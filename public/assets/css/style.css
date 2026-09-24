@@ -198,7 +198,8 @@ main{display:block}
   -webkit-overflow-scrolling:touch;scrollbar-width:thin}
 .album-strip figure{margin:0;scroll-snap-align:start;border-radius:14px;overflow:hidden;background:#fffdf5;
   border:1px solid var(--line);box-shadow:var(--shadow);cursor:zoom-in}
-.album-strip img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#f3e7c4}
+/* Like the news pictures: show the TOP of each photo (posters keep their heading); tap to see it whole. */
+.album-strip img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;object-position:top center;background:#f3e7c4}
 .album-strip figcaption{padding:.5rem .7rem;font-size:.8rem;color:var(--muted);line-height:1.4}
 .album-nav{position:absolute;top:calc(50% - 1.6rem);width:3.2rem;height:3.2rem;border-radius:50%;border:2px solid var(--line);
   background:rgba(255,253,247,.96);color:var(--red);font-size:1.4rem;cursor:pointer;box-shadow:var(--shadow);z-index:2}

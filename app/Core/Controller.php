@@ -74,20 +74,16 @@ abstract class Controller
     // ------------------------------------------------------------------
     // Roles
     //
-    // The two roles are separate areas, not two levels of the same one:
+    //   admin         /admin/*   runs the event: records, forms, news,
+    //                            photos, check-in, exports
+    //   system_admin  /admin/* AND /system/*
+    //                 a SUPER admin: everything an admin can do, plus
+    //                 the site itself — logo, banner, header, footer,
+    //                 user accounts, QR generator
     //
-    //   admin         /admin/*   runs the event
-    //   system_admin  /system/*  runs the site
-    //
-    // Neither can open the other's pages. A system admin who needs
-    // something changed on the event asks an admin, and an admin who
-    // needs the banner replaced asks a system admin — which is the point
-    // of separating them. Nobody gets stranded: a system admin can reset
-    // any admin's password and create accounts of either role.
-    //
-    // All three checks below run on the SERVER. Hiding a menu item stops
-    // an honest person wandering in; it does nothing about someone who
-    // types the URL, and the browser's session already knows its role.
+    // An admin can never open /system. All checks run on the SERVER:
+    // hiding a menu item stops an honest person wandering in; it does
+    // nothing about someone who types the URL.
     // ------------------------------------------------------------------
 
     /**
@@ -107,20 +103,13 @@ abstract class Controller
         }
     }
 
-    /** Restrict a page to the event administrators' area. */
+    /**
+     * Restrict a page to signed-in staff. Both roles pass: the system
+     * admin is a super admin and can do everything an admin can.
+     */
     protected function requireAdmin(): void
     {
         $this->requireLogin();
-
-        if ($this->isSystemAdmin()) {
-            http_response_code(403);
-            $this->flash(
-                'error',
-                '這是管理員頁面',
-                '系統管理員帳號負責網站設定，不處理報名與布施資料。請改用管理員帳號登入。'
-            );
-            $this->redirect('/system');
-        }
     }
 
     /** Restrict a page to the system administrators' area. */

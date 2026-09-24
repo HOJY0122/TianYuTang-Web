@@ -26,7 +26,10 @@ class AdminController extends Controller
         if (!empty($_SESSION['admin_id'])) {
             $this->redirect($this->homePath());
         }
-        $this->view('admin/login', ['error' => $this->takeLoginError()]);
+        $this->view('admin/login', [
+            'error' => $this->takeLoginError(),
+            'site'  => (new \App\Models\Setting())->site(),
+        ]);
     }
 
     /** POST /admin/login */
@@ -42,12 +45,16 @@ class AdminController extends Controller
         // Checked BEFORE the password, so a locked-out address learns
         // nothing — not even whether a guess would have been right.
         if ($attempts->isLockedOut($ip)) {
-            $_SESSION['login_error'] = '登入失敗次數過多，請 ' . LoginAttempt::WINDOW_MINUTES . ' 分鐘後再試。';
+            $_SESSION['login_error'] = [
+                'message'  => '登入失敗次數過多，請 ' . LoginAttempt::WINDOW_MINUTES . ' 分鐘後再試。'
+                            . "\nToo many failed attempts. Please try again in " . LoginAttempt::WINDOW_MINUTES . ' minutes.',
+                'attempts' => 0,
+            ];
             $this->redirect('/admin/login');
         }
 
         if ($username === '' || $password === '') {
-            $_SESSION['login_error'] = '請輸入帳號與密碼。';
+            $_SESSION['login_error'] = ['message' => "請輸入帳號與密碼。\nPlease enter your username and password."];
             $this->redirect('/admin/login');
         }
 
@@ -55,7 +62,14 @@ class AdminController extends Controller
 
         if ($user === null) {
             $attempts->recordFailure($ip, $username);
-            $_SESSION['login_error'] = '帳號或密碼錯誤。';
+            $left = $attempts->remaining($ip);
+            $_SESSION['login_error'] = [
+                'message'  => $left > 0
+                    ? "帳號或密碼錯誤。\nWrong username or password."
+                    : '登入失敗次數過多，請 ' . LoginAttempt::WINDOW_MINUTES . ' 分鐘後再試。'
+                      . "\nToo many failed attempts. Please try again in " . LoginAttempt::WINDOW_MINUTES . ' minutes.',
+                'attempts' => $left,
+            ];
             $this->redirect('/admin/login');
         }
 
@@ -115,18 +129,27 @@ class AdminController extends Controller
         $eventId = (int) $event['id'];
 
         $this->view('admin/dashboard', [
+            'pageTitle'      => '儀表板 Dashboard',
+            'nav'            => 'dashboard',
             'event'          => $event,
             'flash'          => $this->takeFlash(),
             'allEvents'      => $eventModel->all(),
+            'eventBarPath'   => '/admin/dashboard',
             'totalAttendees' => $rsvpModel->totalAttendees($eventId),
             'totalCheckedIn' => $rsvpModel->totalCheckedIn($eventId),
             'totalGroups'    => $rsvpModel->totalGroups($eventId),
+            'byStatus'       => $rsvpModel->countsByStatus($eventId),
+            'bySourceRsvp'   => $rsvpModel->countsBySource($eventId),
             'totalTables'    => $donationModel->totalTables($eventId),
             'totalAmount'    => $donationModel->totalAmount($eventId),
             'totalPaid'      => $donationModel->totalPaid($eventId),
+            'donationCount'  => $donationModel->countFor($eventId),
             'bySource'       => $donationModel->totalsBySource($eventId),
-            'rsvpGroups'     => $rsvpModel->allGroups($eventId),
-            'donations'      => $donationModel->all($eventId),
+            'byKind'         => $donationModel->totalsByKind($eventId),
+            'dailyPeople'    => $rsvpModel->dailyCounts($eventId, 14),
+            'dailyMoney'     => $donationModel->dailyTotals($eventId, 14),
+            'recentGroups'   => $rsvpModel->searchGroups($eventId, [], 6),
+            'recentDonations'=> $donationModel->search($eventId, [], 6),
         ]);
     }
 
@@ -413,10 +436,11 @@ class AdminController extends Controller
 
         $eventModel = new Event();
         $id = (int) ($_GET['id'] ?? 0);
-        $event = $id > 0 ? $eventModel->find($id) : null;
+        // No id (the menu link) means "the event the website is showing".
+        $event = $id > 0 ? $eventModel->find($id) : $eventModel->active();
 
         if ($event === null) {
-            $this->flash('error', '找不到活動', '找不到該活動，請從列表重新選擇。');
+            $this->flash('error', '找不到活動 Not found', '找不到該活動，請從列表重新選擇。This event does not exist.');
             $this->redirect('/admin/dashboard');
         }
 
@@ -424,6 +448,7 @@ class AdminController extends Controller
             'isSystemAdmin' => $this->isSystemAdmin(),
             'mode'   => 'edit',
             'event'  => $event,
+            'allEvents' => $eventModel->all(),
             'errors' => $this->takeFormErrors(),
             'old'    => $this->takeOldEventInput(),
             'flash'  => $this->takeFlash(),
@@ -492,6 +517,15 @@ class AdminController extends Controller
             'rsvp_closes_at'     => $this->datetimeOrNull($_POST['rsvp_closes_at']     ?? ''),
             'donation_opens_at'  => $this->datetimeOrNull($_POST['donation_opens_at']  ?? ''),
             'donation_closes_at' => $this->datetimeOrNull($_POST['donation_closes_at'] ?? ''),
+
+            // Home-page content
+            'welcome_zh'    => trim((string) ($_POST['welcome_zh'] ?? '')) ?: null,
+            'welcome_en'    => trim((string) ($_POST['welcome_en'] ?? '')) ?: null,
+            'contact_info'  => trim((string) ($_POST['contact_info'] ?? '')) ?: null,
+            'maps_url'      => trim((string) ($_POST['maps_url'] ?? '')) ?: null,
+            'waze_url'      => trim((string) ($_POST['waze_url'] ?? '')) ?: null,
+            'rsvp_note'     => trim((string) ($_POST['rsvp_note'] ?? '')) ?: null,
+            'donation_note' => trim((string) ($_POST['donation_note'] ?? '')) ?: null,
         ];
 
         $errors = Event::validate($fields);
@@ -509,6 +543,20 @@ class AdminController extends Controller
         // settings owned by the system admin (/system), not event fields,
         // so this form cannot change them however the POST is crafted.
 
+        // Waze QR image: stored only once every text field is valid, and
+        // the old file removed only after the new value is saved.
+        $qrUploader = new ImageUploader('waze');
+        $oldQr      = $isNew ? null : ($eventModel->find($id)['waze_qr_path'] ?? null);
+        if (!$errors && ImageUploader::wasProvided($_FILES['waze_qr'] ?? null)) {
+            try {
+                $fields['waze_qr_path'] = $qrUploader->store($_FILES['waze_qr'], 600);
+            } catch (RuntimeException $e) {
+                $errors[] = 'Waze QR：' . $e->getMessage();
+            }
+        } elseif (!$errors && !empty($_POST['remove_waze_qr'])) {
+            $fields['waze_qr_path'] = null;
+        }
+
         if ($errors) {
             $_SESSION['event_form_errors'] = $errors;
             $_SESSION['event_form_old']    = $fields;
@@ -519,12 +567,19 @@ class AdminController extends Controller
             $id = $eventModel->create($fields);
             $this->flash(
                 'success',
-                '活動已新增',
-                '新活動已建立，但尚未公開。確認資料無誤後，請按「設為公開」。'
+                '活動已新增 Event created',
+                "新活動已建立，但尚未公開。確認資料無誤後，請按「設為公開」。\nThe new event is not live yet — press Make live when it is ready."
             );
         } else {
             $eventModel->update($id, $fields);
-            $this->flash('success', '已儲存', '活動資料已更新，網站已同步顯示。');
+            // A test copy shares the original's QR file — only delete it
+            // when no other event still points at it.
+            if ($oldQr && array_key_exists('waze_qr_path', $fields) && $fields['waze_qr_path'] !== $oldQr
+                && $eventModel->countOtherEventsUsingImage($oldQr, $id) === 0) {
+                $qrUploader->delete($oldQr);
+            }
+            $this->flash('success', '已儲存 Saved', "活動資料已更新，網站已同步顯示。\nThe event is updated on the website.");
+            $this->redirect("/admin/event/edit?id={$id}");
         }
         $this->redirect("/admin/dashboard?event={$id}");
     }
@@ -572,10 +627,11 @@ class AdminController extends Controller
         $this->redirect($eventId ? "/admin/dashboard?event={$eventId}" : '/admin/dashboard');
     }
 
-    private function takeLoginError(): string
+    /** @return array{message:string, attempts?:int}|null */
+    private function takeLoginError(): ?array
     {
-        $error = $_SESSION['login_error'] ?? '';
+        $error = $_SESSION['login_error'] ?? null;
         unset($_SESSION['login_error']);
-        return $error;
+        return is_array($error) ? $error : null;
     }
 }

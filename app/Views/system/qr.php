@@ -1,22 +1,8 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QR Code 產生器｜系統管理</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700;900&family=Noto+Sans+TC:wght@400;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="<?= asset('css/admin.css') ?>">
-</head>
-<body>
-
-<div class="adminbar system">
-  <h1>🔳 QR Code 產生器</h1>
-  <div style="display:flex;align-items:center;gap:14px">
-    <span class="who"><?= h($_SESSION['admin_display'] ?? $_SESSION['admin_username']) ?></span>
-    <a class="logout" href="<?= url('/system') ?>">← 系統管理</a>
-  </div>
-</div>
-
+<?php
+$pageTitle = 'QR Code 產生器 QR Generator';
+$nav = 'qr';
+require BASE_PATH . '/app/Views/layouts/admin_header.php';
+?>
 <div class="wrap qr-wrap">
 
   <div class="qr-layout">
@@ -411,5 +397,4 @@ function download() {
 
 render();
 </script>
-</body>
-</html>
+<?php require BASE_PATH . '/app/Views/layouts/admin_footer.php'; ?>

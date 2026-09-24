@@ -1,29 +1,10 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>現場報到｜天玉堂</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700;900&family=Noto+Sans+TC:wght@400;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="<?= asset('css/admin.css') ?>">
-</head>
-<body>
-
-<div class="adminbar">
-  <h1>✅ 現場報到 Check-in</h1>
-  <div style="display:flex;align-items:center;gap:14px">
-    <span class="who"><?= h($_SESSION['admin_username']) ?></span>
-    <a class="logout" href="<?= url('/admin/dashboard') ?>">← 後台</a>
-  </div>
-</div>
-
+<?php
+$pageTitle = '現場報到 Check-in';
+$nav = 'checkin';
+require BASE_PATH . '/app/Views/layouts/admin_header.php';
+?>
 <div class="wrap checkin-wrap">
 
-  <?php if (!empty($flash)): ?>
-    <div class="flash <?= h($flash['type']) ?>">
-      <strong><?= h($flash['title']) ?></strong> — <?= h($flash['message']) ?>
-    </div>
-  <?php endif; ?>
 
   <?php if ($event['is_test']): ?>
     <div class="flash test">🧪 測試活動 — 此處的報到紀錄不列入正式統計。</div>
@@ -227,5 +208,4 @@
   }
 })();
 </script>
-</body>
-</html>
+<?php require BASE_PATH . '/app/Views/layouts/admin_footer.php'; ?>

@@ -1,279 +1,151 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>管理後台｜天玉堂 2026</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700;900&family=Noto+Sans+TC:wght@400;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="<?= asset('css/admin.css') ?>">
-</head>
-<body>
+<?php
+require BASE_PATH . '/app/Views/layouts/admin_header.php';
+require BASE_PATH . '/app/Views/partials/charts.php';
+require BASE_PATH . '/app/Views/partials/event_bar.php';
 
-<div class="adminbar">
-  <h1>🙏 天玉堂 2026 管理系統</h1>
-  <div style="display:flex;align-items:center;gap:14px">
-    <span class="who">您好，<?= h($_SESSION['admin_display'] ?? $_SESSION['admin_username']) ?></span>
-    <a class="mini-btn ghost" href="<?= url('/account/password') ?>">🔑 密碼</a>
-    <form class="logout-form" method="POST" action="<?= url('/admin/logout') ?>">
-      <?= csrf_field() ?>
-      <button type="submit" class="logout">登出 Logout</button>
-    </form>
+$eid        = (int) $event['id'];
+$q          = '?event=' . $eid;
+$arrivedPct = $totalAttendees > 0 ? min(100, round($totalCheckedIn / $totalAttendees * 100)) : 0;
+$paidPct    = $totalAmount > 0 ? min(100, round($totalPaid / $totalAmount * 100)) : 0;
+$statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confirmed', 'cancelled' => '已取消 Cancelled'];
+?>
+
+<!-- ---------- Event actions ---------- -->
+<div class="panel">
+  <div class="eventbar-actions">
+    <a class="mini-btn btn-lg" href="<?= url('/admin/event/edit') ?>?id=<?= $eid ?>">✏️ 編輯活動 Edit event</a>
+    <a class="mini-btn ghost btn-lg" href="<?= url('/admin/event/new') ?>">＋ 新增活動 New event</a>
+    <?php if (!$event['is_active']): ?>
+      <form method="POST" action="<?= url('/admin/event/activate') ?>" style="margin:0"
+            onsubmit="return confirm('確定將此活動設為公開？網站首頁會立即切換。\nMake this event live on the website now?');">
+        <?= csrf_field() ?><input type="hidden" name="event_id" value="<?= $eid ?>">
+        <button class="mini-btn btn-lg" type="submit">🌐 設為公開 Make live</button>
+      </form>
+    <?php endif; ?>
+    <?php if ($event['is_test']): ?>
+      <form method="POST" action="<?= url('/admin/event/test-delete') ?>" style="margin:0"
+            onsubmit="return confirm('刪除此測試活動及其所有測試資料？此操作無法復原。\nDelete this test event and all its test data? This cannot be undone.');">
+        <?= csrf_field() ?><input type="hidden" name="event_id" value="<?= $eid ?>">
+        <button class="mini-btn danger btn-lg" type="submit">🗑 刪除測試資料 Delete test data</button>
+      </form>
+    <?php else: ?>
+      <form method="POST" action="<?= url('/admin/event/test-copy') ?>" style="margin:0"
+            onsubmit="return confirm('建立測試副本？測試資料不會計入正式統計。\nCreate a test copy? Test data is not counted.');">
+        <?= csrf_field() ?><input type="hidden" name="event_id" value="<?= $eid ?>">
+        <button class="mini-btn ghost btn-lg" type="submit">🧪 建立測試副本 Test copy</button>
+      </form>
+    <?php endif; ?>
   </div>
 </div>
 
-<div class="wrap">
+<!-- ---------- Headline numbers ---------- -->
+<div class="kpis">
+  <div class="kpi">
+    <div class="k-label">參加人數<span class="en">People registered</span></div>
+    <div class="k-value"><?= number_format($totalAttendees) ?></div>
+    <div class="k-sub"><?= number_format($totalGroups) ?> 組 groups · 現場 walk-in <?= (int) $bySourceRsvp['walkin']['people'] ?></div>
+  </div>
+  <div class="kpi">
+    <div class="k-label">已報到<span class="en">Checked in</span></div>
+    <div class="k-value"><?= number_format($totalCheckedIn) ?></div>
+    <div class="k-sub"><?= $arrivedPct ?>% of <?= number_format($totalAttendees) ?></div>
+    <div class="meter" title="<?= $arrivedPct ?>%"><i style="width:<?= $arrivedPct ?>%"></i></div>
+  </div>
+  <div class="kpi">
+    <div class="k-label">待確認報名<span class="en">Pending registrations</span></div>
+    <div class="k-value"><?= number_format($byStatus['pending']) ?></div>
+    <div class="k-sub">已確認 confirmed <?= (int) $byStatus['confirmed'] ?> · 取消 cancelled <?= (int) $byStatus['cancelled'] ?></div>
+  </div>
+  <div class="kpi">
+    <div class="k-label">布施總額<span class="en">Total pledged</span></div>
+    <div class="k-value"><?= rm($totalAmount) ?></div>
+    <div class="k-sub"><?= number_format($donationCount) ?> 筆 donations · 功德席 <?= number_format($totalTables) ?> 席 seats</div>
+  </div>
+  <div class="kpi">
+    <div class="k-label">已收款<span class="en">Received</span></div>
+    <div class="k-value"><?= rm($totalPaid) ?></div>
+    <div class="k-sub"><?= $paidPct ?>% · 未收 outstanding <?= rm(max(0, $totalAmount - $totalPaid)) ?></div>
+    <div class="meter" title="<?= $paidPct ?>%"><i style="width:<?= $paidPct ?>%"></i></div>
+  </div>
+</div>
 
-  <?php if ($event['is_test']): ?>
-    <div class="flash test">
-      🧪 <strong>您正在檢視測試活動</strong> — 以下數據僅供測試，不會列入正式紀錄。
-    </div>
-  <?php endif; ?>
+<!-- ---------- Trends ---------- -->
+<div class="grid-2">
+  <div class="panel"><?php chart_columns([
+      'title' => '每日報名人數', 'subtitle' => 'People registered per day', 'unit' => '人 people',
+      'rows'  => array_map(static fn($r) => ['day' => $r['day'], 'value' => $r['people']], $dailyPeople),
+  ]); ?></div>
+  <div class="panel"><?php chart_columns([
+      'title' => '每日布施金額', 'subtitle' => 'Donations per day (RM)', 'money' => true,
+      'rows'  => array_map(static fn($r) => ['day' => $r['day'], 'value' => $r['total']], $dailyMoney),
+  ]); ?></div>
+</div>
 
-  <?php if (!empty($flash)): ?>
-    <div class="flash <?= h($flash['type']) ?>">
-      <strong><?= h($flash['title']) ?></strong> — <?= h($flash['message']) ?>
-    </div>
-  <?php endif; ?>
+<div class="grid-2">
+  <div class="panel"><?php chart_split([
+      'title' => '布施類別', 'subtitle' => 'Merit seats vs freewill', 'money' => true,
+      'parts' => [['label' => '功德席 Merit seats', 'value' => $byKind['seats']],
+                  ['label' => '隨喜 Freewill', 'value' => $byKind['freewill']]],
+  ]); ?></div>
+  <div class="panel"><?php chart_split([
+      'title' => '布施來源', 'subtitle' => 'Online vs counter (cash)', 'money' => true,
+      'parts' => [['label' => '線上 Online', 'value' => $bySource['online']],
+                  ['label' => '現場 Counter', 'value' => $bySource['counter']]],
+  ]); ?></div>
+</div>
 
-  <!-- ---------- Event switcher ---------- -->
-  <div class="panel eventbar">
-    <div>
-      <h2 style="margin:0 0 4px"><?= h($event['year']) ?> · <?= h($event['name']) ?></h2>
-      <div class="help">
-        <?= h($event['start_date']) ?> → <?= h($event['end_date']) ?>
-        · 功德席 RM<?= number_format((float) $event['merit_table_price'], 0) ?>
-        <?php if (!$event['is_active']): ?>
-          · <span class="badge pending">未啟用 Not live</span>
-        <?php else: ?>
-          · <span class="badge">目前公開 Live</span>
-        <?php endif; ?>
-        <?php if ($event['is_test']): ?>
-          · <span class="badge cancelled">測試 Test</span>
-        <?php endif; ?>
-      </div>
-      <div class="help" style="margin-top:6px">
-        <?php
-        foreach ([
-            App\Models\Event::SECTION_RSVP     => '報名',
-            App\Models\Event::SECTION_DONATION => '布施',
-        ] as $section => $label):
-            $w = App\Models\Event::windowStatus($event, $section);
-        ?>
-          <span style="margin-right:14px">
-            <?= h($label) ?>：
-            <?php if ($w['open'] && !$w['closes_at']): ?>
-              <span class="badge">開放中</span>
-            <?php elseif ($w['open']): ?>
-              <span class="badge">開放中</span>
-              <span style="opacity:.75">至 <?= h(App\Models\Event::formatDateTime($w['closes_at'])) ?></span>
-            <?php elseif ($w['reason'] === 'not_yet'): ?>
-              <span class="badge pending">尚未開放</span>
-              <span style="opacity:.75"><?= h(App\Models\Event::formatDateTime($w['opens_at'])) ?> 開始</span>
-            <?php else: ?>
-              <span class="badge cancelled">已截止</span>
-              <span style="opacity:.75"><?= h(App\Models\Event::formatDateTime($w['closes_at'])) ?></span>
-            <?php endif; ?>
-          </span>
+<!-- ---------- Latest records ---------- -->
+<div class="grid-2">
+  <div class="panel">
+    <h2>最新報名 <span class="en">Latest registrations</span></h2>
+    <?php if (!$recentGroups): ?>
+      <p class="empty">尚無報名。No registrations yet.</p>
+    <?php else: ?>
+      <table class="records">
+        <?php foreach ($recentGroups as $g): ?>
+          <tr>
+            <td data-label="編號 Ref"><a class="rowlink" href="<?= url('/admin/registrations/edit') ?>?id=<?= (int) $g['id'] ?>"><?= h($g['ref_code']) ?></a>
+              <span class="sub-line"><?= h(date('m-d H:i', strtotime($g['created_at']))) ?></span></td>
+            <td data-label="聯絡人 Contact"><?= h($g['lead_name']) ?><span class="sub-line"><?= (int) $g['attendee_count'] ?> 位 people</span></td>
+            <td data-label="狀態 Status"><span class="badge <?= $g['status'] === 'confirmed' ? 'ok' : h($g['status']) ?>"><?= h($statusText[$g['status']]) ?></span></td>
+          </tr>
         <?php endforeach; ?>
-      </div>
-    </div>
-
-    <div class="eventbar-actions">
-      <?php if (count($allEvents) > 1): ?>
-        <form method="GET" action="<?= url('/admin/dashboard') ?>" style="margin:0">
-          <select name="event" onchange="this.form.submit()">
-            <?php foreach ($allEvents as $e): ?>
-              <option value="<?= (int) $e['id'] ?>"<?= (int) $e['id'] === (int) $event['id'] ? ' selected' : '' ?>>
-                <?= h($e['year']) ?> — <?= h($e['name']) ?><?= $e['is_test'] ? ' (測試)' : '' ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-        </form>
-      <?php endif; ?>
-
-      <a class="mini-btn" href="<?= url('/admin/event/edit') ?>?id=<?= (int) $event['id'] ?>">✏️ 編輯活動資料</a>
-      <a class="mini-btn" href="<?= url('/admin/checkin') ?>?event=<?= (int) $event['id'] ?>">✅ 現場報到</a>
-      <a class="mini-btn" href="<?= url('/admin/walkin') ?>?event=<?= (int) $event['id'] ?>">🚶 現場報名</a>
-      <a class="mini-btn" href="<?= url('/admin/counter') ?>?event=<?= (int) $event['id'] ?>">💰 現場布施</a>
-      <a class="mini-btn" href="<?= url('/admin/photos') ?>?event=<?= (int) $event['id'] ?>">📸 相簿管理</a>
-      <a class="mini-btn ghost" href="<?= url('/admin/event/new') ?>">＋ 新增活動</a>
-
-      <?php if ($event['is_test']): ?>
-        <form method="POST" action="<?= url('/admin/event/test-delete') ?>" style="margin:0"
-              onsubmit="return confirm('確定要刪除這個測試活動嗎？\n所有測試的報名與布施紀錄都會一併刪除，此操作無法復原。');">
-          <?= csrf_field() ?>
-          <input type="hidden" name="event_id" value="<?= (int) $event['id'] ?>">
-          <button class="mini-btn danger" type="submit">🗑 刪除測試資料</button>
-        </form>
-      <?php else: ?>
-        <form method="POST" action="<?= url('/admin/event/test-copy') ?>" style="margin:0"
-              onsubmit="return confirm('建立這個活動的測試副本？\n測試資料不會計入正式統計。');">
-          <?= csrf_field() ?>
-          <input type="hidden" name="event_id" value="<?= (int) $event['id'] ?>">
-          <button class="mini-btn ghost" type="submit">🧪 建立測試副本</button>
-        </form>
-      <?php endif; ?>
-
-      <?php if (!$event['is_active']): ?>
-        <form method="POST" action="<?= url('/admin/event/activate') ?>" style="margin:0"
-              onsubmit="return confirm('確定要將此活動設為公開顯示嗎？網站首頁會立即切換到這個活動。');">
-          <?= csrf_field() ?>
-          <input type="hidden" name="event_id" value="<?= (int) $event['id'] ?>">
-          <button class="mini-btn" type="submit">設為公開 Make live</button>
-        </form>
-      <?php endif; ?>
-    </div>
-  </div>
-
-  <!-- ---------- Statistics ---------- -->
-  <div class="statboard">
-    <div class="stats">
-      <div class="stat">
-        <small>參加人數 Attendees</small>
-        <strong><?= (int) $totalAttendees ?></strong>
-        <div class="sub">已報到 Arrived: <?= (int) $totalCheckedIn ?></div>
-      </div>
-      <div class="stat">
-        <small>報名組數 Registrations</small>
-        <strong><?= (int) $totalGroups ?></strong>
-      </div>
-      <div class="stat">
-        <small>功德席 Merit Seats</small>
-        <strong><?= (int) $totalTables ?></strong>
-      </div>
-      <div class="stat">
-        <small>布施總額 Total Pledged</small>
-        <strong><?= rm($totalAmount) ?></strong>
-        <div class="sub">已收 Received: <?= rm($totalPaid) ?></div>
-        <div class="sub">線上 <?= rm($bySource['online']) ?> · 現場 <?= rm($bySource['counter']) ?></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ---------- RSVP table ---------- -->
-  <div class="panel">
-    <h2>報名紀錄 · RSVP
-      <span class="panel-actions">
-        <a class="mini-btn ghost"
-           href="<?= url('/admin/export/attendees') ?>?event=<?= (int) $event['id'] ?>">⬇️ CSV</a>
-        <a class="mini-btn ghost"
-           href="<?= url('/admin/print/attendees') ?>?event=<?= (int) $event['id'] ?>"
-           target="_blank">🖨️ 列印報到表</a>
-      </span>
-    </h2>
-    <div class="scroll">
-      <table>
-        <thead>
-          <tr><th>編號</th><th>代表姓名</th><th>人數</th><th>提交時間</th><th>狀態</th><th>操作</th></tr>
-        </thead>
-        <tbody>
-        <?php if (empty($rsvpGroups)): ?>
-          <tr><td colspan="6" class="empty">尚無報名資料。</td></tr>
-        <?php else: ?>
-          <?php foreach ($rsvpGroups as $g): ?>
-            <tr>
-              <td><?= h($g['ref_code']) ?></td>
-              <td><?= h($g['lead_name'] ?? '—') ?></td>
-              <td><?= (int) $g['attendee_count'] ?> 位</td>
-              <td><?= h($g['created_at']) ?></td>
-              <td>
-                <?php if ($g['status'] === 'confirmed'): ?>
-                  <span class="badge">已確認 Confirmed</span>
-                <?php elseif ($g['status'] === 'cancelled'): ?>
-                  <span class="badge cancelled">已取消 Cancelled</span>
-                <?php else: ?>
-                  <span class="badge pending">待確認 Pending</span>
-                <?php endif; ?>
-              </td>
-              <td>
-                <div class="actions-cell">
-                  <?php if ($g['status'] !== 'confirmed'): ?>
-                    <form method="POST" action="<?= url('/admin/rsvp/confirm') ?>" style="margin:0">
-                      <?= csrf_field() ?>
-                      <input type="hidden" name="group_id" value="<?= (int) $g['id'] ?>">
-                      <button class="mini-btn" type="submit">確認</button>
-                    </form>
-                  <?php endif; ?>
-                  <?php if ($g['status'] !== 'cancelled'): ?>
-                    <form method="POST" action="<?= url('/admin/rsvp/cancel') ?>" style="margin:0"
-                          onsubmit="return confirm('確定要取消這筆報名嗎？');">
-                      <?= csrf_field() ?>
-                      <input type="hidden" name="group_id" value="<?= (int) $g['id'] ?>">
-                      <button class="mini-btn ghost" type="submit">取消</button>
-                    </form>
-                  <?php endif; ?>
-                </div>
-              </td>
-            </tr>
-          <?php endforeach; ?>
-        <?php endif; ?>
-        </tbody>
       </table>
-    </div>
+    <?php endif; ?>
+    <p style="margin:12px 0 0"><a class="mini-btn ghost" href="<?= url('/admin/registrations') . $q ?>">查看全部 View all →</a></p>
   </div>
-
-  <!-- ---------- Donations table ---------- -->
   <div class="panel">
-    <h2>布施紀錄 · Donations
-      <span class="panel-actions">
-        <a class="mini-btn ghost"
-           href="<?= url('/admin/export/donations') ?>?event=<?= (int) $event['id'] ?>">⬇️ CSV</a>
-        <a class="mini-btn ghost"
-           href="<?= url('/admin/print/donations') ?>?event=<?= (int) $event['id'] ?>"
-           target="_blank">🖨️ 列印布施表</a>
-      </span>
-    </h2>
-    <div class="scroll">
-      <table>
-        <thead>
-          <tr><th>編號</th><th>姓名</th><th>聯絡</th><th>方式</th><th>詳情</th><th>金額</th><th>狀態</th><th>操作</th></tr>
-        </thead>
-        <tbody>
-        <?php if (empty($donations)): ?>
-          <tr><td colspan="9" class="empty">尚無布施資料。</td></tr>
-        <?php else: ?>
-          <?php foreach ($donations as $d): ?>
-            <tr>
-              <td><?= h($d['ref_code']) ?></td>
-              <td>
-                <?php if (($d['source'] ?? 'online') === 'counter'): ?>
-                  <span class="badge counter">現場</span>
-                  <?php if (!empty($d['receipt_path'])): ?>
-                    <a href="<?= url('/admin/receipt?id=' . (int) $d['id']) ?>" target="_blank" title="查看收據">📄</a>
-                  <?php endif; ?>
-                <?php else: ?>
-                  <span class="help">線上</span>
-                <?php endif; ?>
-              </td>
-              <td><?= h($d['name']) ?></td>
-              <td><?= h($d['contact_no']) ?></td>
-              <td><?= $d['method'] === 'table' ? '功德席' : '隨喜布施' ?></td>
-              <td><?= $d['method'] === 'table' ? ((int) $d['table_count'] . ' 席') : '—' ?></td>
-              <td><?= rm((float) $d['amount']) ?></td>
-              <td>
-                <?php if ($d['status'] === 'paid'): ?>
-                  <span class="badge">已付 Paid</span>
-                <?php else: ?>
-                  <span class="badge pending">待付 Pending</span>
-                <?php endif; ?>
-              </td>
-              <td>
-                <?php if ($d['status'] !== 'paid'): ?>
-                  <form method="POST" action="<?= url('/admin/donation/paid') ?>" style="margin:0">
-                    <?= csrf_field() ?>
-                    <input type="hidden" name="donation_id" value="<?= (int) $d['id'] ?>">
-                    <button class="mini-btn" type="submit">標記已付</button>
-                  </form>
-                <?php endif; ?>
-              </td>
-            </tr>
-          <?php endforeach; ?>
-        <?php endif; ?>
-        </tbody>
+    <h2>最新布施 <span class="en">Latest donations</span></h2>
+    <?php if (!$recentDonations): ?>
+      <p class="empty">尚無布施。No donations yet.</p>
+    <?php else: ?>
+      <table class="records">
+        <?php foreach ($recentDonations as $d): ?>
+          <tr>
+            <td data-label="編號 Ref"><a class="rowlink" href="<?= url('/admin/donations/edit') ?>?id=<?= (int) $d['id'] ?>"><?= h($d['ref_code']) ?></a>
+              <span class="sub-line"><?= h(date('m-d H:i', strtotime($d['created_at']))) ?></span></td>
+            <td data-label="姓名 Name"><?= h($d['name']) ?><span class="sub-line"><?= h(App\Models\Donation::describe($d)) ?></span></td>
+            <td data-label="金額 Amount" class="num"><strong><?= rm((float) $d['amount']) ?></strong>
+              <span class="sub-line"><?= $d['status'] === 'paid' ? '✓ 已付 Paid' : '待付 Pending' ?></span></td>
+          </tr>
+        <?php endforeach; ?>
       </table>
-    </div>
+    <?php endif; ?>
+    <p style="margin:12px 0 0"><a class="mini-btn ghost" href="<?= url('/admin/donations') . $q ?>">查看全部 View all →</a></p>
   </div>
-
 </div>
-</body>
-</html>
+
+<!-- ---------- Downloads & printing ---------- -->
+<div class="panel">
+  <h2>下載與列印 <span class="en">Downloads &amp; printing</span></h2>
+  <div class="eventbar-actions">
+    <a class="mini-btn btn-lg" href="<?= url('/admin/export/attendees') . $q ?>">⬇️ 參加者 CSV Attendees</a>
+    <a class="mini-btn btn-lg" href="<?= url('/admin/export/donations') . $q ?>">⬇️ 布施 CSV Donations</a>
+    <a class="mini-btn ghost btn-lg" href="<?= url('/admin/print/attendees') . $q ?>" target="_blank">🖨️ 報到名單 Check-in sheet</a>
+    <a class="mini-btn ghost btn-lg" href="<?= url('/admin/print/donations') . $q ?>" target="_blank">🖨️ 布施清單 Donation list</a>
+    <a class="mini-btn ghost btn-lg" href="<?= url('/admin/qr') . $q ?>" target="_blank">🔳 活動 QR Event QR</a>
+  </div>
+  <p class="help" style="margin-bottom:0">CSV 可用 Excel、Numbers 或 Google Sheets 開啟。CSV files open in Excel, Numbers or Google Sheets.</p>
+</div>
+
+<?php require BASE_PATH . '/app/Views/layouts/admin_footer.php'; ?>

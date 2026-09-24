@@ -78,11 +78,12 @@ try { if (localStorage.getItem('tyt-text') === 'lg') document.documentElement.cl
             title="放大字體 Larger text">A+</button>
 
     <nav class="site-nav" aria-label="主選單 Main menu">
-      <?php foreach ($navItems as $key => [$href, $zh, $en]): ?>
-        <a href="<?= url($href) ?>"<?= $activeNav === $key ? ' class="active" aria-current="page"' : '' ?>>
-          <?= h($zh) ?><small><?= h($en) ?></small>
+      <?php // Prefixed loop variables: this file shares scope with the page.
+      foreach ($navItems as $_nKey => [$_nHref, $_nZh, $_nEn]): ?>
+        <a href="<?= url($_nHref) ?>"<?= $activeNav === $_nKey ? ' class="active" aria-current="page"' : '' ?>>
+          <?= h($_nZh) ?><small><?= h($_nEn) ?></small>
         </a>
-      <?php endforeach; ?>
+      <?php endforeach; unset($_nKey, $_nHref, $_nZh, $_nEn); ?>
     </nav>
   </div>
 </header>

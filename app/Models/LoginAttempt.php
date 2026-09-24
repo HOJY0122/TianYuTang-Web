@@ -29,6 +29,16 @@ class LoginAttempt extends Model
         return $this->recentFailures($ip) >= self::MAX_FAILURES;
     }
 
+    /**
+     * How many more wrong passwords this address may try before being
+     * locked out. Counted per address, not per username, so it says
+     * nothing about which usernames exist.
+     */
+    public function remaining(string $ip): int
+    {
+        return max(0, self::MAX_FAILURES - $this->recentFailures($ip));
+    }
+
     /** Record one failed attempt. */
     public function recordFailure(string $ip, string $username): void
     {

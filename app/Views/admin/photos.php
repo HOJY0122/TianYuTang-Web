@@ -1,29 +1,10 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>相簿管理｜天玉堂</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700;900&family=Noto+Sans+TC:wght@400;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="<?= asset('css/admin.css') ?>">
-</head>
-<body>
-
-<div class="adminbar">
-  <h1>📸 相簿管理 Photo Gallery</h1>
-  <div style="display:flex;align-items:center;gap:14px">
-    <span class="who">您好，<?= h($_SESSION['admin_username']) ?></span>
-    <a class="logout" href="<?= url('/admin/dashboard') ?>">← 返回後台</a>
-  </div>
-</div>
-
+<?php
+$pageTitle = '相簿管理 Photos';
+$nav = 'photos';
+require BASE_PATH . '/app/Views/layouts/admin_header.php';
+?>
 <div class="wrap">
 
-  <?php if (!empty($flash)): ?>
-    <div class="flash <?= h($flash['type']) ?>">
-      <strong><?= h($flash['title']) ?></strong> — <?= h($flash['message']) ?>
-    </div>
-  <?php endif; ?>
 
   <?php if ($event['is_test']): ?>
     <div class="flash test">🧪 這是測試活動的相簿，不會出現在正式網站上。</div>
@@ -126,5 +107,4 @@
   </div>
 
 </div>
-</body>
-</html>
+<?php require BASE_PATH . '/app/Views/layouts/admin_footer.php'; ?>

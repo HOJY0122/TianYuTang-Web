@@ -170,8 +170,8 @@ class Event extends Model
         }
         return (int) $this->scalar(
             'SELECT COUNT(*) FROM events
-             WHERE id <> ? AND (hero_banner_path = ? OR favicon_path = ?)',
-            [$excludeEventId, $path, $path]
+             WHERE id <> ? AND (hero_banner_path = ? OR favicon_path = ? OR waze_qr_path = ?)',
+            [$excludeEventId, $path, $path, $path]
         );
     }
 

@@ -60,7 +60,7 @@ class ExportController extends Controller
         $rows     = $model->all($eventId, 10000);
 
         $data = [['編號 Ref', '來源 Source', '姓名 Name', '聯絡號碼 Contact', '方式 Method',
-                  '功德席數 Seats', '金額 Amount (RM)', '狀態 Status',
+                  '功德席數 Seats', '隨喜 Freewill (RM)', '總額 Amount (RM)', '狀態 Status',
                   '登記者 Recorded by', '備註 Notes', '收據 Receipt', '提交時間 Submitted']];
 
         foreach ($rows as $r) {
@@ -69,8 +69,10 @@ class ExportController extends Controller
                 ($r['source'] ?? 'online') === 'counter' ? '現場 Counter' : '線上 Online',
                 $r['name'],
                 $r['contact_no'],
-                $r['method'] === 'table' ? '功德席 Merit Seat' : '隨喜布施 Freewill',
-                $r['method'] === 'table' ? (string) (int) $r['table_count'] : '',
+                ['table' => '功德席 Merit Seat', 'free' => '隨喜布施 Freewill', 'mixed' => '功德席+隨喜 Seats+Freewill'][$r['method']] ?? $r['method'],
+                !empty($r['table_count']) ? (string) (int) $r['table_count'] : '',
+                // Older freewill rows predate free_amount; their amount IS the freewill.
+                number_format((float) ($r['free_amount'] ?? ($r['method'] === 'free' ? $r['amount'] : 0)), 2, '.', ''),
                 number_format((float) $r['amount'], 2, '.', ''),  // no thousands separator: it would split the cell
                 $r['status'] === 'paid' ? '已付 Paid' : '待付 Pending',
                 $r['recorded_by'] ?? '',
@@ -83,13 +85,13 @@ class ExportController extends Controller
         // A totals row the treasurer does not have to compute by hand.
         $data[] = [];
         $bySource = $model->totalsBySource($eventId);
-        $data[] = ['總計 Total', '', '', '', '', (string) $model->totalTables($eventId),
+        $data[] = ['總計 Total', '', '', '', '', (string) $model->totalTables($eventId), '',
                    number_format($model->totalAmount($eventId), 2, '.', ''), '', '', '', '', ''];
-        $data[] = ['已收 Received', '', '', '', '', '',
+        $data[] = ['已收 Received', '', '', '', '', '', '',
                    number_format($model->totalPaid($eventId), 2, '.', ''), '', '', '', '', ''];
-        $data[] = ['線上 Online', '', '', '', '', '',
+        $data[] = ['線上 Online', '', '', '', '', '', '',
                    number_format($bySource['online'], 2, '.', ''), '', '', '', '', ''];
-        $data[] = ['現場 Counter', '', '', '', '', '',
+        $data[] = ['現場 Counter', '', '', '', '', '', '',
                    number_format($bySource['counter'], 2, '.', ''), '', '', '', '', ''];
 
         $this->sendCsv($this->filename($event, 'donations'), $data);

@@ -35,7 +35,7 @@ $current = static function (string $key, string $lang) use ($saved): string {
 </nav>
 
 <div class="word-layout">
-  <form method="POST" action="<?= url('/system/wording') ?>" class="panel wording" id="wordForm">
+  <form method="POST" action="<?= url('/system/wording') ?>" class="panel wording" id="wordForm" data-trad-check>
     <?= csrf_field() ?>
     <input type="hidden" name="group" value="<?= h($group) ?>">
     <p class="help" style="margin-top:0">

@@ -42,7 +42,7 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
 
 <!-- enctype is required: without it the browser sends only the file
      NAME, never the file itself, and $_FILES arrives empty. -->
-<form method="POST" action="<?= url('/system/settings') ?>" enctype="multipart/form-data" class="form-panel wide-form">
+<form method="POST" action="<?= url('/system/settings') ?>" enctype="multipart/form-data" class="form-panel wide-form" data-trad-check>
   <?= csrf_field() ?>
   <p class="help" style="margin-top:0">這些設定屬於網站本身，換年度也不必重新設定。
     <span class="en">These belong to the site itself and carry over from year to year.</span></p>

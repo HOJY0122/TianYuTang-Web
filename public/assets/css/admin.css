@@ -723,3 +723,6 @@ details.guide > :not(summary){margin:0 20px 18px}
 .ocr-text pre{white-space:pre-wrap;word-break:break-word;margin:8px 0;max-height:260px;overflow:auto;font:14px/1.6 "Noto Sans TC",system-ui,sans-serif;background:#fff;border-radius:8px;padding:8px 10px;border:1px solid #f0e4c6}
 .setup-steps{margin:10px 0 0;padding-left:1.2rem;line-height:1.7;font-size:.92rem}
 .setup-steps .en{display:block;color:var(--muted);font-size:.9em}
+/* Simplified-character warning under a text box (trad-check.js) */
+.trad-note{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0 0;padding:8px 10px;border-radius:8px;background:#fff4e0;border:1px solid #e8c77a;color:#7a4b00}
+.trad-note[hidden]{display:none}

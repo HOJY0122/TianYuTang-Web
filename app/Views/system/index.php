@@ -32,6 +32,18 @@ $img = static fn(?string $p): string => $p ? BASE_URL . '/' . $p : '';
       <input id="site_name_en" name="site_name_en" maxlength="120" value="<?= h($settings['site_name_en']) ?>">
       <p class="help">顯示在中文名稱下方。Shown under the Chinese name.</p></div>
   </div>
+  <label>標題字體 <span class="en">Heading font</span></label>
+  <div class="font-choices">
+    <?php foreach (App\Models\Setting::HEADING_FONTS as $fKey => [$fLabel, $fFamily]): ?>
+      <label class="font-choice">
+        <input type="radio" name="heading_font" value="<?= h($fKey) ?>"<?= ($settings['heading_font'] ?? 'brush') === $fKey ? ' checked' : '' ?>>
+        <span class="font-sample" style="font-family:'<?= h($fFamily) ?>',serif"><?= h($settings['site_name']) ?> 千秋寶誕</span>
+        <small><?= h($fLabel) ?></small>
+      </label>
+    <?php endforeach; ?>
+  </div>
+  <p class="help">用於網站名稱與各段標題，內文維持清晰的黑體。Used for the site name and headings; body text stays in a clear sans-serif.</p>
+
   <label for="site_tagline">頂部標語 <span class="en">Top bar text</span></label>
   <input id="site_tagline" name="site_tagline" maxlength="255" value="<?= h($settings['site_tagline']) ?>">
   <p class="help">網站最上方的深紅色橫條，留空即不顯示。The dark red strip at the very top. Leave empty to hide it.</p>

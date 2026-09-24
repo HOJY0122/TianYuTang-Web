@@ -1,5 +1,7 @@
 <?php
 $dateLines = App\Models\Event::formatDateLines($event);
+$qrSite    = (new App\Models\Setting())->site();
+$qrLogo    = $qrSite['site_logo_path'] ?: $qrSite['site_favicon_path'];
 ?>
 <!DOCTYPE html>
 <html lang="zh-Hant">
@@ -24,14 +26,19 @@ $dateLines = App\Models\Event::formatDateLines($event);
 <body>
 
 <div class="toolbar no-print">
-  <button class="primary" onclick="window.print()">🖨️ 列印海報</button>
-  <button onclick="downloadQr()">⬇️ 下載 PNG</button>
+  <button class="primary" onclick="window.print()">🖨️ 列印海報 Print poster</button>
+  <button onclick="downloadQr()">⬇️ 下載 PNG Download</button>
+  <?php if ($qrLogo): ?>
+    <label style="display:inline-flex;align-items:center;gap:6px;font-weight:700">
+      <input type="checkbox" id="withLogo" checked> 置中標誌 Logo in the middle
+    </label>
+  <?php endif; ?>
   <a href="<?= url('/admin/dashboard') ?>?event=<?= (int) $event['id'] ?>">← 返回後台</a>
   <span class="hint">可貼在佈告欄，或下載 PNG 放進 WhatsApp、海報、傳單。</span>
 </div>
 
 <div class="qr-poster">
-  <h1>天玉堂</h1>
+  <h1><?= h($qrSite['site_name']) ?></h1>
   <div class="sub"><?= h($event['year']) ?> <?= h($event['name']) ?></div>
   <div class="dates">
     <?php foreach ($dateLines as $i => $line): ?><?= $i ? '<br>' : '' ?><?= h($line) ?><?php endforeach; ?>
@@ -48,29 +55,62 @@ $dateLines = App\Models\Event::formatDateLines($event);
 
 <script src="<?= asset('js/qrcode.min.js') ?>"></script>
 <script>
-const SITE_URL = <?= json_encode($siteUrl, JSON_UNESCAPED_SLASHES) ?>;
+const SITE_URL = <?= json_encode($siteUrl, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?>;
+const LOGO_URL = <?= json_encode($qrLogo ? BASE_URL . '/' . $qrLogo : null, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?>;
 
-window.TYTQRCode.toCanvas(document.getElementById('eventQr'), SITE_URL, {
-  width: 300,
-  margin: 2,
-  // Posters get scuffed, photographed at an angle, and printed small.
-  // High correction still scans with roughly 30% of the code obscured.
-  errorCorrectionLevel: 'H',
-  color: { dark: '#000000', light: '#ffffff' }
-});
+// Error correction H: the code still scans with about 30% of it hidden —
+// which is what lets a logo sit in the middle. The logo and its white pad
+// take 22% of the width (about 5% of the area), well inside that margin.
+const QR_OPTS  = { margin: 2, errorCorrectionLevel: 'H', color: { dark: '#000000', light: '#ffffff' } };
+const LOGO_PAD = 0.22;
+let logoImg = null;
+
+function drawLogo(canvas) {
+  const box = document.getElementById('withLogo');
+  if (!logoImg || (box && !box.checked)) return;
+  const ctx  = canvas.getContext('2d');
+  const size = canvas.width * LOGO_PAD;
+  const x = (canvas.width - size) / 2, y = (canvas.height - size) / 2, r = size * 0.18;
+  // White rounded pad: scanners read a clean block far better than a
+  // logo blended into the black modules.
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.arcTo(x + size, y, x + size, y + size, r); ctx.arcTo(x + size, y + size, x, y + size, r);
+  ctx.arcTo(x, y + size, x, y, r); ctx.arcTo(x, y, x + size, y, r); ctx.closePath(); ctx.fill();
+  const inner = size * 0.84, ratio = Math.min(inner / logoImg.width, inner / logoImg.height);
+  const w = logoImg.width * ratio, h = logoImg.height * ratio;
+  ctx.drawImage(logoImg, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+}
+
+function render() {
+  const canvas = document.getElementById('eventQr');
+  // Drawn at 2× and shown at 300px, so it stays crisp when printed.
+  window.TYTQRCode.toCanvas(canvas, SITE_URL, Object.assign({ width: 600 }, QR_OPTS)).then(function () {
+    canvas.style.width = '300px'; canvas.style.height = '300px';
+    drawLogo(canvas);
+  });
+}
 
 function downloadQr() {
-  // Render larger than the on-screen version so the PNG holds up when
-  // someone drops it into a printed banner.
-  window.TYTQRCode.toDataURL(SITE_URL, {
-    width: 1200, margin: 2, errorCorrectionLevel: 'H'
-  }).then(function (url) {
+  // Larger than the on-screen version so it holds up on a printed banner.
+  const big = document.createElement('canvas');
+  window.TYTQRCode.toCanvas(big, SITE_URL, Object.assign({ width: 1200 }, QR_OPTS)).then(function () {
+    drawLogo(big);
     const a = document.createElement('a');
-    a.href = url;
+    a.href = big.toDataURL('image/png');
     a.download = 'tianyutang-<?= (int) $event['year'] ?>-qr.png';
     a.click();
   });
 }
+
+if (LOGO_URL) {
+  const img = new Image();
+  img.onload = function () { logoImg = img; render(); };
+  img.onerror = render;              // no logo? still show a plain QR
+  img.src = LOGO_URL;
+  document.getElementById('withLogo').addEventListener('change', render);
+}
+render();
 </script>
 
 </body>

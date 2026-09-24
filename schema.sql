@@ -53,6 +53,12 @@ CREATE TABLE IF NOT EXISTS events (
     rsvp_note         TEXT         NULL,              -- note above the registration form
     donation_note     TEXT         NULL,              -- note above the donation form
 
+    -- Online donation limits (migration 009). NULL = no limit of our own.
+    seats_min         SMALLINT UNSIGNED NULL DEFAULT NULL,
+    seats_max         SMALLINT UNSIGNED NULL DEFAULT NULL,
+    free_min          DECIMAL(10,2)     NULL DEFAULT NULL,
+    free_max          DECIMAL(10,2)     NULL DEFAULT NULL,
+
     -- Money and limits (per event — prices change between years)
     merit_table_price DECIMAL(10,2) NOT NULL DEFAULT 500.00,
     max_attendees     TINYINT UNSIGNED NOT NULL DEFAULT 10,
@@ -260,7 +266,8 @@ INSERT IGNORE INTO schema_migrations (filename, how) VALUES
     ('005_add_roles_and_settings.sql',         'detected'),
     ('006_split_roles_and_walkin.sql',         'detected'),
     ('007_add_login_attempts.sql',             'detected'),
-    ('008_site_content_and_mixed_donations.sql','detected');
+    ('008_site_content_and_mixed_donations.sql','detected'),
+    ('009_donation_limits.sql',                'detected');
 
 -- ============================================================
 -- Seed data

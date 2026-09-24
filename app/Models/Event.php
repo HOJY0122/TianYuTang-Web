@@ -222,7 +222,25 @@ class Event extends Model
         'welcome_zh', 'welcome_en', 'contact_info',
         'maps_url', 'waze_url', 'waze_qr_path',
         'rsvp_note', 'donation_note',
+        // Online donation limits (migration 009)
+        'seats_min', 'seats_max', 'free_min', 'free_max',
     ];
+
+    /**
+     * The online donation limits that apply to an event: the committee's
+     * own where set, otherwise the system's built-in safety caps.
+     *
+     * @return array{seats_min:int, seats_max:int, free_min:float, free_max:float}
+     */
+    public static function donationLimits(array $event): array
+    {
+        return [
+            'seats_min' => max(1, (int) ($event['seats_min'] ?? 1)),
+            'seats_max' => min(Donation::MAX_SEATS, (int) ($event['seats_max'] ?? 0) ?: Donation::MAX_SEATS),
+            'free_min'  => max(1.0, (float) ($event['free_min'] ?? 1)),
+            'free_max'  => min((float) Donation::MAX_FREEWILL, (float) ($event['free_max'] ?? 0) ?: (float) Donation::MAX_FREEWILL),
+        ];
+    }
 
     /** Update the editable fields of an event. */
     public function update(int $id, array $fields): bool
@@ -381,6 +399,18 @@ class Event extends Model
             if (mb_strlen((string) ($input[$key] ?? '')) > 3000) {
                 $errors[] = '文字內容過長（3000 字以內）。Text is too long (max 3000).';
                 break;
+            }
+        }
+        // Donation limits: each optional, but a minimum above its maximum
+        // would make every online donation impossible.
+        foreach ([['seats_min', 'seats_max', '功德席', 'seats', Donation::MAX_SEATS],
+                  ['free_min', 'free_max', '隨喜金額', 'freewill', Donation::MAX_FREEWILL]] as [$lo, $hi, $zh, $en, $cap]) {
+            $min = $input[$lo] ?? null;
+            $max = $input[$hi] ?? null;
+            if (($min !== null && ($min < 1 || $min > $cap)) || ($max !== null && ($max < 1 || $max > $cap))) {
+                $errors[] = "{$zh}上下限須介於 1 至 " . number_format($cap) . "。{$en} limits must be between 1 and " . number_format($cap) . '.';
+            } elseif ($min !== null && $max !== null && $min > $max) {
+                $errors[] = "{$zh}最少不可大於最多。The {$en} minimum cannot be above the maximum.";
             }
         }
         if (mb_strlen((string) ($input['contact_info'] ?? '')) > 255) {

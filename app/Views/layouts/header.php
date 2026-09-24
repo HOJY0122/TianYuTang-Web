@@ -36,15 +36,26 @@ $navItems = [
 <title><?= h(($pageTitle ?? '') !== '' ? $pageTitle . '｜' . $siteName : $siteName) ?></title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;800&display=swap" rel="stylesheet">
+<?php [$_hFamily, $_hParam] = (new App\Models\Setting())->headingFont(); ?>
+<link href="https://fonts.googleapis.com/css2?family=<?= $_hParam ?><?= $_hParam !== 'LXGW+WenKai+TC:wght@400;700' ? '&family=LXGW+WenKai+TC:wght@400;700' : '' ?>&family=Noto+Sans+TC:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= asset('css/style.css') ?>">
+<style>
+/* Heading typeface chosen by the system admin (Site settings). Rare
+   characters it lacks fall back to LXGW WenKai TC, glyph by glyph. */
+:root{--kai:"<?= h($_hFamily) ?>","LXGW WenKai TC","BiauKai","DFKai-SB","標楷體",serif;--kai-weight:<?= $_hFamily === 'LXGW WenKai TC' ? 700 : 400 ?>}
+</style>
 <?php if ($siteFavicon): ?>
 <link rel="icon" href="<?= h($uploadUrl($siteFavicon)) ?>">
 <link rel="apple-touch-icon" href="<?= h($uploadUrl($siteFavicon)) ?>">
 <?php endif; ?>
 <script>
-// Remembered larger text, applied before the page draws so it never jumps.
-try { if (localStorage.getItem('tyt-text') === 'lg') document.documentElement.classList.add('text-lg'); } catch (e) {}
+// Remembered accessibility choices, applied before the page draws so it never jumps.
+try {
+  var a = JSON.parse(localStorage.getItem('tyt-a11y') || '{}');
+  if (a.size === 'lg') document.documentElement.classList.add('text-lg');
+  if (a.size === 'xl') document.documentElement.classList.add('text-xl');
+  if (a.hc) document.documentElement.classList.add('hc');
+} catch (e) {}
 </script>
 </head>
 <body>
@@ -74,8 +85,29 @@ try { if (localStorage.getItem('tyt-text') === 'lg') document.documentElement.cl
       </span>
     </a>
 
-    <button type="button" class="text-toggle" id="textToggle" aria-pressed="false"
-            title="放大字體 Larger text">A+</button>
+    <div class="a11y">
+      <button type="button" class="a11y-btn" id="a11yBtn" aria-expanded="false" aria-controls="a11yPanel"
+              title="無障礙設定 Accessibility">
+        <!-- Universal access symbol: a person with open arms, in a circle -->
+        <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" stroke-width="2"/>
+          <circle cx="12" cy="6.3" r="1.7" fill="currentColor"/>
+          <path d="M6.5 9.2l5.5 1.3 5.5-1.3M12 10.5v3.6M12 14.1l-2.6 4.6M12 14.1l2.6 4.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="sr-only">無障礙設定 Accessibility</span>
+      </button>
+      <div class="a11y-panel" id="a11yPanel" role="dialog" aria-label="無障礙設定 Accessibility" hidden>
+        <div class="a11y-title">無障礙設定 <span class="en">Accessibility</span></div>
+        <div class="a11y-label">文字大小 <span class="en">Text size</span></div>
+        <div class="a11y-sizes" role="group" aria-label="文字大小 Text size">
+          <button type="button" data-size="md" style="font-size:1rem">A<small>標準 Normal</small></button>
+          <button type="button" data-size="lg" style="font-size:1.25rem">A<small>大 Large</small></button>
+          <button type="button" data-size="xl" style="font-size:1.5rem">A<small>特大 X-Large</small></button>
+        </div>
+        <label class="a11y-switch"><input type="checkbox" id="a11yContrast"> 高對比 <span class="en">High contrast</span></label>
+        <button type="button" class="a11y-reset" id="a11yReset">↺ 重設 Reset</button>
+      </div>
+    </div>
 
     <nav class="site-nav" aria-label="主選單 Main menu">
       <?php // Prefixed loop variables: this file shares scope with the page.
@@ -89,13 +121,44 @@ try { if (localStorage.getItem('tyt-text') === 'lg') document.documentElement.cl
 </header>
 <script>
 (function () {
-  var btn = document.getElementById('textToggle');
-  var root = document.documentElement;
-  btn.setAttribute('aria-pressed', root.classList.contains('text-lg') ? 'true' : 'false');
-  btn.addEventListener('click', function () {
-    var on = root.classList.toggle('text-lg');
-    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-    try { localStorage.setItem('tyt-text', on ? 'lg' : ''); } catch (e) {}
+  var root = document.documentElement, btn = document.getElementById('a11yBtn'), panel = document.getElementById('a11yPanel');
+  var contrast = document.getElementById('a11yContrast');
+  function load() { try { return JSON.parse(localStorage.getItem('tyt-a11y') || '{}'); } catch (e) { return {}; } }
+  function apply(a) {
+    root.classList.toggle('text-lg', a.size === 'lg');
+    root.classList.toggle('text-xl', a.size === 'xl');
+    root.classList.toggle('hc', !!a.hc);
+    panel.querySelectorAll('[data-size]').forEach(function (b) {
+      b.setAttribute('aria-pressed', (a.size || 'md') === b.dataset.size ? 'true' : 'false');
+    });
+    contrast.checked = !!a.hc;
+    try { localStorage.setItem('tyt-a11y', JSON.stringify(a)); } catch (e) {}
+  }
+  function open(show) { panel.hidden = !show; btn.setAttribute('aria-expanded', show ? 'true' : 'false'); }
+  var state = load();
+  apply(state);
+  btn.addEventListener('click', function (e) { e.stopPropagation(); open(panel.hidden); });
+  panel.addEventListener('click', function (e) { e.stopPropagation(); });
+  panel.querySelectorAll('[data-size]').forEach(function (b) {
+    b.addEventListener('click', function () { state.size = b.dataset.size; apply(state); });
+  });
+  contrast.addEventListener('change', function () { state.hc = contrast.checked; apply(state); });
+  document.getElementById('a11yReset').addEventListener('click', function () { state = {}; apply(state); });
+  document.addEventListener('click', function () { open(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !panel.hidden) { open(false); btn.focus(); } });
+
+  // ⓘ info buttons anywhere on the page: tap to show, tap again / elsewhere to hide.
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest ? e.target.closest('.info-btn') : null;
+    document.querySelectorAll('.info-pop:not([hidden])').forEach(function (p) {
+      if (!t || p.id !== t.getAttribute('aria-controls')) { p.hidden = true; var o = document.querySelector('[aria-controls="' + p.id + '"]'); if (o) o.setAttribute('aria-expanded', 'false'); }
+    });
+    if (t) {
+      e.preventDefault();
+      var pop = document.getElementById(t.getAttribute('aria-controls'));
+      pop.hidden = !pop.hidden;
+      t.setAttribute('aria-expanded', pop.hidden ? 'false' : 'true');
+    }
   });
 })();
 </script>

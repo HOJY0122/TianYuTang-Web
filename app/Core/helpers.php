@@ -66,3 +66,17 @@ function rm_compact(float $amount): string
     $whole = abs($amount - round($amount)) < 0.005;
     return 'RM ' . number_format($amount, $whole ? 0 : 2);
 }
+
+/**
+ * An ⓘ button with a short bilingual explanation that opens on tap.
+ * Used beside fields a visitor may hesitate over ("why do you need my
+ * IC?"). The click handling lives in layouts/header.php.
+ */
+function info_tip(string $zh, string $en): string
+{
+    static $n = 0;
+    $id = 'info' . (++$n);
+    return '<button type="button" class="info-btn" aria-expanded="false" aria-controls="' . $id . '" title="說明 More info">'
+         . '<span aria-hidden="true">i</span><span class="sr-only">說明 More info</span></button>'
+         . '<span class="info-pop" id="' . $id . '" role="note" hidden>' . h($zh) . '<span class="en">' . h($en) . '</span></span>';
+}

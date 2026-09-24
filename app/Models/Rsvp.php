@@ -483,4 +483,34 @@ class Rsvp extends Model
         }
         return $out;
     }
+
+    /**
+     * Every attendee of every registration (cancelled included), in the
+     * order they registered — one row per person, for the Excel export.
+     */
+    public function masterList(int $eventId): array
+    {
+        return $this->fetchAll(
+            'SELECT g.id AS group_id, g.ref_code, g.created_at, g.attendee_count, g.status, g.source, g.recorded_by,
+                    a.id AS attendee_id, a.name, a.ic_no, a.contact_no, a.checked_in_at
+             FROM rsvp_groups g JOIN rsvp_attendees a ON a.group_id = g.id
+             WHERE g.event_id = ?
+             ORDER BY g.id, a.id',
+            [$eventId]
+        );
+    }
+
+    /** @return array<int,int> group size => how many registrations of that size (not cancelled) */
+    public function groupSizes(int $eventId): array
+    {
+        $out = [];
+        foreach ($this->fetchAll(
+            "SELECT attendee_count AS size, COUNT(*) AS n FROM rsvp_groups
+             WHERE event_id = ? AND status <> 'cancelled' GROUP BY attendee_count",
+            [$eventId]
+        ) as $r) {
+            $out[(int) $r['size']] = (int) $r['n'];
+        }
+        return $out;
+    }
 }

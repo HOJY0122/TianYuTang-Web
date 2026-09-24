@@ -139,35 +139,92 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
   <section class="panel form-sec" id="ai">
   <h3>⑤ AI 讀取收據 <span class="en">AI receipt reading</span></h3>
   <?php
-    [$aiWhere, $aiKey] = App\Core\ReceiptReader::keySource();
-    $aiFrom = ['config' => 'config/config.php', 'env' => '伺服器環境變數 server environment', 'settings' => '本頁 this page'][$aiWhere] ?? '';
+    $aiProvider = App\Core\ReceiptReader::provider();
+    $aiFromText = ['config' => 'config/config.php', 'env' => '伺服器環境變數 server environment', 'settings' => '本頁 this page'];
   ?>
-  <div class="ai-status <?= $aiKey !== '' ? 'is-on' : 'is-off' ?>">
-    <?php if ($aiKey !== ''): ?>
-      <strong>✓ 已設定金鑰 Key set</strong> <code><?= h(App\Core\ReceiptReader::mask($aiKey)) ?></code>
-      <span class="help">來源 From: <?= h($aiFrom) ?></span>
-    <?php else: ?>
-      <strong>✕ 尚未設定金鑰 No key yet</strong>
-      <span class="help">收據只能手動輸入。Receipts can only be typed in by hand.</span>
-    <?php endif; ?>
+  <label>使用哪個 AI 服務 <span class="en">Which AI service</span></label>
+  <div class="ai-choice" role="radiogroup">
+    <?php foreach (App\Core\ReceiptReader::PROVIDERS as $pKey => [$pLabel, $pPrefix, $pUrl]): ?>
+      <?php [$pWhere, $pKeyVal] = App\Core\ReceiptReader::keySource($pKey); ?>
+      <label class="ai-option">
+        <input type="radio" name="ai_provider" value="<?= $pKey ?>"<?= $aiProvider === $pKey ? ' checked' : '' ?>>
+        <span class="ai-option-body">
+          <strong><?= h($pLabel) ?></strong>
+          <small><?= $pKey === 'anthropic'
+              ? '讀手寫中文最準確，按用量收費。Best at handwritten Chinese; paid per use.'
+              : ($pKey === 'nvidia'
+                  ? '有免費額度，開源模型，手寫中文較不準。Free credits; open models, weaker on handwritten Chinese.'
+                  : '每月首 1,000 張免費，手寫辨識好；只讀文字，欄位由系統按標籤推斷。First 1,000 a month free, good with handwriting; reads text only — fields are worked out from the printed labels.') ?></small>
+          <span class="ai-key-state <?= $pKeyVal !== '' ? 'on' : 'off' ?>"><?= $pKeyVal !== ''
+              ? '✓ 金鑰 Key ' . h(App\Core\ReceiptReader::mask($pKeyVal)) . ' · ' . h($aiFromText[$pWhere] ?? '')
+              : '✕ 未有金鑰 No key' ?></span>
+        </span>
+      </label>
+    <?php endforeach; ?>
   </div>
   <?php foreach (App\Core\ReceiptReader::setupHints() as $hint): ?>
     <p class="flash error" style="white-space:pre-line;margin:10px 0 0">⚠️ <?= h($hint) ?></p>
   <?php endforeach; ?>
-  <label for="anthropic_api_key">Anthropic API 金鑰 <span class="en">API key</span></label>
-  <div class="pw-field">
-    <input id="anthropic_api_key" name="anthropic_api_key" type="password" autocomplete="off" spellcheck="false"
-           placeholder="<?= $aiWhere === 'settings' ? '已儲存，留空保持不變 Saved — leave empty to keep it' : 'sk-ant-api03-…' ?>">
-    <button type="button" class="pw-eye" data-toggle-password="anthropic_api_key" title="顯示 Show">👁</button>
+
+  <div class="ai-panel" data-ai-panel="anthropic">
+    <label for="anthropic_api_key">Anthropic API 金鑰 <span class="en">API key</span></label>
+    <div class="pw-field">
+      <input id="anthropic_api_key" name="anthropic_api_key" type="password" autocomplete="off" spellcheck="false"
+             placeholder="<?= App\Core\ReceiptReader::keySource('anthropic')[0] === 'settings' ? '已儲存，留空保持不變 Saved — leave empty to keep it' : 'sk-ant-api03-…' ?>">
+      <button type="button" class="pw-eye" data-toggle-password="anthropic_api_key" title="顯示 Show">👁</button>
+    </div>
+    <p class="help">到 <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a> 建立金鑰（sk-ant- 開頭）並儲值。模型 Model：<code><?= h(App\Core\ReceiptReader::model('anthropic')) ?></code>
+      <span class="en">Create a key at console.anthropic.com (starts with sk-ant-) and add credit.</span></p>
+    <?php if (App\Core\ReceiptReader::keySource('anthropic')[0] === 'settings'): ?>
+      <label class="check-row" style="font-weight:600"><input type="checkbox" name="remove_anthropic_key" value="1" style="width:auto"> 移除已儲存的 Anthropic 金鑰 <span class="en">Remove the saved key</span></label>
+    <?php endif; ?>
   </div>
-  <p class="help">到 <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a> 建立金鑰（以 sk-ant- 開頭），貼在這裡，先按「測試連線」再儲存。每讀一張收據會向 Anthropic 帳戶收費。
-    <span class="en">Create a key at console.anthropic.com (it starts with sk-ant-), paste it here, press Test connection, then Save. Each receipt read is billed to that Anthropic account.</span></p>
-  <?php if ($aiWhere === 'settings'): ?>
-    <label class="check-row" style="font-weight:600"><input type="checkbox" name="remove_api_key" value="1" style="width:auto"> 移除已儲存的金鑰 <span class="en">Remove the saved key</span></label>
-  <?php endif; ?>
+
+  <div class="ai-panel" data-ai-panel="nvidia">
+    <label for="nvidia_api_key">NVIDIA API 金鑰 <span class="en">API key</span></label>
+    <div class="pw-field">
+      <input id="nvidia_api_key" name="nvidia_api_key" type="password" autocomplete="off" spellcheck="false"
+             placeholder="<?= App\Core\ReceiptReader::keySource('nvidia')[0] === 'settings' ? '已儲存，留空保持不變 Saved — leave empty to keep it' : 'nvapi-…' ?>">
+      <button type="button" class="pw-eye" data-toggle-password="nvidia_api_key" title="顯示 Show">👁</button>
+    </div>
+    <p class="help">到 <a href="https://build.nvidia.com/" target="_blank" rel="noopener">build.nvidia.com</a> 登入，在任何模型頁按「Get API Key」取得金鑰（nvapi- 開頭）。
+      <span class="en">Sign in at build.nvidia.com and press “Get API Key” on any model page (starts with nvapi-).</span></p>
+    <label for="nvidia_model">模型 <span class="en">Model (must accept images)</span></label>
+    <input id="nvidia_model" name="nvidia_model" list="nvidiaModels" maxlength="120" value="<?= h(App\Core\ReceiptReader::model('nvidia')) ?>" spellcheck="false">
+    <datalist id="nvidiaModels">
+      <?php foreach (App\Core\ReceiptReader::NVIDIA_MODELS as $m): ?><option value="<?= h($m) ?>"><?php endforeach; ?>
+    </datalist>
+    <p class="help">可直接從清單選，或貼上 build.nvidia.com 上任何「視覺 Vision」模型的名稱。讀不準時可換一個試試。
+      <span class="en">Pick from the list, or paste the name of any vision model on build.nvidia.com. If readings are poor, try another.</span></p>
+    <?php if (App\Core\ReceiptReader::keySource('nvidia')[0] === 'settings'): ?>
+      <label class="check-row" style="font-weight:600"><input type="checkbox" name="remove_nvidia_key" value="1" style="width:auto"> 移除已儲存的 NVIDIA 金鑰 <span class="en">Remove the saved key</span></label>
+    <?php endif; ?>
+  </div>
+
+  <div class="ai-panel" data-ai-panel="google">
+    <label for="google_api_key">Google Cloud API 金鑰 <span class="en">API key</span></label>
+    <div class="pw-field">
+      <input id="google_api_key" name="google_api_key" type="password" autocomplete="off" spellcheck="false"
+             placeholder="<?= App\Core\ReceiptReader::keySource('google')[0] === 'settings' ? '已儲存，留空保持不變 Saved — leave empty to keep it' : 'AIza…' ?>">
+      <button type="button" class="pw-eye" data-toggle-password="google_api_key" title="顯示 Show">👁</button>
+    </div>
+    <ol class="setup-steps">
+      <li>在 <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud</a> 選好專案，到「API 和服務 → 程式庫」啟用 <strong>Cloud Vision API</strong>。
+        <span class="en">Pick your project, then APIs &amp; Services → Library → enable <strong>Cloud Vision API</strong>.</span></li>
+      <li>到「帳單」確認已連結付款方式（每月首 1,000 張免費）。<span class="en">Under Billing, make sure a payment method is linked (the first 1,000 a month are free).</span></li>
+      <li>到「API 和服務 → 憑證」→「建立憑證 → API 金鑰」，複製 AIza 開頭的金鑰貼在上面。
+        <span class="en">APIs &amp; Services → Credentials → Create credentials → API key; paste the key (starts with AIza) above.</span></li>
+      <li>建議：編輯金鑰，「API 限制」選 Cloud Vision API；「應用程式限制」保持「無」（網站限制會擋住伺服器）。
+        <span class="en">Recommended: edit the key, restrict it to Cloud Vision API, and leave Application restrictions at None (a website restriction blocks the server).</span></li>
+    </ol>
+    <?php if (App\Core\ReceiptReader::keySource('google')[0] === 'settings'): ?>
+      <label class="check-row" style="font-weight:600"><input type="checkbox" name="remove_google_key" value="1" style="width:auto"> 移除已儲存的 Google 金鑰 <span class="en">Remove the saved key</span></label>
+    <?php endif; ?>
+  </div>
+
   <div class="ai-actions">
     <button type="submit" class="mini-btn btn-lg" formaction="<?= url('/system/ai-test') ?>" formnovalidate>🔌 測試連線 <span class="en">Test connection</span></button>
-    <span class="help">檢查金鑰與帳戶餘額：不讀取收據，只送出一個極小的要求（遠低於 RM 0.01）。Checks the key and that the account has credit, with one tiny request (well under RM 0.01) — no receipt is read.</span>
+    <span class="help">測試所選的服務：只送出一個極小的要求，不讀取收據。Tests the service chosen above with one tiny request — no receipt is read.</span>
   </div>
   </section>
   </div>
@@ -178,6 +235,15 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
   </div>
 </form>
 <script>
+// Show only the key box for the AI service that is chosen.
+(function () {
+  function sync() {
+    var chosen = (document.querySelector('input[name="ai_provider"]:checked') || {}).value;
+    document.querySelectorAll('[data-ai-panel]').forEach(function (p) { p.hidden = p.dataset.aiPanel !== chosen; });
+  }
+  document.querySelectorAll('input[name="ai_provider"]').forEach(function (r) { r.addEventListener('change', sync); });
+  sync();
+})();
 document.querySelectorAll('[data-reset]').forEach(function (b) {
   b.addEventListener('click', function () {
     var input = document.getElementById(b.dataset.reset);

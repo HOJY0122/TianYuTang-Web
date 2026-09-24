@@ -100,6 +100,17 @@ The temple's paper receipt book, kept online.
 The list can be searched, filtered by date and payment, sorted by any
 column, and exported to Excel. Photos are private (`storage/receipts`).
 
+**Choosing the reading service:** Site settings → ⑤ AI offers
+**Anthropic Claude** (most accurate on handwritten Chinese, paid per use),
+**NVIDIA** (build.nvidia.com, free credits, open vision models such as
+`meta/llama-3.2-90b-vision-instruct` — expect more corrections) or
+**Google Cloud Vision** (OCR, first 1,000 scans a month free, good with
+handwriting). Google returns words only; `ReceiptOcrParser` places them
+using the printed labels (布施 … 總數, No., 日期, 姓名), and the full scanned
+text is shown beside the photo. Each has
+its own key box; NVIDIA also has a model box. Test connection checks the
+service that is selected.
+
 **Turning AI reading on:** a system admin opens 網站設定 Site settings →
 ⑤ AI, pastes an API key from console.anthropic.com, presses
 **🔌 測試連線 Test connection** (a free check), then Save. The key can also go in

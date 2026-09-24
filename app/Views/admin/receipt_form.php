@@ -29,8 +29,8 @@ $imgUrl  = $isNew
 $aiNotes = $isNew ? ($draft['ai_notes'] ?? null) : ($row['ai_notes'] ?? null);
 ?>
 <?php if ($isNew && ($draft['source'] ?? '') === 'ai'): ?>
-  <div class="flash info">🤖 <strong>AI 已填好草稿，請對照相片核對後再儲存。</strong> The AI has filled in a draft — please check it against the photo, then save.
-    <?php if ($unsure): ?><br>🟨 黃色欄位是 AI 不確定的地方。Yellow fields are ones the AI was unsure of.<?php endif; ?></div>
+  <div class="flash info">🤖 <strong>已自動讀取並填好草稿，請對照相片核對後再儲存。</strong> A draft has been filled in automatically — please check it against the photo, then save.
+    <?php if ($unsure): ?><br>🟨 黃色欄位最需要再看一眼。Yellow fields need a second look most.<?php endif; ?></div>
 <?php endif; ?>
 <?php if ($duplicate): ?>
   <div class="flash error">⚠️ 已有另一張收據使用 No. <?= h($duplicate['receipt_no']) ?>（<?= h($duplicate['name'] ?? '—') ?>，<?= rm((float) $duplicate['total']) ?>）。
@@ -50,6 +50,13 @@ $aiNotes = $isNew ? ($draft['ai_notes'] ?? null) : ($row['ai_notes'] ?? null);
       </div>
       <div class="photo-view" id="photoView"><img src="<?= h($imgUrl) ?>" alt="收據相片 Receipt photo" id="photoImg"></div>
       <?php if ($aiNotes): ?><figcaption class="help">🤖 <?= h($aiNotes) ?></figcaption><?php endif; ?>
+      <?php if ($isNew && !empty($draft['ocr_text'])): ?>
+        <details class="ocr-text" open>
+          <summary>🔤 掃描到的文字 <span class="en">Text found in the photo</span></summary>
+          <pre><?= h($draft['ocr_text']) ?></pre>
+          <p class="help">可以從這裡複製貼上到右邊的欄位。You can copy from here into the fields.</p>
+        </details>
+      <?php endif; ?>
     </figure>
   <?php endif; ?>
 

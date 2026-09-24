@@ -70,11 +70,19 @@ class SystemController extends Controller
     {
         $this->requireSystemAdmin();
         $this->requireCsrf();
-        $typed  = ReceiptReader::tidyKey(is_string($_POST['anthropic_api_key'] ?? null) ? $_POST['anthropic_api_key'] : '');
-        $result = (new ReceiptReader())->testConnection($typed !== '' ? $typed : null);
-        $note   = $typed !== '' ? "\n（測試的是剛輸入、尚未儲存的金鑰，記得按「儲存設定」。Tested the key you typed — remember to Save.）" : '';
+        // Test the service chosen on the page (even before saving), with
+        // the key and model typed there if any, otherwise the saved ones.
+        $provider = is_string($_POST['ai_provider'] ?? null) && isset(ReceiptReader::PROVIDERS[$_POST['ai_provider']])
+            ? $_POST['ai_provider'] : ReceiptReader::provider();
+        $typed  = ReceiptReader::tidyKey(is_string($_POST[$provider . '_api_key'] ?? null) ? $_POST[$provider . '_api_key'] : '');
+        $model  = $provider === 'nvidia' && is_string($_POST['nvidia_model'] ?? null)
+                  && preg_match('#^[A-Za-z0-9._\-/:]{3,120}$#', trim($_POST['nvidia_model'])) ? trim($_POST['nvidia_model']) : null;
+        $result = (new ReceiptReader())->testConnection($typed !== '' ? $typed : null, $provider, $model);
+        $label  = ReceiptReader::PROVIDERS[$provider][0];
+        $note   = ($typed !== '' || $provider !== ReceiptReader::provider())
+            ? "\n（測試的是本頁剛選／輸入、尚未儲存的設定，記得按「儲存設定」。Tested what is on the page — remember to Save.）" : '';
         $this->flash($result['ok'] ? 'success' : 'error',
-            $result['ok'] ? 'AI 連線成功 Connected' : 'AI 連線失敗 Not connected',
+            ($result['ok'] ? 'AI 連線成功 Connected' : 'AI 連線失敗 Not connected') . ' · ' . $label,
             $result['message'] . ($result['ok'] ? $note : ''));
         $this->redirect('/system#ai');
     }
@@ -201,19 +209,31 @@ class SystemController extends Controller
         foreach ($values as $key => $value) {
             $setting->set($key, $value);
         }
-        // AI key: only written when a new one is typed (the box is always
-        // empty on the page — a saved key is never sent back to the browser).
-        $newKey = ReceiptReader::tidyKey(is_string($_POST['anthropic_api_key'] ?? null) ? $_POST['anthropic_api_key'] : '');
-        if ($newKey !== '') {
-            if (!preg_match('/^sk-ant-[A-Za-z0-9_\-]{10,}$/', $newKey)) {
-                $this->flash('error', '金鑰格式不對 Key not saved',
-                    "Anthropic 金鑰以 sk-ant- 開頭，只含英文字母、數字、- 和 _。其他設定已儲存。\n"
-                    . 'Anthropic keys start with sk-ant- and contain only letters, numbers, - and _. Your other settings were saved.');
-                $this->redirect('/system#ai');
+        // AI: which service, its keys and (for NVIDIA) the model. A key is
+        // only written when a new one is typed — the boxes are always empty
+        // on the page, so a saved key is never sent back to the browser.
+        $provider = is_string($_POST['ai_provider'] ?? null) && isset(ReceiptReader::PROVIDERS[$_POST['ai_provider']])
+            ? $_POST['ai_provider'] : null;
+        if ($provider !== null) {
+            $setting->set('ai_provider', $provider);
+        }
+        foreach (ReceiptReader::PROVIDERS as $pKey => [$pLabel, $pPrefix]) {
+            $typed = ReceiptReader::tidyKey(is_string($_POST[$pKey . '_api_key'] ?? null) ? $_POST[$pKey . '_api_key'] : '');
+            if ($typed !== '') {
+                if (!str_starts_with($typed, $pPrefix) || !preg_match('/^[A-Za-z0-9_\-]{12,}$/', $typed)) {
+                    $this->flash('error', '金鑰格式不對 Key not saved',
+                        "{$pLabel} 金鑰以 {$pPrefix} 開頭，只含英文字母、數字、- 和 _。其他設定已儲存。\n"
+                        . "{$pLabel} keys start with {$pPrefix} and contain only letters, numbers, - and _. Your other settings were saved.");
+                    $this->redirect('/system#ai');
+                }
+                $setting->set($pKey . '_api_key', $typed);
+            } elseif (!empty($_POST['remove_' . $pKey . '_key'])) {
+                $setting->delete($pKey . '_api_key');
             }
-            $setting->set('anthropic_api_key', $newKey);
-        } elseif (!empty($_POST['remove_api_key'])) {
-            $setting->delete('anthropic_api_key');
+        }
+        $nvModel = is_string($_POST['nvidia_model'] ?? null) ? trim($_POST['nvidia_model']) : '';
+        if ($nvModel !== '' && preg_match('#^[A-Za-z0-9._\-/:]{3,120}$#', $nvModel)) {
+            $setting->set('nvidia_model', $nvModel);
         }
 
         // On/off switches: an unticked checkbox is simply absent from the POST.

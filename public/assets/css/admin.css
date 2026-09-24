@@ -697,3 +697,19 @@ details.guide > :not(summary){margin:0 20px 18px}
 .empty-card{text-align:center;padding:34px 20px;border-style:dashed}
 .empty-card .empty-icon{font-size:40px;margin-bottom:8px}
 .empty-card .en{display:block;font-weight:600;color:var(--muted);font-size:.9em}
+/* AI service choice */
+.ai-choice{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.ai-option{display:flex;gap:10px;align-items:flex-start;margin:0!important;padding:14px;border:2px solid #eadcb5;border-radius:14px;background:#fffdf6;cursor:pointer;font-weight:400!important}
+.ai-option input{width:20px!important;height:20px;margin-top:3px;flex:none;accent-color:#9f211b}
+.ai-option:has(input:checked){border-color:#9f211b;background:#fff4ec}
+.ai-option-body{display:flex;flex-direction:column;gap:4px}
+.ai-option-body small{color:var(--muted);line-height:1.5}
+.ai-key-state{font-size:12px;font-weight:700}
+.ai-key-state.on{color:#2e7d4f}.ai-key-state.off{color:#a3281f}
+.ai-panel[hidden]{display:none}
+.ocr-text{margin-top:12px;border:1px solid #eadcb5;border-radius:10px;background:#fffdf6;padding:8px 12px}
+.ocr-text summary{cursor:pointer;font-weight:800}
+.ocr-text summary .en{font-weight:500;color:var(--muted);font-size:.85em}
+.ocr-text pre{white-space:pre-wrap;word-break:break-word;margin:8px 0;max-height:260px;overflow:auto;font:14px/1.6 "Noto Sans TC",system-ui,sans-serif;background:#fff;border-radius:8px;padding:8px 10px;border:1px solid #f0e4c6}
+.setup-steps{margin:10px 0 0;padding-left:1.2rem;line-height:1.7;font-size:.92rem}
+.setup-steps .en{display:block;color:var(--muted);font-size:.9em}

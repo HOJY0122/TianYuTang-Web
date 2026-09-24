@@ -187,6 +187,15 @@ class Donation extends Model
      *
      * @param array{q?:string, status?:string, source?:string} $filters
      */
+    /** List sort choices: request value => SQL. Only these ever reach ORDER BY. */
+    public const SORTS = [
+        'ref'    => 'id',
+        'name'   => 'name',
+        'amount' => 'amount',
+        'status' => 'status',
+        'date'   => 'created_at',
+    ];
+
     public function search(int $eventId, array $filters, int $limit = 50, int $offset = 0): array
     {
         [$where, $params] = $this->filterSql($eventId, $filters);
@@ -194,7 +203,7 @@ class Donation extends Model
             'SELECT id, ref_code, source, name, contact_no, method, table_count, free_amount, amount,
                     status, receipt_path, recorded_by, notes, created_at
              FROM donations WHERE ' . $where . '
-             ORDER BY created_at DESC, id DESC
+             ORDER BY ' . Rsvp::orderBy($filters, self::SORTS, 'created_at') . ', id ' . Rsvp::dir($filters) . '
              LIMIT ' . (int) $limit . ' OFFSET ' . (int) $offset,
             $params
         );

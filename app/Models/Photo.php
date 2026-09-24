@@ -154,4 +154,23 @@ class Photo extends Model
         unset($year);
         return $years;
     }
+
+    /**
+     * Save a dragged order for one event's album: $ids from first to last.
+     * Only photos of that event are touched, so a crafted list cannot
+     * shuffle another year's album.
+     */
+    public function reorder(int $eventId, array $ids): void
+    {
+        $this->db->beginTransaction();
+        try {
+            foreach (array_values(array_unique(array_map('intval', $ids))) as $i => $id) {
+                $this->execute('UPDATE event_photos SET sort_order = ? WHERE id = ? AND event_id = ?', [$i + 1, $id, $eventId]);
+            }
+            $this->db->commit();
+        } catch (\Throwable $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
+    }
 }

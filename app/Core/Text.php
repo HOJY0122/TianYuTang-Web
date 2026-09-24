@@ -8,8 +8,9 @@ use App\Models\Setting;
  *
  * Each entry has a Chinese and an English default. The system admin can
  * replace either at 系統管理 → 網站文字 Wording; the replacement is
- * stored in the settings table as "txt.<key>.zh" / "txt.<key>.en".
- * Clearing a box brings the default back, so nothing can be lost for good.
+ * stored in the settings table as "txt.<key>.zh" / "txt.<key>.en" and
+ * used exactly as typed — an empty box shows nothing. The ↺ button on
+ * that page puts the default back.
  *
  * In views:
  *   t('home.news')        → "最新消息"                 (Chinese)
@@ -62,6 +63,7 @@ class Text
         'home.scan'           => ['home', '掃描導航', 'Scan for Waze'],
         'home.news'           => ['home', '最新消息', 'News & Announcements'],
         'home.pinned'         => ['home', '📌 置頂', 'Pinned'],
+        'home.read_more'      => ['home', '閱讀全文', 'Read more'],
         'home.photos'         => ['home', '活動留影', 'Photo Albums'],
         'home.photos_hint'    => ['home', '左右滑動看更多相片，點一下放大。', 'Swipe for more photos. Tap a photo to enlarge.'],
         'home.all_albums'     => ['home', '📸 瀏覽全部相簿', 'View all albums'],
@@ -127,8 +129,10 @@ class Text
         if ($item === null) {
             return $key;   // a typo shows up on the page instead of vanishing
         }
+        // A saved value is used exactly as typed — an empty one shows
+        // nothing. Only a text that was never changed uses the default.
         $saved = (new Setting())->all()["txt.{$key}.{$lang}"] ?? null;
-        $text  = ($saved !== null && $saved !== '') ? $saved : ($lang === 'en' ? $item[2] : $item[1]);
+        $text  = $saved ?? ($lang === 'en' ? $item[2] : $item[1]);
         if ($vars) {
             $pairs = [];
             foreach ($vars as $k => $v) {

@@ -328,6 +328,18 @@ class AdminController extends Controller
         $this->redirect('/admin/photos?event=' . (int) ($photo['event_id'] ?? 0));
     }
 
+    /** POST /admin/photos/reorder — event_id + ids[] in order, from drag and drop. Answers JSON. */
+    public function reorderPhotos(): void
+    {
+        $this->requireAdmin();
+        $this->requireCsrf();
+        $ids = is_array($_POST['ids'] ?? null) ? $_POST['ids'] : [];
+        (new Photo())->reorder((int) ($_POST['event_id'] ?? 0), array_slice($ids, 0, 2000));
+        header('Content-Type: application/json');
+        echo json_encode(['ok' => true]);
+        exit;
+    }
+
     /** POST /admin/photos/delete */
     public function deletePhoto(): void
     {

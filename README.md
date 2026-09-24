@@ -37,6 +37,7 @@ Adding a migration: create the next numbered file in `migrations/`
 | Event details — dates, venue, welcome text, Waze / Google Maps, form notes | ✓ | ✓ |
 | News posts on the home page, photo albums | ✓ | ✓ |
 | On the day — check-in, walk-in registration, counter donations | ✓ | ✓ |
+| Receipts — scan the paper receipt book (AI), search, edit, export | ✓ | ✓ |
 | Site settings — name, logo, banner, favicon, top bar (on/off), footer, printout letterhead | | ✓ |
 | Wording — every fixed text on the public site, both languages | | ✓ |
 | User accounts, QR generator | | ✓ |
@@ -73,8 +74,9 @@ site itself. Admins can never open `/system`.
 ## Wording, images and the counter
 
 - **網站文字 Wording** (system admin) — every fixed text on the public site,
-  grouped by page, in Chinese and English. Grey text is the default; empty
-  a box to get it back. Includes the ⓘ help panel text and printout titles.
+  one tab per page, with that page shown live beside the boxes as you type.
+  Boxes hold what the site shows now; **empty = show nothing**, ↺ puts the
+  default back. Includes the ⓘ help panel text and printout titles.
 - **Date line** — the home page writes it from the event dates; fill in
   *日期文字 Date line* in Event details to use your own words (e.g. the lunar date).
 - **Uploading pictures** — after choosing a file, an editor opens: drag to
@@ -84,3 +86,28 @@ site itself. Admins can never open `/system`.
   amount, and *確認收款* marks it paid with the time and the staff name.
   A donation QR scanned at check-in (or a registration QR at the counter)
   opens the right page automatically.
+
+## Receipts (收據紀錄)
+
+The temple's paper receipt book, kept online.
+
+1. **📷 掃描收據 Scan receipt** — photograph a receipt (rotate / crop if needed).
+2. **🤖 AI 讀取** — Claude (Anthropic) reads the handwriting into a draft:
+   number, date, name, item, each box (布施 祈福 蓮花燈 添油 龍香 塔香 樂捐 施齋 其他),
+   Cash / Bank-In, total and issued-by. Fields it is unsure of are yellow.
+3. **Check it against the photo, then Save.** Nothing is stored before that.
+
+The list can be searched, filtered by date and payment, sorted by any
+column, and exported to Excel. Photos are private (`storage/receipts`).
+
+**Turning AI reading on:** put an API key from console.anthropic.com in
+`config/config.php` (`ANTHROPIC_API_KEY`), or set that environment variable
+on the server. Without a key, receipts are typed in by hand beside the photo.
+Each reading is one request to Claude Opus 5 (`claude-opus-5`); the
+key is billed per use by Anthropic.
+
+## Ordering
+
+Photos and news posts are put in order by **dragging** (mouse or finger);
+the order saves when you let go. The ↑ ↓ buttons on photos still work.
+Registration, donation and receipt lists sort by clicking a column heading.

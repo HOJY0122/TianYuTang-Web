@@ -103,6 +103,10 @@ class PostController extends Controller
 
         if ($id) {
             $model->update($id, $f);
+            // Pinning a post that was not pinned brings it to the top.
+            if ($f['is_pinned'] && empty($post['is_pinned'])) {
+                $model->moveToTop($id);
+            }
         } else {
             $id = $model->create($f, (string) ($_SESSION['admin_username'] ?? 'admin'));
         }
@@ -115,6 +119,18 @@ class PostController extends Controller
             ? '消息已發佈到首頁。The post is live on the home page.'
             : '已存為草稿，首頁不會顯示。Saved as a draft — not shown on the home page.');
         $this->redirect('/admin/posts');
+    }
+
+    /** POST /admin/posts/reorder — ids[] top to bottom, from drag and drop. Answers JSON. */
+    public function reorder(): void
+    {
+        $this->requireAdmin();
+        $this->requireCsrf();
+        $ids = is_array($_POST['ids'] ?? null) ? $_POST['ids'] : [];
+        (new Post())->reorder(array_slice($ids, 0, 500));
+        header('Content-Type: application/json');
+        echo json_encode(['ok' => true]);
+        exit;
     }
 
     /** POST /admin/posts/delete */

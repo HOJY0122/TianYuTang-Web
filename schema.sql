@@ -241,10 +241,43 @@ CREATE TABLE IF NOT EXISTS posts (
     image_path   VARCHAR(255) NULL,
     is_published BOOLEAN NOT NULL DEFAULT TRUE,
     is_pinned    BOOLEAN NOT NULL DEFAULT FALSE,
+    sort_order   INT NOT NULL DEFAULT 0,          -- drag-and-drop order (migration 011)
     created_by   VARCHAR(50)  NULL,
     created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_feed (is_published, is_pinned, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Scanned paper receipts (migration 011) — see that file for the story.
+CREATE TABLE IF NOT EXISTS receipts (
+    id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    receipt_no    VARCHAR(30)   NULL,                 -- printed number, e.g. 26432
+    receipt_date  DATE          NULL,
+    item          VARCHAR(255)  NULL,                 -- 項目
+    name          VARCHAR(150)  NULL,                 -- 姓名 Name
+    amt_donation  DECIMAL(10,2) NOT NULL DEFAULT 0,   -- 布施
+    amt_blessing  DECIMAL(10,2) NOT NULL DEFAULT 0,   -- 祈福
+    amt_lotus     DECIMAL(10,2) NOT NULL DEFAULT 0,   -- 蓮花燈
+    amt_oil       DECIMAL(10,2) NOT NULL DEFAULT 0,   -- 添油
+    amt_dragon    DECIMAL(10,2) NOT NULL DEFAULT 0,   -- 龍香
+    amt_tower     DECIMAL(10,2) NOT NULL DEFAULT 0,   -- 塔香
+    amt_gift      DECIMAL(10,2) NOT NULL DEFAULT 0,   -- 樂捐
+    amt_meal      DECIMAL(10,2) NOT NULL DEFAULT 0,   -- 施齋
+    amt_other     DECIMAL(10,2) NOT NULL DEFAULT 0,   -- 其他
+    other_label   VARCHAR(100)  NULL,                 -- what "其他" was for
+    total         DECIMAL(10,2) NOT NULL DEFAULT 0,   -- 總數 as written
+    payment       ENUM('cash','bank','') NOT NULL DEFAULT '',
+    issued_by     VARCHAR(100)  NULL,                 -- 發據人
+    notes         TEXT          NULL,
+    image_path    VARCHAR(255)  NULL,                 -- private photo (storage/receipts)
+    source        ENUM('ai','manual') NOT NULL DEFAULT 'manual',
+    ai_notes      TEXT          NULL,                 -- what the AI was unsure about
+    created_by    VARCHAR(50)   NULL,
+    updated_by    VARCHAR(50)   NULL,
+    created_at    DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    DATETIME      NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_receipt_no (receipt_no),
+    INDEX idx_receipt_date (receipt_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================
@@ -272,7 +305,8 @@ INSERT IGNORE INTO schema_migrations (filename, how) VALUES
     ('007_add_login_attempts.sql',             'detected'),
     ('008_site_content_and_mixed_donations.sql','detected'),
     ('009_donation_limits.sql',                'detected'),
-    ('010_date_text_and_payment.sql',          'detected');
+    ('010_date_text_and_payment.sql',          'detected'),
+    ('011_receipts_and_post_order.sql',        'detected');
 
 -- ============================================================
 -- Seed data

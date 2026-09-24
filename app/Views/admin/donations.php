@@ -16,6 +16,7 @@ $here       = $pagerBase . '?' . http_build_query($pagerQuery + ['page' => $page
 <div class="panel">
   <form method="GET" action="<?= url('/admin/donations') ?>" class="toolbar">
     <input type="hidden" name="event" value="<?= $eid ?>">
+    <input type="hidden" name="sort" value="<?= h($filters['sort']) ?>"><input type="hidden" name="dir" value="<?= h($filters['dir']) ?>">
     <label class="field">搜尋 Search
       <input type="search" name="q" value="<?= h($filters['q']) ?>" placeholder="姓名、電話或編號 Name, phone, ref">
     </label>
@@ -49,7 +50,8 @@ $here       = $pagerBase . '?' . http_build_query($pagerQuery + ['page' => $page
     <p class="empty">沒有符合的布施。No matching donations.</p>
   <?php else: ?>
   <table class="records">
-    <thead><tr><th>編號 Ref</th><th>姓名 Name</th><th>內容 Details</th><th class="num">金額 Amount</th><th>付款 Payment</th><th>操作 Actions</th></tr></thead>
+    <thead><tr><?= sort_th('編號 Ref', 'ref', $pagerQuery, $pagerBase) ?><?= sort_th('姓名 Name', 'name', $pagerQuery, $pagerBase, 'asc') ?><th>內容 Details</th>
+      <?= sort_th('金額 Amount', 'amount', $pagerQuery, $pagerBase, 'desc', 'num') ?><?= sort_th('付款 Payment', 'status', $pagerQuery, $pagerBase, 'asc') ?><th>操作 Actions</th></tr></thead>
     <tbody>
     <?php foreach ($rows as $d): ?>
       <tr>

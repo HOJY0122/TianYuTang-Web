@@ -17,6 +17,12 @@ define('BASE_URL', $scriptDir === '/' ? '' : $scriptDir);
 // ---------- 2. Configuration ----------
 require BASE_PATH . '/config/config.php';
 
+// Pages may only be shown inside a frame on THIS site (the Wording
+// page's live preview). Another website framing the admin pages could
+// trick a signed-in admin into clicking buttons they cannot see.
+header('X-Frame-Options: SAMEORIGIN');
+header("Content-Security-Policy: frame-ancestors 'self'");
+
 // ---------- 3. Autoloader ----------
 // Maps App\Controllers\RsvpController → app/Controllers/RsvpController.php
 spl_autoload_register(static function (string $class): void {
@@ -79,6 +85,7 @@ $router->get('/admin/posts/new',      'PostController@form');
 $router->get('/admin/posts/edit',     'PostController@form');
 $router->post('/admin/posts/save',    'PostController@save');
 $router->post('/admin/posts/delete',  'PostController@delete');
+$router->post('/admin/posts/reorder', 'PostController@reorder');
 
 // Walk-in registration at the counter
 $router->get('/admin/walkin',       'WalkinController@index');
@@ -90,6 +97,7 @@ $router->get('/system/users',          'SystemController@users');
 $router->post('/system/settings',      'SystemController@saveSettings');
 $router->get('/system/wording',        'SystemController@wording');
 $router->post('/system/wording',       'SystemController@saveWording');
+$router->get('/system/wording/preview', 'SystemController@wordingPreview');
 $router->post('/system/users/create',  'SystemController@createUser');
 $router->post('/system/users/role',    'SystemController@changeRole');
 $router->post('/system/users/password','SystemController@resetPassword');
@@ -127,11 +135,24 @@ $router->get('/admin/export/donations-excel', 'ExportController@donationsExcel')
 $router->get('/admin/export/attendees.xlsx', 'ExportController@attendeesExcel');
 $router->get('/admin/export/donations.xlsx', 'ExportController@donationsExcel');
 
+// Paper receipt book — scanned (AI) or typed in, then kept and searched
+$router->get('/admin/receipts',         'ReceiptController@index');
+$router->get('/admin/receipts/new',     'ReceiptController@create');
+$router->post('/admin/receipts/scan',   'ReceiptController@scan');
+$router->get('/admin/receipts/review',  'ReceiptController@review');
+$router->get('/admin/receipts/edit',    'ReceiptController@edit');
+$router->post('/admin/receipts/save',   'ReceiptController@save');
+$router->post('/admin/receipts/delete', 'ReceiptController@delete');
+$router->post('/admin/receipts/cancel', 'ReceiptController@cancel');
+$router->get('/admin/receipts/image',   'ReceiptController@image');
+$router->get('/admin/receipts/excel',   'ReceiptController@excel');
+
 // Photo gallery
 $router->get('/admin/photos',          'AdminController@photos');
 $router->post('/admin/photos/upload',  'AdminController@uploadPhotos');
 $router->post('/admin/photos/caption', 'AdminController@updateCaption');
 $router->post('/admin/photos/move',    'AdminController@movePhoto');
+$router->post('/admin/photos/reorder', 'AdminController@reorderPhotos');
 $router->post('/admin/photos/delete',  'AdminController@deletePhoto');
 
 // ---------- 6. Go ----------

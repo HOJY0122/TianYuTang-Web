@@ -347,6 +347,26 @@ class Rsvp extends Model
      *
      * @param array{q?:string, status?:string, source?:string} $filters
      */
+    /** List sort choices: request value => SQL. Only these ever reach ORDER BY. */
+    public const GROUP_SORTS = [
+        'ref'    => 'g.id',
+        'name'   => 'lead_name',
+        'people' => 'g.attendee_count',
+        'status' => 'g.status',
+        'date'   => 'g.created_at',
+    ];
+
+    /** "column DIR" from a whitelist — never the raw request value. */
+    public static function orderBy(array $f, array $sorts, string $default): string
+    {
+        return ($sorts[$f['sort'] ?? ''] ?? $default) . ' ' . self::dir($f);
+    }
+
+    public static function dir(array $f): string
+    {
+        return strtolower((string) ($f['dir'] ?? '')) === 'asc' ? 'ASC' : 'DESC';
+    }
+
     public function searchGroups(int $eventId, array $filters, int $limit = 50, int $offset = 0): array
     {
         [$where, $params] = $this->groupFilterSql($eventId, $filters);
@@ -357,7 +377,7 @@ class Rsvp extends Model
                     (SELECT COUNT(*) FROM rsvp_attendees WHERE group_id = g.id AND checked_in_at IS NOT NULL) AS arrived
              FROM rsvp_groups g
              WHERE ' . $where . '
-             ORDER BY g.created_at DESC, g.id DESC
+             ORDER BY ' . self::orderBy($filters, self::GROUP_SORTS, 'g.created_at') . ', g.id ' . self::dir($filters) . '
              LIMIT ' . (int) $limit . ' OFFSET ' . (int) $offset,
             $params
         );

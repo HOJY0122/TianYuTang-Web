@@ -11,6 +11,7 @@ $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confi
 <div class="panel">
   <form method="GET" action="<?= url('/admin/registrations') ?>" class="toolbar">
     <input type="hidden" name="event" value="<?= $eid ?>">
+    <input type="hidden" name="sort" value="<?= h($filters['sort']) ?>"><input type="hidden" name="dir" value="<?= h($filters['dir']) ?>">
     <label class="field">搜尋 Search
       <input type="search" name="q" value="<?= h($filters['q']) ?>" placeholder="姓名、電話、證件或編號 Name, phone, IC, ref">
     </label>
@@ -46,7 +47,9 @@ $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confi
   <?php else: ?>
   <table class="records">
     <thead><tr>
-      <th>編號 Ref</th><th>聯絡人 Contact</th><th>人數 People</th><th>狀態 Status</th><th>報到 Arrived</th><th>操作 Actions</th>
+      <?= sort_th('編號 Ref', 'ref', $pagerQuery, $pagerBase) ?><?= sort_th('聯絡人 Contact', 'name', $pagerQuery, $pagerBase, 'asc') ?>
+      <?= sort_th('人數 People', 'people', $pagerQuery, $pagerBase) ?><?= sort_th('狀態 Status', 'status', $pagerQuery, $pagerBase, 'asc') ?>
+      <th>報到 Arrived</th><th>操作 Actions</th>
     </tr></thead>
     <tbody>
     <?php foreach ($groups as $g): ?>

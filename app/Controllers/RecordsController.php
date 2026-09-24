@@ -267,6 +267,10 @@ class RecordsController extends Controller
         foreach ($keys as $k) {
             $out[$k] = is_string($_GET[$k] ?? null) ? $_GET[$k] : '';
         }
+        // Sorting: which column (checked against a whitelist in the model)
+        // and which way. Newest first until the admin picks otherwise.
+        $out['sort'] = is_string($_GET['sort'] ?? null) && preg_match('/^[a-z]{1,10}$/', $_GET['sort']) ? $_GET['sort'] : 'date';
+        $out['dir']  = ($_GET['dir'] ?? '') === 'asc' ? 'asc' : 'desc';
         return $out;
     }
 

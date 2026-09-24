@@ -14,11 +14,17 @@ $showMap    = $hasQrImage || $wazeUrl !== '' || $mapsUrl !== '';
 
 <main id="main">
 
-<?php if ($siteHeroBanner): ?>
-  <!-- The banner is shown whole: never faded, never cropped. -->
-  <div class="banner">
-    <img src="<?= h($uploadUrl($siteHeroBanner)) ?>" alt="<?= h($siteName) ?>">
-  </div>
+<?php
+// Banner slideshow (System → 首頁橫幅). With no slides yet, an old event
+// banner is shown as a single picture.
+$bannerSlides = (new App\Models\Banner())->active();
+if (!$bannerSlides && $siteHeroBanner) {
+    $bannerSlides = (new App\Models\Banner())->withSizes([['id' => 0, 'image_path' => $siteHeroBanner, 'img_w' => null, 'img_h' => null,
+        'pos_x' => 50, 'pos_y' => 50, 'zoom' => 100, 'caption_zh' => null, 'caption_en' => null, 'link_url' => null]]);
+}
+?>
+<?php if ($bannerSlides): ?>
+  <?php $bannerSite = $site; $bannerAlt = $siteName; require BASE_PATH . '/app/Views/partials/banner_show.php'; ?>
 <?php else: ?>
   <div class="hero-fallback">
     <h1><?= h($siteName) ?></h1>

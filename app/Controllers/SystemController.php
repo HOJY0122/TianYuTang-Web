@@ -164,6 +164,11 @@ class SystemController extends Controller
     public function wordingPreview(): void
     {
         $this->requireSystemAdmin();
+        if (($_GET['kind'] ?? '') === 'login') {
+            // The login page as a signed-out visitor sees it (nothing is submitted from here).
+            $this->view('admin/login', ['error' => null, 'site' => (new Setting())->site(), 'preview' => true]);
+            return;
+        }
         $isRsvp = ($_GET['kind'] ?? 'rsvp') !== 'don';
         $event  = (new Event())->active();
         $this->view('confirm/success', [
@@ -268,7 +273,6 @@ class SystemController extends Controller
         $imageNotes = [];
         foreach ([
             ['logo',        'site_logo_path',    'logos',    400,  '網站標誌 Logo'],
-            ['hero_banner', 'site_banner_path',  'banners',  1920, '首頁橫幅 Banner'],
             ['favicon',     'site_favicon_path', 'favicons', 180,  '網站小圖示 Favicon'],
         ] as [$input, $key, $subdir, $maxWidth, $label]) {
             try {
@@ -352,6 +356,10 @@ class SystemController extends Controller
         // file the favicon still points at. (The setting being changed
         // has already been saved with its new value, so it won't match.)
         if (in_array($path, (new Setting())->all(), true)) {
+            return;
+        }
+        // …nor a home page banner slide.
+        if ((new \App\Models\Banner())->countUsing($path) > 0) {
             return;
         }
         $uploader->delete($path);

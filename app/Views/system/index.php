@@ -83,7 +83,6 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
 
   <?php foreach ([
       ['logo', 'site_logo_path', '網站標誌', 'Logo', '顯示在網站名稱左邊、後台與消息貼文。建議正方形透明背景 PNG。Shown left of the site name, in the admin area and on news posts. A square PNG with transparent background works best.', 'favicon'],
-      ['hero_banner', 'site_banner_path', '首頁橫幅', 'Home page banner', '完整顯示在首頁頂部，不會被裁切或淡化。建議寬 1920px。Shown whole at the top of the home page — never cropped or faded. 1920px wide is ideal.', ''],
       ['favicon', 'site_favicon_path', '網站小圖示', 'Favicon', '瀏覽器分頁上的小圖示（前台與後台都會用到）。建議正方形 180×180px。更換後可能要按 Ctrl+F5 才看得到。The small icon on browser tabs (public site and admin). Square, 180×180px. Press Ctrl+F5 to see a change.', 'favicon'],
   ] as [$input, $key, $zh, $en, $help, $cls]): ?>
     <label for="<?= $input ?>"><?= $zh ?> <span class="en"><?= $en ?></span></label>
@@ -94,10 +93,12 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
       </div>
     <?php endif; ?>
     <input id="<?= $input ?>" name="<?= $input ?>" type="file" accept="image/jpeg,image/png,image/gif,image/webp"
-           data-aspects="<?= ['logo' => '1:1,original', 'hero_banner' => 'original,16:9,3:1', 'favicon' => '1:1'][$input] ?>"
-           data-max-width="<?= ['logo' => 600, 'hero_banner' => 1920, 'favicon' => 256][$input] ?>">
+           data-aspects="<?= ['logo' => '1:1,original', 'favicon' => '1:1'][$input] ?>"
+           data-max-width="<?= ['logo' => 600, 'favicon' => 256][$input] ?>">
     <p class="help"><?= h($help) ?></p>
   <?php endforeach; ?>
+  <div class="flash info" style="margin:14px 0 0">🖼️ 首頁橫幅（可放多張輪播、調整位置和高度）在「<a href="<?= url('/system/banners') ?>">首頁橫幅</a>」頁。
+    <span class="en">The home page banner — several pictures, position and height — has its own page: <a href="<?= url('/system/banners') ?>">Home banner</a>.</span></div>
   </section>
   <section class="panel form-sec">
   <h3>③ 頁尾 <span class="en">Footer</span></h3>

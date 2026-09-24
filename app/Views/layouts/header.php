@@ -15,7 +15,7 @@ $activeNav = $activeNav ?? '';
 // Before migration 006 the favicon/banner lived on the event row; keep
 // reading it there so an install mid-upgrade still shows them.
 $siteFavicon    = $site['site_favicon_path'] ?: ($event['favicon_path'] ?? null);
-$siteHeroBanner = $site['site_banner_path']  ?: ($event['hero_banner_path'] ?? null);
+$siteHeroBanner = $event['hero_banner_path'] ?? null;   // old single banner, used only when no slides exist
 $siteLogo       = $site['site_logo_path'];
 
 /** Versioned upload URL: browsers cache icons hard, a new path forces a refresh. */
@@ -41,6 +41,7 @@ $helpKey = in_array($activeNav, ['home', 'register', 'donate', 'gallery'], true)
 <?php [$_hFamily, $_hParam] = (new App\Models\Setting())->headingFont(); ?>
 <link href="https://fonts.googleapis.com/css2?family=<?= $_hParam ?><?= $_hParam !== 'LXGW+WenKai+TC:wght@400;700' ? '&family=LXGW+WenKai+TC:wght@400;700' : '' ?>&family=Noto+Sans+TC:wght@400;500;700;800&family=Noto+Sans+SC:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= asset('css/style.css') ?>">
+<?php if (($activeNav ?? '') === 'home'): ?><link rel="stylesheet" href="<?= asset('css/banner.css') ?>"><?php endif; ?>
 <style>
 /* Heading typeface chosen by the system admin (Site settings). Rare
    characters it lacks fall back to LXGW WenKai TC, glyph by glyph;
@@ -61,6 +62,7 @@ try {
   if (a.hc) document.documentElement.classList.add('hc');
 } catch (e) {}
 </script>
+<script src="<?= asset('js/fit-screen.js') ?>"></script>
 </head>
 <body>
 <a class="skip" href="#main">跳到內容 Skip to content</a>

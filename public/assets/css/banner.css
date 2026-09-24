@@ -1,0 +1,48 @@
+/* ============================================================
+   Home page banner slideshow (partials/banner_show.php, js/banner.js)
+   The frame's shape comes from --ar-d (computers) / --ar-m (phones);
+   each picture fills it, anchored and zoomed as set in 首頁橫幅.
+   ============================================================ */
+.banner-show{position:relative;overflow:hidden;background:#f6e7bd;aspect-ratio:var(--ar-d);
+  border-bottom:1px solid #eadcb5;isolation:isolate;touch-action:pan-y;user-select:none}
+@media (max-width:700px){ .banner-show{aspect-ratio:var(--ar-m)} }
+.banner-show.as-phone{aspect-ratio:var(--ar-m)}          /* admin preview of the phone shape */
+.banner-show.as-desktop{aspect-ratio:var(--ar-d)}
+.banner-track{position:absolute;inset:0}
+.banner-slide{position:absolute;inset:0;margin:0}
+.banner-frame{position:absolute;inset:0;display:block;overflow:hidden;color:inherit;text-decoration:none}
+.banner-frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;will-change:transform}
+
+/* Fade: pictures stacked, the active one fades in */
+.fx-fade .banner-slide{opacity:0;transition:opacity .9s ease;visibility:hidden}
+.fx-fade .banner-slide.is-active{opacity:1;visibility:visible;z-index:1}
+/* Slide: pictures side by side, the row moves */
+.fx-slide .banner-track{display:flex;transition:transform .7s cubic-bezier(.4,0,.2,1)}
+.fx-slide .banner-slide{position:relative;flex:0 0 100%;height:100%}
+
+/* Caption over the bottom of the picture */
+.banner-show figcaption{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:1.6rem 1.4rem 2.4rem;
+  background:linear-gradient(transparent,rgba(40,20,5,.72));color:#fff8e6;text-shadow:0 1px 3px rgba(0,0,0,.5);line-height:1.35}
+.banner-show figcaption strong{display:block;font-family:var(--kai,serif);font-size:clamp(1.1rem,2.6vw,2rem);letter-spacing:.08em}
+.banner-show figcaption span{display:block;font-size:clamp(.8rem,1.4vw,1.05rem);opacity:.92}
+.banner-show figcaption span:empty,.banner-show figcaption strong:empty{display:none}
+
+/* Arrows, dots, pause */
+.banner-nav{position:absolute;top:50%;z-index:3;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;
+  background:rgba(255,250,235,.8);color:#7a1a14;font-size:28px;line-height:1;cursor:pointer;opacity:0;transition:opacity .25s;
+  box-shadow:0 2px 8px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;padding:0 0 3px}
+.banner-nav.prev{left:12px}.banner-nav.next{right:12px}
+.banner-show:hover .banner-nav,.banner-nav:focus-visible{opacity:1}
+@media (hover:none){ .banner-nav{opacity:.85;width:36px;height:36px;font-size:24px} }
+.banner-dots{position:absolute;left:0;right:0;bottom:10px;z-index:3;display:flex;justify-content:center;gap:8px;pointer-events:none}
+.banner-dots button{pointer-events:auto;width:10px;height:10px;padding:0;border-radius:999px;border:2px solid #fff8e6;
+  background:rgba(255,248,230,.35);cursor:pointer;transition:width .3s,background .3s;box-shadow:0 1px 3px rgba(0,0,0,.35)}
+.banner-dots button[aria-selected="true"]{width:26px;background:#fff8e6}
+.banner-pause{position:absolute;right:10px;bottom:6px;z-index:3;width:30px;height:30px;border-radius:50%;border:0;
+  background:rgba(40,20,5,.45);color:#fff8e6;font-size:13px;cursor:pointer;opacity:0;transition:opacity .25s}
+.banner-show:hover .banner-pause,.banner-pause:focus-visible,.banner-pause[aria-pressed="true"]{opacity:1}
+.banner-show[data-count="1"] .banner-nav,.banner-show[data-count="1"] .banner-dots,.banner-show[data-count="1"] .banner-pause,
+.banner-show[data-count="0"] .banner-nav,.banner-show[data-count="0"] .banner-dots,.banner-show[data-count="0"] .banner-pause{display:none}
+.banner-show.no-controls .banner-nav,.banner-show.no-controls .banner-dots{display:none}
+@media (max-width:700px){ .banner-show figcaption{padding:1rem .9rem 1.9rem} .banner-dots{bottom:6px} }
+@media (prefers-reduced-motion:reduce){ .fx-fade .banner-slide,.fx-slide .banner-track{transition:none} }

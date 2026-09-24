@@ -20,6 +20,7 @@ $previewUrl = [
     'gallery'  => url('/gallery'),
     'help'     => url('/') . '#help',
     'pdf'      => url('/admin/print/attendees'),
+    'login'    => url('/system/wording/preview') . '?kind=login',
 ];
 $items = array_filter(Text::ITEMS, static fn($i) => $i[0] === $group);
 $current = static function (string $key, string $lang) use ($saved): string {
@@ -40,9 +41,9 @@ $current = static function (string $key, string $lang) use ($saved): string {
     <input type="hidden" name="group" value="<?= h($group) ?>">
     <p class="help" style="margin-top:0">
       ✍️ 框內是網站<strong>現在</strong>顯示的文字，改動會即時出現在右邊預覽（按儲存才生效）。<strong>留空＝不顯示</strong>；按 ↺ 放回預設文字。
-      <code>{n}</code>、<code>{max}</code> 會自動換成數字。<br>
+      <code>{n}</code>、<code>{max}</code> 會自動換成數字，<code>{site}</code>、<code>{site_en}</code> 換成網站名稱。<br>
       <span class="en">Each box holds the text the site shows now. Changes appear in the preview at once and go live when you Save.
-      <strong>Empty = show nothing</strong>; ↺ puts the default back. Keep <code>{n}</code> / <code>{max}</code> — they become numbers.</span>
+      <strong>Empty = show nothing</strong>; ↺ puts the default back. Keep <code>{n}</code> / <code>{max}</code> — they become numbers; <code>{site}</code> / <code>{site_en}</code> become the site name.</span>
     </p>
 
     <?php foreach ($items as $key => $item): $long = !empty($item[3]); ?>

@@ -39,6 +39,7 @@ $menu = [
 if ($isSystem) {
     $menu['系統管理 System'] = [
         ['system', '⚙️', '網站設定', 'Site settings', '/system'],
+        ['banners','🖼️', '首頁橫幅', 'Home banner',   '/system/banners'],
         ['wording','🔤', '網站文字', 'Wording',       '/system/wording'],
         ['users',  '👥', '帳號管理', 'User accounts', '/system/users'],
         ['qr',     '🔳', 'QR 產生器', 'QR generator', '/system/qr'],
@@ -59,6 +60,7 @@ if ($isSystem) {
 <link rel="icon" href="<?= h($versioned($adminFavicon)) ?>">
 <?php endif; ?>
 <meta name="robots" content="noindex">
+<script src="<?= asset('js/fit-screen.js') ?>"></script>
 </head>
 <body class="admin-app">
 

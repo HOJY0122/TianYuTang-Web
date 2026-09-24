@@ -318,13 +318,18 @@ input:focus,select:focus,textarea:focus{border-color:var(--red);box-shadow:0 0 0
 .lb-close:hover,.lb-prev:hover,.lb-next:hover{background:rgba(255,250,240,.36)}
 
 /* ---------- Footer ---------- */
-.site-footer{background:var(--deep-red);color:#fff3c2;text-align:center;padding:2.4rem 1.1rem 1.6rem;margin-top:2rem}
-.site-footer .f-name{font-family:var(--kai);font-size:1.6rem;letter-spacing:.12em}
-.site-footer .f-org{letter-spacing:.06em;font-size:.9rem}
-.site-footer p{margin:.4rem auto;max-width:44rem;white-space:pre-line}
-.site-footer .f-note{opacity:.9;font-size:.9rem}
-.site-footer .f-small{margin-top:1.2rem;font-size:.78rem;opacity:.75}
-.site-footer a{color:#ffe7a8}
+/* Footer: space, text size, alignment and colours come from Site settings (footer.php sets the variables). */
+.site-footer{background:var(--f-bg,var(--deep-red));color:var(--f-fg,#fff3c2);text-align:center;margin-top:2rem;
+  padding:var(--f-pad,2.4rem) 1.1rem calc(var(--f-pad,2.4rem) * .66);font-size:var(--f-size,100%)}
+.site-footer .f-name{font-family:var(--kai);font-size:1.6em;letter-spacing:.12em;color:var(--f-accent,inherit)}
+.site-footer .f-org{letter-spacing:.06em;font-size:.9em}
+.site-footer p{margin:.4em auto;max-width:44rem;white-space:pre-line}
+.site-footer .f-note{opacity:.9;font-size:.9em}
+.site-footer .f-small{margin-top:1.2em;font-size:.78em;opacity:.75}
+.site-footer a{color:var(--f-accent,#ffe7a8)}
+.site-footer.f-left{text-align:left}
+.site-footer.f-left > *{max-width:1100px;margin-left:auto;margin-right:auto}
+.site-footer.f-left p{max-width:1100px}
 
 /* ---------- Phones & tablets ---------- */
 @media (max-width:900px){
@@ -386,7 +391,7 @@ input[aria-invalid="true"]{border-color:#c0392b;background:#fff6f5}
 .help-contact{font-weight:700}
 .help-close{position:absolute;top:.5rem;right:.5rem;width:2.2rem;height:2.2rem;border:0;border-radius:50%;background:var(--gold-soft);
   font-size:1.3rem;line-height:1;cursor:pointer}
-.site-footer{padding-bottom:5rem}   /* room for the ⓘ button */
+.site-footer{padding-bottom:max(5rem,calc(var(--f-pad,2.4rem) * .66))}   /* room for the ⓘ button */
 .loc-title{margin:0;color:var(--red);font-size:1.4rem}
 .loc-title .en{display:inline;font-size:.6em;margin-left:.4rem}
 @media (max-width:760px){

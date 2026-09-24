@@ -780,3 +780,23 @@ details.guide > :not(summary){margin:0 20px 18px}
 .table-scroll > table.records{min-width:100%}
 @media (max-width:760px){ .table-scroll{overflow:visible;background:none} }
 @media (max-width:360px){ .bn-device span{padding:8px 10px;font-size:.85rem} }
+
+/* Site settings → ③ Footer → footer look, with the home page footer as a live preview */
+.sub-head{margin:24px 0 4px;padding-top:16px;border-top:1px dashed #eadcb5;color:var(--red);font-size:16px}
+.footer-look{display:grid;grid-template-columns:minmax(240px,340px) 1fr;gap:18px;align-items:start}
+@media (max-width:900px){ .footer-look{grid-template-columns:1fr} }
+.fl-controls{min-width:0}
+.fl-range{display:flex;align-items:center;gap:10px}
+.fl-range input[type=range]{flex:1;padding:0;border:0;box-shadow:none;background:none;accent-color:#9f211b}
+.fl-range output{min-width:4.2em;font-weight:800;color:#9f211b;text-align:right}
+.fl-themes{display:flex;flex-wrap:wrap;gap:8px}
+.fl-theme{margin:0!important;cursor:pointer}
+.fl-theme input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.fl-theme span{display:block;padding:8px 12px;border-radius:10px;background:var(--bg);color:var(--fg);font-weight:800;font-size:13px;
+  border:2px solid transparent;box-shadow:0 0 0 1px rgba(0,0,0,.12)}
+.fl-theme input:checked + span{border-color:#fff;box-shadow:0 0 0 3px #9f211b}
+.fl-theme input:focus-visible + span{outline:2px solid #9f211b;outline-offset:3px}
+#footerReset{margin-top:14px}
+.fl-preview{min-width:0}
+.fl-preview-bar{font-weight:800;margin-bottom:6px}
+.fl-preview iframe{display:block;width:100%;height:320px;border:1px solid #d8bf79;border-radius:12px;background:#fffaf0}

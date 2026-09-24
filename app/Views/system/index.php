@@ -120,6 +120,42 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
   <textarea id="footer_note_zh" name="footer_note_zh" rows="2" maxlength="500"><?= h($settings['footer_note_zh']) ?></textarea>
   <label for="footer_note_en">頁尾說明（英文）<span class="en">Footer note (English)</span></label>
   <textarea id="footer_note_en" name="footer_note_en" rows="2" maxlength="500"><?= h($settings['footer_note_en']) ?></textarea>
+
+  <?php use App\Models\Setting as FS; ?>
+  <h4 class="sub-head">🎨 頁尾外觀 <span class="en">Footer look</span></h4>
+  <div class="footer-look">
+    <div class="fl-controls">
+      <label for="footer_pad">↕ 高度（上下空間）<span class="en">Height (space above and below)</span></label>
+      <div class="fl-range"><input type="range" id="footer_pad" name="footer_pad" min="<?= FS::FOOTER_PAD[0] ?>" max="<?= FS::FOOTER_PAD[1] ?>" step="2" value="<?= (int) $settings['footer_pad'] ?>">
+        <output for="footer_pad"><?= (int) $settings['footer_pad'] ?> px</output></div>
+
+      <label for="footer_size">🔠 字體大小 <span class="en">Text size</span></label>
+      <div class="fl-range"><input type="range" id="footer_size" name="footer_size" min="<?= FS::FOOTER_SIZE[0] ?>" max="<?= FS::FOOTER_SIZE[1] ?>" step="5" value="<?= (int) $settings['footer_size'] ?>">
+        <output for="footer_size"><?= (int) $settings['footer_size'] ?>%</output></div>
+
+      <label>↔ 排列 <span class="en">Alignment</span></label>
+      <div class="seg-toggle">
+        <label class="seg-on"><input type="radio" name="footer_align" value="center"<?= $settings['footer_align'] !== 'left' ? ' checked' : '' ?>><span>置中 Centre</span></label>
+        <label class="seg-on"><input type="radio" name="footer_align" value="left"<?= $settings['footer_align'] === 'left' ? ' checked' : '' ?>><span>靠左 Left</span></label>
+      </div>
+
+      <label>🎨 顏色 <span class="en">Colours</span></label>
+      <div class="fl-themes">
+        <?php foreach (FS::FOOTER_THEMES as $tKey => [$tLabel, $tBg, $tFg, $tAccent]): ?>
+          <label class="fl-theme" style="--bg:<?= $tBg ?>;--fg:<?= $tFg ?>">
+            <input type="radio" name="footer_theme" value="<?= $tKey ?>" data-bg="<?= $tBg ?>" data-fg="<?= $tFg ?>" data-accent="<?= $tAccent ?>"<?= $settings['footer_theme'] === $tKey ? ' checked' : '' ?>>
+            <span><?= h($tLabel) ?></span>
+          </label>
+        <?php endforeach; ?>
+      </div>
+      <button type="button" class="mini-btn ghost" id="footerReset">↺ 預設外觀 <span class="en">Default look</span></button>
+    </div>
+    <div class="fl-preview">
+      <div class="fl-preview-bar">👀 即時預覽 <span class="en">Live preview — the bottom of the home page</span></div>
+      <iframe id="footerFrame" src="<?= url('/') ?>" title="頁尾預覽 Footer preview" loading="lazy" tabindex="-1"></iframe>
+      <p class="help">外觀即時改變；文字按「儲存」後更新。<span class="en">The look changes as you go; text changes show after Save.</span></p>
+    </div>
+  </div>
   </section>
   <section class="panel form-sec">
   <h3>④ 列印 / PDF 抬頭 <span class="en">Printout letterhead</span></h3>
@@ -236,6 +272,43 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
   </div>
 </form>
 <script>
+// Footer look: show every change in the home page preview straight away.
+(function () {
+  var frame = document.getElementById('footerFrame');
+  if (!frame) return;
+  var pad = document.getElementById('footer_pad'), size = document.getElementById('footer_size');
+  function foot() {
+    try { return frame.contentDocument.querySelector('.site-footer'); } catch (e) { return null; }
+  }
+  function apply() {
+    pad.nextElementSibling.textContent = pad.value + ' px';
+    size.nextElementSibling.textContent = size.value + '%';
+    var f = foot();
+    if (!f) return;
+    var t = document.querySelector('input[name=footer_theme]:checked');
+    f.style.setProperty('--f-pad', pad.value + 'px');
+    f.style.setProperty('--f-size', size.value + '%');
+    if (t) { f.style.setProperty('--f-bg', t.dataset.bg); f.style.setProperty('--f-fg', t.dataset.fg); f.style.setProperty('--f-accent', t.dataset.accent); }
+    f.classList.toggle('f-left', (document.querySelector('input[name=footer_align]:checked') || {}).value === 'left');
+    frame.contentWindow.scrollTo(0, frame.contentDocument.documentElement.scrollHeight);
+  }
+  frame.addEventListener('load', function () {
+    // Only the footer matters here: no help button, no slideshow timers.
+    var d = frame.contentDocument, st = d.createElement('style');
+    st.textContent = '.help-fab,.fit-toggle,.site-header,.topbar,.testbar{display:none!important}html{scroll-behavior:auto!important}';
+    d.head.appendChild(st);
+    apply();
+  });
+  [pad, size].forEach(function (el) { el.addEventListener('input', apply); });
+  document.querySelectorAll('input[name=footer_theme],input[name=footer_align]').forEach(function (el) { el.addEventListener('change', apply); });
+  document.getElementById('footerReset').addEventListener('click', function () {
+    pad.value = <?= (int) FS::DEFAULTS['footer_pad'] ?>; size.value = <?= (int) FS::DEFAULTS['footer_size'] ?>;
+    document.querySelector('input[name=footer_align][value=center]').checked = true;
+    document.querySelector('input[name=footer_theme][value=red]').checked = true;
+    apply();
+  });
+})();
+
 // Show only the key box for the AI service that is chosen.
 (function () {
   function sync() {

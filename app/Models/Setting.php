@@ -47,6 +47,11 @@ class Setting extends Model
         // Once saved, the text is used exactly as typed — empty hides the line.
         'footer_title'      => null,         // default: "🙏 " + site name
         'footer_copyright'  => null,         // default: "© {year} " + organisation
+        // Footer look (Site settings → ③ Footer → 外觀 Look)
+        'footer_pad'        => '38',         // px of space above the text; the space below follows
+        'footer_size'       => '100',        // text size, %
+        'footer_align'      => 'center',     // center | left
+        'footer_theme'      => 'red',        // see FOOTER_THEMES
         'pdf_name'          => null,         // default: site name
         'pdf_name_en'       => null,         // default: English name
         'pdf_line1'         => null,         // default: footer organisation
@@ -69,6 +74,18 @@ class Setting extends Model
         'brush_light' => ['毛筆（細）Brush — light',                       'Yuji Syuku',     'Yuji+Syuku'],
         'kai'         => ['楷書 Kai — clean and easy to read',            'LXGW WenKai TC', 'LXGW+WenKai+TC:wght@400;700'],
     ];
+
+    /** Footer colours: key => [label, background, text, accent (links, heading)]. */
+    public const FOOTER_THEMES = [
+        'red'   => ['深紅 Deep red',   '#711711', '#fff3c2', '#fff3c2'],
+        'brown' => ['深棕 Dark brown', '#3b2417', '#f5e6c8', '#e8c77a'],
+        'dark'  => ['墨黑 Ink black',  '#1c1612', '#efe3c7', '#d9b25f'],
+        'gold'  => ['金色 Gold',       '#9a7428', '#fffbe9', '#fff1c1'],
+        'cream' => ['米色 Cream',      '#f3e6c4', '#4a2c1a', '#9f211b'],
+    ];
+
+    /** Footer limits, shared by the settings page and the save check. */
+    public const FOOTER_PAD = [8, 96], FOOTER_SIZE = [80, 140];
 
     /** The chosen heading font: [CSS family, Google Fonts parameter]. */
     public function headingFont(): array

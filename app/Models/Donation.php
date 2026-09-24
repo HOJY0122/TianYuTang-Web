@@ -137,10 +137,10 @@ class Donation extends Model
         $this->execute(
             'INSERT INTO donations
              (event_id, source, name, contact_no, method, table_count, free_amount, amount, status,
-              receipt_path, recorded_by, notes)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+              paid_at, paid_by, receipt_path, recorded_by, notes)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?)',
             [$eventId, 'counter', $name, $contact, $c['method'], $c['table_count'], $c['free_amount'],
-             $c['amount'], 'paid', $receiptPath, $recordedBy, $notes]
+             $c['amount'], 'paid', $recordedBy, $receiptPath, $recordedBy, $notes]
         );
         $id = (int) $this->db->lastInsertId();
 
@@ -162,10 +162,13 @@ class Donation extends Model
     {
         $c = self::compose((int) $fields['seats'], (float) $fields['free_amount'], $seatPrice);
 
+        // MySQL applies SET left to right, so paid_at sees the NEW status:
+        // the first "paid" time is kept, and cleared if set back to pending.
         $this->execute(
             'UPDATE donations
                 SET name = ?, contact_no = ?, method = ?, table_count = ?, free_amount = ?,
-                    amount = ?, status = ?, notes = ?
+                    amount = ?, status = ?, notes = ?,
+                    paid_at = IF(status = \'paid\', COALESCE(paid_at, NOW()), NULL)
               WHERE id = ?',
             [$fields['name'], $fields['contact'], $c['method'], $c['table_count'], $c['free_amount'],
              $c['amount'], $fields['status'] === 'paid' ? 'paid' : 'pending', $fields['notes'], $id]
@@ -296,10 +299,40 @@ class Donation extends Model
         return $this->fetchOne('SELECT * FROM donations WHERE id = ?', [$id]);
     }
 
-    /** Mark a donation as paid. */
-    public function markPaid(int $id): bool
+    /** Mark a donation as paid, noting when and by whom. */
+    public function markPaid(int $id, ?string $by = null): bool
     {
-        return $this->execute("UPDATE donations SET status = 'paid' WHERE id = ?", [$id]) > 0;
+        return $this->execute(
+            "UPDATE donations SET status = 'paid', paid_at = COALESCE(paid_at, NOW()), paid_by = COALESCE(paid_by, ?)
+              WHERE id = ?",
+            [$by, $id]
+        ) > 0;
+    }
+
+    /**
+     * Payment taken at the counter for an ONLINE pledge — the donor shows
+     * their donation QR, pays, and staff tick it off here. An optional
+     * receipt photo and note are kept with the donation.
+     */
+    public function receiveAtCounter(int $id, string $by, ?string $receiptPath, ?string $note): bool
+    {
+        return $this->execute(
+            "UPDATE donations
+                SET status = 'paid', paid_at = NOW(), paid_by = ?,
+                    receipt_path = COALESCE(?, receipt_path),
+                    notes = TRIM(BOTH ' · ' FROM CONCAT_WS(' · ', NULLIF(notes, ''), ?))
+              WHERE id = ? AND status = 'pending'",
+            [$by, $receiptPath, $note, $id]
+        ) > 0;
+    }
+
+    /** One donation by its reference (DON-0012), within an event. */
+    public function findByRef(string $ref, int $eventId): ?array
+    {
+        return $this->fetchOne(
+            'SELECT * FROM donations WHERE event_id = ? AND ref_code = ?',
+            [$eventId, strtoupper(trim($ref))]
+        );
     }
 
     /** Everything pledged for one event. */

@@ -21,8 +21,8 @@ $dateLines = App\Models\Event::formatDateLines($event);
 </div>
 
 <?php
-$docTitleZh = '報名名單 · 現場報到表';
-$docTitleEn = 'Attendee list · Check-in sheet';
+$docTitleZh = t('pdf.attendees');
+$docTitleEn = t('pdf.attendees', 'en');
 require BASE_PATH . '/app/Views/print/_letterhead.php';
 ?>
 
@@ -78,7 +78,7 @@ require BASE_PATH . '/app/Views/print/_letterhead.php';
   sheet, which IS an accounting record, keeps its sign-off.
 -->
 
-<p class="confidential">🔒 機密文件：內含個人資料，僅供本會內部使用，用後請妥善銷毀。Confidential — contains personal data (PDPA). For internal use only; dispose of securely.</p>
+<p class="confidential">🔒 <?= h(t('pdf.confidential') . ' ' . t('pdf.confidential', 'en')) ?></p>
 
 </body>
 </html>

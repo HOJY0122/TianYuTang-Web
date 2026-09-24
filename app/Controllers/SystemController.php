@@ -2,6 +2,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Text;
 use App\Core\ImageUploader;
 use App\Models\AdminUser;
 use App\Models\Event;
@@ -59,6 +60,52 @@ class SystemController extends Controller
         ]);
     }
 
+    /** GET /system/wording — every fixed text on the public site */
+    public function wording(): void
+    {
+        $this->requireSystemAdmin();
+        $this->view('system/wording', [
+            'pageTitle' => '網站文字 Wording',
+            'nav'       => 'wording',
+            'saved'     => (new Setting())->all(),
+            'flash'     => $this->takeFlash(),
+        ]);
+    }
+
+    /**
+     * POST /system/wording
+     *
+     * Only keys in Text::ITEMS are read, so the form cannot be used to
+     * write arbitrary settings. A box left empty — or still holding the
+     * default — stores nothing, and the default shows on the site.
+     */
+    public function saveWording(): void
+    {
+        $this->requireSystemAdmin();
+        $this->requireCsrf();
+
+        $setting = new Setting();
+        $posted  = is_array($_POST['txt'] ?? null) ? $_POST['txt'] : [];
+        $changed = 0;
+        foreach (Text::ITEMS as $key => $item) {
+            foreach (['zh', 'en'] as $lang) {
+                $value = $posted[$key][$lang] ?? '';
+                $value = is_string($value) ? trim(str_replace("\r\n", "\n", $value)) : '';
+                $value = mb_substr($value, 0, 1000);
+                if ($value === Text::fallback($key, $lang)) {
+                    $value = '';
+                }
+                $settingKey = "txt.{$key}.{$lang}";
+                if ($value !== (string) ($setting->all()[$settingKey] ?? '')) {
+                    $setting->set($settingKey, $value);
+                    $changed++;
+                }
+            }
+        }
+        $this->flash('success', '已儲存 Saved', "已更新 {$changed} 項文字。{$changed} text(s) updated.");
+        $this->redirect('/system/wording');
+    }
+
     // ------------------------------------------------------------------
     // Site settings
     // ------------------------------------------------------------------
@@ -86,6 +133,8 @@ class SystemController extends Controller
             'site_name' => 80, 'site_name_en' => 120, 'site_tagline' => 255,
             'footer_org' => 150, 'footer_address' => 255, 'footer_contact' => 150,
             'footer_note_zh' => 500, 'footer_note_en' => 500,
+            'footer_title' => 120, 'footer_copyright' => 200,
+            'pdf_name' => 80, 'pdf_name_en' => 120, 'pdf_line1' => 255, 'pdf_line2' => 255, 'pdf_line3' => 255,
         ];
         $values = [];
         foreach ($limits as $key => $max) {
@@ -101,6 +150,10 @@ class SystemController extends Controller
         }
         foreach ($values as $key => $value) {
             $setting->set($key, $value);
+        }
+        // On/off switches: an unticked checkbox is simply absent from the POST.
+        foreach (['site_tagline_on', 'pdf_show_logo'] as $key) {
+            $setting->set($key, !empty($_POST[$key]) ? '1' : '0');
         }
         // Heading font: only one of the known choices can be stored.
         $font = is_string($_POST['heading_font'] ?? null) ? $_POST['heading_font'] : '';

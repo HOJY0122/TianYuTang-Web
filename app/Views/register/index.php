@@ -12,17 +12,16 @@ require BASE_PATH . '/app/Views/layouts/header.php';
 <main id="main">
 <section class="section narrow">
   <div class="section-title">
-    <h2>報名參加<span class="en">Event Registration</span></h2>
+    <h2><?= tb('register.title') ?></h2>
     <p><?= h($event['year']) ?> <?= h($event['name']) ?></p>
   </div>
 
   <?php if (!$window['open']): ?>
     <div class="card closed-card">
       <div class="closed-icon"><?= $window['reason'] === 'not_yet' ? '🕒' : '🔒' ?></div>
-      <h3><?= $window['reason'] === 'not_yet' ? '報名尚未開放' : '線上報名已截止' ?>
-        <span class="en"><?= $window['reason'] === 'not_yet' ? 'Registration is not open yet' : 'Online registration has closed' ?></span></h3>
+      <h3><?= tb($window['reason'] === 'not_yet' ? 'register.not_yet' : 'register.closed') ?></h3>
       <p><?= h(App\Models\Event::windowMessage($window, 'rsvp')) ?></p>
-      <p class="help">歡迎於活動當日親臨現場登記。Walk-in registration is available at the counter on the day.</p>
+      <p class="help"><?= h(t('register.walkin') . ' ' . t('register.walkin', 'en')) ?></p>
     </div>
   <?php else: ?>
 
@@ -37,20 +36,19 @@ require BASE_PATH . '/app/Views/layouts/header.php';
       <div class="note"><?= h($event['rsvp_note']) ?></div>
     <?php endif; ?>
 
-    <div class="form-step"><b>1</b> <span>幾位參加？<?= info_tip('一家人或一群朋友可以一起報名，全部共用一個報名編號，活動當日出示一次即可報到。', 'Family or friends can register together under one reference number and check in together on the day.') ?></span><span class="en">How many people?</span></div>
+    <div class="form-step"><b>1</b> <span><?= h(t('register.step1')) ?></span><span class="en"><?= h(t('register.step1', 'en')) ?></span></div>
     <div class="stepper">
       <button type="button" data-step="-1" aria-label="減少 Fewer">−</button>
       <input id="attendeeCount" name="attendee_count" type="number" inputmode="numeric"
              min="1" max="<?= $maxAttendees ?>" value="<?= $startCount ?>" aria-label="人數 Number of people">
       <button type="button" data-step="1" aria-label="增加 More">+</button>
     </div>
-    <p class="help">每次最多 <?= $maxAttendees ?> 位，全部共用一個報名編號。
-      Up to <?= $maxAttendees ?> people, all under one reference number.</p>
+    <p class="help"><?= h(t('register.limit', 'zh', ['max' => $maxAttendees]) . ' ' . t('register.limit', 'en', ['max' => $maxAttendees])) ?></p>
 
-    <div class="form-step"><b>2</b> <span>填寫每位參加者資料<?= info_tip('身份證號碼用於活動當日核對身份；聯絡號碼用於活動通知。資料只供本會使用，並依個人資料保護法令（PDPA）妥善保管。沒有身份證可填護照號碼。', 'Your IC is used to confirm who you are at check-in; your phone number is for event updates. Data is used only by us and protected under the PDPA. No IC? Use your passport number.') ?></span><span class="en">Details for each person</span></div>
+    <div class="form-step"><b>2</b> <span><?= h(t('register.step2')) ?></span><span class="en"><?= h(t('register.step2', 'en')) ?></span></div>
     <div id="attendees"></div>
 
-    <button class="primary" type="submit">📝 提交報名<span class="en">Submit Registration</span></button>
+    <button class="primary" type="submit"><?= tb('register.submit') ?></button>
   </form>
   <?php endif; ?>
 </section>

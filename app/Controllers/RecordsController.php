@@ -245,7 +245,7 @@ class RecordsController extends Controller
         $this->requireCsrf();
         $model = new Donation();
         $id    = (int) ($_POST['donation_id'] ?? 0);
-        $model->markPaid($id);
+        $model->markPaid($id, $_SESSION['admin_username'] ?? null);
         $this->redirect($this->returnPath('/admin/donations?event=' . (int) $model->eventIdOf($id)));
     }
 

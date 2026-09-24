@@ -25,8 +25,8 @@ $seatPrice = (float) $event['merit_table_price'];
 </div>
 
 <?php
-$docTitleZh = '布施名單 · 功德紀錄';
-$docTitleEn = 'Donation record';
+$docTitleZh = t('pdf.donations');
+$docTitleEn = t('pdf.donations', 'en');
 require BASE_PATH . '/app/Views/print/_letterhead.php';
 ?>
 
@@ -90,7 +90,7 @@ require BASE_PATH . '/app/Views/print/_letterhead.php';
   <div><div class="sign-line">日期 Date</div></div>
 </div>
 
-<p class="confidential">🔒 機密文件：內含個人資料，僅供本會內部使用，用後請妥善銷毀。Confidential — contains personal data (PDPA). For internal use only; dispose of securely.</p>
+<p class="confidential">🔒 <?= h(t('pdf.confidential') . ' ' . t('pdf.confidential', 'en')) ?></p>
 
 </body>
 </html>

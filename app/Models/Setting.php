@@ -25,6 +25,7 @@ class Setting extends Model
         'site_name'         => '天玉堂',
         'site_name_en'      => 'Tian Yu Tang',
         'site_tagline'      => '🙏 感恩您的參與與支持　｜　Thank you for your kind support',
+        'site_tagline_on'   => '1',          // the switch beside it: '1' shown, '0' hidden
         'site_logo_path'    => null,
         'site_banner_path'  => null,
         'site_favicon_path' => null,
@@ -36,6 +37,15 @@ class Setting extends Model
         'footer_contact'    => '',
         'footer_note_zh'    => '如有任何疑問，敬請於活動當日親臨櫃台詢問。',
         'footer_note_en'    => 'For enquiries, kindly visit the on-site counter on the event day.',
+        'footer_title'      => '',           // blank = "🙏 " + site name
+        'footer_copyright'  => '',           // blank = "© {year} " + organisation
+        // Printout letterhead (PDF). Blank lines fall back to the values above.
+        'pdf_name'          => '',           // blank = site name
+        'pdf_name_en'       => '',           // blank = English name
+        'pdf_line1'         => '',           // blank = footer organisation
+        'pdf_line2'         => '',           // blank = footer address
+        'pdf_line3'         => '',           // blank = footer contact
+        'pdf_show_logo'     => '1',
     ];
 
     /**

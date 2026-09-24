@@ -41,6 +41,8 @@ CREATE TABLE IF NOT EXISTS events (
     location          VARCHAR(255) NOT NULL,
     start_date        DATE NOT NULL,
     end_date          DATE NOT NULL,
+    date_text_zh      VARCHAR(255) NULL,              -- own wording for the date line (migration 010)
+    date_text_en      VARCHAR(255) NULL,
     counter_note      VARCHAR(255) NULL,              -- e.g. 現場詢問處開放時間：16/10 及 17/10
 
     -- Home-page content, edited by admins (migration 008)
@@ -149,6 +151,8 @@ CREATE TABLE IF NOT EXISTS donations (
     free_amount DECIMAL(10,2) NULL DEFAULT NULL, -- freewill part (free / mixed)
     amount DECIMAL(10,2) NOT NULL,
     status ENUM('pending','paid') NOT NULL DEFAULT 'pending',
+    paid_at DATETIME    NULL DEFAULT NULL,  -- when it was marked paid (migration 010)
+    paid_by VARCHAR(50) NULL DEFAULT NULL,  -- which staff member marked it
 
     receipt_path VARCHAR(255) NULL DEFAULT NULL, -- photo of the paper receipt
     recorded_by  VARCHAR(50)  NULL DEFAULT NULL, -- which admin entered it
@@ -267,7 +271,8 @@ INSERT IGNORE INTO schema_migrations (filename, how) VALUES
     ('006_split_roles_and_walkin.sql',         'detected'),
     ('007_add_login_attempts.sql',             'detected'),
     ('008_site_content_and_mixed_donations.sql','detected'),
-    ('009_donation_limits.sql',                'detected');
+    ('009_donation_limits.sql',                'detected'),
+    ('010_date_text_and_payment.sql',          'detected');
 
 -- ============================================================
 -- Seed data

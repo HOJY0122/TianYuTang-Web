@@ -57,7 +57,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
       <p class="help" id="eclNote"></p>
 
       <label for="qrLogo">中央標誌｜Logo（選填）</label>
-      <input id="qrLogo" type="file" class="file-input" accept="image/*" onchange="loadLogo(event)">
+      <input id="qrLogo" type="file" data-no-editor class="file-input" accept="image/*" onchange="loadLogo(event)">
       <p class="help">
         放上標誌會自動提升容錯等級至 H，並把覆蓋面積限制在安全範圍內 ——
         蓋太多會掃不到。

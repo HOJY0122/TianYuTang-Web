@@ -34,7 +34,7 @@ $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confi
       <a class="mini-btn ghost btn-lg" href="<?= url('/admin/registrations') ?>?event=<?= $eid ?>">清除 Clear</a>
     <?php endif; ?>
     <span class="spacer"></span>
-    <a class="mini-btn ghost btn-lg" href="<?= url('/admin/export/attendees.xlsx') ?>?event=<?= $eid ?>">📊 Excel</a>
+    <a class="mini-btn ghost btn-lg" href="<?= url('/admin/export/attendees-excel') ?>?event=<?= $eid ?>">📊 Excel</a>
     <a class="mini-btn ghost btn-lg" href="<?= url('/admin/export/attendees') ?>?event=<?= $eid ?>">⬇️ CSV</a>
     <a class="mini-btn ghost btn-lg" href="<?= url('/admin/walkin') ?>?event=<?= $eid ?>">＋ 現場報名 Walk-in</a>
   </form>

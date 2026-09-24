@@ -88,6 +88,8 @@ $router->post('/admin/walkin/save', 'WalkinController@save');
 $router->get('/system',                'SystemController@index');
 $router->get('/system/users',          'SystemController@users');
 $router->post('/system/settings',      'SystemController@saveSettings');
+$router->get('/system/wording',        'SystemController@wording');
+$router->post('/system/wording',       'SystemController@saveWording');
 $router->post('/system/users/create',  'SystemController@createUser');
 $router->post('/system/users/role',    'SystemController@changeRole');
 $router->post('/system/users/password','SystemController@resetPassword');
@@ -102,6 +104,7 @@ $router->post('/account/password',     'SystemController@changeOwnPassword');
 // Counter (cash) donations
 $router->get('/admin/counter',      'CounterController@index');
 $router->post('/admin/counter/save','CounterController@save');
+$router->post('/admin/counter/receive', 'CounterController@receive');
 $router->get('/admin/receipt',      'CounterController@receipt');
 
 // On-site check-in
@@ -117,6 +120,10 @@ $router->get('/admin/qr',             'PrintController@eventQr');
 // CSV downloads
 $router->get('/admin/export/attendees', 'ExportController@attendees');
 $router->get('/admin/export/donations', 'ExportController@donations');
+// Excel links end in "-excel", not ".xlsx": some hosts serve any URL
+// ending in a file extension as a static file, so PHP never saw it.
+$router->get('/admin/export/attendees-excel', 'ExportController@attendeesExcel');
+$router->get('/admin/export/donations-excel', 'ExportController@donationsExcel');
 $router->get('/admin/export/attendees.xlsx', 'ExportController@attendeesExcel');
 $router->get('/admin/export/donations.xlsx', 'ExportController@donationsExcel');
 

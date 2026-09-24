@@ -139,8 +139,8 @@ $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confi
 <div class="panel">
   <h2>下載與列印 <span class="en">Downloads &amp; printing</span></h2>
   <div class="eventbar-actions">
-    <a class="mini-btn btn-lg" href="<?= url('/admin/export/attendees.xlsx') . $q ?>">📊 報名 Excel Registrations</a>
-    <a class="mini-btn btn-lg" href="<?= url('/admin/export/donations.xlsx') . $q ?>">📊 布施 Excel Donations</a>
+    <a class="mini-btn btn-lg" href="<?= url('/admin/export/attendees-excel') . $q ?>">📊 報名 Excel Registrations</a>
+    <a class="mini-btn btn-lg" href="<?= url('/admin/export/donations-excel') . $q ?>">📊 布施 Excel Donations</a>
     <a class="mini-btn ghost btn-lg" href="<?= url('/admin/export/attendees') . $q ?>">⬇️ CSV 報名</a>
     <a class="mini-btn ghost btn-lg" href="<?= url('/admin/export/donations') . $q ?>">⬇️ CSV 布施</a>
     <a class="mini-btn ghost btn-lg" href="<?= url('/admin/print/attendees') . $q ?>" target="_blank">🖨️ 報到名單 Check-in sheet</a>

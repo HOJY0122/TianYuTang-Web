@@ -36,6 +36,7 @@ $menu = [
 if ($isSystem) {
     $menu['系統管理 System'] = [
         ['system', '⚙️', '網站設定', 'Site settings', '/system'],
+        ['wording','🔤', '網站文字', 'Wording',       '/system/wording'],
         ['users',  '👥', '帳號管理', 'User accounts', '/system/users'],
         ['qr',     '🔳', 'QR 產生器', 'QR generator', '/system/qr'],
     ];

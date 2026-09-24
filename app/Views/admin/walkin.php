@@ -45,7 +45,8 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     <p class="help" style="margin-top:14px">
       登記當天才到場、沒有事先在網站報名的善信。
       儲存後會<strong>直接確認並完成報到</strong>，不必再到報到頁掃描，
-      人數會立刻計入現場統計。
+      人數會立刻計入現場統計。<br>
+      <span class="en">For people who arrive on the day without registering online. Saving confirms and checks them in at once — no scan needed.</span>
     </p>
 
     <?php if (count($allEvents) > 1): ?>
@@ -83,7 +84,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   <!-- ---------- Recently registered ---------- -->
   <?php if ($recent): ?>
     <div class="panel">
-      <h2>最近現場登記</h2>
+      <h2>最近現場登記 <span class="en">Recent walk-ins</span></h2>
       <div class="scroll">
         <table>
           <thead>
@@ -104,7 +105,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
       </div>
       <p class="help">
         登記錯了？到<a href="<?= url('/admin/dashboard') ?>">後台</a>取消該筆報名，
-        紀錄會保留但不列入人數。
+        紀錄會保留但不列入人數。<span class="en">Made a mistake? Cancel it from Registrations — it is kept but not counted.</span>
       </p>
     </div>
   <?php endif; ?>
@@ -132,7 +133,7 @@ function renderRows() {
     const div = document.createElement('div');
     div.className = 'attendee';
     div.innerHTML = `
-      <h4>參加者 ${i + 1}</h4>
+      <h4>參加者 Person ${i + 1}</h4>
       <label>姓名｜Name *</label>
       <input name="attendee_name[]" maxlength="100" placeholder="請輸入姓名" required>
       <div class="form-row">

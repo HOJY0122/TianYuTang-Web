@@ -32,7 +32,11 @@ class CheckinController extends Controller
         $event = $event ?? $eventModel->active();
         $eventId = (int) $event['id'];
 
-        $ref     = trim((string) ($_GET['ref'] ?? ''));
+        $ref     = strtoupper(trim((string) ($_GET['ref'] ?? '')));
+        // A donation reference typed or scanned here belongs to the counter.
+        if (preg_match('/(^|-)DON-\d+$/', $ref)) {
+            $this->redirect('/admin/counter?event=' . $eventId . '&ref=' . urlencode($ref));
+        }
         $group   = null;
         $people  = [];
         $notFound = false;

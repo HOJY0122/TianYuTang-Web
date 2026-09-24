@@ -37,7 +37,8 @@ Adding a migration: create the next numbered file in `migrations/`
 | Event details — dates, venue, welcome text, Waze / Google Maps, form notes | ✓ | ✓ |
 | News posts on the home page, photo albums | ✓ | ✓ |
 | On the day — check-in, walk-in registration, counter donations | ✓ | ✓ |
-| Site settings — name, logo, banner, favicon, top bar, footer | | ✓ |
+| Site settings — name, logo, banner, favicon, top bar (on/off), footer, printout letterhead | | ✓ |
+| Wording — every fixed text on the public site, both languages | | ✓ |
 | User accounts, QR generator | | ✓ |
 
 The system admin is a super admin: everything an admin can do, plus the
@@ -53,8 +54,10 @@ site itself. Admins can never open `/system`.
 ## Exports, printing and limits
 
 - **Excel** (`📊 Excel` buttons) — a Dashboard sheet of totals plus a Master
-  sheet of every row, with filters, frozen headers and a Status dropdown,
-  laid out like the committee's own spreadsheets. CSV is still available.
+  sheet of every row, with borders, shaded rows, filters, frozen headers, a
+  Status dropdown and A4 print setup, laid out like the committee's own
+  spreadsheets. Built without the PHP zip extension, so it works on any
+  host. CSV is still available.
 - **Printed sheets / PDF** carry a letterhead (logo, name, organisation,
   address), the document title in both languages, who printed it, and
   page numbers. Use the browser's *Save as PDF*.
@@ -66,3 +69,18 @@ site itself. Admins can never open `/system`.
   never limited.
 - **IC and phone numbers** are checked in the browser and on the server,
   and stored in one format (`650101-10-1234`, `012-345 6789`).
+
+## Wording, images and the counter
+
+- **網站文字 Wording** (system admin) — every fixed text on the public site,
+  grouped by page, in Chinese and English. Grey text is the default; empty
+  a box to get it back. Includes the ⓘ help panel text and printout titles.
+- **Date line** — the home page writes it from the event dates; fill in
+  *日期文字 Date line* in Event details to use your own words (e.g. the lunar date).
+- **Uploading pictures** — after choosing a file, an editor opens: drag to
+  move, zoom, pick a crop shape, rotate. You see the result before saving.
+- **Donation QR at the counter** — a donor shows the QR from their donation
+  confirmation; *現場布施 Counter donation* scans or looks it up, shows the
+  amount, and *確認收款* marks it paid with the time and the staff name.
+  A donation QR scanned at check-in (or a registration QR at the counter)
+  opens the right page automatically.

@@ -526,6 +526,12 @@ class AdminController extends Controller
             'waze_url'      => trim((string) ($_POST['waze_url'] ?? '')) ?: null,
             'rsvp_note'     => trim((string) ($_POST['rsvp_note'] ?? '')) ?: null,
             'donation_note' => trim((string) ($_POST['donation_note'] ?? '')) ?: null,
+
+            // Online donation limits — blank means "no limit of our own".
+            'seats_min' => $this->numberOrNull($_POST['seats_min'] ?? '', true),
+            'seats_max' => $this->numberOrNull($_POST['seats_max'] ?? '', true),
+            'free_min'  => $this->numberOrNull($_POST['free_min'] ?? '', false),
+            'free_max'  => $this->numberOrNull($_POST['free_max'] ?? '', false),
         ];
 
         $errors = Event::validate($fields);
@@ -582,6 +588,16 @@ class AdminController extends Controller
             $this->redirect("/admin/event/edit?id={$id}");
         }
         $this->redirect("/admin/dashboard?event={$id}");
+    }
+
+    /** A blank box becomes NULL; anything else a whole number or 2-decimal amount. */
+    private function numberOrNull($value, bool $whole)
+    {
+        $value = is_string($value) ? trim($value) : '';
+        if ($value === '') {
+            return null;
+        }
+        return $whole ? (int) $value : round((float) $value, 2);
     }
 
     /**

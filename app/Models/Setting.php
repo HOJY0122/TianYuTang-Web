@@ -28,6 +28,8 @@ class Setting extends Model
         'site_logo_path'    => null,
         'site_banner_path'  => null,
         'site_favicon_path' => null,
+        // Heading typeface — see HEADING_FONTS
+        'heading_font'      => 'brush',
         // Footer
         'footer_org'        => 'PERSATUAN PENGANUT DEWA TAI ZHI KUALA LUMPUR',
         'footer_address'    => '',
@@ -35,6 +37,29 @@ class Setting extends Model
         'footer_note_zh'    => '如有任何疑問，敬請於活動當日親臨櫃台詢問。',
         'footer_note_en'    => 'For enquiries, kindly visit the on-site counter on the event day.',
     ];
+
+    /**
+     * Heading typefaces the system admin can choose from.
+     * key => [label, CSS family, Google Fonts family parameter]
+     *
+     * All three contain every Traditional character the site uses
+     * (壇 帥 寶 誕 …); Chinese brush fonts on Google Fonts are Simplified
+     * only, so their headings came out half brush, half plain. Any rare
+     * character a font lacks falls back to LXGW WenKai TC.
+     */
+    public const HEADING_FONTS = [
+        'brush'       => ['毛筆（粗）Brush — bold, closest to the banner', 'Yuji Boku',      'Yuji+Boku'],
+        'brush_light' => ['毛筆（細）Brush — light',                       'Yuji Syuku',     'Yuji+Syuku'],
+        'kai'         => ['楷書 Kai — clean and easy to read',            'LXGW WenKai TC', 'LXGW+WenKai+TC:wght@400;700'],
+    ];
+
+    /** The chosen heading font: [CSS family, Google Fonts parameter]. */
+    public function headingFont(): array
+    {
+        $key = $this->site()['heading_font'];
+        $f   = self::HEADING_FONTS[$key] ?? self::HEADING_FONTS['brush'];
+        return [$f[1], $f[2]];
+    }
 
     /**
      * Every site setting with defaults filled in — what the layouts use.

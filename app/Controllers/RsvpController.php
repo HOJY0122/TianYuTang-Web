@@ -2,6 +2,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Validate;
 use App\Models\Event;
 use App\Models\Rsvp;
 use Exception;
@@ -91,14 +92,18 @@ class RsvpController extends Controller
             if ($name === '' || mb_strlen($name) > 100) {
                 $this->fail("第 {$n} 位參加者：請填寫姓名。\nPerson {$n}: please enter a name.");
             }
-            if (!$this->looksLikeIc($ic)) {
-                $this->fail("第 {$n} 位參加者：身份證號碼格式不正確。\nPerson {$n}: the IC / passport number does not look right.");
+            // Stored in one tidy format (650101-10-1234, 012-345 6789) so the
+            // committee's lists and searches are consistent.
+            $icOk = Validate::icOrPassport($ic);
+            if ($icOk === null) {
+                $this->fail("第 {$n} 位 Person {$n}：\n" . Validate::IC_MESSAGE);
             }
-            if (!$this->looksLikePhone($contact)) {
-                $this->fail("第 {$n} 位參加者：聯絡號碼格式不正確。\nPerson {$n}: the contact number does not look right.");
+            $phoneOk = Validate::phone($contact);
+            if ($phoneOk === null) {
+                $this->fail("第 {$n} 位 Person {$n}：\n" . Validate::PHONE_MESSAGE);
             }
 
-            $attendees[] = ['name' => $name, 'ic' => $ic, 'contact' => $contact];
+            $attendees[] = ['name' => $name, 'ic' => $icOk, 'contact' => $phoneOk];
         }
 
         // --- Save ---
@@ -128,28 +133,6 @@ class RsvpController extends Controller
             ),
         ];
         $this->redirect('/rsvp/success');
-    }
-
-    /**
-     * Malaysian IC: 12 digits, with or without dashes (e.g. 901010-10-1234).
-     * Kept lenient so foreign passport numbers are still accepted.
-     */
-    private function looksLikeIc(string $ic): bool
-    {
-        if ($ic === '' || mb_strlen($ic) > 30) {
-            return false;
-        }
-        $digitsOnly = preg_replace('/\D/', '', $ic);
-        // Either a proper 12-digit IC, or an alphanumeric passport-style ID.
-        return strlen($digitsOnly) === 12 || preg_match('/^[A-Za-z0-9\- ]{6,30}$/', $ic) === 1;
-    }
-
-    /** Malaysian mobile/landline: 9–15 digits once spaces and dashes go. */
-    private function looksLikePhone(string $phone): bool
-    {
-        $digitsOnly = preg_replace('/\D/', '', $phone);
-        $len = strlen($digitsOnly);
-        return $len >= 9 && $len <= 15;
     }
 
     /**

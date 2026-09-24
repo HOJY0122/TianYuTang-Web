@@ -2,6 +2,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\XlsxWriter;
 use App\Models\Donation;
 use App\Models\Event;
 use App\Models\Rsvp;
@@ -98,6 +99,148 @@ class ExportController extends Controller
     }
 
     // ------------------------------------------------------------------
+    // Excel — laid out like the committee's own sample workbooks:
+    // a Dashboard sheet of totals, then a Master sheet of every row.
+    // ------------------------------------------------------------------
+
+    /** GET /admin/export/attendees.xlsx?event=<id> */
+    public function attendeesExcel(): void
+    {
+        $this->requireAdmin();
+        $event = $this->resolveEvent();
+        $id    = (int) $event['id'];
+        $rsvp  = new Rsvp();
+        $rows  = $rsvp->masterList($id);
+        $st    = $rsvp->countsByStatus($id);
+        $sizes = $rsvp->groupSizes($id);
+        $max   = max(10, (int) $event['max_attendees'], $sizes ? max(array_keys($sizes)) : 0);
+
+        $x    = new XlsxWriter();
+        $dash = $x->addSheet('Dashboard', [
+            'widths' => [32, 14, 4, 24, 14, 4], 'freeze' => 3,
+            'merges' => ['A1:F1', 'A' . ($max + 6) . ':F' . ($max + 6)],
+        ]);
+        $x->row($dash, [[$this->title($event, 'RSVP Dashboard 報名統計'), 'title']], 30);
+        $x->row($dash, []);
+        $x->row($dash, [['Summary 摘要', 'header'], ['Total 數量', 'header'], '', ['Group Size 每組人數', 'header'], ['Groups 組數', 'header']]);
+        $summary = [
+            ['👥 Total Attendees 參加人數',     $rsvp->totalAttendees($id)],
+            ['📋 Registration Groups 報名組數', $rsvp->totalGroups($id)],
+            ['⏳ Pending 待確認',              $st['pending']],
+            ['✅ Confirmed 已確認',            $st['confirmed']],
+            ['🙋 Checked In 已報到',           $rsvp->totalCheckedIn($id)],
+            ['❌ Cancelled 已取消',            $st['cancelled']],
+        ];
+        for ($i = 0; $i < max(count($summary), $max); $i++) {
+            $x->row($dash, [
+                isset($summary[$i]) ? [$summary[$i][0], 'text'] : '',
+                isset($summary[$i]) ? [$summary[$i][1], 'int'] : '',
+                '',
+                $i < $max ? [($i + 1) . ' Pax', 'text'] : '',
+                $i < $max ? [$sizes[$i + 1] ?? 0, 'int'] : '',
+            ]);
+        }
+        $x->row($dash, []);
+        $x->row($dash, [['💡 Event Day: Use "RSVP Master" to search names and update Status. 活動當日：在「RSVP Master」搜尋姓名並更新狀態。', 'note']]);
+
+        $master = $x->addSheet('RSVP Master', [
+            'widths' => [16, 20, 12, 11, 30, 22, 20, 15, 30], 'freeze' => 1, 'filter' => true,
+            'dropdown' => ['H', ['Pending', 'Confirmed', 'Checked In', 'Cancelled']],
+        ]);
+        $x->row($master, array_map(fn($h) => [$h, 'header'], [
+            'Registration ID 報名編號', 'Submitted 提交時間', 'Group Size 人數', 'Attendee 第幾位',
+            'Name 姓名', 'IC No. 身份證', 'Contact No. 電話', 'Status 狀態', 'Notes 備註',
+        ]), 30);
+        $seq = [];
+        foreach ($rows as $r) {
+            $seq[$r['group_id']] = ($seq[$r['group_id']] ?? 0) + 1;
+            $status = $r['status'] === 'cancelled' ? 'Cancelled'
+                : ($r['checked_in_at'] ? 'Checked In' : ucfirst($r['status']));
+            $notes = trim(($r['source'] === 'walkin' ? '現場報名 Walk-in' : '')
+                . (!empty($r['recorded_by']) ? ' · ' . $r['recorded_by'] : '')
+                . ($r['checked_in_at'] ? ' · 報到 ' . date('d/m H:i', strtotime($r['checked_in_at'])) : ''), ' ·');
+            $x->row($master, [
+                $r['ref_code'],
+                [XlsxWriter::date($r['created_at']), 'datetime'],
+                [(int) $r['attendee_count'], 'int'],
+                [(int) $seq[$r['group_id']], 'int'],
+                $r['name'],
+                [$r['ic_no'], 'textfmt'],        // text, so leading zeros and dashes survive
+                [$r['contact_no'], 'textfmt'],
+                $status,
+                $notes,
+            ]);
+        }
+        $x->send($this->filename($event, 'rsvp', 'xlsx'));
+    }
+
+    /** GET /admin/export/donations.xlsx?event=<id> */
+    public function donationsExcel(): void
+    {
+        $this->requireAdmin();
+        $event = $this->resolveEvent();
+        $id    = (int) $event['id'];
+        $model = new Donation();
+        $rows  = array_reverse($model->all($id, 100000));   // oldest first, like a register
+        $kind  = $model->totalsByKind($id);
+        $src   = $model->totalsBySource($id);
+        $total = $model->totalAmount($id);
+        $paid  = $model->totalPaid($id);
+
+        $x    = new XlsxWriter();
+        $dash = $x->addSheet('Donation Dashboard', [
+            'widths' => [32, 19, 4, 32, 19, 4], 'freeze' => 3, 'merges' => ['A1:F1', 'A12:F12'],
+        ]);
+        $x->row($dash, [[$this->title($event, 'Donation Dashboard 布施統計'), 'title']], 30);
+        $x->row($dash, []);
+        $x->row($dash, [['Summary 摘要', 'header'], ['Total 數量', 'header'], '', ['Donation Method 布施方式', 'header'], ['Amount 金額', 'header']]);
+        $x->row($dash, [['💰 Total Donation 布施總額', 'text'], [$total, 'money'], '', ['🙏 隨喜布施 Freewill', 'text'], [$kind['freewill'], 'money']]);
+        $x->row($dash, [['👥 Total Donors 布施人數', 'text'], [count($rows), 'int'], '', ['🪷 功德席 Merit Seats', 'text'], [$kind['seats'], 'money']]);
+        $x->row($dash, [['🪷 Total Merit Seats 功德席數', 'text'], [$model->totalTables($id), 'int'], '', ['🌐 線上 Online', 'text'], [$src['online'], 'money']]);
+        $x->row($dash, [['⏳ Pending 待付', 'text'], [max(0, $total - $paid), 'money'], '', ['💵 現場 Counter', 'text'], [$src['counter'], 'money']]);
+        $x->row($dash, [['✅ Paid / Received 已收', 'text'], [$paid, 'money']]);
+        $x->row($dash, [['❌ Cancelled 已取消', 'text'], [0, 'money']]);
+        $x->row($dash, []);
+        $x->row($dash, []);
+        $x->row($dash, [['💡 Event Day: Use "Donation Master" to check donors and update payment status. 活動當日：在「Donation Master」核對布施者並更新付款狀態。', 'note']]);
+
+        $master = $x->addSheet('Donation Master', [
+            'widths' => [15, 20, 28, 20, 34, 14, 17, 15, 34], 'freeze' => 1, 'filter' => true,
+            'dropdown' => ['H', ['Pending', 'Paid', 'Cancelled']],
+        ]);
+        $x->row($master, array_map(fn($h) => [$h, 'header'], [
+            'Donation ID 布施編號', 'Submitted 提交時間', 'Name 姓名', 'Contact No. 電話', 'Donation Method 布施方式',
+            'Merit Seats 功德席', 'Amount (RM) 金額', 'Status 狀態', 'Notes 備註',
+        ]), 30);
+        foreach ($rows as $r) {
+            $notes = implode(' · ', array_filter([
+                $r['source'] === 'counter' ? '現場 Counter' : '',
+                $r['recorded_by'] ? '登記 ' . $r['recorded_by'] : '',
+                $r['receipt_path'] ? '有收據 Receipt' : '',
+                $r['notes'] ?? '',
+            ]));
+            $x->row($master, [
+                $r['ref_code'],
+                [XlsxWriter::date($r['created_at']), 'datetime'],
+                $r['name'],
+                [$r['contact_no'], 'textfmt'],
+                Donation::describe($r),
+                [(int) ($r['table_count'] ?? 0), 'int'],
+                [(float) $r['amount'], 'money'],
+                $r['status'] === 'paid' ? 'Paid' : 'Pending',
+                $notes,
+            ]);
+        }
+        $x->send($this->filename($event, 'donations', 'xlsx'));
+    }
+
+    /** "🙏 2026 中壇元帥千秋寶誕｜RSVP Dashboard" — like the committee's sample. */
+    private function title(array $event, string $what): string
+    {
+        return '🙏 ' . $event['year'] . ' ' . $event['name'] . '｜' . $what;
+    }
+
+    // ------------------------------------------------------------------
 
     /**
      * Send an array of rows as a CSV download.
@@ -168,9 +311,9 @@ class ExportController extends Controller
     }
 
     /** e.g. tianyutang-2026-attendees-20260924.csv */
-    private function filename(array $event, string $kind): string
+    private function filename(array $event, string $kind, string $ext = 'csv'): string
     {
-        return sprintf('tianyutang-%d-%s-%s.csv', (int) $event['year'], $kind, date('Ymd'));
+        return sprintf('tianyutang-%d-%s-%s.%s', (int) $event['year'], $kind, date('Ymd'), $ext);
     }
 
     private function resolveEvent(): array

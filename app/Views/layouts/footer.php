@@ -22,7 +22,8 @@ $footerYear = isset($event['year']) ? (int) $event['year'] : (int) date('Y');
   <?php endif; ?>
   <div class="f-small">
     © <?= $footerYear ?> <?= h($site['footer_org'] !== '' ? $site['footer_org'] : $site['site_name']) ?>
-    　·　<a href="<?= url('/admin/login') ?>">管理登入 Admin</a>
+    <?php /* No admin link on purpose: the committee knows the address, and
+             advertising it to every visitor only invites password guessing. */ ?>
   </div>
 </footer>
 </body>

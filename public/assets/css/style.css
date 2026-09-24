@@ -19,7 +19,7 @@ html.text-lg{font-size:21px}
 *{box-sizing:border-box}
 body{margin:0;background:linear-gradient(180deg,#fff7d9,#fffaf0 40%,#f7ecc8);color:var(--dark);
   font-family:var(--sans);line-height:1.7}
-h1,h2,h3,h4,.kai{font-family:var(--kai);font-weight:700;line-height:1.35}
+h1,h2,h3,h4,.kai{font-family:var(--kai);font-weight:var(--kai-weight,700);line-height:1.35}
 a{color:inherit}
 img{max-width:100%}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -38,7 +38,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 /* ---------- Header: logo + name, big nav ---------- */
 .site-header{position:sticky;top:0;z-index:30;background:rgba(255,250,240,.96);backdrop-filter:blur(10px);
   border-bottom:1px solid var(--line);box-shadow:0 2px 12px rgba(67,39,18,.06)}
-.header-inner{max-width:1180px;margin:auto;display:flex;align-items:center;gap:1rem;padding:.6rem 1.1rem}
+.header-inner{max-width:1280px;margin:auto;display:flex;align-items:center;gap:1rem;padding:.6rem 1.1rem}
 .brand{display:flex;align-items:center;gap:.75rem;text-decoration:none;min-width:0;margin-right:auto}
 .brand img{width:3rem;height:3rem;object-fit:contain;border-radius:10px;flex:none}
 .brand-text{display:flex;flex-direction:column;min-width:0}
@@ -51,13 +51,46 @@ button,input,select,textarea{font:inherit;color:inherit}
 .site-nav a:hover{background:var(--gold-soft);color:var(--red)}
 .site-nav a.active{background:var(--red);color:#fff8df}
 .site-nav a.active small{color:#ffe9b8}
-.text-toggle{flex:none;border:2px solid var(--line);background:var(--card);border-radius:12px;min-width:3.2rem;min-height:3.2rem;
-  font-weight:800;cursor:pointer;color:var(--red)}
-.text-toggle[aria-pressed="true"]{background:var(--red);color:#fff8df;border-color:var(--red)}
+/* Accessibility button (universal access icon) and its panel */
+.a11y{position:relative;flex:none}
+.a11y-btn{display:grid;place-items:center;width:3.2rem;height:3.2rem;border-radius:50%;border:2px solid var(--line);
+  background:var(--card);color:var(--red);cursor:pointer}
+.a11y-btn:hover,.a11y-btn[aria-expanded="true"]{background:var(--red);color:#fff8df;border-color:var(--red)}
+.a11y-panel{position:absolute;right:0;top:calc(100% + .5rem);z-index:50;width:17.5rem;background:#fffdf7;border:2px solid var(--line);
+  border-radius:16px;padding:1rem;box-shadow:0 14px 40px rgba(40,20,10,.25)}
+.a11y-title{font-weight:800;font-size:1.05rem;margin-bottom:.6rem}
+.a11y-label{font-weight:700;font-size:.9rem;margin:.4rem 0 .35rem}
+.a11y-sizes{display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem}
+.a11y-sizes button{min-height:3.6rem;border:2px solid var(--line);border-radius:12px;background:#fff;cursor:pointer;font-weight:800;line-height:1.1}
+.a11y-sizes button small{display:block;font-size:.62rem;font-weight:500;color:var(--muted);margin-top:.15rem}
+.a11y-sizes button[aria-pressed="true"]{border-color:var(--red);background:#fff1e8;color:var(--red)}
+.a11y-switch{display:flex;align-items:center;gap:.6rem;margin:.9rem 0 .2rem;font-weight:700;cursor:pointer}
+.a11y-switch input{width:1.6rem;height:1.6rem;min-height:0;accent-color:var(--red)}
+.a11y-reset{margin-top:.6rem;width:100%;min-height:2.8rem;border:1px solid var(--line);border-radius:10px;background:transparent;cursor:pointer;font-weight:700}
+html.text-xl{font-size:24px}
+
+/* High contrast: pure black on white, underlined links, strong borders */
+html.hc body{background:#fff;color:#000}
+html.hc{--muted:#1a1a1a;--line:#000;--card:#fff;--paper:#fff;--gold-soft:#ffe66b}
+html.hc .card,html.hc .site-header,html.hc input,html.hc select,html.hc textarea{border-color:#000!important;background:#fff}
+html.hc a{text-decoration:underline}
+html.hc .cta,html.hc .btn,html.hc .primary{background:#000!important;color:#fff!important;border-color:#000!important}
+html.hc .topbar,html.hc .site-footer{background:#000;color:#fff}
+html.hc .en,html.hc .help{color:#000}
+
+/* ⓘ info button + its popover */
+.info-btn{display:inline-grid;place-items:center;width:1.55rem;height:1.55rem;margin-left:.35rem;border-radius:50%;
+  border:2px solid var(--gold);background:#fff;color:var(--deep-red);font:700 .8rem/1 Georgia,serif;cursor:pointer;vertical-align:middle;padding:0}
+.info-btn:hover,.info-btn[aria-expanded="true"]{background:var(--gold);color:#fff}
+.info-pop{display:block;margin:.4rem 0 .2rem;padding:.7rem .9rem;border-radius:10px;background:#fff8e1;border:1px solid var(--line);
+  font-family:var(--sans);font-weight:500;font-size:.9rem;line-height:1.6;color:var(--dark);letter-spacing:0;text-align:left}
+.info-pop .en{margin-top:.2rem}
 
 /* ---------- Banner: shown whole, never faded or cropped ---------- */
 .banner{background:#f6e7bd;line-height:0;border-bottom:1px solid var(--line)}
-.banner img{display:block;width:100%;height:auto;max-height:520px;object-fit:contain;margin:auto}
+/* Always the full width of the screen, at the image's own proportions:
+   nothing cropped, nothing faded, no empty bands at the sides. */
+.banner img{display:block;width:100%;height:auto}
 .hero-fallback{text-align:center;padding:3.5rem 1rem 3rem;
   background:radial-gradient(circle at 15% 20%,rgba(181,138,53,.15),transparent 30%),
              radial-gradient(circle at 85% 30%,rgba(159,33,27,.10),transparent 28%),linear-gradient(180deg,#fff4c9,#fffaf0)}
@@ -66,7 +99,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 /* ---------- Page sections ---------- */
 main{display:block}
-.section{max-width:1180px;margin:auto;padding:2.6rem 1.1rem}
+.section{max-width:1280px;margin:auto;padding:2.6rem 1.1rem}
 .section.narrow{max-width:860px}
 .section-title{text-align:center;margin-bottom:1.6rem}
 .section-title h2{font-size:clamp(1.7rem,4.2vw,2.3rem);margin:0;color:var(--red);letter-spacing:.08em}
@@ -305,4 +338,20 @@ input:focus,select:focus,textarea:focus{border-color:var(--red);box-shadow:0 0 0
   body{background:#fff}
   .confirm-wrap{padding:0}
   .card{border:0;box-shadow:none;background:#fff}
+}
+.modal-box.is-info{border-color:var(--gold);background:#fffaf0}
+.modal-box.is-info h2{color:var(--deep-red)}
+.modal-box.is-info p{color:var(--dark)}
+
+/* Inline field errors from validate.js */
+.field-error{margin:.35rem 0 0;color:#a3281f;font-size:.85rem;font-weight:700;white-space:pre-line}
+.field-error:empty{display:none}
+input[aria-invalid="true"]{border-color:#c0392b;background:#fff6f5}
+.limit-note{margin-top:.6rem;padding:.7rem .9rem;border-radius:10px;background:#fff5d0;border-left:5px solid var(--gold);
+  font-size:.9rem;white-space:pre-line}
+/* [hidden] must win over the display rules above (it otherwise loses to them). */
+.info-pop[hidden],.a11y-panel[hidden]{display:none!important}
+@media (max-width:760px){
+  /* On a phone the panel spans the screen instead of hanging off one edge. */
+  .a11y-panel{position:fixed;left:.75rem;right:.75rem;top:4.2rem;width:auto}
 }

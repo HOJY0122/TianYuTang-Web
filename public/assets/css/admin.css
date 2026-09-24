@@ -25,6 +25,7 @@ h1,h2,h3{font-family:var(--kai)}
 
 /* ---------- App shell ---------- */
 .side{position:fixed;inset:0 auto 0 0;width:250px;background:var(--side);color:#f5e7c4;display:flex;flex-direction:column;
+  scrollbar-width:thin;scrollbar-color:#5a4232 transparent;
   z-index:40;overflow-y:auto}
 .side-brand{display:flex;align-items:center;gap:10px;padding:18px 16px;border-bottom:1px solid #4a3528}
 .side-brand img{width:42px;height:42px;object-fit:contain;border-radius:8px;background:#fff8e6;flex:none}
@@ -50,7 +51,7 @@ h1,h2,h3{font-family:var(--kai)}
 .topbar-admin .who{font-size:13px;color:var(--muted);white-space:nowrap}
 .menu-btn{display:none;border:1px solid var(--line);background:var(--card);border-radius:10px;width:44px;height:44px;
   font-size:22px;cursor:pointer;flex:none}
-.content{padding:22px 24px 60px;max-width:1280px;width:100%}
+.content{padding:22px 28px 60px;width:100%;max-width:1760px}
 
 @media (max-width:1000px){
   .side{transform:translateX(-100%);transition:transform .2s;box-shadow:4px 0 30px rgba(0,0,0,.3)}
@@ -400,3 +401,21 @@ background:#fffdf6;font:inherit;resize:vertical}
 
 /* English beside a Kai heading reads better in the sans face. */
 h1 .en,h2 .en,h3 .en,h4 .en{font-family:var(--sans);font-size:.62em;font-weight:500;letter-spacing:0}
+
+/* Sidebar scrollbar: thin and dark so it disappears into the menu. */
+.side::-webkit-scrollbar{width:6px}
+.side::-webkit-scrollbar-thumb{background:#5a4232;border-radius:6px}
+.side::-webkit-scrollbar-track{background:transparent}
+/* Wide screens: three charts/panels per row instead of two. */
+@media (min-width:1600px){ .kpis{grid-template-columns:repeat(5,minmax(0,1fr))} }
+/* Mid-size laptops / tablets in landscape: forms and tables use the space. */
+@media (max-width:1200px){ .form-panel{max-width:none} }
+
+/* Heading-font picker on the site settings page */
+.font-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.font-choice{display:flex!important;flex-direction:column;gap:4px;border:2px solid var(--line);border-radius:12px;padding:10px 12px;
+  margin:0!important;cursor:pointer;background:#fffdf6;font-weight:400!important}
+.font-choice:has(input:checked){border-color:var(--red);background:#fff1e8}
+.font-choice input{width:auto!important;align-self:flex-start}
+.font-sample{font-size:24px;color:var(--dark);line-height:1.3}
+.font-choice small{color:var(--muted);font-size:12px}

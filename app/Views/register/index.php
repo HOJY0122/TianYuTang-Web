@@ -37,7 +37,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
       <div class="note"><?= h($event['rsvp_note']) ?></div>
     <?php endif; ?>
 
-    <div class="form-step"><b>1</b> 幾位參加？<span class="en">How many people?</span></div>
+    <div class="form-step"><b>1</b> <span>幾位參加？<?= info_tip('一家人或一群朋友可以一起報名，全部共用一個報名編號，活動當日出示一次即可報到。', 'Family or friends can register together under one reference number and check in together on the day.') ?></span><span class="en">How many people?</span></div>
     <div class="stepper">
       <button type="button" data-step="-1" aria-label="減少 Fewer">−</button>
       <input id="attendeeCount" name="attendee_count" type="number" inputmode="numeric"
@@ -47,7 +47,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     <p class="help">每次最多 <?= $maxAttendees ?> 位，全部共用一個報名編號。
       Up to <?= $maxAttendees ?> people, all under one reference number.</p>
 
-    <div class="form-step"><b>2</b> 填寫每位參加者資料<span class="en">Details for each person</span></div>
+    <div class="form-step"><b>2</b> <span>填寫每位參加者資料<?= info_tip('身份證號碼用於活動當日核對身份；聯絡號碼用於活動通知。資料只供本會使用，並依個人資料保護法令（PDPA）妥善保管。沒有身份證可填護照號碼。', 'Your IC is used to confirm who you are at check-in; your phone number is for event updates. Data is used only by us and protected under the PDPA. No IC? Use your passport number.') ?></span><span class="en">Details for each person</span></div>
     <div id="attendees"></div>
 
     <button class="primary" type="submit">📝 提交報名<span class="en">Submit Registration</span></button>
@@ -59,6 +59,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
 <?php require BASE_PATH . '/app/Views/partials/modal.php'; ?>
 
 <?php if ($window['open']): ?>
+<script src="<?= asset('js/validate.js') ?>"></script>
 <script>
 (function () {
   var MAX   = <?= $maxAttendees ?>;
@@ -99,9 +100,9 @@ require BASE_PATH . '/app/Views/layouts/header.php';
         + '<input name="attendee_name[]" required maxlength="100" autocomplete="name" value="' + esc(OLD.names[i]) + '">'
         + '<div class="row">'
         + '<div><label>身份證 / 護照號碼<span class="en">IC / Passport No.</span></label>'
-        + '<input name="attendee_ic[]" required maxlength="30" placeholder="例 e.g. 651020-10-2020" value="' + esc(OLD.ics[i]) + '"></div>'
+        + '<input name="attendee_ic[]" required maxlength="30" data-validate="ic" autocomplete="off" placeholder="例 e.g. 651020-10-2020" value="' + esc(OLD.ics[i]) + '"></div>'
         + '<div><label>聯絡號碼<span class="en">Contact No.</span></label>'
-        + '<input name="attendee_contact[]" required maxlength="30" inputmode="tel" autocomplete="tel" placeholder="例 e.g. 012 345 6789" value="' + esc(OLD.contacts[i]) + '">'
+        + '<input name="attendee_contact[]" required maxlength="30" inputmode="tel" autocomplete="tel" data-validate="phone" placeholder="例 e.g. 012 345 6789" value="' + esc(OLD.contacts[i]) + '">'
         + (i > 0 ? '<button type="button" class="btn ghost same-contact" style="margin-top:.5rem">同上 Same as person 1</button>' : '')
         + '</div></div></div>';
     }
@@ -122,7 +123,9 @@ require BASE_PATH . '/app/Views/layouts/header.php';
   box.addEventListener('click', function (e) {
     if (!e.target.classList.contains('same-contact')) return;
     var first = box.querySelector('[name="attendee_contact[]"]').value;
-    e.target.parentNode.querySelector('input').value = first;
+    var target = e.target.parentNode.querySelector('input');
+    target.value = first;
+    if (window.TYTValidate) { target.dataset.touched = '1'; window.TYTValidate.check(target, true); }
   });
 
   render();

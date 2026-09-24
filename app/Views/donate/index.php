@@ -7,6 +7,7 @@ $pageTitle = '功德布施 Donate';
 $seatPrice = (float) $event['merit_table_price'];
 $wantSeats = $old ? !empty($old['want_seats']) : true;
 $wantFree  = !empty($old['want_free']);
+$limits    = App\Models\Event::donationLimits($event);
 require BASE_PATH . '/app/Views/layouts/header.php';
 ?>
 
@@ -45,8 +46,8 @@ require BASE_PATH . '/app/Views/layouts/header.php';
         <input id="donName" name="name" required maxlength="100" autocomplete="name" value="<?= h($old['name'] ?? '') ?>">
       </div>
       <div>
-        <label for="donContact">聯絡號碼<span class="en">Contact No.</span></label>
-        <input id="donContact" name="contact" required maxlength="30" inputmode="tel" autocomplete="tel"
+        <label for="donContact">聯絡號碼<span class="en">Contact No.</span><?= info_tip('工作人員會以此號碼聯絡您，確認付款方式與收據。', 'Our staff will use this number to arrange payment and your receipt.') ?></label>
+        <input id="donContact" name="contact" required maxlength="30" inputmode="tel" autocomplete="tel" data-validate="phone"
                placeholder="例 e.g. 012 345 6789" value="<?= h($old['contact'] ?? '') ?>">
       </div>
     </div>
@@ -56,16 +57,17 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     <div class="choice">
       <input type="checkbox" id="wantSeats" name="want_seats" value="1"<?= $wantSeats ? ' checked' : '' ?>>
       <div class="choice-body">
-        <label class="choice-title" for="wantSeats"><strong>🪷 功德席 Merit Seats</strong>
+        <label class="choice-title" for="wantSeats"><strong>🪷 功德席 Merit Seats<?= info_tip('功德席：以席位為單位護持法會，功德迴向您與家人，祈求平安吉祥。可認捐一席或多席。', 'A merit seat supports the ceremony as one sponsored place; its merit is dedicated to you and your family. You may sponsor one or more seats.') ?></strong>
           <span class="help">每席 RM <?= number_format($seatPrice, 2) ?>　RM <?= number_format($seatPrice, 2) ?> per seat</span></label>
         <div class="detail" data-for="wantSeats">
           <div class="stepper">
             <button type="button" data-seat="-1" aria-label="減少 Fewer">−</button>
-            <input id="tableCount" name="table_count" type="number" inputmode="numeric" min="1"
-                   max="<?= App\Models\Donation::MAX_SEATS ?>" value="<?= h(($old['table_count'] ?? '') !== '' ? $old['table_count'] : '1') ?>"
+            <input id="tableCount" name="table_count" type="number" inputmode="numeric" min="<?= (int) $limits['seats_min'] ?>"
+                   max="<?= (int) $limits['seats_max'] ?>" value="<?= h(($old['table_count'] ?? '') !== '' ? $old['table_count'] : '1') ?>"
                    aria-label="席數 Number of seats">
             <button type="button" data-seat="1" aria-label="增加 More">+</button>
           </div>
+          <div class="limit-note hidden" id="seatNote" role="status"></div>
         </div>
       </div>
     </div>
@@ -73,17 +75,18 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     <div class="choice">
       <input type="checkbox" id="wantFree" name="want_free" value="1"<?= $wantFree ? ' checked' : '' ?>>
       <div class="choice-body">
-        <label class="choice-title" for="wantFree"><strong>🙏 隨喜布施 Freewill Donation</strong>
+        <label class="choice-title" for="wantFree"><strong>🙏 隨喜布施 Freewill Donation<?= info_tip('隨喜：依您的心意布施任何金額，用於法會與堂務開支。可以與功德席一起選擇。', 'Freewill: give any amount you wish towards the ceremony and temple upkeep. You can choose it together with merit seats.') ?></strong>
           <span class="help">任何金額皆可。Any amount you wish.</span></label>
         <div class="detail" data-for="wantFree">
           <label for="freeAmount" class="sr-only">金額 Amount (RM)</label>
-          <input id="freeAmount" name="free_amount" type="number" inputmode="decimal" min="1" step="0.01"
+          <input id="freeAmount" name="free_amount" type="number" inputmode="decimal" min="<?= h((string) $limits['free_min']) ?>" step="0.01"
                  placeholder="RM" value="<?= h($old['free_amount'] ?? '') ?>">
           <div class="quick-amounts">
-            <?php foreach ([50, 100, 200, 500] as $amount): ?>
+            <?php foreach ([50, 100, 200, 500] as $amount): if ($amount < $limits['free_min'] || $amount > $limits['free_max']) continue; ?>
               <button type="button" data-amount="<?= $amount ?>">RM <?= $amount ?></button>
             <?php endforeach; ?>
           </div>
+          <div class="limit-note hidden" id="freeNote" role="status"></div>
         </div>
       </div>
     </div>
@@ -103,10 +106,13 @@ require BASE_PATH . '/app/Views/layouts/header.php';
 <?php require BASE_PATH . '/app/Views/partials/modal.php'; ?>
 
 <?php if ($window['open']): ?>
+<script src="<?= asset('js/validate.js') ?>"></script>
 <script>
 (function () {
   // Display only — the server recalculates the total from the event's price.
   var PRICE = <?= json_encode($seatPrice) ?>;
+  // Limits set by the committee for this event (the server checks them too).
+  var LIM = <?= json_encode($limits) ?>;
   var wantSeats = document.getElementById('wantSeats');
   var wantFree  = document.getElementById('wantFree');
   var seatsEl   = document.getElementById('tableCount');
@@ -127,11 +133,40 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     if (free)  parts.push('隨喜 freewill ' + money(free));
     document.getElementById('totalBreakdown').textContent = parts.join(' + ');
     document.getElementById('donationTotal').textContent = money(seats * PRICE + free);
+    checkLimits(seats, free);
+  }
+
+  // Over a maximum is generosity, not a mistake: thank them first, then
+  // say how to give the rest. Under a minimum is a plain note.
+  function note(id, text) {
+    var el = document.getElementById(id);
+    el.textContent = text || '';
+    el.classList.toggle('hidden', !text);
+  }
+  function checkLimits(seats, free) {
+    var problems = 0, s = '', f = '';
+    if (seats && seats < LIM.seats_min) { s = '功德席最少 ' + LIM.seats_min + ' 席。\nThe minimum is ' + LIM.seats_min + ' seats.'; problems++; }
+    else if (seats > LIM.seats_max) {
+      s = '🙏 感恩您的大力護持！線上每次最多 ' + LIM.seats_max + ' 席。請先提交 ' + LIM.seats_max + ' 席，再提交一次餘下的席數，或於活動當日親臨櫃台辦理。'
+        + '\nThank you for your generous support! Online, each submission is up to ' + LIM.seats_max + ' seats — please submit again for the rest, or visit our counter on the event day.';
+      problems++;
+    } else if (seats && seats === LIM.seats_max && LIM.seats_max < 200) {
+      s = '已達線上每次上限 ' + LIM.seats_max + ' 席。如需更多，可再提交一次或於活動當日到櫃台辦理。\nThis is the online maximum per submission. For more, submit again or visit the counter on the day.';
+    }
+    if (free && free < LIM.free_min) { f = '隨喜金額最少 ' + money(LIM.free_min) + '。\nThe minimum freewill amount is ' + money(LIM.free_min) + '.'; problems++; }
+    else if (free > LIM.free_max) {
+      f = '🙏 感恩您的大力護持！線上每次隨喜最多 ' + money(LIM.free_max) + '。請先提交此金額，再提交一次餘額，或於活動當日親臨櫃台辦理。'
+        + '\nThank you for your generous support! Online, each freewill gift is up to ' + money(LIM.free_max) + ' — please submit again for the rest, or visit our counter on the event day.';
+      problems++;
+    }
+    note('seatNote', s); note('freeNote', f);
+    document.querySelector('[data-seat="1"]').disabled = seats >= LIM.seats_max;
+    return problems;
   }
 
   document.querySelectorAll('[data-seat]').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      seatsEl.value = Math.max(1, (parseInt(seatsEl.value, 10) || 0) + Number(btn.dataset.seat));
+      seatsEl.value = Math.min(LIM.seats_max, Math.max(LIM.seats_min, (parseInt(seatsEl.value, 10) || 0) + Number(btn.dataset.seat)));
       update();
     });
   });
@@ -148,6 +183,13 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     if (!wantSeats.checked && !wantFree.checked) {
       e.preventDefault();
       alert('請至少選擇一種布施方式。\nPlease choose at least one option.');
+      return;
+    }
+    var seats = wantSeats.checked ? parseInt(seatsEl.value, 10) || 0 : 0;
+    var free  = wantFree.checked ? parseFloat(freeEl.value) || 0 : 0;
+    if (checkLimits(seats, free)) {
+      e.preventDefault();
+      (document.querySelector('.limit-note:not(.hidden)') || seatsEl).scrollIntoView({ block: 'center', behavior: 'smooth' });
     }
   });
   update();

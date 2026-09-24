@@ -117,6 +117,8 @@ $router->get('/admin/qr',             'PrintController@eventQr');
 // CSV downloads
 $router->get('/admin/export/attendees', 'ExportController@attendees');
 $router->get('/admin/export/donations', 'ExportController@donations');
+$router->get('/admin/export/attendees.xlsx', 'ExportController@attendeesExcel');
+$router->get('/admin/export/donations.xlsx', 'ExportController@donationsExcel');
 
 // Photo gallery
 $router->get('/admin/photos',          'AdminController@photos');

@@ -2,6 +2,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Validate;
 use App\Models\Donation;
 use App\Models\Event;
 use Exception;
@@ -66,8 +67,9 @@ class DonationController extends Controller
         if ($name === '' || mb_strlen($name) > 100) {
             $this->fail("請填寫姓名。\nPlease enter your name.");
         }
-        if (!$this->looksLikePhone($contact)) {
-            $this->fail("請填寫有效的聯絡號碼。\nPlease enter a valid contact number.");
+        $phone = Validate::phone($contact);
+        if ($phone === null) {
+            $this->fail(Validate::PHONE_MESSAGE);
         }
         if (!empty($_POST['want_seats']) && $seats <= 0) {
             $this->fail("請輸入功德席數量。\nPlease enter the number of merit seats.");
@@ -78,10 +80,13 @@ class DonationController extends Controller
         if ($errors = Donation::validateParts($seats, $free)) {
             $this->fail(implode("\n", $errors));
         }
+        if ($limitMessage = $this->limitProblem($event, $seats, $free)) {
+            $this->fail($limitMessage, '感恩您的支持 Thank you for your support', 'info');
+        }
 
         try {
             $result = (new Donation())->create(
-                (int) $event['id'], $name, $contact, $seats, $free, $seatPrice,
+                (int) $event['id'], $name, $phone, $seats, $free, $seatPrice,
                 Event::refPrefix($event, 'DON')   // TEST-DON-0001 on a dry run
             );
         } catch (Exception $e) {
@@ -104,15 +109,38 @@ class DonationController extends Controller
         $this->redirect('/donation/success');
     }
 
-    private function looksLikePhone(string $phone): bool
+    /**
+     * The committee's online limits for this event. Going OVER a maximum
+     * is generosity, not a mistake — so the reply thanks the donor first,
+     * then explains how to give the rest: another online submission, or
+     * the counter on the day (which has no limit).
+     */
+    private function limitProblem(array $event, int $seats, float $free): ?string
     {
-        $digitsOnly = preg_replace('/\D/', '', $phone);
-        $len = strlen($digitsOnly);
-        return $len >= 9 && $len <= 15;
+        $lim = Event::donationLimits($event);
+        if ($seats > 0 && $seats < $lim['seats_min']) {
+            return "功德席最少 {$lim['seats_min']} 席。\nThe minimum is {$lim['seats_min']} merit seats.";
+        }
+        if ($seats > $lim['seats_max']) {
+            return "🙏 感恩您的大力護持！線上每次最多可認捐 {$lim['seats_max']} 席功德席。\n"
+                 . "請先提交 {$lim['seats_max']} 席，再提交一次餘下的席數；或於活動當日親臨櫃台辦理。\n"
+                 . "Thank you so much for your generous support! Online, each submission can sponsor up to {$lim['seats_max']} seats. "
+                 . 'Please submit ' . $lim['seats_max'] . ' now and again for the rest, or visit our counter on the event day.';
+        }
+        if ($free > 0 && $free < $lim['free_min']) {
+            return '隨喜金額最少 ' . rm($lim['free_min']) . "。\nThe minimum freewill amount is " . rm($lim['free_min']) . '.';
+        }
+        if ($free > $lim['free_max']) {
+            return '🙏 感恩您的大力護持！線上每次隨喜最多 ' . rm($lim['free_max']) . "。\n"
+                 . "請先提交此金額，再提交一次餘額；或於活動當日親臨櫃台辦理。\n"
+                 . 'Thank you so much for your generous support! Online, each freewill gift can be up to ' . rm($lim['free_max'])
+                 . '. Please submit that now and again for the rest, or visit our counter on the event day.';
+        }
+        return null;
     }
 
     /** Back to the form with the reason — and what they typed. */
-    private function fail(string $message): void
+    private function fail(string $message, string $title = '提交未完成 Not submitted', string $type = 'error'): void
     {
         $str = static fn(string $k): string => is_string($_POST[$k] ?? null) ? mb_substr($_POST[$k], 0, 100) : '';
         $_SESSION['donation_old'] = [
@@ -123,7 +151,7 @@ class DonationController extends Controller
             'want_free'   => !empty($_POST['want_free']),
             'free_amount' => $str('free_amount'),
         ];
-        $this->flash('error', '提交未完成 Not submitted', $message);
+        $this->flash($type, $title, $message);
         $this->redirect('/donate');
     }
 }

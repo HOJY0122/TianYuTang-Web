@@ -98,6 +98,20 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     <div><label for="max_attendees">每次報名最多人數 <span class="en">Max people per registration *</span></label>
       <input id="max_attendees" name="max_attendees" type="number" required min="1" max="50" value="<?= h((string) $v('max_attendees')) ?>"></div>
   </div>
+  <p class="help" style="margin:18px 0 0"><strong>線上布施上下限 Online donation limits</strong>（留空＝不限 blank = no limit）。
+    超過上限時，網站會感謝布施者，並請他們再提交一次餘額或於活動當日到櫃台辦理。現場布施不受限制。<br>
+    <span class="en">Above the maximum, donors are thanked and asked to submit again for the remainder or visit the counter. Counter donations are never limited.</span></p>
+  <div class="form-grid">
+    <div><label for="seats_min">功德席最少 <span class="en">Min seats</span></label>
+      <input id="seats_min" name="seats_min" type="number" min="1" max="200" value="<?= h((string) $v('seats_min')) ?>" placeholder="1"></div>
+    <div><label for="seats_max">功德席最多 <span class="en">Max seats per submission</span></label>
+      <input id="seats_max" name="seats_max" type="number" min="1" max="200" value="<?= h((string) $v('seats_max')) ?>" placeholder="例 e.g. 10"></div>
+    <div><label for="free_min">隨喜最少 (RM) <span class="en">Min freewill</span></label>
+      <input id="free_min" name="free_min" type="number" min="1" step="0.01" value="<?= h((string) $v('free_min')) ?>" placeholder="例 e.g. 10"></div>
+    <div><label for="free_max">隨喜最多 (RM) <span class="en">Max freewill per submission</span></label>
+      <input id="free_max" name="free_max" type="number" min="1" step="0.01" value="<?= h((string) $v('free_max')) ?>" placeholder="例 e.g. 5000"></div>
+  </div>
+
   <label for="rsvp_note">報名頁說明 <span class="en">Note on the registration page</span></label>
   <textarea id="rsvp_note" name="rsvp_note" rows="2" maxlength="3000" placeholder="席位有限，敬請提前登記。"><?= h($v('rsvp_note')) ?></textarea>
   <label for="donation_note">布施頁說明 <span class="en">Note on the donation page</span></label>

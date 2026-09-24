@@ -8,48 +8,49 @@ $seatPrice = (float) $event['merit_table_price'];
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>布施名單｜<?= h($event['year']) ?> <?= h($event['name']) ?></title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700;800&family=Noto+Sans+TC:wght@400;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@700&family=Noto+Sans+TC:wght@400;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= asset('css/print.css') ?>">
+<style>
+/* More columns than the check-in sheet: landscape keeps names on one line. */
+@page { size: A4 landscape; }
+</style>
 </head>
 <body>
 
 <div class="toolbar no-print">
-  <button class="primary" onclick="window.print()">🖨️ 列印 / 存成 PDF</button>
+  <button class="primary" onclick="window.print()">🖨️ 列印 / 存成 PDF　Print / Save as PDF</button>
   <a href="<?= url('/admin/print/attendees') ?>?event=<?= (int) $event['id'] ?>">報名名單 →</a>
   <a href="<?= url('/admin/dashboard') ?>?event=<?= (int) $event['id'] ?>">← 返回後台</a>
-  <span class="hint">在列印視窗選擇「另存為 PDF」即可存檔，不需額外軟體。</span>
+  <span class="hint">在列印視窗選擇「另存為 PDF」。Choose “Save as PDF” in the print window.</span>
 </div>
 
-<div class="sheet-head">
-  <h1>布施名單 · 功德紀錄</h1>
-  <div class="meta">
-    <span><strong><?= h($event['year']) ?> <?= h($event['name']) ?></strong>
-      　|　功德席 RM<?= number_format($seatPrice, 0) ?> / 席</span>
-    <span>列印時間：<?= h($printedAt) ?></span>
-  </div>
-</div>
+<?php
+$docTitleZh = '布施名單 · 功德紀錄';
+$docTitleEn = 'Donation record';
+require BASE_PATH . '/app/Views/print/_letterhead.php';
+?>
 
 <div class="summary">
-  <span>布施總額 <b><?= rm($totals['pledged']) ?></b></span>
-  <span>已收金額 <b><?= rm($totals['paid']) ?></b></span>
-  <span>功德席 <b><?= (int) $totals['seats'] ?></b> 席</span>
-  <span>筆數 <b><?= count($donations) ?></b></span>
+  <span>布施總額 Pledged <b><?= rm($totals['pledged']) ?></b></span>
+  <span>已收 Received <b><?= rm($totals['paid']) ?></b></span>
+  <span>功德席 Seats <b><?= (int) $totals['seats'] ?></b> 席</span>
+  <span>筆數 Count <b><?= count($donations) ?></b></span>
   <span class="muted">線上 <?= rm($totals['online']) ?> · 現場 <?= rm($totals['counter']) ?></span>
 </div>
 
 <table>
   <thead>
     <tr>
-      <th class="tick">核對</th>
+      <th class="tick">核對<br><small>Check</small></th>
       <th class="num">#</th>
-      <th class="ref">編號</th>
-      <th>來源</th>
-      <th>姓名</th>
-      <th>聯絡號碼</th>
-      <th>方式</th>
-      <th>詳情</th>
-      <th class="amount">金額 (RM)</th>
-      <th>狀態</th>
+      <th class="ref">編號 <small>Ref</small></th>
+      <th>來源 <small>Source</small></th>
+      <th>姓名 <small>Name</small></th>
+      <th>聯絡號碼 <small>Contact</small></th>
+      <th>方式 <small>Method</small></th>
+      <th>詳情 <small>Details</small></th>
+      <th class="amount">金額 <small>RM</small></th>
+      <th>狀態 <small>Status</small></th>
     </tr>
   </thead>
   <tbody>
@@ -88,6 +89,8 @@ $seatPrice = (float) $event['merit_table_price'];
   <div><div class="sign-line">覆核簽名 Verified by</div></div>
   <div><div class="sign-line">日期 Date</div></div>
 </div>
+
+<p class="confidential">🔒 機密文件：內含個人資料，僅供本會內部使用，用後請妥善銷毀。Confidential — contains personal data (PDPA). For internal use only; dispose of securely.</p>
 
 </body>
 </html>

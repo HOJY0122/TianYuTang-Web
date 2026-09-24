@@ -102,6 +102,11 @@ class SystemController extends Controller
         foreach ($values as $key => $value) {
             $setting->set($key, $value);
         }
+        // Heading font: only one of the known choices can be stored.
+        $font = is_string($_POST['heading_font'] ?? null) ? $_POST['heading_font'] : '';
+        if (isset(Setting::HEADING_FONTS[$font])) {
+            $setting->set('heading_font', $font);
+        }
 
         // Images are done after the text has been saved, so a rejected
         // upload never discards a perfectly good name change.

@@ -93,7 +93,7 @@ $showMap    = $hasQrImage || $wazeUrl !== '' || $mapsUrl !== '';
   <?php if ($showMap): ?>
     <div class="card location-card">
       <div>
-        <h3 class="kai" style="margin:0;color:var(--red);font-size:1.4rem">🚗 如何前往<span class="en">Getting there</span></h3>
+        <h3 class="kai" style="margin:0;color:var(--red);font-size:1.4rem">🚗 如何前往<?= info_tip('用手機相機對準 QR Code，點出現的連結，就會打開 Waze 導航到會場。', 'Point your phone camera at the QR code and tap the link that appears — Waze will open with directions to the venue.') ?><span class="en">Getting there</span></h3>
         <p style="margin:.5rem 0 0">
           用手機掃描右邊的 QR Code，或按下面的按鈕開啟導航。
           <span class="en">Scan the QR code with your phone, or tap a button below to open navigation.</span>

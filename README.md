@@ -49,3 +49,20 @@ site itself. Admins can never open `/system`.
 - `/register` — one reference number for the whole group, every person's details
 - `/donate` — merit seats, freewill, or both in one donation
 - `/gallery` — every year's album; older years stay after a new event is created
+
+## Exports, printing and limits
+
+- **Excel** (`📊 Excel` buttons) — a Dashboard sheet of totals plus a Master
+  sheet of every row, with filters, frozen headers and a Status dropdown,
+  laid out like the committee's own spreadsheets. CSV is still available.
+- **Printed sheets / PDF** carry a letterhead (logo, name, organisation,
+  address), the document title in both languages, who printed it, and
+  page numbers. Use the browser's *Save as PDF*.
+- **Event QR** can show the site logo in the middle; it still scans
+  (error correction H).
+- **Online donation limits** — set min/max merit seats and freewill per
+  event under *活動資料 Event details*. Above a maximum the donor is thanked
+  and asked to submit again or visit the counter. Counter donations are
+  never limited.
+- **IC and phone numbers** are checked in the browser and on the server,
+  and stored in one format (`650101-10-1234`, `012-345 6789`).

@@ -179,3 +179,42 @@ tbody tr:nth-child(even) td { background: #fafafa; }
   -webkit-print-color-adjust:exact;
   print-color-adjust:exact;
 }
+
+/* ==========================================================
+   Letterhead — the standard top of every printed sheet / PDF
+   ========================================================== */
+.letterhead {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 24px;
+  border-bottom: 3px double #7a1a14; padding-bottom: 12px; margin-bottom: 16px;
+}
+.lh-org { display: flex; gap: 12px; align-items: center; min-width: 0; }
+.lh-org img { width: 64px; height: 64px; object-fit: contain; flex: none; }
+.lh-name { font-family: "LXGW WenKai TC", "Noto Serif TC", serif; font-size: 24px; font-weight: 700; color: #7a1a14; letter-spacing: .08em; line-height: 1.2; }
+.lh-en { font-size: 12px; color: #555; letter-spacing: .04em; }
+.lh-line { font-size: 11.5px; color: #444; }
+.lh-doc { text-align: right; flex: none; max-width: 48%; }
+.lh-title { font-family: "LXGW WenKai TC", "Noto Serif TC", serif; font-size: 22px; font-weight: 700; line-height: 1.2; }
+.lh-title-en { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #555; margin-bottom: 6px; }
+.lh-meta { width: auto; margin-left: auto; border-collapse: collapse; font-size: 11.5px; }
+.lh-meta th, .lh-meta td { padding: 1px 0 1px 10px; border: 0; background: none; text-align: right; font-weight: 400; }
+.lh-meta th { color: #666; }
+.confidential { margin-top: 14px; font-size: 11px; color: #666; }
+
+/* Page size, margins, and a running footer with page numbers.
+   Margin boxes are supported by Chrome/Edge 131+; older browsers just
+   print without the footer. */
+@page {
+  size: A4;
+  margin: 14mm 12mm 16mm;
+  @bottom-right { content: "第 " counter(page) " / " counter(pages) " 頁  Page " counter(page) " of " counter(pages); font-size: 9pt; color: #555; }
+}
+@page { @bottom-left { font-size: 9pt; color: #555; } }
+@media print {
+  body { padding: 0; }
+  thead { display: table-header-group; }   /* repeat column titles on every page */
+  tr { break-inside: avoid; }
+  .letterhead { break-after: avoid; }
+}
+th small { font-weight: 400; color: #555; font-size: 10px; }
+td strong { white-space: nowrap; }      /* names stay on one line */
+tfoot { display: table-row-group; }     /* the total prints once, at the end — not on every page */

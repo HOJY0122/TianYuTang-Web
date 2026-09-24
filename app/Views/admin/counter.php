@@ -93,8 +93,9 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     <?php endif; ?>
   </div>
 
-  <div class="panel guide">
-    <h2 style="margin-top:0">🧭 用哪一個？ <span class="en">Which one do I use?</span></h2>
+  <details class="panel guide">
+    <summary><span>🧭 用哪一個？ <span class="en">Which one do I use?</span></span><span class="guide-toggle" aria-hidden="true">顯示 Show ▾</span></summary>
+
     <ul>
       <li><strong>① 線上布施付款</strong>：善信已在網上登記布施，現在來付款 → 掃描他的布施 QR。
         <span class="en">They pledged online and are paying now → scan their donation QR.</span></li>
@@ -103,7 +104,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
       <li>記得拍下紙本收據，日後可核對。<span class="en">Photograph the paper receipt so amounts can be checked later.</span></li>
       <li>掃到報名 QR 會自動轉到「現場報到」。<span class="en">A registration QR opens Check-in automatically.</span></li>
     </ul>
-  </div>
+  </details>
   </div>
   <div class="page-col">
   <!-- ---------- Entry form ---------- -->

@@ -2,6 +2,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\ReceiptReader;
 use App\Core\Text;
 use App\Core\ImageUploader;
 use App\Models\AdminUser;
@@ -58,6 +59,24 @@ class SystemController extends Controller
             'adminCount'  => $users->countAdmins(),
             'flash'       => $this->takeFlash(),
         ]);
+    }
+
+    /**
+     * POST /system/ai-test — check the AI key without reading a receipt.
+     * Uses the key just typed in the box if there is one (so it can be
+     * tried before saving), otherwise the key in use.
+     */
+    public function aiTest(): void
+    {
+        $this->requireSystemAdmin();
+        $this->requireCsrf();
+        $typed  = ReceiptReader::tidyKey(is_string($_POST['anthropic_api_key'] ?? null) ? $_POST['anthropic_api_key'] : '');
+        $result = (new ReceiptReader())->testConnection($typed !== '' ? $typed : null);
+        $note   = $typed !== '' ? "\n（測試的是剛輸入、尚未儲存的金鑰，記得按「儲存設定」。Tested the key you typed — remember to Save.）" : '';
+        $this->flash($result['ok'] ? 'success' : 'error',
+            $result['ok'] ? 'AI 連線成功 Connected' : 'AI 連線失敗 Not connected',
+            $result['message'] . ($result['ok'] ? $note : ''));
+        $this->redirect('/system#ai');
     }
 
     /** GET /system/wording — every fixed text on the public site */
@@ -182,6 +201,21 @@ class SystemController extends Controller
         foreach ($values as $key => $value) {
             $setting->set($key, $value);
         }
+        // AI key: only written when a new one is typed (the box is always
+        // empty on the page — a saved key is never sent back to the browser).
+        $newKey = ReceiptReader::tidyKey(is_string($_POST['anthropic_api_key'] ?? null) ? $_POST['anthropic_api_key'] : '');
+        if ($newKey !== '') {
+            if (!preg_match('/^sk-ant-[A-Za-z0-9_\-]{10,}$/', $newKey)) {
+                $this->flash('error', '金鑰格式不對 Key not saved',
+                    "Anthropic 金鑰以 sk-ant- 開頭，只含英文字母、數字、- 和 _。其他設定已儲存。\n"
+                    . 'Anthropic keys start with sk-ant- and contain only letters, numbers, - and _. Your other settings were saved.');
+                $this->redirect('/system#ai');
+            }
+            $setting->set('anthropic_api_key', $newKey);
+        } elseif (!empty($_POST['remove_api_key'])) {
+            $setting->delete('anthropic_api_key');
+        }
+
         // On/off switches: an unticked checkbox is simply absent from the POST.
         foreach (['site_tagline_on', 'pdf_show_logo'] as $key) {
             if (isset($_POST[$key])) {   // Show / Hide buttons send '1' or '0'

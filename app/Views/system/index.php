@@ -136,6 +136,40 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
   <?php $line('pdf_line2', '第二行', 'Line 2', 255); ?>
   <?php $line('pdf_line3', '第三行', 'Line 3', 255); ?>
   </section>
+  <section class="panel form-sec" id="ai">
+  <h3>⑤ AI 讀取收據 <span class="en">AI receipt reading</span></h3>
+  <?php
+    [$aiWhere, $aiKey] = App\Core\ReceiptReader::keySource();
+    $aiFrom = ['config' => 'config/config.php', 'env' => '伺服器環境變數 server environment', 'settings' => '本頁 this page'][$aiWhere] ?? '';
+  ?>
+  <div class="ai-status <?= $aiKey !== '' ? 'is-on' : 'is-off' ?>">
+    <?php if ($aiKey !== ''): ?>
+      <strong>✓ 已設定金鑰 Key set</strong> <code><?= h(App\Core\ReceiptReader::mask($aiKey)) ?></code>
+      <span class="help">來源 From: <?= h($aiFrom) ?></span>
+    <?php else: ?>
+      <strong>✕ 尚未設定金鑰 No key yet</strong>
+      <span class="help">收據只能手動輸入。Receipts can only be typed in by hand.</span>
+    <?php endif; ?>
+  </div>
+  <?php foreach (App\Core\ReceiptReader::setupHints() as $hint): ?>
+    <p class="flash error" style="white-space:pre-line;margin:10px 0 0">⚠️ <?= h($hint) ?></p>
+  <?php endforeach; ?>
+  <label for="anthropic_api_key">Anthropic API 金鑰 <span class="en">API key</span></label>
+  <div class="pw-field">
+    <input id="anthropic_api_key" name="anthropic_api_key" type="password" autocomplete="off" spellcheck="false"
+           placeholder="<?= $aiWhere === 'settings' ? '已儲存，留空保持不變 Saved — leave empty to keep it' : 'sk-ant-api03-…' ?>">
+    <button type="button" class="pw-eye" data-toggle-password="anthropic_api_key" title="顯示 Show">👁</button>
+  </div>
+  <p class="help">到 <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a> 建立金鑰（以 sk-ant- 開頭），貼在這裡，先按「測試連線」再儲存。每讀一張收據會向 Anthropic 帳戶收費。
+    <span class="en">Create a key at console.anthropic.com (it starts with sk-ant-), paste it here, press Test connection, then Save. Each receipt read is billed to that Anthropic account.</span></p>
+  <?php if ($aiWhere === 'settings'): ?>
+    <label class="check-row" style="font-weight:600"><input type="checkbox" name="remove_api_key" value="1" style="width:auto"> 移除已儲存的金鑰 <span class="en">Remove the saved key</span></label>
+  <?php endif; ?>
+  <div class="ai-actions">
+    <button type="submit" class="mini-btn btn-lg" formaction="<?= url('/system/ai-test') ?>" formnovalidate>🔌 測試連線 <span class="en">Test connection</span></button>
+    <span class="help">免費檢查，不會讀取任何收據。A free check — no receipt is read, nothing is billed.</span>
+  </div>
+  </section>
   </div>
 
   <div class="form-actions sticky-actions wide-actions">

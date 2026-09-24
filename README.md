@@ -100,9 +100,15 @@ The temple's paper receipt book, kept online.
 The list can be searched, filtered by date and payment, sorted by any
 column, and exported to Excel. Photos are private (`storage/receipts`).
 
-**Turning AI reading on:** put an API key from console.anthropic.com in
-`config/config.php` (`ANTHROPIC_API_KEY`), or set that environment variable
-on the server. Without a key, receipts are typed in by hand beside the photo.
+**Turning AI reading on:** a system admin opens 網站設定 Site settings →
+⑤ AI, pastes an API key from console.anthropic.com, presses
+**🔌 測試連線 Test connection** (a free check), then Save. The key can also go in
+`config/config.php` (`define('ANTHROPIC_API_KEY', 'sk-ant-…');`) or the
+server's `ANTHROPIC_API_KEY` environment variable — the settings page shows
+which one is in use, and points out common pasting mistakes. Without a key,
+receipts are typed in by hand beside the photo. `app/Core/cacert.pem`
+(Mozilla's certificate list) is used only if the server cannot check HTTPS
+certificates itself, as on many Windows XAMPP installs.
 Each reading is one request to Claude Opus 5 (`claude-opus-5`); the
 key is billed per use by Anthropic.
 

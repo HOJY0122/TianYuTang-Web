@@ -103,7 +103,7 @@ try {
           <circle cx="12" cy="3.6" r="2.3" fill="currentColor"/>
           <path d="M3.5 7.6l8.5 1.8 8.5-1.8M12 9.4v5.2M12 14.6l-3.6 6.6M12 14.6l3.6 6.6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <small aria-hidden="true">無障礙</small>
+        <small aria-hidden="true">無障礙<br>Access</small>
         <span class="sr-only">無障礙設定 Accessibility</span>
       </button>
       <div class="a11y-panel" id="a11yPanel" role="dialog" aria-label="無障礙設定 Accessibility" hidden>

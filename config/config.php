@@ -21,14 +21,17 @@ define('SITE_NAME', '天玉堂');
 
 // ---------- AI receipt reading (optional) ----------
 // 收據掃描 Receipts can read a photo of a handwritten receipt with Claude
-// (Anthropic). Paste an API key from console.anthropic.com between the
-// quotes — or set the ANTHROPIC_API_KEY environment variable on the
-// server. Left empty, receipts are simply typed in by hand.
-// Keep the real key out of git: it is a password that costs money.
-define('ANTHROPIC_API_KEY', getenv('ANTHROPIC_API_KEY') ?: '');
+// (Anthropic). The EASIEST way: system admin → 網站設定 Site settings →
+// ⑤ AI, paste the key there and press 🔌 Test connection.
+//
+// Or paste it here, between the two quotes on the right:
+//     define('ANTHROPIC_API_KEY', 'sk-ant-api03-xxxxxxxx');
+// Left empty, the server's ANTHROPIC_API_KEY environment variable or the
+// key saved in Site settings is used. With no key, receipts are typed in.
+// Keep a real key out of git: it is a password that costs money.
+define('ANTHROPIC_API_KEY', '');
 define('ANTHROPIC_MODEL', 'claude-opus-5');
-// Only changed for testing against a stand-in server.
-define('ANTHROPIC_API_URL', getenv('ANTHROPIC_API_URL') ?: 'https://api.anthropic.com/v1/messages');
+define('ANTHROPIC_API_URL', '');   // leave empty (only changed for testing)
 
 // ---------- Time ----------
 // Every date and time in this system means Malaysian local time.

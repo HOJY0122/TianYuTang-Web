@@ -52,8 +52,12 @@ $payLabel   = ['cash' => '💵 現金 Cash', 'bank' => '🏦 轉帳 Bank-in', ''
   </form>
 
   <?php if (!$aiReady): ?>
-    <p class="flash info" style="margin:0 0 12px">🤖 AI 讀取尚未啟用：可以照常拍照並手動輸入。啟用方法：在 <code>config/config.php</code> 填入 ANTHROPIC_API_KEY。<br>
-      <span class="en">AI reading is off — you can still attach photos and type receipts in. To turn it on, add an ANTHROPIC_API_KEY in config/config.php.</span></p>
+    <p class="flash info" style="margin:0 0 12px">🤖 AI 讀取尚未啟用，可以照常拍照並手動輸入。AI reading is off — you can still attach photos and type receipts in.<br>
+      <?php if (!empty($isSystem)): ?>
+        👉 <a href="<?= url('/system') ?>#ai">到「網站設定 → ⑤ AI」貼上金鑰並測試連線 Set the key in Site settings → ⑤ AI</a>
+      <?php else: ?>
+        請系統管理員在「網站設定 → ⑤ AI」設定金鑰。Ask a system admin to set the key in Site settings → ⑤ AI.
+      <?php endif; ?></p>
   <?php endif; ?>
 
   <p class="help" style="margin:0 0 8px">共 <?= number_format((int) $sum['n']) ?> 張 · <?= number_format((int) $sum['n']) ?> receipt<?= (int) $sum['n'] === 1 ? '' : 's' ?>

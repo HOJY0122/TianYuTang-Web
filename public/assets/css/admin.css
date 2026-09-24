@@ -661,3 +661,9 @@ body.is-sorting,body.is-sorting *{cursor:grabbing!important;user-select:none}
 
 .qr-preview{position:sticky;top:76px}
 .qr-stage canvas{max-width:min(100%,440px)!important}
+.ai-status{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;padding:12px 14px;border-radius:12px;margin-top:12px}
+.ai-status.is-on{background:#e8f3e8;border:1px solid #9fcca9}
+.ai-status.is-off{background:#fbeeee;border:1px solid #e0b3b3}
+.ai-status code{font-size:.85rem;background:#fff;padding:2px 8px;border-radius:6px}
+.ai-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px}
+.mini-btn .en,.primary .en{color:inherit;opacity:.9;font-weight:600}

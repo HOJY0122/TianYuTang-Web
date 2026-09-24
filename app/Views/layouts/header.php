@@ -39,12 +39,14 @@ $helpKey = in_array($activeNav, ['home', 'register', 'donate', 'gallery'], true)
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <?php [$_hFamily, $_hParam] = (new App\Models\Setting())->headingFont(); ?>
-<link href="https://fonts.googleapis.com/css2?family=<?= $_hParam ?><?= $_hParam !== 'LXGW+WenKai+TC:wght@400;700' ? '&family=LXGW+WenKai+TC:wght@400;700' : '' ?>&family=Noto+Sans+TC:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=<?= $_hParam ?><?= $_hParam !== 'LXGW+WenKai+TC:wght@400;700' ? '&family=LXGW+WenKai+TC:wght@400;700' : '' ?>&family=Noto+Sans+TC:wght@400;500;700;800&family=Noto+Sans+SC:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= asset('css/style.css') ?>">
 <style>
 /* Heading typeface chosen by the system admin (Site settings). Rare
-   characters it lacks fall back to LXGW WenKai TC, glyph by glyph. */
-:root{--kai:"<?= h($_hFamily) ?>","LXGW WenKai TC","BiauKai","DFKai-SB","標楷體",serif;--kai-weight:<?= $_hFamily === 'LXGW WenKai TC' ? 700 : 400 ?>}
+   characters it lacks fall back to LXGW WenKai TC, glyph by glyph;
+   Simplified ones (帅 乐 …) to a Kai font that has them (KaiTi on
+   Windows, STKaiti on Mac) rather than a plain sans-serif. */
+:root{--kai:"<?= h($_hFamily) ?>","LXGW WenKai TC","BiauKai","DFKai-SB","標楷體","KaiTi","STKaiti",serif;--kai-weight:<?= $_hFamily === 'LXGW WenKai TC' ? 700 : 400 ?>}
 </style>
 <?php if ($siteFavicon): ?>
 <link rel="icon" href="<?= h($uploadUrl($siteFavicon)) ?>">

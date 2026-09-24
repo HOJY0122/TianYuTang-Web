@@ -51,6 +51,6 @@ document.querySelectorAll('[data-toggle-password]').forEach(function (btn) {
 </script>
 <script src="<?= asset('js/dialog.js') ?>"></script>
 <script src="<?= asset('js/image-editor.js') ?>"></script>
-<?php if (in_array($nav ?? "", ["system", "wording"], true)): ?><script src="<?= asset("js/trad-check.js") ?>"></script><?php endif; ?>
+<script src="<?= asset('js/trad-check.js') ?>"></script>
 </body>
 </html>

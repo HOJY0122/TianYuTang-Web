@@ -8,7 +8,7 @@ $favicon = $site['site_favicon_path'];
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>管理登入 Admin Login｜<?= h($site['site_name']) ?></title>
-<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;800&family=Noto+Sans+SC:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= asset('css/admin.css') ?>">
 <?php if ($favicon): ?><link rel="icon" href="<?= h(BASE_URL . '/' . $favicon) ?>"><?php endif; ?>
 <meta name="robots" content="noindex">

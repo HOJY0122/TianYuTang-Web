@@ -59,3 +59,10 @@ function mask_ic(?string $ic): string
     // A fixed-length mask also hides how long the number is.
     return '****' . mb_substr($ic, -4);
 }
+
+/** Short Ringgit for headline tiles: RM 12,300 (cents only when there are any). */
+function rm_compact(float $amount): string
+{
+    $whole = abs($amount - round($amount)) < 0.005;
+    return 'RM ' . number_format($amount, $whole ? 0 : 2);
+}

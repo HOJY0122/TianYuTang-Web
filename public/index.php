@@ -86,6 +86,7 @@ $router->post('/admin/walkin/save', 'WalkinController@save');
 
 // System administration (system_admin only — enforced in the controller)
 $router->get('/system',                'SystemController@index');
+$router->get('/system/users',          'SystemController@users');
 $router->post('/system/settings',      'SystemController@saveSettings');
 $router->post('/system/users/create',  'SystemController@createUser');
 $router->post('/system/users/role',    'SystemController@changeRole');

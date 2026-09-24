@@ -58,12 +58,12 @@ $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confi
   </div>
   <div class="kpi">
     <div class="k-label">布施總額<span class="en">Total pledged</span></div>
-    <div class="k-value"><?= rm($totalAmount) ?></div>
+    <div class="k-value"><?= rm_compact($totalAmount) ?></div>
     <div class="k-sub"><?= number_format($donationCount) ?> 筆 donations · 功德席 <?= number_format($totalTables) ?> 席 seats</div>
   </div>
   <div class="kpi">
     <div class="k-label">已收款<span class="en">Received</span></div>
-    <div class="k-value"><?= rm($totalPaid) ?></div>
+    <div class="k-value"><?= rm_compact($totalPaid) ?></div>
     <div class="k-sub"><?= $paidPct ?>% · 未收 outstanding <?= rm(max(0, $totalAmount - $totalPaid)) ?></div>
     <div class="meter" title="<?= $paidPct ?>%"><i style="width:<?= $paidPct ?>%"></i></div>
   </div>

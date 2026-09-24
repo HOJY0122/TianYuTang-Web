@@ -8,9 +8,9 @@ $pagerQuery = array_filter(['event' => $eid] + $filters, static fn($v) => $v !==
 $here       = $pagerBase . '?' . http_build_query($pagerQuery + ['page' => $page]);
 ?>
 <div class="kpis">
-  <div class="kpi"><div class="k-label">布施總額<span class="en">Total pledged</span></div><div class="k-value"><?= rm($sum) ?></div></div>
-  <div class="kpi"><div class="k-label">已收款<span class="en">Received</span></div><div class="k-value"><?= rm($paid) ?></div></div>
-  <div class="kpi"><div class="k-label">未收款<span class="en">Outstanding</span></div><div class="k-value"><?= rm(max(0, $sum - $paid)) ?></div></div>
+  <div class="kpi"><div class="k-label">布施總額<span class="en">Total pledged</span></div><div class="k-value"><?= rm_compact($sum) ?></div></div>
+  <div class="kpi"><div class="k-label">已收款<span class="en">Received</span></div><div class="k-value"><?= rm_compact($paid) ?></div></div>
+  <div class="kpi"><div class="k-label">未收款<span class="en">Outstanding</span></div><div class="k-value"><?= rm_compact(max(0, $sum - $paid)) ?></div></div>
 </div>
 
 <div class="panel">

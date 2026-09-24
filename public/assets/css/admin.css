@@ -316,7 +316,7 @@ background:#fffdf6;font:inherit;resize:vertical}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:0 6px 18px rgba(67,39,18,.07)}
 .kpi .k-label{font-size:13.5px;color:var(--muted);font-weight:700}
 .kpi .k-label .en{display:block;font-weight:500;font-size:12px}
-.kpi .k-value{font-size:32px;font-weight:800;line-height:1.15;margin-top:6px;color:var(--dark)}
+.kpi .k-value{font-size:30px;white-space:nowrap;font-weight:800;line-height:1.15;margin-top:6px;color:var(--dark)}
 .kpi .k-sub{font-size:12.5px;color:var(--muted);margin-top:2px}
 .meter{height:8px;border-radius:99px;background:#f0e2bd;margin-top:10px;overflow:hidden}
 .meter i{display:block;height:100%;border-radius:99px;background:var(--red)}
@@ -388,9 +388,15 @@ background:#fffdf6;font:inherit;resize:vertical}
 @media (max-width:760px){
   .records thead{display:none}
   .records,.records tbody,.records tr,.records td{display:block;width:100%}
-  .records tr{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;background:var(--card);padding:6px 4px}
+  .records tr{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:12px;margin-bottom:10px;
+    background:var(--card);padding:6px 4px}
+  .records td{min-width:0;overflow-wrap:anywhere}
+  .records td:last-child:not(:first-child){grid-column:1/-1}
   .records td{border:0;padding:5px 10px;white-space:normal}
   .records td[data-label]::before{content:attr(data-label);display:block;font-size:11.5px;color:var(--muted);font-weight:700}
   .toolbar input[type=search]{width:100%}
   .toolbar .field{flex:1 1 140px}
 }
+
+/* English beside a Kai heading reads better in the sans face. */
+h1 .en,h2 .en,h3 .en,h4 .en{font-family:var(--sans);font-size:.62em;font-weight:500;letter-spacing:0}

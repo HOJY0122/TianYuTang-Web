@@ -18,9 +18,11 @@ $albumLink = $albumLink ?? null;
       <small><?= h($album['name']) ?></small>
     </h3>
     <?php if ($albumLink): ?>
-      <a class="album-all" href="<?= h($albumLink) ?>">查看全部 <?= (int) $album['photo_count'] ?> 張 · View all →</a>
+      <?php // Wording: 網站文字 → 相簿 Gallery (gallery.view_all / gallery.count). ?>
+      <?php $albumN = ['n' => (int) $album['photo_count']]; ?>
+      <a class="album-all" href="<?= h($albumLink) ?>"><?= h(trim(t('gallery.view_all', 'zh', $albumN) . ' · ' . t('gallery.view_all', 'en', $albumN), ' ·')) ?></a>
     <?php else: ?>
-      <span class="help"><?= (int) $album['photo_count'] ?> 張相片 photos</span>
+      <span class="help"><?= h(trim(t('gallery.count', 'zh', ['n' => (int) $album['photo_count']]) . ' ' . t('gallery.count', 'en', ['n' => (int) $album['photo_count']]))) ?></span>
     <?php endif; ?>
   </div>
 

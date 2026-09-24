@@ -62,6 +62,30 @@ class ReceiptReader
         return self::apiKey() !== '';
     }
 
+    /**
+     * Why receipt reading is off, in words a system admin can act on:
+     * the chosen service has no key — and whether another one does.
+     */
+    public static function whyOff(): string
+    {
+        if (self::configured()) {
+            return '';
+        }
+        $chosen = self::PROVIDERS[self::provider()][0];
+        $others = [];
+        foreach (self::PROVIDERS as $p => [$label]) {
+            if ($p !== self::provider() && self::apiKey($p) !== '') {
+                $others[] = $label;
+            }
+        }
+        $msg = "目前選用「{$chosen}」，但它沒有已儲存的金鑰。The chosen service, {$chosen}, has no saved key.";
+        if ($others) {
+            $list = implode('、', $others);
+            $msg .= "\n已有金鑰的服務：{$list} — 請在 ⑤ AI 選用它並按「儲存設定」。A key is saved for {$list} — choose it in ⑤ AI and press Save.";
+        }
+        return $msg;
+    }
+
     /** Which service reads receipts (Site settings → ⑤ AI). */
     public static function provider(): string
     {

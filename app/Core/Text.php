@@ -104,6 +104,9 @@ class Text
         'gallery.hint'        => ['gallery', '歷年活動留影，左右滑動看更多，點一下放大。', 'Photos from every year. Swipe for more, tap to enlarge.'],
         'gallery.empty_title' => ['gallery', '相簿準備中', 'Photos coming soon'],
         'gallery.empty_text'  => ['gallery', '活動後將上傳精彩留影，敬請期待。', 'Photos will be added after the event.'],
+        // Album headings (home page and gallery). {n} = number of photos; delete it to hide the number.
+        'gallery.view_all'    => ['gallery', '查看全部 {n} 張', 'View all →'],
+        'gallery.count'       => ['gallery', '{n} 張相片', '{n} photos'],
 
         // --- ⓘ help panel, one per page ---
         'help.title'    => ['help', '使用說明', 'How to use this page'],

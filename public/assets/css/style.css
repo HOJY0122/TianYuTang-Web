@@ -320,7 +320,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--red);box-shadow:0 0 0
 /* ---------- Footer ---------- */
 /* Footer: space, text size, alignment and colours come from Site settings (footer.php sets the variables). */
 .site-footer{background:var(--f-bg,var(--deep-red));color:var(--f-fg,#fff3c2);text-align:center;margin-top:2rem;
-  padding:var(--f-pad,2.4rem) 1.1rem calc(var(--f-pad,2.4rem) * .66);font-size:var(--f-size,100%)}
+  padding:var(--f-pad,2.4rem) 1.1rem;font-size:var(--f-size,100%)}
 .site-footer .f-name{font-family:var(--kai);font-size:1.6em;letter-spacing:.12em;color:var(--f-accent,inherit)}
 .site-footer .f-org{letter-spacing:.06em;font-size:.9em}
 .site-footer p{margin:.4em auto;max-width:44rem;white-space:pre-line}
@@ -391,7 +391,7 @@ input[aria-invalid="true"]{border-color:#c0392b;background:#fff6f5}
 .help-contact{font-weight:700}
 .help-close{position:absolute;top:.5rem;right:.5rem;width:2.2rem;height:2.2rem;border:0;border-radius:50%;background:var(--gold-soft);
   font-size:1.3rem;line-height:1;cursor:pointer}
-.site-footer{padding-bottom:max(5rem,calc(var(--f-pad,2.4rem) * .66))}   /* room for the ⓘ button */
+@media (max-width:560px){ .site-footer{padding-bottom:max(4.5rem,var(--f-pad,2.4rem))} }   /* phones: room for the ⓘ button */
 .loc-title{margin:0;color:var(--red);font-size:1.4rem}
 .loc-title .en{display:inline;font-size:.6em;margin-left:.4rem}
 @media (max-width:760px){
@@ -453,3 +453,8 @@ html.hc .help-btn{background:#000;border-color:#fff}
 .fit-toggle{position:fixed;left:8px;bottom:8px;z-index:9999;padding:3px 9px;opacity:.8;border-radius:999px;border:1px solid rgba(0,0,0,.15);
   background:rgba(255,250,235,.92);color:#6b1d16;font:600 10px/1.3 system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.15);cursor:pointer}
 .fit-toggle[hidden]{display:none}
+
+/* The footer always sits at the bottom of the screen, even on a short page. */
+body{min-height:100vh;display:flex;flex-direction:column}
+body > main{flex:1 0 auto}
+body > .site-footer{flex-shrink:0}

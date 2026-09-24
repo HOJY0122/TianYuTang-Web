@@ -351,17 +351,18 @@ class SystemController extends Controller
     /** GET /account/password — both roles */
     public function passwordForm(): void
     {
-        $this->requireLogin();
+        $this->requireLogin(true);
         $this->view('system/password', [
             'flash'    => $this->takeFlash(),
             'homePath' => $this->homePath(),
+            'forced'   => !empty($_SESSION['must_change_password']),
         ]);
     }
 
     /** POST /account/password — both roles */
     public function changeOwnPassword(): void
     {
-        $this->requireLogin();
+        $this->requireLogin(true);
         $this->requireCsrf();
 
         $users   = new AdminUser();
@@ -386,6 +387,7 @@ class SystemController extends Controller
 
         $users->updatePassword($id, $new);
         session_regenerate_id(true);
+        unset($_SESSION['must_change_password']);   // released from the forced change
 
         $this->flash('success', '密碼已變更', '您的密碼已更新。');
         $this->redirect($this->homePath());

@@ -49,7 +49,7 @@ $router->get('/donation/success',   'ConfirmController@donation');
 // Admin
 $router->get('/admin/login',        'AdminController@loginForm');
 $router->post('/admin/login',       'AdminController@login');
-$router->get('/admin/logout',       'AdminController@logout');
+$router->post('/admin/logout',      'AdminController@logout');
 $router->get('/admin/dashboard',    'AdminController@dashboard');
 $router->post('/admin/rsvp/confirm','AdminController@confirmRsvp');
 $router->post('/admin/rsvp/cancel', 'AdminController@cancelRsvp');
@@ -82,6 +82,7 @@ $router->post('/account/password',     'SystemController@changeOwnPassword');
 // Counter (cash) donations
 $router->get('/admin/counter',      'CounterController@index');
 $router->post('/admin/counter/save','CounterController@save');
+$router->get('/admin/receipt',      'CounterController@receipt');
 
 // On-site check-in
 $router->get('/admin/checkin',         'CheckinController@index');

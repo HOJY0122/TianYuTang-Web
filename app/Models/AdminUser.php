@@ -20,6 +20,14 @@ class AdminUser extends Model
     public const ROLE_SYSTEM = 'system_admin';
 
     /**
+     * The password schema.sql ships with. It is published with the
+     * source, so anyone can read it — which is why logging in with it
+     * only unlocks the change-password page, and why no account may be
+     * given it again.
+     */
+    public const DEFAULT_PASSWORD = 'tianyutang2026';
+
+    /**
      * Check a username/password pair.
      *
      * Returns null for BOTH "no such user" and "wrong password" so the
@@ -153,6 +161,9 @@ class AdminUser extends Model
         }
         if (strlen($password) > 200) {
             $errors[] = '密碼過長。';
+        }
+        if ($password === self::DEFAULT_PASSWORD) {
+            $errors[] = '不可使用系統預設密碼，請另設一組。';
         }
         if ($password !== $confirm) {
             $errors[] = '兩次輸入的密碼不一致。';

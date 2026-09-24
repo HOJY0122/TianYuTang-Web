@@ -91,6 +91,7 @@
           <form method="POST" action="<?= url('/admin/checkin/group') ?>" style="margin:0">
             <?= csrf_field() ?>
             <input type="hidden" name="group_id" value="<?= (int) $group['id'] ?>">
+            <input type="hidden" name="event_id" value="<?= (int) $event['id'] ?>">
             <input type="hidden" name="ref" value="<?= h($ref) ?>">
             <button class="big-btn" type="submit">✅ 全部報到</button>
           </form>
@@ -115,6 +116,7 @@
             <form method="POST" action="<?= url('/admin/checkin/person') ?>" style="margin:0">
               <?= csrf_field() ?>
               <input type="hidden" name="attendee_id" value="<?= (int) $p['id'] ?>">
+              <input type="hidden" name="event_id" value="<?= (int) $event['id'] ?>">
               <input type="hidden" name="ref" value="<?= h($ref) ?>">
               <?php if ($in): ?>
                 <input type="hidden" name="undo" value="1">

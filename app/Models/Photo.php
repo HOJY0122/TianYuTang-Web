@@ -48,12 +48,6 @@ class Photo extends Model
         );
     }
 
-    /** How many photos an event has. */
-    public function countForEvent(int $eventId): int
-    {
-        return (int) $this->scalar('SELECT COUNT(*) FROM event_photos WHERE event_id = ?', [$eventId]);
-    }
-
     /** A single photo, or null. */
     public function find(int $id): ?array
     {
@@ -136,15 +130,5 @@ class Photo extends Model
              GROUP BY e.id, e.name, e.year, e.year_label
              ORDER BY e.year DESC, e.id DESC"
         );
-    }
-
-    /** Both file paths for a photo, for cleanup after deletion. */
-    public function filePathsOf(int $id): array
-    {
-        $photo = $this->find($id);
-        if ($photo === null) {
-            return [];
-        }
-        return [$photo['file_path'], $photo['thumb_path']];
     }
 }

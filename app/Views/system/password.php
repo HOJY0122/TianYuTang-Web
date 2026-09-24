@@ -13,7 +13,14 @@
   <h1>🔑 變更密碼</h1>
   <div style="display:flex;align-items:center;gap:14px">
     <span class="who"><?= h($_SESSION['admin_display'] ?? $_SESSION['admin_username']) ?></span>
-    <a class="logout" href="<?= url($homePath ?? '/admin/dashboard') ?>">← 返回</a>
+    <?php if (empty($forced)): ?>
+      <a class="logout" href="<?= url($homePath ?? '/admin/dashboard') ?>">← 返回</a>
+    <?php else: ?>
+      <form class="logout-form" method="POST" action="<?= url('/admin/logout') ?>">
+        <?= csrf_field() ?>
+        <button type="submit" class="logout">登出 Logout</button>
+      </form>
+    <?php endif; ?>
   </div>
 </div>
 
@@ -22,6 +29,13 @@
   <?php if (!empty($flash)): ?>
     <div class="flash <?= h($flash['type']) ?>">
       <strong><?= h($flash['title']) ?></strong> — <?= h($flash['message']) ?>
+    </div>
+  <?php endif; ?>
+
+  <?php if (!empty($forced)): ?>
+    <div class="flash error">
+      <strong>請先更改密碼</strong> — 您正在使用系統預設密碼，任何人都可以在說明文件中看到它。
+      設定新密碼後才能繼續使用後台。
     </div>
   <?php endif; ?>
 
@@ -50,7 +64,9 @@
 
       <div class="form-actions">
         <button class="primary" type="submit">變更密碼</button>
-        <a class="mini-btn ghost" href="<?= url('/admin/dashboard') ?>">取消</a>
+        <?php if (empty($forced)): ?>
+          <a class="mini-btn ghost" href="<?= url($homePath ?? '/admin/dashboard') ?>">取消</a>
+        <?php endif; ?>
       </div>
     </form>
   </div>

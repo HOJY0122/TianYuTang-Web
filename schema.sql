@@ -76,15 +76,21 @@ CREATE TABLE IF NOT EXISTS events (
 CREATE TABLE IF NOT EXISTS rsvp_groups (
     id INT AUTO_INCREMENT PRIMARY KEY,
     event_id INT NOT NULL,
+
+    -- online = the public form; walkin = entered at the counter (migration 006)
+    source ENUM('online','walkin') NOT NULL DEFAULT 'online',
+
     ref_code VARCHAR(20) NULL UNIQUE,           -- RSVP-0001, set from id right after insert
     attendee_count TINYINT UNSIGNED NOT NULL,
     status ENUM('pending','confirmed','cancelled') NOT NULL DEFAULT 'pending',
+    recorded_by VARCHAR(50) NULL DEFAULT NULL,  -- which admin entered a walk-in
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     -- RESTRICT, not CASCADE: deleting an event must never silently
     -- destroy the registrations attached to it.
     FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE RESTRICT,
-    INDEX idx_event_status (event_id, status)
+    INDEX idx_event_status (event_id, status),
+    INDEX idx_event_source (event_id, source)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================
@@ -190,6 +196,19 @@ CREATE TABLE IF NOT EXISTS settings (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================
+-- login_attempts — failed admin logins, for rate limiting.
+-- Five failures from one IP within 15 minutes locks it out
+-- until the oldest ages out. Old rows are pruned by the app.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS login_attempts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ip           VARCHAR(45) NOT NULL,
+    username     VARCHAR(50) NOT NULL,
+    attempted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_ip_time (ip, attempted_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
 -- Seed data
 -- ============================================================
 
@@ -206,8 +225,10 @@ SELECT
     500.00, 10, TRUE, FALSE
 WHERE NOT EXISTS (SELECT 1 FROM events WHERE year = 2026 AND is_test = FALSE);
 
--- Default admin. CHANGE THIS PASSWORD after first login.
--- Login: admin / tianyutang2026
+-- Default admin. Login: admin / tianyutang2026
+-- The app will not let this password be used for anything except
+-- choosing a new one: the first login goes straight to the
+-- change-password page (see AdminUser::DEFAULT_PASSWORD).
 INSERT INTO admin_users (username, password_hash, role, display_name) VALUES
 ('admin', '$2y$12$2peuIpyQnsls10rNrIOTU.8xcMbsvlnnhpCIxLsQZkia9EapTIvgW', 'system_admin', '系統管理員')
 ON DUPLICATE KEY UPDATE username = username;

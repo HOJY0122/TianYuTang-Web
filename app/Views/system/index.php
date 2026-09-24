@@ -13,7 +13,10 @@
   <h1>⚙️ 系統管理 System Admin</h1>
   <div style="display:flex;align-items:center;gap:14px">
     <span class="who"><?= h($_SESSION['admin_display'] ?? $_SESSION['admin_username']) ?></span>
-    <a class="logout" href="<?= url('/admin/logout') ?>">登出 Log out</a>
+    <form class="logout-form" method="POST" action="<?= url('/admin/logout') ?>">
+      <?= csrf_field() ?>
+      <button type="submit" class="logout">登出 Log out</button>
+    </form>
   </div>
 </div>
 

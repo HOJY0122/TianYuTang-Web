@@ -6,6 +6,7 @@ use App\Core\ImageUploader;
 use App\Models\AdminUser;
 use App\Models\Donation;
 use App\Models\Event;
+use App\Models\LoginAttempt;
 use App\Models\Photo;
 use App\Models\Rsvp;
 use RuntimeException;
@@ -35,6 +36,15 @@ class AdminController extends Controller
 
         $username = trim((string) ($_POST['username'] ?? ''));
         $password = (string) ($_POST['password'] ?? '');
+        $ip       = (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+        $attempts = new LoginAttempt();
+
+        // Checked BEFORE the password, so a locked-out address learns
+        // nothing — not even whether a guess would have been right.
+        if ($attempts->isLockedOut($ip)) {
+            $_SESSION['login_error'] = '登入失敗次數過多，請 ' . LoginAttempt::WINDOW_MINUTES . ' 分鐘後再試。';
+            $this->redirect('/admin/login');
+        }
 
         if ($username === '' || $password === '') {
             $_SESSION['login_error'] = '請輸入帳號與密碼。';
@@ -44,9 +54,12 @@ class AdminController extends Controller
         $user = (new AdminUser())->verify($username, $password);
 
         if ($user === null) {
+            $attempts->recordFailure($ip, $username);
             $_SESSION['login_error'] = '帳號或密碼錯誤。';
             $this->redirect('/admin/login');
         }
+
+        $attempts->clear($ip);
 
         // Fresh session ID on privilege change — blocks session fixation.
         session_regenerate_id(true);
@@ -56,14 +69,28 @@ class AdminController extends Controller
         $_SESSION['admin_display']  = $user['display_name'] ?: $user['username'];
         (new AdminUser())->recordLogin((int) $user['id']);
 
+        // Still on the password printed in the README? Then this login
+        // unlocks exactly one page: the one that replaces it.
+        if (hash_equals(AdminUser::DEFAULT_PASSWORD, $password)) {
+            $_SESSION['must_change_password'] = true;
+            $this->redirect('/account/password');
+        }
+
         // Each role lands in its own area. Sending a system admin to the
         // event dashboard would only bounce them straight back out.
         $this->redirect($this->homePath());
     }
 
-    /** GET /admin/logout */
+    /**
+     * POST /admin/logout
+     *
+     * POST with a CSRF token, not a plain link: a GET logout can be
+     * triggered by any web page (an <img src=".../admin/logout">), which
+     * would sign the committee out mid-task.
+     */
     public function logout(): void
     {
+        $this->requireCsrf();
         $_SESSION = [];
         session_destroy();
         $this->redirect('/admin/login');
@@ -469,21 +496,15 @@ class AdminController extends Controller
 
         $errors = Event::validate($fields);
 
-        // Editing an event that already has registrations? Lowering the
-        // attendee cap below a group that is already booked would leave
-        // the dashboard showing a number the form says is impossible.
-        if (!$isNew && !$errors) {
-            $existing = $eventModel->find($id);
-            if ($existing === null) {
+        // Editing? Then the event must still exist — it may have been a
+        // test event deleted in another tab.
+        if (!$isNew) {
+            if ($eventModel->find($id) === null) {
                 $this->flash('error', '找不到活動', '找不到該活動。');
                 $this->redirect('/admin/dashboard');
             }
         }
 
-        // ---- Image uploads ----
-        // Done after validation so a rejected form never leaves an
-        // orphaned file on disk, and kept out of $fields until they
-        // succeed so a failed upload cannot blank an existing image.
         // Banner and favicon are NOT handled here any more. They are site
         // settings owned by the system admin (/system), not event fields,
         // so this form cannot change them however the POST is crafted.
@@ -495,17 +516,16 @@ class AdminController extends Controller
         }
 
         if ($isNew) {
-            $newId = $eventModel->create($fields);
+            $id = $eventModel->create($fields);
             $this->flash(
                 'success',
                 '活動已新增',
                 '新活動已建立，但尚未公開。確認資料無誤後，請按「設為公開」。'
             );
-            $this->redirect("/admin/dashboard?event={$newId}");
+        } else {
+            $eventModel->update($id, $fields);
+            $this->flash('success', '已儲存', '活動資料已更新，網站已同步顯示。');
         }
-
-        $eventModel->update($id, $fields);
-        $this->flash('success', '已儲存', '活動資料已更新，網站已同步顯示。');
         $this->redirect("/admin/dashboard?event={$id}");
     }
 

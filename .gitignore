@@ -1,0 +1,23 @@
+# ----------------------------------------------------------
+# Uploaded files are DATA the site creates at runtime, not code.
+# Keep them out of git: they bloat the repository forever, and
+# receipt photos are financial records that must not be published
+# with the source. Only the folder skeleton (.gitkeep) and the
+# protective .htaccess files are tracked.
+# ----------------------------------------------------------
+/public/uploads/**
+!/public/uploads/**/
+!/public/uploads/**/.gitkeep
+!/public/uploads/**/.htaccess
+!/public/uploads/.htaccess
+
+/storage/**
+!/storage/**/
+!/storage/**/.gitkeep
+!/storage/.htaccess
+
+# Local tooling
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

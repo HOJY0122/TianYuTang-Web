@@ -97,7 +97,9 @@ class CounterController extends Controller
         $seatPrice  = (float) $event['merit_table_price'];
 
         if ($method === 'free') {
-            $freeAmount = (float) ($_POST['free_amount'] ?? 0);
+            // Rounded BEFORE the check: 0.001 would pass "> 0" and then be
+            // stored by the DECIMAL(10,2) column as a RM 0.00 donation.
+            $freeAmount = round((float) ($_POST['free_amount'] ?? 0), 2);
             if ($freeAmount <= 0 || $freeAmount > 1000000) {
                 $errors[] = '請輸入有效的布施金額。';
             }
@@ -108,25 +110,24 @@ class CounterController extends Controller
             }
         }
 
+        if ($errors) {
+            $this->backWithErrors($eventId, $errors, compact('name', 'contact', 'method', 'notes'));
+        }
+
         // Receipt photo is optional but strongly encouraged.
+        //
+        // Stored only once every other field has passed: saving it first
+        // meant each rejected form left a receipt on disk that no donation
+        // pointed at. Kept PRIVATE (outside the web root) because it is a
+        // financial record — see receipt() below for how admins view it.
         $receiptPath = null;
         if (ImageUploader::wasProvided($_FILES['receipt'] ?? null)) {
             try {
-                $receiptPath = (new ImageUploader('receipts'))->store($_FILES['receipt'], 1600);
+                $receiptPath = (new ImageUploader('receipts', true))->store($_FILES['receipt'], 1600);
             } catch (RuntimeException $e) {
-                $errors[] = '收據相片：' . $e->getMessage();
+                $this->backWithErrors($eventId, ['收據相片：' . $e->getMessage()],
+                    compact('name', 'contact', 'method', 'notes'));
             }
-        }
-
-        if ($errors) {
-            $_SESSION['counter_errors'] = $errors;
-            $_SESSION['counter_old']    = [
-                'name' => $name, 'contact' => $contact, 'method' => $method,
-                'free_amount' => $_POST['free_amount'] ?? '',
-                'table_count' => $_POST['table_count'] ?? '',
-                'notes' => $notes,
-            ];
-            $this->redirect("/admin/counter?event={$eventId}");
         }
 
         $result = (new Donation())->createAtCounter(
@@ -149,6 +150,61 @@ class CounterController extends Controller
             "{$result['ref_code']}　{$name}　" . rm($result['amount'])
             . ($receiptPath ? '　（收據已附）' : '')
         );
+        $this->redirect("/admin/counter?event={$eventId}");
+    }
+
+    /**
+     * GET /admin/receipt?id=<donation id>
+     *
+     * Receipt photos live outside the web root, so no URL can reach them
+     * directly. This is the only way to see one: signed-in admins only,
+     * looked up by donation id — never by a file path from the browser.
+     */
+    public function receipt(): void
+    {
+        $this->requireAdmin();
+
+        $donation = (new Donation())->find((int) ($_GET['id'] ?? 0));
+        $stored   = $donation['receipt_path'] ?? null;
+
+        // Receipts saved before the move to storage/ still carry their
+        // old "uploads/receipts/…" path under public/.
+        $uploader = str_starts_with((string) $stored, 'uploads/')
+            ? new ImageUploader('receipts')
+            : new ImageUploader('receipts', true);
+        $file = $uploader->absolutePath($stored);
+
+        $info = $file !== null ? @getimagesize($file) : false;
+        if ($info === false) {
+            http_response_code(404);
+            require BASE_PATH . '/app/Views/errors/404.php';
+            return;
+        }
+
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        header('Content-Type: ' . $info['mime']);
+        header('Content-Length: ' . filesize($file));
+        header('Content-Disposition: inline; filename="' . basename($file) . '"');
+        header('X-Content-Type-Options: nosniff');
+        header('Cache-Control: private, no-store');   // not left in shared caches
+        readfile($file);
+        exit;
+    }
+
+    /**
+     * Return to the form with the problems listed and the typed values
+     * kept, so the volunteer only fixes what was wrong. (A chosen file
+     * cannot be kept — browsers never refill a file input.)
+     */
+    private function backWithErrors(int $eventId, array $errors, array $values): void
+    {
+        $_SESSION['counter_errors'] = $errors;
+        $_SESSION['counter_old']    = $values + [
+            'free_amount' => (string) ($_POST['free_amount'] ?? ''),
+            'table_count' => (string) ($_POST['table_count'] ?? ''),
+        ];
         $this->redirect("/admin/counter?event={$eventId}");
     }
 

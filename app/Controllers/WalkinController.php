@@ -83,6 +83,12 @@ class WalkinController extends Controller
         }
 
         foreach ($names as $i => $rawName) {
+            // Plain text only — attendee_name[0][]=x arrives as a nested
+            // array, which (string) would turn into the word "Array".
+            if (!is_string($rawName) || !is_string($ics[$i] ?? '') || !is_string($contacts[$i] ?? '')) {
+                $errors[] = '參加者資料格式不正確，請重新填寫。';
+                break;
+            }
             $name    = trim((string) $rawName);
             $ic      = trim((string) ($ics[$i] ?? ''));
             $contact = trim((string) ($contacts[$i] ?? ''));
@@ -125,8 +131,12 @@ class WalkinController extends Controller
 
         if ($errors) {
             $_SESSION['walkin_errors'] = $errors;
+            // Only plain text goes back into the form; anything else
+            // (a crafted nested array) is dropped rather than echoed.
+            $textOnly = static fn(array $list): array
+                => array_map(static fn($v) => is_string($v) ? $v : '', $list);
             $_SESSION['walkin_old']    = [
-                'names' => $names, 'ics' => $ics, 'contacts' => $contacts,
+                'names' => $textOnly($names), 'ics' => $textOnly($ics), 'contacts' => $textOnly($contacts),
             ];
             $this->redirect("/admin/walkin?event={$eventId}");
         }

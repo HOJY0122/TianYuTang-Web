@@ -1,0 +1,11 @@
+# Private files (receipt photos) — never reachable from a browser.
+# They live outside public/ already; this is the second lock in case the
+# whole project folder is ever served. Admins view receipts through the
+# /admin/receipt route, which checks the login first.
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order deny,allow
+    Deny from all
+</IfModule>

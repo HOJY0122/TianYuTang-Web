@@ -29,6 +29,13 @@ use RuntimeException;
  *  5. The uploads directory refuses to execute scripts (see its
  *     .htaccess). Defence in depth — by this point nothing executable
  *     should exist there anyway.
+ *
+ * PUBLIC vs PRIVATE
+ *   Banners and gallery photos are meant to be seen by everyone, so they
+ *   go under public/uploads and the web server hands them out directly.
+ *   Receipt photos are financial records, so they are stored PRIVATE:
+ *   under storage/, outside the web root, where no URL can reach them.
+ *   An admin-only route (CounterController::receipt) streams them.
  */
 class ImageUploader
 {
@@ -46,15 +53,31 @@ class ImageUploader
 
     private string $uploadDir;
     private string $publicPrefix;
+    private string $rootDir;    // nothing outside this may ever be deleted or read
+    private string $pathBase;   // stored paths are relative to this
 
     /**
-     * @param string $subdir folder under public/uploads, e.g. 'banners'
+     * @param string $subdir  folder name, e.g. 'banners'
+     * @param bool   $private true = storage/<subdir> (never web-reachable),
+     *                        false = public/uploads/<subdir>
      */
-    public function __construct(string $subdir = '')
+    public function __construct(string $subdir = '', bool $private = false)
     {
         $subdir = trim($subdir, '/');
-        $this->uploadDir    = BASE_PATH . '/public/uploads' . ($subdir ? '/' . $subdir : '');
-        $this->publicPrefix = 'uploads' . ($subdir ? '/' . $subdir : '');
+
+        if ($private) {
+            // Stored as "receipts/ab12….jpg", relative to storage/.
+            $this->pathBase     = BASE_PATH . '/storage';
+            $this->rootDir      = $this->pathBase;
+            $this->uploadDir    = $this->rootDir . ($subdir ? '/' . $subdir : '');
+            $this->publicPrefix = $subdir;
+        } else {
+            // Stored as "uploads/banners/ab12….jpg", relative to public/.
+            $this->pathBase     = BASE_PATH . '/public';
+            $this->rootDir      = $this->pathBase . '/uploads';
+            $this->uploadDir    = $this->rootDir . ($subdir ? '/' . $subdir : '');
+            $this->publicPrefix = 'uploads' . ($subdir ? '/' . $subdir : '');
+        }
 
         if (!is_dir($this->uploadDir) && !mkdir($this->uploadDir, 0755, true) && !is_dir($this->uploadDir)) {
             throw new RuntimeException('Cannot create upload directory: ' . $this->uploadDir);
@@ -249,29 +272,37 @@ class ImageUploader
         return $files;
     }
 
-    /**
-     * Delete a previously stored file.
-     * The path is confined to the uploads directory, so a crafted value
-     * such as "../../config/config.php" cannot reach outside it.
-     */
+    /** Delete a previously stored file (confined as absolutePath() describes). */
     public function delete(?string $relativePath): void
     {
-        if (empty($relativePath)) {
-            return;
-        }
-
-        $uploadsRoot = realpath(BASE_PATH . '/public/uploads');
-        $full        = realpath(BASE_PATH . '/public/' . $relativePath);
-
-        if ($uploadsRoot === false || $full === false) {
-            return;
-        }
-        if (!str_starts_with($full, $uploadsRoot . DIRECTORY_SEPARATOR)) {
-            return;   // outside the uploads folder — refuse
-        }
-        if (is_file($full)) {
+        $full = $this->absolutePath($relativePath);
+        if ($full !== null) {
             @unlink($full);
         }
+    }
+
+    /**
+     * Turn a stored path back into a real file on disk, or null.
+     *
+     * The result is confined to this uploader's root folder, so a crafted
+     * value such as "../../config/config.php" cannot reach outside it.
+     */
+    public function absolutePath(?string $relativePath): ?string
+    {
+        if (empty($relativePath)) {
+            return null;
+        }
+
+        $root = realpath($this->rootDir);
+        $full = realpath($this->pathBase . '/' . $relativePath);
+
+        if ($root === false || $full === false) {
+            return null;
+        }
+        if (!str_starts_with($full, $root . DIRECTORY_SEPARATOR)) {
+            return null;   // outside the root folder — refuse
+        }
+        return is_file($full) ? $full : null;
     }
 
     /** Was a file actually chosen, and did PHP accept it? */

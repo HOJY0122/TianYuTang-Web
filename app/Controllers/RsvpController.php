@@ -40,9 +40,12 @@ class RsvpController extends Controller
         }
 
         $count    = (int) ($_POST['attendee_count'] ?? 0);
-        $names    = (array) ($_POST['attendee_name'] ?? []);
-        $ics      = (array) ($_POST['attendee_ic'] ?? []);
-        $contacts = (array) ($_POST['attendee_contact'] ?? []);
+        // array_values(): the loop below reads [0], [1], [2]… but a
+        // crafted POST can send attendee_name[7]=… — right count, wrong
+        // keys — which would read keys that do not exist.
+        $names    = array_values((array) ($_POST['attendee_name'] ?? []));
+        $ics      = array_values((array) ($_POST['attendee_ic'] ?? []));
+        $contacts = array_values((array) ($_POST['attendee_contact'] ?? []));
 
         // --- Validate the submission as a whole ---
         if ($count < 1 || $count > $maxAttendees) {
@@ -55,6 +58,11 @@ class RsvpController extends Controller
         // --- Validate each attendee ---
         $attendees = [];
         for ($i = 0; $i < $count; $i++) {
+            // Each entry must be plain text. attendee_name[0][]=x would
+            // arrive as a nested array and become the string "Array".
+            if (!is_string($names[$i]) || !is_string($ics[$i]) || !is_string($contacts[$i])) {
+                $this->fail('參加者資料格式不正確，請重新填寫。');
+            }
             $name    = trim((string) $names[$i]);
             $ic      = trim((string) $ics[$i]);
             $contact = trim((string) $contacts[$i]);

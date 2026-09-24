@@ -78,7 +78,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
       <div id="walkinRows"></div>
 
       <div class="form-actions">
-        <button class="primary" type="submit">🚶 登記並報到</button>
+        <button class="primary" type="submit">🚶 登記並報到 <span class="en">Register &amp; check in</span></button>
       </div>
     </form>
   </div>
@@ -112,17 +112,24 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
         紀錄會保留但不列入人數。<span class="en">Made a mistake? Cancel it from Registrations — it is kept but not counted.</span>
       </p>
     </div>
+  <?php else: ?>
+    <div class="panel empty-card">
+      <div class="empty-icon" aria-hidden="true">🚶</div>
+      <strong>今天還沒有現場報名 <span class="en">No walk-ins yet</span></strong>
+      <p class="help">登記後會顯示在這裡，方便核對。Each walk-in appears here once saved.</p>
+    </div>
   <?php endif; ?>
 
-  <div class="panel guide">
-    <h2 style="margin-top:0">🧭 現場報名 <span class="en">Walk-in tips</span></h2>
+  <details class="panel guide">
+    <summary><span>🧭 現場報名 <span class="en">Walk-in tips</span></span><span class="guide-toggle" aria-hidden="true">顯示 Show ▾</span></summary>
+
     <ul>
       <li>適用於當天才到、沒有網上報名的善信。<span class="en">For people who did not register online.</span></li>
       <li>儲存後即自動報到，不必再掃描。<span class="en">Saving also checks them in — no scan needed.</span></li>
       <li>身份證與電話可留空，但有填寫較易查找。<span class="en">IC and phone are optional, but make finding them later easier.</span></li>
       <li>已在網上報名？請用「現場報到」。<span class="en">Registered online? Use Check-in instead.</span></li>
     </ul>
-  </div>
+  </details>
   </div>
   </div>
 </div>

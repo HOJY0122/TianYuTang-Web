@@ -116,15 +116,16 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     </div>
   <?php endif; ?>
 
-  <div class="panel guide">
-    <h2 style="margin-top:0">🧭 報到步驟 <span class="en">How to check in</span></h2>
+  <details class="panel guide">
+    <summary><span>🧭 報到步驟 <span class="en">How to check in</span></span><span class="guide-toggle" aria-hidden="true">顯示 Show ▾</span></summary>
+
     <ol>
       <li>請善信出示報名 QR Code，按「📷 掃描」對準畫面。<span class="en">Ask for their registration QR and tap Scan.</span></li>
       <li>沒有 QR？輸入報名編號（RSVP-0007）或到「報名紀錄」以姓名搜尋。<span class="en">No QR? Type the number, or search by name in Registrations.</span></li>
       <li>家人一起到：按「全部報到」；分開到：逐位按「報到」。<span class="en">Family together: Check in all. Arriving separately: one by one.</span></li>
       <li>沒有報名的善信，請到「現場報名」。<span class="en">Not registered? Use Walk-in register.</span></li>
     </ol>
-  </div>
+  </details>
   </div>
   <div class="page-col">
   <?php $pct = $stats['expected'] > 0 ? min(100, round($stats['arrived'] / $stats['expected'] * 100)) : 0; ?>

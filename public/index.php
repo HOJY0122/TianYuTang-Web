@@ -41,6 +41,8 @@ $router = new App\Core\Router();
 // Public site
 $router->get('/',                   'HomeController@index');
 $router->get('/gallery',            'GalleryController@index');
+$router->get('/register',           'RsvpController@form');
+$router->get('/donate',             'DonationController@form');
 $router->post('/rsvp/submit',       'RsvpController@submit');
 $router->post('/donation/submit',   'DonationController@submit');
 $router->get('/rsvp/success',       'ConfirmController@rsvp');

@@ -15,6 +15,42 @@ use App\Core\Model;
  */
 class Setting extends Model
 {
+    /**
+     * Every site-level setting the pages use, with its default. The system
+     * admin's configuration page is built from the same keys, so a value
+     * can only be shown if it can also be edited.
+     */
+    public const DEFAULTS = [
+        // Identity
+        'site_name'         => '天玉堂',
+        'site_name_en'      => 'Tian Yu Tang',
+        'site_tagline'      => '🙏 感恩您的參與與支持　｜　Thank you for your kind support',
+        'site_logo_path'    => null,
+        'site_banner_path'  => null,
+        'site_favicon_path' => null,
+        // Footer
+        'footer_org'        => 'PERSATUAN PENGANUT DEWA TAI ZHI KUALA LUMPUR',
+        'footer_address'    => '',
+        'footer_contact'    => '',
+        'footer_note_zh'    => '如有任何疑問，敬請於活動當日親臨櫃台詢問。',
+        'footer_note_en'    => 'For enquiries, kindly visit the on-site counter on the event day.',
+    ];
+
+    /**
+     * Every site setting with defaults filled in — what the layouts use.
+     * A value saved as empty text stays empty (the admin cleared it on
+     * purpose); only a setting never saved falls back to its default.
+     */
+    public function site(): array
+    {
+        $all = $this->all();
+        $out = [];
+        foreach (self::DEFAULTS as $key => $default) {
+            $out[$key] = array_key_exists($key, $all) ? $all[$key] : $default;
+        }
+        return $out;
+    }
+
     /** Shared per-request cache, cleared whenever a value is written. */
     private static ?array $cache = null;
 

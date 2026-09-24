@@ -43,9 +43,11 @@ use App\Core\Database;
 /**
  * How to recognise, on a database older than this runner, that each
  * existing migration has already been applied: [table, column]. A null
- * column means "the table exists". Only used on the first run — every
- * migration from 008 on is tracked by schema_migrations alone and needs
- * no entry here.
+ * column means "the table exists". Only used on the first run.
+ *
+ * schema.sql now creates schema_migrations itself and records every
+ * migration it contains, so a fresh install never needs this list, and
+ * new migrations need no entry here — only in schema.sql.
  */
 const ALREADY_APPLIED_IF = [
     '001_add_events.sql'              => ['rsvp_groups',    'event_id'],
@@ -55,6 +57,7 @@ const ALREADY_APPLIED_IF = [
     '005_add_roles_and_settings.sql'  => ['admin_users',    'role'],
     '006_split_roles_and_walkin.sql'  => ['rsvp_groups',    'source'],
     '007_add_login_attempts.sql'      => ['login_attempts', null],
+    '008_site_content_and_mixed_donations.sql' => ['posts', null],
 ];
 
 $args      = array_slice($argv, 1);

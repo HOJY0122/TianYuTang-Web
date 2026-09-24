@@ -43,3 +43,19 @@ function rm(float $amount): string
 {
     return 'RM ' . number_format($amount, 2);
 }
+
+/**
+ * Hide all but the last 4 characters of an IC / passport number.
+ * Used anywhere a number is shown back to a visitor — a confirmation
+ * page can be seen over a shoulder or left open on a shared phone.
+ */
+function mask_ic(?string $ic): string
+{
+    $ic = (string) $ic;
+    $len = mb_strlen($ic);
+    if ($len <= 4) {
+        return $ic;
+    }
+    // A fixed-length mask also hides how long the number is.
+    return '****' . mb_substr($ic, -4);
+}

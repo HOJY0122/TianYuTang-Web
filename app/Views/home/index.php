@@ -1,256 +1,196 @@
 <?php
 /**
- * Public homepage. Every event-specific value comes from $event, the
- * active row in the events table — nothing here is hardcoded to 2026.
+ * Public home page — information, news and photos. Every value comes
+ * from the active event (admin) or site settings (system admin).
  */
-$seatPrice = (float) $event['merit_table_price'];
-$pageTitle = '天玉堂｜' . $event['year'] . ' ' . $event['name'];
+$pageTitle = $event['year'] . ' ' . $event['name'];
 require BASE_PATH . '/app/Views/layouts/header.php';
+
+$hasQrImage = !empty($event['waze_qr_path']);
+$wazeUrl    = trim((string) ($event['waze_url'] ?? ''));
+$mapsUrl    = trim((string) ($event['maps_url'] ?? ''));
+$showMap    = $hasQrImage || $wazeUrl !== '' || $mapsUrl !== '';
 ?>
 
-<main id="home">
-<?php
-// An uploaded banner becomes the hero background. Without one the hero
-// keeps its original gradient, so the site looks finished either way.
-// $siteHeroBanner is resolved in the header: the site setting first,
-// falling back to the event's own column on a pre-006 database.
-$bannerPath = $siteHeroBanner ?? null;
-$heroStyle  = $bannerPath
-    ? ' style="background-image:linear-gradient(rgba(255,247,217,.86),rgba(255,250,240,.93)), url(\''
-      . h(BASE_URL . '/' . $bannerPath) . '\');background-size:cover;background-position:center"'
-    : '';
-?>
-<section class="hero<?= $bannerPath ? ' has-banner' : '' ?>"<?= $heroStyle ?>>
-  <div>
-    <div class="cloud">☁　☁　☁</div>
-    <?php if (!empty($event['year_label'])): ?>
-      <div class="year"><?= h($event['year']) ?> <?= h($event['year_label']) ?></div>
-    <?php else: ?>
-      <div class="year"><?= h($event['year']) ?></div>
-    <?php endif; ?>
+<main id="main">
+
+<?php if ($siteHeroBanner): ?>
+  <!-- The banner is shown whole: never faded, never cropped. -->
+  <div class="banner">
+    <img src="<?= h($uploadUrl($siteHeroBanner)) ?>" alt="<?= h($siteName) ?>">
+  </div>
+<?php else: ?>
+  <div class="hero-fallback">
     <h1><?= h($siteName) ?></h1>
-    <h2><?= h($event['name']) ?></h2>
-    <p>誠邀十方善信共襄盛舉，同結善緣，共種福田。</p>
-    <?php if (!empty($event['subtitle'])): ?>
-      <p><?= h($event['subtitle']) ?><?= $dateRange ? ' · ' . h($dateRange) : '' ?></p>
-    <?php endif; ?>
-    <div class="actions">
-      <a class="cta" href="#rsvp"><div class="icon">📝</div><strong>報名參加</strong><span>我要參加活動 · Register to Attend</span></a>
-      <a class="cta" href="#donation"><div class="icon">🙏</div><strong>功德布施</strong><span>我要支持活動 · Support the Event</span></a>
+    <?php if (($site['site_name_en'] ?? '') !== ''): ?><p><?= h($site['site_name_en']) ?></p><?php endif; ?>
+  </div>
+<?php endif; ?>
+
+<!-- ============ Welcome ============ -->
+<section class="section narrow welcome">
+  <div class="year"><?= h($event['year']) ?><?= !empty($event['year_label']) ? ' ' . h($event['year_label']) : '' ?></div>
+  <h1><?= h($event['name']) ?></h1>
+  <?php if (!empty($event['subtitle'])): ?>
+    <p class="subtitle"><?= h($event['subtitle']) ?></p>
+  <?php endif; ?>
+  <?php if ($dateLines): ?>
+    <div class="dates">📅 <?= h($dateLines[0]) ?><?= count($dateLines) > 1 ? ' <span class="nw">起 · ' . count($dateLines) . ' 天</span>' : '' ?>
+      <?php if ($dateRange): ?><span class="en"><?= h($dateRange . ' ' . $event['year']) ?></span><?php endif; ?></div>
+  <?php endif; ?>
+
+  <?php if (!empty($event['welcome_zh']) || !empty($event['welcome_en'])): ?>
+    <div class="welcome-text">
+      <?= h($event['welcome_zh'] ?? '') ?>
+      <?php if (!empty($event['welcome_en'])): ?><span class="en"><?= h($event['welcome_en']) ?></span><?php endif; ?>
     </div>
+  <?php else: ?>
+    <div class="welcome-text">
+      誠邀十方善信共襄盛舉，同結善緣，共種福田。
+      <span class="en">All are warmly welcome to join us in this celebration.</span>
+    </div>
+  <?php endif; ?>
+
+  <div class="cta-grid">
+    <a class="cta" href="<?= url('/register') ?>">
+      <span class="icon">📝</span>
+      <strong>報名參加</strong>
+      <span><?= $rsvpWindow['open'] ? 'Register to Attend' : ($rsvpWindow['reason'] === 'not_yet' ? '尚未開放 Opening soon' : '已截止 Closed') ?></span>
+    </a>
+    <a class="cta" href="<?= url('/donate') ?>">
+      <span class="icon">🙏</span>
+      <strong>功德布施</strong>
+      <span><?= $donationWindow['open'] ? 'Make a Donation' : ($donationWindow['reason'] === 'not_yet' ? '尚未開放 Opening soon' : '已截止 Closed') ?></span>
+    </a>
   </div>
 </section>
 
-<section>
+<!-- ============ Event information ============ -->
+<section class="section" id="info">
   <div class="section-title">
-    <div class="eyebrow">EVENT INFORMATION</div>
-    <h2>活動資料</h2>
-    <p>清楚、簡單、方便長輩使用</p>
+    <h2>活動資料<span class="en">Event Information</span></h2>
   </div>
+
   <div class="info-grid">
-    <div class="info-card">
-      <h3>📅 日期</h3>
-      <p><?php foreach ($dateLines as $i => $line): ?><?= $i ? '<br>' : '' ?><?= h($line) ?><?php endforeach; ?></p>
+    <div class="card info-card">
+      <h3>📅 日期<span class="en">Date</span></h3>
+      <p><?php foreach ($dateLines as $i => $line): ?><?= $i ? "\n" : '' ?><?= h($line) ?><?php endforeach; ?></p>
+      <?php if ($dateRange): ?><p class="help"><?= h($dateRange) ?></p><?php endif; ?>
     </div>
-    <div class="info-card">
-      <h3>📍 地點</h3>
-      <p><?= nl2br(h($event['location'])) ?></p>
+    <div class="card info-card">
+      <h3>📍 地點<span class="en">Venue</span></h3>
+      <p><?= h($event['location']) ?></p>
     </div>
-    <div class="info-card">
-      <h3>🙏 誠邀參與</h3>
-      <p>席位有限，敬請提前登記。未能提前登記者，也可於活動當日親臨現場登記。
-      <?php if (!empty($event['counter_note'])): ?>
-        <br><span class="help"><?= h($event['counter_note']) ?></span>
+    <div class="card info-card">
+      <h3>🙏 現場詢問<span class="en">Enquiries</span></h3>
+      <p><?= !empty($event['counter_note']) ? h($event['counter_note']) : '歡迎於活動當日親臨櫃台詢問。' ?></p>
+      <?php if (!empty($event['contact_info'])): ?>
+        <p class="help">📞 <?= h($event['contact_info']) ?></p>
       <?php endif; ?>
-      </p>
+      <p class="help">Walk-in registration is available at the counter on the day.</p>
     </div>
   </div>
+
+  <?php if ($showMap): ?>
+    <div class="card location-card">
+      <div>
+        <h3 class="kai" style="margin:0;color:var(--red);font-size:1.4rem">🚗 如何前往<span class="en">Getting there</span></h3>
+        <p style="margin:.5rem 0 0">
+          用手機掃描右邊的 QR Code，或按下面的按鈕開啟導航。
+          <span class="en">Scan the QR code with your phone, or tap a button below to open navigation.</span>
+        </p>
+        <div class="map-buttons">
+          <?php if ($wazeUrl !== ''): ?>
+            <a class="btn waze" href="<?= h($wazeUrl) ?>" target="_blank" rel="noopener">🚙 Waze 導航</a>
+          <?php endif; ?>
+          <?php if ($mapsUrl !== ''): ?>
+            <a class="btn ghost" href="<?= h($mapsUrl) ?>" target="_blank" rel="noopener">🗺️ Google 地圖 Maps</a>
+          <?php endif; ?>
+        </div>
+      </div>
+      <?php if ($hasQrImage || $wazeUrl !== ''): ?>
+        <div class="qr-frame">
+          <?php if ($hasQrImage): ?>
+            <img src="<?= h(BASE_URL . '/' . $event['waze_qr_path']) ?>" alt="Waze QR Code">
+          <?php else: ?>
+            <canvas id="wazeQr" aria-label="Waze QR Code"></canvas>
+          <?php endif; ?>
+          <small>掃描導航 Scan for Waze</small>
+        </div>
+      <?php endif; ?>
+    </div>
+  <?php endif; ?>
 </section>
 
-<?php if (!empty($photoPreview)): ?>
-<!-- ============ 相簿預覽 Gallery teaser ============ -->
-<section id="photos">
+<?php if ($posts): ?>
+<!-- ============ News feed ============ -->
+<section class="section" id="news">
   <div class="section-title">
-    <div class="eyebrow">PHOTO ARCHIVE</div>
-    <h2>📸 活動留影</h2>
-    <p>法會精彩片刻，與十方善信共同回顧。</p>
+    <h2>最新消息<span class="en">News &amp; Announcements</span></h2>
   </div>
-  <div class="photo-strip">
-    <?php foreach ($photoPreview as $photo): ?>
-      <a class="strip-item" href="<?= url('/gallery') ?>?year=<?= (int) $event['id'] ?>">
-        <img src="<?= h(BASE_URL . '/' . $photo['thumb_path']) ?>"
-             alt="<?= h($photo['caption'] ?? '法會留影') ?>" loading="lazy">
-      </a>
+  <div class="feed">
+    <?php foreach ($posts as $post): ?>
+      <article class="card post">
+        <div class="post-head">
+          <div class="post-avatar">
+            <?php if ($siteLogo): ?><img src="<?= h($uploadUrl($siteLogo)) ?>" alt=""><?php else: ?><?= h(mb_substr($siteName, 0, 1)) ?><?php endif; ?>
+          </div>
+          <div class="post-meta">
+            <strong><?= h($siteName) ?></strong>
+            <span><?= h(date('Y-m-d', strtotime($post['created_at']))) ?></span>
+          </div>
+          <?php if ($post['is_pinned']): ?><span class="pin">📌 置頂 Pinned</span><?php endif; ?>
+        </div>
+        <div class="post-body">
+          <h3><?= h($post['title_zh']) ?><?php if (!empty($post['title_en'])): ?><span class="en"><?= h($post['title_en']) ?></span><?php endif; ?></h3>
+          <?php if (!empty($post['body_zh'])): ?><p><?= h($post['body_zh']) ?></p><?php endif; ?>
+          <?php if (!empty($post['body_en'])): ?><p class="en"><?= h($post['body_en']) ?></p><?php endif; ?>
+        </div>
+        <?php if (!empty($post['image_path'])): ?>
+          <img class="post-image" src="<?= h(BASE_URL . '/' . $post['image_path']) ?>"
+               data-lightbox="<?= h(BASE_URL . '/' . $post['image_path']) ?>"
+               alt="<?= h($post['title_zh']) ?>" loading="lazy">
+        <?php endif; ?>
+      </article>
     <?php endforeach; ?>
-  </div>
-  <div style="text-align:center;margin-top:24px">
-    <a class="gallery-link" href="<?= url('/gallery') ?>">瀏覽完整相簿 View Full Gallery →</a>
   </div>
 </section>
 <?php endif; ?>
 
-<!-- ============ 報名 RSVP ============ -->
-<section id="rsvp">
+<?php if ($albums): ?>
+<!-- ============ Photo albums, one row per year ============ -->
+<section class="section" id="photos">
   <div class="section-title">
-    <div class="eyebrow">REGISTRATION</div>
-    <h2>📝 報名參加</h2>
-    <p>請填寫參加者資料，每位參加者均需完整填寫。</p>
+    <h2>活動留影<span class="en">Photo Albums</span></h2>
+    <p>左右滑動看更多相片，點一下放大。<span class="en">Swipe for more photos. Tap a photo to enlarge.</span></p>
   </div>
-  <div class="form-wrap">
-    <?php if (!$rsvpWindow['open']): ?>
-      <div class="form-card closed-card">
-        <div class="closed-icon"><?= $rsvpWindow['reason'] === 'not_yet' ? '🕒' : '🔒' ?></div>
-        <h3><?= $rsvpWindow['reason'] === 'not_yet' ? '報名尚未開放' : '線上報名已截止' ?></h3>
-        <p><?= h(App\Models\Event::windowMessage($rsvpWindow, 'rsvp')) ?></p>
-      </div>
-    <?php else: ?>
-    <form class="form-card" action="<?= url('/rsvp/submit') ?>" method="POST">
-      <?= csrf_field() ?>
-      <h3>參加者資料</h3>
-      <?php if (!empty($rsvpWindow['closes_at'])): ?>
-        <div class="note">
-          ⏳ 線上報名將於 <strong><?= h(App\Models\Event::formatDateTime($rsvpWindow['closes_at'])) ?></strong> 截止。
-        </div>
-      <?php endif; ?>
-      <div class="note">第一步：選擇參加人數。網站會自動產生相應的參加者資料欄位。</div>
-
-      <label for="attendeeCount">報名人數｜Number of Attendees</label>
-      <select id="attendeeCount" name="attendee_count" onchange="renderAttendees()">
-        <?php
-        $selectedCount = (int) ($oldInput['rsvp_count'] ?? 1);
-        $maxAttendees  = (int) $event['max_attendees'];
-        for ($i = 1; $i <= $maxAttendees; $i++):
-        ?>
-          <option value="<?= $i ?>"<?= $i === $selectedCount ? ' selected' : '' ?>><?= $i ?> 位</option>
-        <?php endfor; ?>
-      </select>
-
-      <div id="attendees"></div>
-      <button class="primary" type="submit">📝 提交報名</button>
-    </form>
-    <?php endif; ?>
+  <?php foreach ($albums as $album): ?>
+    <?php $albumLink = url('/gallery') . '#album-' . (int) $album['id']; ?>
+    <?php require BASE_PATH . '/app/Views/partials/album.php'; ?>
+  <?php endforeach; ?>
+  <div style="text-align:center">
+    <a class="btn ghost" href="<?= url('/gallery') ?>">📸 瀏覽全部相簿 View all albums</a>
   </div>
 </section>
+<?php endif; ?>
 
-<!-- ============ 布施 Donation ============ -->
-<section id="donation">
-  <div class="section-title">
-    <div class="eyebrow">MERIT &amp; DONATION</div>
-    <h2>🙏 功德布施</h2>
-    <p>一份善念，一份布施，共種福田，共結善緣。</p>
-  </div>
-  <div class="form-wrap">
-    <?php if (!$donationWindow['open']): ?>
-      <div class="form-card closed-card">
-        <div class="closed-icon"><?= $donationWindow['reason'] === 'not_yet' ? '🕒' : '🔒' ?></div>
-        <h3><?= $donationWindow['reason'] === 'not_yet' ? '布施尚未開放' : '線上布施已截止' ?></h3>
-        <p><?= h(App\Models\Event::windowMessage($donationWindow, 'donation')) ?></p>
-      </div>
-    <?php else: ?>
-    <form class="form-card" action="<?= url('/donation/submit') ?>" method="POST">
-      <?= csrf_field() ?>
-      <h3>布施資料</h3>
-
-      <?php if (!empty($donationWindow['closes_at'])): ?>
-        <div class="note">
-          ⏳ 線上布施將於 <strong><?= h(App\Models\Event::formatDateTime($donationWindow['closes_at'])) ?></strong> 截止。
-        </div>
-      <?php endif; ?>
-
-      <div class="row">
-        <div>
-          <label for="donName">姓名｜Name</label>
-          <input id="donName" name="name" required maxlength="100"
-                 value="<?= h($oldInput['don_name'] ?? '') ?>" placeholder="請輸入姓名">
-        </div>
-        <div>
-          <label for="donContact">聯絡號碼｜Contact No.</label>
-          <input id="donContact" name="contact" required maxlength="30"
-                 value="<?= h($oldInput['don_contact'] ?? '') ?>" placeholder="例如：012 345 6789">
-        </div>
-      </div>
-
-      <label for="donationMethod">布施方式｜Donation Method</label>
-      <?php $oldMethod = $oldInput['don_method'] ?? 'free'; ?>
-      <select id="donationMethod" name="method" onchange="updateDonation()">
-        <option value="free"<?= $oldMethod === 'free' ? ' selected' : '' ?>>🙏 隨喜布施 / Freewill Donation</option>
-        <option value="table"<?= $oldMethod === 'table' ? ' selected' : '' ?>>🪷 布施功德席 RM<?= number_format($seatPrice, 0) ?> / 席</option>
-      </select>
-
-      <div id="freeDonation">
-        <label for="freeAmount">布施金額｜Donation Amount (RM)</label>
-        <input id="freeAmount" name="free_amount" type="number" min="1" step="0.01"
-               placeholder="請輸入金額" oninput="updateDonation()">
-      </div>
-
-      <div id="tableDonation" class="hidden">
-        <label for="tableCount">功德席數量｜Number of Merit Tables</label>
-        <input id="tableCount" name="table_count" type="number" min="1" max="200" value="1" oninput="updateDonation()">
-        <p class="help">每席 RM<?= number_format($seatPrice, 0) ?>，例如：2 席 = RM<?= number_format(2 * $seatPrice) ?></p>
-      </div>
-
-      <div class="total"><span>總額｜Total</span><strong id="donationTotal">RM 0</strong></div>
-      <button class="primary" type="submit">🙏 提交布施</button>
-    </form>
-    <?php endif; ?>
-  </div>
-</section>
 </main>
 
 <?php require BASE_PATH . '/app/Views/partials/modal.php'; ?>
+<?php require BASE_PATH . '/app/Views/partials/lightbox.php'; ?>
 
+<?php if (!$hasQrImage && $wazeUrl !== ''): ?>
+<script src="<?= asset('js/qrcode.min.js') ?>"></script>
 <script>
-// Price comes from the event row, so changing it in admin updates the
-// running total here too — no code edit needed.
-const MERIT_SEAT_PRICE = <?= (float) $seatPrice ?>;
-
-function renderAttendees(){
-  const countEl = document.getElementById('attendeeCount');
-  const box     = document.getElementById('attendees');
-  // The form is absent when registration is closed — nothing to build.
-  if (!countEl || !box) return;
-
-  const n = Number(countEl.value);
-  box.innerHTML = '';
-  for (let i = 1; i <= n; i++){
-    box.insertAdjacentHTML('beforeend', `
-      <div class="attendee">
-        <h4>參加者 ${i}</h4>
-        <label>姓名｜Name</label>
-        <input name="attendee_name[]" required maxlength="100" placeholder="請輸入姓名">
-        <div class="row">
-          <div><label>身份證號碼｜IC No.</label><input name="attendee_ic[]" required maxlength="30" placeholder="例如：651020-10-2020"></div>
-          <div><label>聯絡號碼｜Contact No.</label><input name="attendee_contact[]" required maxlength="30" placeholder="例如：012 345 6789"></div>
-        </div>
-      </div>`);
-  }
-}
-
-function updateDonation(){
-  const methodEl = document.getElementById('donationMethod');
-  // The form is absent when donations are closed.
-  if (!methodEl) return;
-
-  const method     = methodEl.value;
-  const freeAmount = document.getElementById('freeAmount');
-  const tableCount = document.getElementById('tableCount');
-
-  document.getElementById('freeDonation').classList.toggle('hidden', method !== 'free');
-  document.getElementById('tableDonation').classList.toggle('hidden', method !== 'table');
-
-  // Only the field in use should be submitted / required.
-  freeAmount.disabled = (method !== 'free');
-  tableCount.disabled = (method !== 'table');
-
-  const total = (method === 'free')
-    ? (Number(freeAmount.value) || 0)
-    : (Number(tableCount.value) || 0) * MERIT_SEAT_PRICE;
-
-  document.getElementById('donationTotal').textContent = 'RM ' + total.toLocaleString('en-MY');
-}
-
-renderAttendees();
-updateDonation();
+// No uploaded QR image, so draw one from the Waze link. Same result for
+// the visitor, and nothing for the admin to regenerate if the link changes.
+(function () {
+  var canvas = document.getElementById('wazeQr');
+  if (!canvas || !window.TYTQRCode) return;
+  window.TYTQRCode.toCanvas(canvas, <?= json_encode($wazeUrl, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?>, {
+    width: 220, margin: 1, errorCorrectionLevel: 'M'
+  }).catch(function () { canvas.parentNode.style.display = 'none'; });
+})();
 </script>
+<?php endif; ?>
 
 <?php require BASE_PATH . '/app/Views/layouts/footer.php'; ?>

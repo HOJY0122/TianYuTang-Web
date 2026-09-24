@@ -52,6 +52,7 @@ class ConfirmController extends Controller
         $this->view('confirm/success', [
             'event'        => (new Event())->active(),
             'kind'         => $kind,
+            'activeNav'    => $kind === 'rsvp' ? 'register' : 'donate',
             'confirmation' => $confirmation,
         ]);
     }

@@ -329,4 +329,158 @@ class Rsvp extends Model
         $row = $this->fetchOne('SELECT event_id FROM rsvp_groups WHERE id = ?', [$groupId]);
         return $row === null ? null : (int) $row['event_id'];
     }
+
+    // ------------------------------------------------------------------
+    // Admin records: search and edit
+    // ------------------------------------------------------------------
+
+    /** One registration group, or null. */
+    public function findGroup(int $groupId): ?array
+    {
+        return $this->fetchOne('SELECT * FROM rsvp_groups WHERE id = ?', [$groupId]);
+    }
+
+    /**
+     * Registration groups for one event, filtered, newest first. The
+     * search looks inside EVERY attendee, not just the first — a family
+     * is often remembered by the grandmother's name, not the booker's.
+     *
+     * @param array{q?:string, status?:string, source?:string} $filters
+     */
+    public function searchGroups(int $eventId, array $filters, int $limit = 50, int $offset = 0): array
+    {
+        [$where, $params] = $this->groupFilterSql($eventId, $filters);
+        return $this->fetchAll(
+            'SELECT g.id, g.ref_code, g.attendee_count, g.status, g.source, g.recorded_by, g.created_at,
+                    (SELECT name FROM rsvp_attendees WHERE group_id = g.id ORDER BY id LIMIT 1) AS lead_name,
+                    (SELECT contact_no FROM rsvp_attendees WHERE group_id = g.id ORDER BY id LIMIT 1) AS lead_contact,
+                    (SELECT COUNT(*) FROM rsvp_attendees WHERE group_id = g.id AND checked_in_at IS NOT NULL) AS arrived
+             FROM rsvp_groups g
+             WHERE ' . $where . '
+             ORDER BY g.created_at DESC, g.id DESC
+             LIMIT ' . (int) $limit . ' OFFSET ' . (int) $offset,
+            $params
+        );
+    }
+
+    public function countGroups(int $eventId, array $filters): int
+    {
+        [$where, $params] = $this->groupFilterSql($eventId, $filters);
+        return (int) $this->scalar('SELECT COUNT(*) FROM rsvp_groups g WHERE ' . $where, $params);
+    }
+
+    /** @return array{0:string, 1:array} */
+    private function groupFilterSql(int $eventId, array $filters): array
+    {
+        $where  = ['g.event_id = ?'];
+        $params = [$eventId];
+
+        $q = trim((string) ($filters['q'] ?? ''));
+        if ($q !== '') {
+            $like    = '%' . addcslashes($q, '%_\\') . '%';
+            $where[] = '(g.ref_code LIKE ? OR EXISTS (SELECT 1 FROM rsvp_attendees a
+                          WHERE a.group_id = g.id AND (a.name LIKE ? OR a.contact_no LIKE ? OR a.ic_no LIKE ?)))';
+            array_push($params, $like, $like, $like, $like);
+        }
+        if (in_array($filters['status'] ?? '', ['pending', 'confirmed', 'cancelled'], true)) {
+            $where[]  = 'g.status = ?';
+            $params[] = $filters['status'];
+        }
+        if (in_array($filters['source'] ?? '', ['online', 'walkin'], true)) {
+            $where[]  = 'g.source = ?';
+            $params[] = $filters['source'];
+        }
+        return [implode(' AND ', $where), $params];
+    }
+
+    /**
+     * Save an edited registration: its status and every attendee.
+     *
+     * $attendees is the full list as it should be afterwards:
+     *   ['id' => 12, 'name' => …]   an existing person, updated
+     *   ['id' => 0,  'name' => …]   someone added to the group
+     * Anyone in the group whose id is NOT in the list is removed.
+     * One transaction, so the group can never be left half-edited.
+     */
+    public function updateGroup(int $groupId, string $status, array $attendees): void
+    {
+        if (!in_array($status, ['pending', 'confirmed', 'cancelled'], true)) {
+            $status = 'pending';
+        }
+
+        try {
+            $this->db->beginTransaction();
+
+            $keep = [];
+            foreach ($attendees as $a) {
+                $id = (int) ($a['id'] ?? 0);
+                if ($id > 0) {
+                    // group_id in the WHERE: an id from another group is ignored.
+                    $this->execute(
+                        'UPDATE rsvp_attendees SET name = ?, ic_no = ?, contact_no = ?
+                         WHERE id = ? AND group_id = ?',
+                        [$a['name'], $a['ic'], $a['contact'], $id, $groupId]
+                    );
+                    $keep[] = $id;
+                } else {
+                    $this->execute(
+                        'INSERT INTO rsvp_attendees (group_id, name, ic_no, contact_no) VALUES (?, ?, ?, ?)',
+                        [$groupId, $a['name'], $a['ic'], $a['contact']]
+                    );
+                    $keep[] = (int) $this->db->lastInsertId();
+                }
+            }
+
+            $placeholders = implode(',', array_fill(0, count($keep), '?'));
+            $this->execute(
+                "DELETE FROM rsvp_attendees WHERE group_id = ? AND id NOT IN ({$placeholders})",
+                array_merge([$groupId], $keep)
+            );
+
+            $this->execute(
+                'UPDATE rsvp_groups SET status = ?, attendee_count = ? WHERE id = ?',
+                [$status, count($keep), $groupId]
+            );
+
+            $this->db->commit();
+        } catch (Exception $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * People registered per day, for the dashboard chart.
+     *
+     * @return array<int, array{day:string, people:int}>
+     */
+    public function dailyCounts(int $eventId, int $days = 30): array
+    {
+        return array_map(
+            static fn($r) => ['day' => $r['day'], 'people' => (int) $r['people']],
+            $this->fetchAll(
+                "SELECT DATE(g.created_at) AS day, COUNT(a.id) AS people
+                 FROM rsvp_groups g JOIN rsvp_attendees a ON a.group_id = g.id
+                 WHERE g.event_id = ? AND g.status <> 'cancelled'
+                   AND g.created_at >= CURDATE() - INTERVAL " . (int) $days . ' DAY
+                 GROUP BY DATE(g.created_at) ORDER BY day',
+                [$eventId]
+            )
+        );
+    }
+
+    /** @return array{pending:int, confirmed:int, cancelled:int} groups per status */
+    public function countsByStatus(int $eventId): array
+    {
+        $out = ['pending' => 0, 'confirmed' => 0, 'cancelled' => 0];
+        foreach ($this->fetchAll(
+            'SELECT status, COUNT(*) AS n FROM rsvp_groups WHERE event_id = ? GROUP BY status',
+            [$eventId]
+        ) as $r) {
+            $out[$r['status']] = (int) $r['n'];
+        }
+        return $out;
+    }
 }

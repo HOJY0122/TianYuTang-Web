@@ -96,3 +96,19 @@ function tb(string $key, array $vars = []): string
     $en = t($key, 'en', $vars);
     return h(t($key, 'zh', $vars)) . ($en !== '' ? '<span class="en">' . h($en) . '</span>' : '');
 }
+
+/**
+ * A sortable column heading for admin lists: click to sort by this
+ * column, click again to flip ascending / descending. The arrow shows
+ * the current direction. $query is the list's current filters.
+ */
+function sort_th(string $label, string $key, array $query, string $path, string $default = 'desc', string $class = ''): string
+{
+    $active = ($query['sort'] ?? '') === $key;
+    $dir    = $active ? (($query['dir'] ?? 'desc') === 'asc' ? 'desc' : 'asc') : $default;
+    $href   = url($path) . '?' . http_build_query(array_merge($query, ['sort' => $key, 'dir' => $dir, 'page' => 1]));
+    $arrow  = $active ? (($query['dir'] ?? 'desc') === 'asc' ? '▲' : '▼') : '⇅';
+    $aria   = $active ? (($query['dir'] ?? 'desc') === 'asc' ? 'ascending' : 'descending') : 'none';
+    return '<th' . ($class ? ' class="' . h($class) . '"' : '') . ' aria-sort="' . $aria . '"><a class="sort-link' . ($active ? ' is-active' : '') . '" href="' . h($href) . '"'
+         . ' title="排序 Sort">' . $label . ' <span class="sort-arrow" aria-hidden="true">' . $arrow . '</span></a></th>';
+}

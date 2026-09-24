@@ -8,12 +8,13 @@
  */
 $lh      = (new App\Models\Setting())->site();
 $lhLogo  = $lh['pdf_show_logo'] === '1' ? ($lh['site_logo_path'] ?: $lh['site_favicon_path']) : null;
-// Each letterhead line can be set on its own (Site settings → Printouts);
-// a blank one falls back to the matching site / footer value.
-$lhOr    = static fn(string $own, string $fallback): string => $lh[$own] !== '' ? $lh[$own] : $lh[$fallback];
-$lhName  = $lhOr('pdf_name', 'site_name');
-$lhNameEn= $lhOr('pdf_name_en', 'site_name_en');
-$lhLines = array_filter([$lhOr('pdf_line1', 'footer_org'), $lhOr('pdf_line2', 'footer_address'), $lhOr('pdf_line3', 'footer_contact')]);
+// Each letterhead line can be set on its own (Site settings → Printouts).
+// Never set: it follows the site / footer value. Saved empty: left out.
+$lhName  = App\Models\Setting::effective('pdf_name', $lh);
+$lhNameEn= App\Models\Setting::effective('pdf_name_en', $lh);
+$lhLines = array_filter([App\Models\Setting::effective('pdf_line1', $lh),
+                         App\Models\Setting::effective('pdf_line2', $lh),
+                         App\Models\Setting::effective('pdf_line3', $lh)], static fn($l) => $l !== '');
 $lhDates = App\Models\Event::formatDateLines($event);
 $lhBy    = $_SESSION['admin_display'] ?? ($_SESSION['admin_username'] ?? '');
 ?>

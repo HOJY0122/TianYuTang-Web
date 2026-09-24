@@ -32,6 +32,9 @@ $menu = [
         ['walkin',  '🚶', '現場報名', 'Walk-in register',  '/admin/walkin'],
         ['counter', '💵', '現場布施', 'Counter donation',  '/admin/counter'],
     ],
+    '財務 Finance' => [
+        ['receipts', '🧾', '收據紀錄', 'Receipts',       '/admin/receipts'],
+    ],
 ];
 if ($isSystem) {
     $menu['系統管理 System'] = [

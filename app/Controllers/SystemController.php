@@ -68,6 +68,7 @@ class SystemController extends Controller
             'pageTitle' => '網站文字 Wording',
             'nav'       => 'wording',
             'saved'     => (new Setting())->all(),
+            'group'     => is_string($_GET['group'] ?? null) && isset(Text::GROUPS[$_GET['group']]) ? $_GET['group'] : 'home',
             'flash'     => $this->takeFlash(),
         ]);
     }
@@ -76,8 +77,9 @@ class SystemController extends Controller
      * POST /system/wording
      *
      * Only keys in Text::ITEMS are read, so the form cannot be used to
-     * write arbitrary settings. A box left empty — or still holding the
-     * default — stores nothing, and the default shows on the site.
+     * write arbitrary settings. Each box is stored exactly as typed —
+     * empty included, which hides that text. A box holding the default
+     * wording stores nothing, so it keeps following the default.
      */
     public function saveWording(): void
     {
@@ -85,25 +87,54 @@ class SystemController extends Controller
         $this->requireCsrf();
 
         $setting = new Setting();
+        $saved   = $setting->all();
         $posted  = is_array($_POST['txt'] ?? null) ? $_POST['txt'] : [];
         $changed = 0;
         foreach (Text::ITEMS as $key => $item) {
             foreach (['zh', 'en'] as $lang) {
-                $value = $posted[$key][$lang] ?? '';
-                $value = is_string($value) ? trim(str_replace("\r\n", "\n", $value)) : '';
-                $value = mb_substr($value, 0, 1000);
-                if ($value === Text::fallback($key, $lang)) {
-                    $value = '';
+                if (!isset($posted[$key][$lang]) || !is_string($posted[$key][$lang])) {
+                    continue;   // not on the form: leave it alone
                 }
+                $value      = mb_substr(trim(str_replace("\r\n", "\n", $posted[$key][$lang])), 0, 1000);
                 $settingKey = "txt.{$key}.{$lang}";
-                if ($value !== (string) ($setting->all()[$settingKey] ?? '')) {
+                $has        = array_key_exists($settingKey, $saved) && $saved[$settingKey] !== null;
+                if ($value === Text::fallback($key, $lang)) {
+                    if ($has) {
+                        $setting->delete($settingKey);
+                        $changed++;
+                    }
+                } elseif (!$has || $saved[$settingKey] !== $value) {
                     $setting->set($settingKey, $value);
                     $changed++;
                 }
             }
         }
         $this->flash('success', '已儲存 Saved', "已更新 {$changed} 項文字。{$changed} text(s) updated.");
-        $this->redirect('/system/wording');
+        $group = is_string($_POST['group'] ?? null) && isset(Text::GROUPS[$_POST['group']]) ? $_POST['group'] : '';
+        $this->redirect('/system/wording' . ($group ? '?group=' . $group : ''));
+    }
+
+    /**
+     * GET /system/wording/preview?page=success&kind=rsvp|don
+     * The confirmation pages only exist right after a real submission,
+     * so the Wording preview shows them with made-up sample details.
+     */
+    public function wordingPreview(): void
+    {
+        $this->requireSystemAdmin();
+        $isRsvp = ($_GET['kind'] ?? 'rsvp') !== 'don';
+        $event  = (new Event())->active();
+        $this->view('confirm/success', [
+            'event'        => $event,
+            'kind'         => $isRsvp ? 'rsvp' : 'donation',
+            'activeNav'    => '',
+            'confirmation' => $isRsvp
+                ? ['ref_code' => 'RSVP-0000', 'count' => 2, 'attendees' => [
+                      ['name' => '陳大文 (示範 sample)', 'ic' => '****1234', 'contact' => '012-345 6789'],
+                      ['name' => '陳小明 (示範 sample)', 'ic' => '****5678', 'contact' => '012-345 6789']]]
+                : ['ref_code' => 'DON-0000', 'amount' => 1100, 'name' => '陳大文 (示範 sample)', 'method' => 'mixed',
+                   'seats' => 2, 'free_amount' => 100, 'seat_price' => 500],
+        ]);
     }
 
     // ------------------------------------------------------------------
@@ -153,7 +184,9 @@ class SystemController extends Controller
         }
         // On/off switches: an unticked checkbox is simply absent from the POST.
         foreach (['site_tagline_on', 'pdf_show_logo'] as $key) {
-            $setting->set($key, !empty($_POST[$key]) ? '1' : '0');
+            if (isset($_POST[$key])) {   // Show / Hide buttons send '1' or '0'
+                $setting->set($key, $_POST[$key] === '1' ? '1' : '0');
+            }
         }
         // Heading font: only one of the known choices can be stored.
         $font = is_string($_POST['heading_font'] ?? null) ? $_POST['heading_font'] : '';

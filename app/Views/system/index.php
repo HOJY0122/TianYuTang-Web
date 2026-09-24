@@ -1,6 +1,30 @@
 <?php
 require BASE_PATH . '/app/Views/layouts/admin_header.php';
 $img = static fn(?string $p): string => $p ? BASE_URL . '/' . $p : '';
+// Two clear buttons — 顯示 Show / 隱藏 Hide — instead of a small switch:
+// easier to tap, and the words say exactly what will happen.
+$toggle = static function (string $name, bool $on, string $label) {
+    ?>
+    <div class="seg-toggle" role="radiogroup" aria-label="<?= h($label) ?>">
+      <label class="seg-on"><input type="radio" name="<?= h($name) ?>" value="1"<?= $on ? ' checked' : '' ?>><span>✓ 顯示 Show</span></label>
+      <label class="seg-off"><input type="radio" name="<?= h($name) ?>" value="0"<?= $on ? '' : ' checked' ?>><span>✕ 隱藏 Hide</span></label>
+    </div>
+    <?php
+};
+// A line prefilled with what the site shows now; ↺ puts the automatic text back.
+$line = static function (string $key, string $zh, string $en, int $max, string $hint = '') use ($settings) {
+    $fallback = App\Models\Setting::fallback($key, $settings);
+    ?>
+    <div class="field-with-reset">
+      <label for="<?= $key ?>"><?= $zh ?> <span class="en"><?= $en ?></span></label>
+      <div class="input-reset">
+        <input id="<?= $key ?>" name="<?= $key ?>" maxlength="<?= $max ?>" value="<?= h(App\Models\Setting::effective($key, $settings)) ?>">
+        <button type="button" class="mini-btn ghost" data-reset="<?= $key ?>" data-value="<?= h($fallback) ?>" title="<?= h($fallback) ?>">↺ 預設 Default</button>
+      </div>
+      <?php if ($hint): ?><p class="help"><?= $hint ?></p><?php endif; ?>
+    </div>
+    <?php
+};
 ?>
 <?php if (!empty($activeEvent)): ?>
   <div class="panel eventbar">
@@ -46,12 +70,11 @@ $img = static fn(?string $p): string => $p ? BASE_URL . '/' . $p : '';
 
   <div class="label-row">
     <label for="site_tagline">頂部標語 <span class="en">Top bar text</span></label>
-    <label class="switch"><input type="checkbox" name="site_tagline_on" value="1"<?= $settings['site_tagline_on'] === '1' ? ' checked' : '' ?>>
-      <span class="switch-ui" aria-hidden="true"></span> 顯示 <span class="en">Show</span></label>
+    <?php $toggle('site_tagline_on', $settings['site_tagline_on'] === '1', '頂部標語 Top bar'); ?>
   </div>
   <input id="site_tagline" name="site_tagline" maxlength="255" value="<?= h($settings['site_tagline']) ?>">
-  <p class="help">網站最上方的深紅色橫條。關閉開關即可隱藏，文字會保留，下次打開不必重打。
-    The dark red strip at the very top. Switch it off to hide it — the text is kept for next time.</p>
+  <p class="help">網站最上方的深紅色橫條。選「隱藏」即可不顯示，文字會保留，下次選「顯示」不必重打。
+    The dark red strip at the very top. Choose Hide to take it away — the text is kept for next time.</p>
 
   <h3>② 圖片 <span class="en">Images</span></h3>
   <p class="help" style="margin-top:0">JPG、PNG、GIF、WebP，單檔 5MB 以內。上傳後系統會自動重新產生圖片。JPG / PNG / GIF / WebP up to 5 MB.</p>
@@ -75,14 +98,11 @@ $img = static fn(?string $p): string => $p ? BASE_URL . '/' . $p : '';
   <?php endforeach; ?>
 
   <h3>③ 頁尾 <span class="en">Footer</span></h3>
-  <p class="help" style="margin-top:0">留空的項目不會顯示。Empty lines are not shown.</p>
+  <p class="help" style="margin-top:0">每一行都照你輸入的顯示；<strong>留空就不顯示</strong>。按「↺ 預設」可放回原本的文字。
+    <span class="en">Every line shows exactly as typed; <strong>leave it empty to hide it</strong>. ↺ Default puts the original text back.</span></p>
   <div class="form-grid">
-    <div><label for="footer_title">頁尾標題 <span class="en">Footer heading</span></label>
-      <input id="footer_title" name="footer_title" maxlength="120" value="<?= h($settings['footer_title']) ?>" placeholder="🙏 <?= h($settings['site_name']) ?>">
-      <p class="help">留空＝「🙏 網站名稱」。Blank = 🙏 + site name.</p></div>
-    <div><label for="footer_copyright">版權行 <span class="en">Copyright line</span></label>
-      <input id="footer_copyright" name="footer_copyright" maxlength="200" value="<?= h($settings['footer_copyright']) ?>" placeholder="© {year} <?= h($settings['footer_org'] ?: $settings['site_name']) ?>">
-      <p class="help">{year} 會換成活動年份。留空＝自動。{year} becomes the event year. Blank = automatic.</p></div>
+    <?php $line('footer_title', '頁尾標題', 'Footer heading', 120); ?>
+    <?php $line('footer_copyright', '版權行', 'Copyright line', 200, '{year} 會自動換成活動年份。{year} becomes the event year.'); ?>
   </div>
   <label for="footer_org">機構名稱 <span class="en">Organisation name</span></label>
   <input id="footer_org" name="footer_org" maxlength="150" value="<?= h($settings['footer_org']) ?>">
@@ -98,27 +118,32 @@ $img = static fn(?string $p): string => $p ? BASE_URL . '/' . $p : '';
   <textarea id="footer_note_en" name="footer_note_en" rows="2" maxlength="500"><?= h($settings['footer_note_en']) ?></textarea>
 
   <h3>④ 列印 / PDF 抬頭 <span class="en">Printout letterhead</span></h3>
-  <p class="help" style="margin-top:0">報到名單、布施清單等列印文件頂部的抬頭。留空的行會沿用上面的網站名稱與頁尾資料。
-    <span class="en">The heading on printed lists and PDFs. Blank lines reuse the site name and footer details above.
-    Document titles are in 網站文字 Wording.</span></p>
-  <label class="switch" style="margin:.6rem 0"><input type="checkbox" name="pdf_show_logo" value="1"<?= $settings['pdf_show_logo'] === '1' ? ' checked' : '' ?>>
-    <span class="switch-ui" aria-hidden="true"></span> 顯示標誌 <span class="en">Show the logo</span></label>
-  <div class="form-grid">
-    <div><label for="pdf_name">抬頭名稱 <span class="en">Heading name</span></label>
-      <input id="pdf_name" name="pdf_name" maxlength="80" value="<?= h($settings['pdf_name']) ?>" placeholder="<?= h($settings['site_name']) ?>"></div>
-    <div><label for="pdf_name_en">英文名稱 <span class="en">English name</span></label>
-      <input id="pdf_name_en" name="pdf_name_en" maxlength="120" value="<?= h($settings['pdf_name_en']) ?>" placeholder="<?= h($settings['site_name_en']) ?>"></div>
+  <p class="help" style="margin-top:0">報到名單、布施清單等列印文件頂部的抬頭。照你輸入的顯示，留空的行不印。文件標題在「網站文字」。
+    <span class="en">The heading on printed lists and PDFs, exactly as typed — empty lines are left off. Document titles are in 網站文字 Wording.</span></p>
+  <div class="label-row" style="margin-top:.6rem">
+    <label>標誌 <span class="en">Logo on printouts</span></label>
+    <?php $toggle('pdf_show_logo', $settings['pdf_show_logo'] === '1', '列印標誌 Logo on printouts'); ?>
   </div>
-  <label for="pdf_line1">第一行 <span class="en">Line 1</span></label>
-  <input id="pdf_line1" name="pdf_line1" maxlength="255" value="<?= h($settings['pdf_line1']) ?>" placeholder="<?= h($settings['footer_org']) ?>">
-  <label for="pdf_line2">第二行 <span class="en">Line 2</span></label>
-  <input id="pdf_line2" name="pdf_line2" maxlength="255" value="<?= h($settings['pdf_line2']) ?>" placeholder="<?= h($settings['footer_address'] ?: '地址 Address') ?>">
-  <label for="pdf_line3">第三行 <span class="en">Line 3</span></label>
-  <input id="pdf_line3" name="pdf_line3" maxlength="255" value="<?= h($settings['pdf_line3']) ?>" placeholder="<?= h($settings['footer_contact'] ?: '電話 Phone · 電郵 Email') ?>">
+  <div class="form-grid">
+    <?php $line('pdf_name', '抬頭名稱', 'Heading name', 80); ?>
+    <?php $line('pdf_name_en', '英文名稱', 'English name', 120); ?>
+  </div>
+  <?php $line('pdf_line1', '第一行', 'Line 1', 255); ?>
+  <?php $line('pdf_line2', '第二行', 'Line 2', 255); ?>
+  <?php $line('pdf_line3', '第三行', 'Line 3', 255); ?>
 
   <div class="form-actions">
     <button class="primary" type="submit">💾 儲存設定 Save settings</button>
     <a class="mini-btn ghost" href="<?= url('/') ?>" target="_blank">👀 查看網站 View site</a>
   </div>
 </form>
+<script>
+document.querySelectorAll('[data-reset]').forEach(function (b) {
+  b.addEventListener('click', function () {
+    var input = document.getElementById(b.dataset.reset);
+    input.value = b.dataset.value;
+    input.focus();
+  });
+});
+</script>
 <?php require BASE_PATH . '/app/Views/layouts/admin_footer.php'; ?>

@@ -132,41 +132,54 @@ $showMap    = $hasQrImage || $wazeUrl !== '' || $mapsUrl !== '';
 </section>
 
 <?php if ($posts): ?>
-<!-- ============ News feed ============ -->
+<!-- ============ News: one row of cards, swipe or use the arrows — like the albums ============ -->
 <section class="section" id="news">
   <div class="section-title">
     <h2><?= tb('home.news') ?></h2>
   </div>
-  <div class="feed">
-    <?php foreach ($posts as $post): ?>
-      <article class="card post">
-        <div class="post-head">
-          <div class="post-avatar">
-            <?php if ($siteLogo): ?><img src="<?= h($uploadUrl($siteLogo)) ?>" alt=""><?php else: ?><?= h(mb_substr($siteName, 0, 1)) ?><?php endif; ?>
+  <div class="album-row news-row">
+    <button type="button" class="album-nav prev" aria-label="上一則 Previous" data-dir="-1">&#10094;</button>
+    <div class="album-strip news-strip" tabindex="0" aria-label="<?= h(t('home.news') . ' ' . t('home.news', 'en')) ?>">
+      <?php foreach ($posts as $post): ?>
+        <article class="card post news-card">
+          <?php if (!empty($post['image_path'])): ?>
+            <div class="post-media">
+              <img class="post-image" src="<?= h(BASE_URL . '/' . $post['image_path']) ?>"
+                   data-lightbox="<?= h(BASE_URL . '/' . $post['image_path']) ?>"
+                   alt="<?= h($post['title_zh']) ?>" loading="lazy">
+              <span class="zoom-hint" aria-hidden="true">🔍</span>
+            </div>
+          <?php endif; ?>
+          <div class="post-head">
+            <div class="post-avatar">
+              <?php if ($siteLogo): ?><img src="<?= h($uploadUrl($siteLogo)) ?>" alt=""><?php else: ?><?= h(mb_substr($siteName, 0, 1)) ?><?php endif; ?>
+            </div>
+            <div class="post-meta">
+              <strong><?= h($siteName) ?></strong>
+              <span><?= h(date('Y-m-d', strtotime($post['created_at']))) ?></span>
+            </div>
+            <?php if ($post['is_pinned']): ?><span class="pin"><?= h(t('home.pinned') . ' ' . t('home.pinned', 'en')) ?></span><?php endif; ?>
           </div>
-          <div class="post-meta">
-            <strong><?= h($siteName) ?></strong>
-            <span><?= h(date('Y-m-d', strtotime($post['created_at']))) ?></span>
+          <div class="post-body">
+            <h3><?= h($post['title_zh']) ?><?php if (!empty($post['title_en'])): ?><span class="en"><?= h($post['title_en']) ?></span><?php endif; ?></h3>
+            <div class="post-text">
+              <?php if (!empty($post['body_zh'])): ?><p><?= h($post['body_zh']) ?></p><?php endif; ?>
+              <?php if (!empty($post['body_en'])): ?><p class="en"><?= h($post['body_en']) ?></p><?php endif; ?>
+            </div>
+            <button type="button" class="read-more" hidden><?= h(t('home.read_more') . ' ' . t('home.read_more', 'en')) ?></button>
           </div>
-          <?php if ($post['is_pinned']): ?><span class="pin"><?= h(t('home.pinned') . ' ' . t('home.pinned', 'en')) ?></span><?php endif; ?>
-        </div>
-        <div class="post-body">
-          <h3><?= h($post['title_zh']) ?><?php if (!empty($post['title_en'])): ?><span class="en"><?= h($post['title_en']) ?></span><?php endif; ?></h3>
-          <?php if (!empty($post['body_zh'])): ?><p><?= h($post['body_zh']) ?></p><?php endif; ?>
-          <?php if (!empty($post['body_en'])): ?><p class="en"><?= h($post['body_en']) ?></p><?php endif; ?>
-        </div>
-        <?php if (!empty($post['image_path'])): ?>
-          <div class="post-media">
-            <img class="post-image" src="<?= h(BASE_URL . '/' . $post['image_path']) ?>"
-                 data-lightbox="<?= h(BASE_URL . '/' . $post['image_path']) ?>"
-                 alt="<?= h($post['title_zh']) ?>" loading="lazy">
-            <span class="zoom-hint" aria-hidden="true">🔍 點擊放大 Tap to enlarge</span>
-          </div>
-        <?php endif; ?>
-      </article>
-    <?php endforeach; ?>
+        </article>
+      <?php endforeach; ?>
+    </div>
+    <button type="button" class="album-nav next" aria-label="下一則 Next" data-dir="1">&#10095;</button>
   </div>
 </section>
+
+<!-- A whole post, opened from "read more" -->
+<dialog class="post-dialog" id="postDialog" aria-label="<?= h(t('home.news')) ?>">
+  <button type="button" class="post-dialog-close" aria-label="關閉 Close">×</button>
+  <div class="post-dialog-body"></div>
+</dialog>
 <?php endif; ?>
 
 <?php if ($albums): ?>
@@ -190,6 +203,31 @@ $showMap    = $hasQrImage || $wazeUrl !== '' || $mapsUrl !== '';
 
 <?php require BASE_PATH . '/app/Views/partials/modal.php'; ?>
 <?php require BASE_PATH . '/app/Views/partials/lightbox.php'; ?>
+
+<?php if ($posts): ?>
+<script>
+// News cards show the first few lines; "read more" appears only on the
+// cards whose text is actually cut off, and opens the whole post.
+(function () {
+  var dlg = document.getElementById('postDialog');
+  var body = dlg.querySelector('.post-dialog-body');
+  document.querySelectorAll('.news-card').forEach(function (card) {
+    var text = card.querySelector('.post-text'), more = card.querySelector('.read-more');
+    if (text.scrollHeight > text.clientHeight + 4) more.hidden = false;
+    more.addEventListener('click', function () {
+      body.innerHTML = '';
+      var copy = card.cloneNode(true);
+      copy.classList.add('is-full');
+      copy.querySelector('.read-more').remove();
+      body.appendChild(copy);
+      if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
+    });
+  });
+  dlg.querySelector('.post-dialog-close').addEventListener('click', function () { dlg.close ? dlg.close() : dlg.removeAttribute('open'); });
+  dlg.addEventListener('click', function (e) { if (e.target === dlg && dlg.close) dlg.close(); });
+})();
+</script>
+<?php endif; ?>
 
 <?php if (!$hasQrImage && $wazeUrl !== ''): ?>
 <script src="<?= asset('js/qrcode.min.js') ?>"></script>

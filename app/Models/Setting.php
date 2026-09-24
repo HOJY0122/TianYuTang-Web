@@ -37,14 +37,15 @@ class Setting extends Model
         'footer_contact'    => '',
         'footer_note_zh'    => '如有任何疑問，敬請於活動當日親臨櫃台詢問。',
         'footer_note_en'    => 'For enquiries, kindly visit the on-site counter on the event day.',
-        'footer_title'      => '',           // blank = "🙏 " + site name
-        'footer_copyright'  => '',           // blank = "© {year} " + organisation
-        // Printout letterhead (PDF). Blank lines fall back to the values above.
-        'pdf_name'          => '',           // blank = site name
-        'pdf_name_en'       => '',           // blank = English name
-        'pdf_line1'         => '',           // blank = footer organisation
-        'pdf_line2'         => '',           // blank = footer address
-        'pdf_line3'         => '',           // blank = footer contact
+        // null = never set: the footer / letterhead works it out for you.
+        // Once saved, the text is used exactly as typed — empty hides the line.
+        'footer_title'      => null,         // default: "🙏 " + site name
+        'footer_copyright'  => null,         // default: "© {year} " + organisation
+        'pdf_name'          => null,         // default: site name
+        'pdf_name_en'       => null,         // default: English name
+        'pdf_line1'         => null,         // default: footer organisation
+        'pdf_line2'         => null,         // default: footer address
+        'pdf_line3'         => null,         // default: footer contact
         'pdf_show_logo'     => '1',
     ];
 
@@ -109,6 +110,34 @@ class Setting extends Model
         $all = $this->all();
         $value = $all[$key] ?? null;
         return ($value === null || $value === '') ? $default : $value;
+    }
+
+    /** What a never-set footer / letterhead line shows, for a given set of site values. */
+    public static function fallback(string $key, array $site): string
+    {
+        return match ($key) {
+            'footer_title'     => '🙏 ' . $site['site_name'],
+            'footer_copyright' => '© {year} ' . ($site['footer_org'] !== '' ? $site['footer_org'] : $site['site_name']),
+            'pdf_name'         => $site['site_name'],
+            'pdf_name_en'      => $site['site_name_en'],
+            'pdf_line1'        => $site['footer_org'],
+            'pdf_line2'        => $site['footer_address'],
+            'pdf_line3'        => $site['footer_contact'],
+            default            => '',
+        };
+    }
+
+    /** The value the site shows: the saved text (even empty), or the fallback if never set. */
+    public static function effective(string $key, array $site): string
+    {
+        return $site[$key] ?? self::fallback($key, $site);
+    }
+
+    /** Remove a setting so its default applies again. */
+    public function delete(string $key): void
+    {
+        $this->execute('DELETE FROM settings WHERE setting_key = ?', [$key]);
+        self::$cache = null;
     }
 
     /** Write one setting, creating it if it does not exist. */

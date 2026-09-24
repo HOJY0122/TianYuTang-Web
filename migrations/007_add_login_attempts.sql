@@ -1,5 +1,5 @@
 -- ============================================================
--- Migration 005 — admin login rate limiting
+-- Migration 007 — admin login rate limiting
 --
 -- Until now the login form accepted unlimited guesses, so a script
 -- could try thousands of passwords against the admin account.
@@ -14,7 +14,7 @@
 --
 -- Nothing existing is changed; safe to run twice.
 --
--- Requires migrations 001–004.
+-- Requires migrations 001–006.
 -- ============================================================
 
 SET NAMES utf8mb4;

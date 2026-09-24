@@ -55,11 +55,110 @@ class Rsvp extends Model
         }
     }
 
+    /**
+     * Register somebody who simply turned up on the day.
+     *
+     * Deliberately different from an online submission:
+     *   - status is CONFIRMED straight away. They are standing at the
+     *     counter; there is nothing left to confirm.
+     *   - everyone is checked in on the spot, for the same reason. The
+     *     head count on the check-in screen must include them, or the
+     *     committee is planning food for the wrong number of people.
+     *   - the volunteer who entered it is stamped on the row, exactly
+     *     as counter donations record who took the cash.
+     *   - submission windows do not apply. Walk-ins exist *because*
+     *     online registration has closed.
+     *
+     * @param array  $attendees list of ['name'=>, 'ic'=>, 'contact'=>]
+     * @return string the generated reference code
+     * @throws Exception if the save fails
+     */
+    public function createWalkIn(
+        int $eventId,
+        array $attendees,
+        string $recordedBy,
+        string $refPrefix = 'RSVP'
+    ): string {
+        $count = count($attendees);
+
+        try {
+            $this->db->beginTransaction();
+
+            $this->execute(
+                'INSERT INTO rsvp_groups (event_id, source, attendee_count, status, recorded_by)
+                 VALUES (?, ?, ?, ?, ?)',
+                [$eventId, 'walkin', $count, 'confirmed', $recordedBy]
+            );
+            $groupId = (int) $this->db->lastInsertId();
+            $refCode = $this->assignRefCode('rsvp_groups', $refPrefix, $groupId);
+
+            foreach ($attendees as $a) {
+                $this->execute(
+                    'INSERT INTO rsvp_attendees (group_id, name, ic_no, contact_no, checked_in_at)
+                     VALUES (?, ?, ?, ?, NOW())',
+                    [$groupId, $a['name'], $a['ic'], $a['contact']]
+                );
+            }
+
+            $this->db->commit();
+            return $refCode;
+        } catch (Exception $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /** Head counts split by how people registered, for the counter screen. */
+    public function countsBySource(int $eventId): array
+    {
+        $rows = $this->fetchAll(
+            "SELECT g.source,
+                    COUNT(DISTINCT g.id) AS groups_count,
+                    COUNT(a.id)          AS people_count
+             FROM rsvp_groups g
+             LEFT JOIN rsvp_attendees a ON a.group_id = g.id
+             WHERE g.event_id = ? AND g.status <> 'cancelled'
+             GROUP BY g.source",
+            [$eventId]
+        );
+
+        $out = [
+            'online' => ['groups' => 0, 'people' => 0],
+            'walkin' => ['groups' => 0, 'people' => 0],
+        ];
+        foreach ($rows as $r) {
+            $key = $r['source'] ?? 'online';
+            if (isset($out[$key])) {
+                $out[$key] = [
+                    'groups' => (int) $r['groups_count'],
+                    'people' => (int) $r['people_count'],
+                ];
+            }
+        }
+        return $out;
+    }
+
+    /** The most recent walk-ins, so the volunteer can see their last entries. */
+    public function recentWalkIns(int $eventId, int $limit = 12): array
+    {
+        return $this->fetchAll(
+            "SELECT g.id, g.ref_code, g.attendee_count, g.recorded_by, g.created_at,
+                    (SELECT name FROM rsvp_attendees WHERE group_id = g.id ORDER BY id LIMIT 1) AS lead_name
+             FROM rsvp_groups g
+             WHERE g.event_id = ? AND g.source = 'walkin' AND g.status <> 'cancelled'
+             ORDER BY g.id DESC
+             LIMIT " . (int) $limit,
+            [$eventId]
+        );
+    }
+
     /** Registration groups for one event, newest first, with the lead attendee's name. */
     public function allGroups(int $eventId, int $limit = 100): array
     {
         return $this->fetchAll(
-            'SELECT g.id, g.ref_code, g.attendee_count, g.status, g.created_at,
+            'SELECT g.id, g.ref_code, g.attendee_count, g.status, g.source, g.created_at,
                     (SELECT name FROM rsvp_attendees WHERE group_id = g.id ORDER BY id LIMIT 1) AS lead_name
              FROM rsvp_groups g
              WHERE g.event_id = ?
@@ -212,7 +311,7 @@ class Rsvp extends Model
     {
         return $this->fetchAll(
             "SELECT a.name, a.ic_no, a.contact_no, a.checked_in_at,
-                    g.ref_code, g.status, g.attendee_count
+                    g.ref_code, g.status, g.source, g.attendee_count
              FROM rsvp_attendees a
              JOIN rsvp_groups g ON g.id = a.group_id
              WHERE g.event_id = ? AND g.status <> 'cancelled'

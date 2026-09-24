@@ -65,7 +65,7 @@ $dateLines = App\Models\Event::formatDateLines($event);
           <td><strong><?= h($a['name']) ?></strong></td>
           <td><?= h($a['ic_no']) ?></td>
           <td><?= h($a['contact_no']) ?></td>
-          <td class="ref"><?= h($a['ref_code']) ?></td>
+          <td class="ref"><?= h($a['ref_code']) ?><?= ($a['source'] ?? 'online') === 'walkin' ? ' 現場' : '' ?></td>
           <td><?= $in ? '已報到 ' . h(date('H:i', strtotime($a['checked_in_at']))) : ($a['status'] === 'confirmed' ? '已確認' : '待確認') ?></td>
         </tr>
       <?php endforeach; ?>

@@ -71,20 +71,87 @@ abstract class Controller
         }
     }
 
+    // ------------------------------------------------------------------
+    // Roles
+    //
+    // The two roles are separate areas, not two levels of the same one:
+    //
+    //   admin         /admin/*   runs the event
+    //   system_admin  /system/*  runs the site
+    //
+    // Neither can open the other's pages. A system admin who needs
+    // something changed on the event asks an admin, and an admin who
+    // needs the banner replaced asks a system admin — which is the point
+    // of separating them. Nobody gets stranded: a system admin can reset
+    // any admin's password and create accounts of either role.
+    //
+    // All three checks below run on the SERVER. Hiding a menu item stops
+    // an honest person wandering in; it does nothing about someone who
+    // types the URL, and the browser's session already knows its role.
+    // ------------------------------------------------------------------
+
     /**
-     * Send the visitor to the admin login page unless already signed in.
+     * Signed in at all, either role. For pages both roles share.
      *
-     * An admin still on the default password is held on the change-
-     * password page until they pick a new one. Only that page passes
-     * $passwordPage = true — every other admin page redirects there.
+     * Someone who signed in with the published default password is held
+     * on the change-password page until they pick a new one. Only that
+     * page passes $passwordPage = true — every other page redirects there.
      */
-    protected function requireAdmin(bool $passwordPage = false): void
+    protected function requireLogin(bool $passwordPage = false): void
     {
         if (empty($_SESSION['admin_id'])) {
             $this->redirect('/admin/login');
         }
         if (!$passwordPage && !empty($_SESSION['must_change_password'])) {
-            $this->redirect('/admin/password');
+            $this->redirect('/account/password');
         }
+    }
+
+    /** Restrict a page to the event administrators' area. */
+    protected function requireAdmin(): void
+    {
+        $this->requireLogin();
+
+        if ($this->isSystemAdmin()) {
+            http_response_code(403);
+            $this->flash(
+                'error',
+                '這是管理員頁面',
+                '系統管理員帳號負責網站設定，不處理報名與布施資料。請改用管理員帳號登入。'
+            );
+            $this->redirect('/system');
+        }
+    }
+
+    /** Restrict a page to the system administrators' area. */
+    protected function requireSystemAdmin(): void
+    {
+        $this->requireLogin();
+
+        if (!$this->isSystemAdmin()) {
+            http_response_code(403);
+            $this->flash(
+                'error',
+                '權限不足',
+                '此功能僅限系統管理員使用。如需更改網站設定，請聯絡系統管理員。'
+            );
+            $this->redirect('/admin/dashboard');
+        }
+    }
+
+    /** Is the signed-in user a system administrator? */
+    protected function isSystemAdmin(): bool
+    {
+        return ($_SESSION['admin_role'] ?? 'admin') === 'system_admin';
+    }
+
+    /**
+     * Where a signed-in user belongs. Used by the login page and by
+     * anything that needs a "back to where I came from" link, so neither
+     * role is ever sent to a page it will immediately bounce off.
+     */
+    protected function homePath(): string
+    {
+        return $this->isSystemAdmin() ? '/system' : '/admin/dashboard';
     }
 }

@@ -1,6 +1,6 @@
 <?php
 // $event is in scope when rendered from the public site; fall back for safety.
-$footerTitle = isset($event['name']) ? '天玉堂' . $event['name'] : SITE_NAME;
+$footerTitle = isset($event['name']) ? ($siteName ?? '天玉堂') . $event['name'] : ($siteName ?? SITE_NAME);
 $footerYear  = isset($event['year']) ? (int) $event['year'] : (int) date('Y');
 ?>
 <footer>

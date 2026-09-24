@@ -12,8 +12,8 @@
 <div class="adminbar">
   <h1>🙏 天玉堂 2026 管理系統</h1>
   <div style="display:flex;align-items:center;gap:14px">
-    <span class="who">您好，<?= h($_SESSION['admin_username']) ?></span>
-    <a class="logout" href="<?= url('/admin/password') ?>">更改密碼</a>
+    <span class="who">您好，<?= h($_SESSION['admin_display'] ?? $_SESSION['admin_username']) ?></span>
+    <a class="mini-btn ghost" href="<?= url('/account/password') ?>">🔑 密碼</a>
     <form class="logout-form" method="POST" action="<?= url('/admin/logout') ?>">
       <?= csrf_field() ?>
       <button type="submit" class="logout">登出 Logout</button>
@@ -93,9 +93,9 @@
 
       <a class="mini-btn" href="<?= url('/admin/event/edit') ?>?id=<?= (int) $event['id'] ?>">✏️ 編輯活動資料</a>
       <a class="mini-btn" href="<?= url('/admin/checkin') ?>?event=<?= (int) $event['id'] ?>">✅ 現場報到</a>
+      <a class="mini-btn" href="<?= url('/admin/walkin') ?>?event=<?= (int) $event['id'] ?>">🚶 現場報名</a>
       <a class="mini-btn" href="<?= url('/admin/counter') ?>?event=<?= (int) $event['id'] ?>">💰 現場布施</a>
       <a class="mini-btn" href="<?= url('/admin/photos') ?>?event=<?= (int) $event['id'] ?>">📸 相簿管理</a>
-      <a class="mini-btn" href="<?= url('/admin/qr') ?>?event=<?= (int) $event['id'] ?>" target="_blank">🔳 活動 QR</a>
       <a class="mini-btn ghost" href="<?= url('/admin/event/new') ?>">＋ 新增活動</a>
 
       <?php if ($event['is_test']): ?>

@@ -27,14 +27,22 @@ class ExportController extends Controller
         $event = $this->resolveEvent();
         $rows  = (new Rsvp())->attendeeSheet((int) $event['id']);
 
-        $data = [['姓名 Name', '身份證號碼 IC No.', '聯絡號碼 Contact', '報名編號 Ref', '狀態 Status']];
+        // 來源 matters to the committee afterwards: how many people
+        // planned ahead versus turned up on the day is what decides how
+        // much food to order next year.
+        $data = [[
+            '姓名 Name', '身份證號碼 IC No.', '聯絡號碼 Contact',
+            '報名編號 Ref', '來源 Source', '狀態 Status', '報到 Checked In',
+        ]];
         foreach ($rows as $r) {
             $data[] = [
                 $r['name'],
                 $r['ic_no'],
                 $r['contact_no'],
                 $r['ref_code'],
+                ($r['source'] ?? 'online') === 'walkin' ? '現場 Walk-in' : '線上 Online',
                 $r['status'] === 'confirmed' ? '已確認 Confirmed' : '待確認 Pending',
+                $r['checked_in_at'] ? date('Y-m-d H:i', strtotime($r['checked_in_at'])) : '',
             ];
         }
 

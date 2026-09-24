@@ -313,9 +313,15 @@ mysql -u USER -p < migrations/001_add_events.sql       # events table
 mysql -u USER -p < migrations/002_add_event_photos.sql # photo gallery
 mysql -u USER -p < migrations/003_add_checkin.sql      # on-site check-in
 mysql -u USER -p < migrations/004_add_counter_donations.sql # cash at the counter
+mysql -u USER -p < migrations/005_add_roles_and_settings.sql # roles + site settings
 ```
 
-Run them in order. Both are safe to run twice.
+Run them in order. Each one is safe to run twice.
+
+Migration 005 promotes **every existing admin account to
+`system_admin`**, so nobody is locked out of the settings the moment it
+runs. Demote the accounts that should be plain admins afterwards, from
+系統設定 → 管理帳號.
 
 It prints a row count at the end; `rows_total` and `rows_with_event`
 must match for both tables.
@@ -378,6 +384,34 @@ Then open http://localhost:8000
       (try `yoursite.com/config/config.php` — it must not display)
 - [ ] Verify the event dates (16, 17 & 18 Oct 2026), venue and 功德席 price
 
+### Admin roles
+
+There are two roles, and **system admin is a superset of admin** — not a
+parallel account type. A system admin can do everything an admin can,
+plus the settings below.
+
+| | 管理員 admin | 系統管理員 system_admin |
+|---|---|---|
+| Dashboard, registrations, donations | ✅ | ✅ |
+| Excel export, print sheets, check-in, counter donations | ✅ | ✅ |
+| Create / edit events, activate, test mode | ✅ | ✅ |
+| Photo gallery upload and ordering | ✅ | ✅ |
+| Hero banner and favicon | ❌ | ✅ |
+| Site name and tagline | ❌ | ✅ |
+| Admin accounts (create, promote, reset, delete) | ❌ | ✅ |
+| QR code generator | ❌ | ✅ |
+
+The split is enforced **server-side** in `SystemController` and in
+`AdminController::saveEvent()`, not by hiding buttons: a plain admin who
+crafts the POST by hand still cannot change branding or promote
+themselves. Two safety rails exist by design — you cannot delete your
+own account, and you cannot remove or demote the **last** system admin,
+so the system can never end up with nobody able to administer it.
+
+Everyone should have their own account rather than sharing one. Counter
+donations record who took the money in `recorded_by`, and that column is
+worthless if the whole committee logs in as `admin`.
+
 ### Default admin login
 
 ```
@@ -385,7 +419,12 @@ Username: admin
 Password: tianyutang2026
 ```
 
-**Change this immediately.** To generate a replacement hash:
+**Change this immediately.** The easiest way is in the browser:
+log in, open **系統設定 → 更改我的密碼** (`/system/password`). Creating
+the committee's individual accounts is on the same page's 管理帳號
+section, which also avoids anyone needing phpMyAdmin.
+
+If you are locked out and have to do it in SQL, generate a hash:
 
 ```bash
 php -r "echo password_hash('your-new-password', PASSWORD_DEFAULT);"
@@ -411,6 +450,9 @@ UPDATE admin_users SET password_hash = 'paste-the-hash-here' WHERE username = 'a
 | Username enumeration | Login returns the same message and takes similar time whether the user exists or not |
 | Source code exposure | `app/` and `config/` outside the web root, plus deny-all `.htaccess` |
 | Password storage | bcrypt via `password_hash()` — plain passwords are never stored |
+| Privilege escalation | Role checked server-side on every system route; branding fields stripped from a plain admin's event POST before it reaches the model |
+| Lockout | The last system admin cannot be deleted or demoted, and no account can delete itself |
+| Password change | Changing your own password requires the current one, so a walk-up at an unlocked screen cannot take the account over |
 
 ---
 
@@ -450,6 +492,15 @@ UPDATE admin_users SET password_hash = 'paste-the-hash-here' WHERE username = 'a
 | POST | `/admin/photos/caption` | `AdminController@updateCaption` |
 | POST | `/admin/photos/move` | `AdminController@movePhoto` |
 | POST | `/admin/photos/delete` | `AdminController@deletePhoto` |
+| GET | `/system` | `SystemController@index` |
+| POST | `/system/settings` | `SystemController@saveSettings` |
+| POST | `/system/users/create` | `SystemController@createUser` |
+| POST | `/system/users/role` | `SystemController@changeRole` |
+| POST | `/system/users/password` | `SystemController@resetPassword` |
+| POST | `/system/users/delete` | `SystemController@deleteUser` |
+| GET | `/system/password` | `SystemController@passwordForm` |
+| POST | `/system/password` | `SystemController@changeOwnPassword` |
+| GET | `/system/qr` | `SystemController@qrGenerator` |
 
 To add a page: register the route in `public/index.php`, add the method
 to a controller, add the view under `app/Views/`.
@@ -466,5 +517,15 @@ to a controller, add the view under `app/Views/`.
 - `MAX_ATTENDEES` and `MERIT_TABLE_PRICE` live in `config/config.php`.
   Changing the price there updates the form, the running total and the
   stored amount together — do not hard-code it anywhere else.
-#   T i a n Y u T a n g - W e b  
- 
+- **The QR generator's finder patterns must stay solid squares.** The
+  styled modes (圓點 / 留縫 / 漸層) paint only the *data* modules; the
+  three corner squares and the alignment patterns are always drawn
+  solid, because those are what a scanner uses to find the code and
+  correct for a tilted phone. Styling them makes the code undetectable
+  at *every* error-correction level — this is not theoretical, it was
+  the first version's behaviour and 74 of 156 test renders failed to
+  decode. If you touch `render()` in `app/Views/system/qr.php`, re-check
+  a styled code with a real phone before shipping it.
+- Site name and tagline come from the `settings` table, read once per
+  request by `Setting::all()`. Anything else that should be editable
+  without a deploy belongs there too, rather than in `config.php`.

@@ -26,7 +26,7 @@ $heroStyle  = $bannerPath
     <?php else: ?>
       <div class="year"><?= h($event['year']) ?></div>
     <?php endif; ?>
-    <h1>天玉堂</h1>
+    <h1><?= h($siteName) ?></h1>
     <h2><?= h($event['name']) ?></h2>
     <p>誠邀十方善信共襄盛舉，同結善緣，共種福田。</p>
     <?php if (!empty($event['subtitle'])): ?>

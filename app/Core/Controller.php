@@ -75,4 +75,33 @@ abstract class Controller
             $this->redirect('/admin/login');
         }
     }
+
+    /**
+     * Restrict a page to system administrators.
+     *
+     * Checked on the SERVER for every system route, not just by hiding
+     * the menu item. Hiding a link stops an honest person wandering in;
+     * it does nothing about someone who types the URL, and the session
+     * already tells the browser which role it holds.
+     */
+    protected function requireSystemAdmin(): void
+    {
+        $this->requireAdmin();
+
+        if (!$this->isSystemAdmin()) {
+            http_response_code(403);
+            $this->flash(
+                'error',
+                '權限不足',
+                '此功能僅限系統管理員使用。如需存取，請聯絡系統管理員。'
+            );
+            $this->redirect('/admin/dashboard');
+        }
+    }
+
+    /** Is the signed-in user a system administrator? */
+    protected function isSystemAdmin(): bool
+    {
+        return ($_SESSION['admin_role'] ?? 'admin') === 'system_admin';
+    }
 }

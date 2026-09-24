@@ -26,11 +26,20 @@
     ⚠️ 測試模式 TEST MODE — 此頁面僅供內部測試，所有報名與布施資料<strong>不會列入正式紀錄</strong>。
   </div>
 <?php endif; ?>
-<div class="topbar">🙏 感恩您的參與與支持　｜　Thank you for your kind support</div>
+<?php
+// Site-level branding, set by a system admin. Falls back to the
+// original wording so a fresh install still reads correctly.
+$siteSettings = (new App\Models\Setting())->all();
+$siteName     = $siteSettings['site_name']    ?? '天玉堂';
+$siteTagline  = $siteSettings['site_tagline'] ?? '🙏 感恩您的參與與支持　｜　Thank you for your kind support';
+?>
+<?php if ($siteTagline !== ''): ?>
+  <div class="topbar"><?= h($siteTagline) ?></div>
+<?php endif; ?>
 
 <header>
   <nav class="nav">
-    <a class="brand" href="<?= url('/') ?>">天玉堂</a>
+    <a class="brand" href="<?= url('/') ?>"><?= h($siteName) ?></a>
     <div class="navlinks">
       <a href="<?= url('/') ?>#home">首頁</a>
       <a href="<?= url('/') ?>#rsvp">報名</a>

@@ -12,7 +12,11 @@
 <div class="adminbar">
   <h1>🙏 天玉堂 2026 管理系統</h1>
   <div style="display:flex;align-items:center;gap:14px">
-    <span class="who">您好，<?= h($_SESSION['admin_username']) ?></span>
+    <span class="who">您好，<?= h($_SESSION['admin_display'] ?? $_SESSION['admin_username']) ?></span>
+    <?php if (($_SESSION['admin_role'] ?? '') === 'system_admin'): ?>
+      <a class="mini-btn ghost" href="<?= url('/system') ?>">⚙️ 系統管理</a>
+    <?php endif; ?>
+    <a class="mini-btn ghost" href="<?= url('/admin/password') ?>">🔑 密碼</a>
     <a class="logout" href="<?= url('/admin/logout') ?>">登出 Logout</a>
   </div>
 </div>
@@ -91,7 +95,6 @@
       <a class="mini-btn" href="<?= url('/admin/checkin') ?>?event=<?= (int) $event['id'] ?>">✅ 現場報到</a>
       <a class="mini-btn" href="<?= url('/admin/counter') ?>?event=<?= (int) $event['id'] ?>">💰 現場布施</a>
       <a class="mini-btn" href="<?= url('/admin/photos') ?>?event=<?= (int) $event['id'] ?>">📸 相簿管理</a>
-      <a class="mini-btn" href="<?= url('/admin/qr') ?>?event=<?= (int) $event['id'] ?>" target="_blank">🔳 活動 QR</a>
       <a class="mini-btn ghost" href="<?= url('/admin/event/new') ?>">＋ 新增活動</a>
 
       <?php if ($event['is_test']): ?>

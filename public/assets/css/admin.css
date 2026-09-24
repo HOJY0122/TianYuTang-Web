@@ -192,3 +192,49 @@ background:#f7e6a8;border-radius:12px;padding:15px 16px;margin-top:18px;font-wei
 background:#fffdf6;font:inherit}
 .receipt-link{color:var(--red);font-weight:700;text-decoration:underline}
 .badge.counter{background:#e3ecf5;color:#2d4f75}
+
+/* ---------- System admin ---------- */
+.adminbar.system h1{color:#4a3161}
+.flash.system-note{background:#efe9f5;border-left:4px solid #6b4b8a;color:#3f3153}
+.flash.system-note a{color:#4a3161;text-decoration:underline;font-weight:700}
+.badge.sysadmin{background:#e7dcf2;color:#4a3161}
+
+.sys-links{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.sys-link{display:flex;align-items:center;gap:14px;padding:16px;border:1px solid var(--line);
+border-radius:14px;background:#fffdf5;transition:.18s}
+.sys-link:hover{border-color:var(--red);transform:translateY(-2px)}
+.sys-ico{font-size:26px}
+.sys-link strong{display:block;font-size:15px}
+.sys-link small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;line-height:1.5}
+
+.pw-form{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.pw-form input{padding:8px 10px;border:1px solid #d8bf79;border-radius:8px;font-size:13px;min-width:0;flex:1}
+.check-row{display:flex;align-items:center;gap:9px;margin:18px 0 0;font-weight:600;font-size:14px}
+.check-row input{width:auto;margin:0}
+.link-btn{background:none;border:0;color:var(--red);text-decoration:underline;cursor:pointer;
+font:inherit;font-size:12.5px;padding:0}
+
+/* QR generator */
+.qr-wrap{max-width:1080px}
+.qr-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);gap:20px;align-items:start}
+.qr-controls{margin:0}
+.qr-preview{position:sticky;top:20px;text-align:center}
+.qr-stage{display:grid;place-items:center;padding:18px;background:#fff;
+border:1px solid var(--line);border-radius:14px;min-height:280px}
+.qr-stage canvas{max-width:100%;height:auto}
+.qr-meta{margin-top:12px;font-size:12.5px;color:var(--muted)}
+.qr-warn{margin-top:12px;padding:11px 14px;border-radius:9px;background:#fbeecb;
+color:#8a5a12;font-size:13px;line-height:1.7;text-align:left}
+.preset-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.form-panel textarea{width:100%;padding:12px 14px;border:1px solid #d8bf79;border-radius:10px;
+background:#fffdf6;font:inherit;resize:vertical}
+.form-panel input[type=color]{height:46px;padding:4px;cursor:pointer}
+
+@media(max-width:900px){
+  .qr-layout{grid-template-columns:1fr}
+  .qr-preview{position:static}
+}
+@media print{
+  .adminbar,.qr-controls,.qr-meta,.qr-warn{display:none!important}
+  .qr-preview{border:0;box-shadow:none}
+}

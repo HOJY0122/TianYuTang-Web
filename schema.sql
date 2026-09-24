@@ -169,7 +169,24 @@ CREATE TABLE IF NOT EXISTS admin_users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
+
+    -- system_admin is a SUPERSET of admin: everything the committee
+    -- does, plus branding, the QR generator and managing logins.
+    role ENUM('admin','system_admin') NOT NULL DEFAULT 'admin',
+
+    display_name  VARCHAR(80) NULL DEFAULT NULL,
+    last_login_at DATETIME NULL DEFAULT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- settings — site-level values not tied to any one year
+-- (the header name, for example, outlives every event)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS settings (
+    setting_key   VARCHAR(50) PRIMARY KEY,
+    setting_value TEXT NULL,
+    updated_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================
@@ -191,6 +208,12 @@ WHERE NOT EXISTS (SELECT 1 FROM events WHERE year = 2026 AND is_test = FALSE);
 
 -- Default admin. CHANGE THIS PASSWORD after first login.
 -- Login: admin / tianyutang2026
-INSERT INTO admin_users (username, password_hash) VALUES
-('admin', '$2y$12$2peuIpyQnsls10rNrIOTU.8xcMbsvlnnhpCIxLsQZkia9EapTIvgW')
+INSERT INTO admin_users (username, password_hash, role, display_name) VALUES
+('admin', '$2y$12$2peuIpyQnsls10rNrIOTU.8xcMbsvlnnhpCIxLsQZkia9EapTIvgW', 'system_admin', '系統管理員')
 ON DUPLICATE KEY UPDATE username = username;
+
+-- Site-level defaults.
+INSERT INTO settings (setting_key, setting_value) VALUES
+    ('site_name',    '天玉堂'),
+    ('site_tagline', '🙏 感恩您的參與與支持　｜　Thank you for your kind support')
+ON DUPLICATE KEY UPDATE setting_key = setting_key;

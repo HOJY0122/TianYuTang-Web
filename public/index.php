@@ -61,6 +61,19 @@ $router->get('/admin/event/edit',   'AdminController@editEvent');
 $router->get('/admin/event/new',    'AdminController@newEvent');
 $router->post('/admin/event/save',  'AdminController@saveEvent');
 
+// System administration (system_admin only — enforced in the controller)
+$router->get('/system',                'SystemController@index');
+$router->post('/system/settings',      'SystemController@saveSettings');
+$router->post('/system/users/create',  'SystemController@createUser');
+$router->post('/system/users/role',    'SystemController@changeRole');
+$router->post('/system/users/password','SystemController@resetPassword');
+$router->post('/system/users/delete',  'SystemController@deleteUser');
+$router->get('/system/qr',             'SystemController@qrGenerator');
+
+// Own password — any signed-in user
+$router->get('/admin/password',        'SystemController@passwordForm');
+$router->post('/admin/password',       'SystemController@changeOwnPassword');
+
 // Counter (cash) donations
 $router->get('/admin/counter',      'CounterController@index');
 $router->post('/admin/counter/save','CounterController@save');

@@ -118,6 +118,7 @@ $v = static fn(string $key, $fallback = '') => $old[$key] ?? ($event[$key] ?? $f
         </div>
       </div>
 
+      <?php if (!empty($isSystemAdmin)): ?>
       <h3>圖片</h3>
       <p class="help" style="margin-top:0">
         支援 JPG、PNG、GIF、WebP，單檔 5MB 以內。上傳後系統會自動重新產生圖片並調整尺寸。
@@ -151,6 +152,12 @@ $v = static fn(string $key, $fallback = '') => $old[$key] ?? ($event[$key] ?? $f
         建議正方形，180×180px 以上。
         <strong>注意：</strong>瀏覽器會長時間快取小圖示，更換後可能需要強制重新整理（Ctrl+F5）才看得到新的。
       </p>
+
+      <?php else: ?>
+      <div class="note-box">
+        🔒 橫幅與網站小圖示由<strong>系統管理員</strong>設定。如需更換，請聯絡系統管理員。
+      </div>
+      <?php endif; ?>
 
       <h3>線上開放時間</h3>
       <p class="help" style="margin-top:0">

@@ -52,6 +52,9 @@ class AdminController extends Controller
         session_regenerate_id(true);
         $_SESSION['admin_id']       = $user['id'];
         $_SESSION['admin_username'] = $user['username'];
+        $_SESSION['admin_role']     = $user['role'] ?? 'admin';
+        $_SESSION['admin_display']  = $user['display_name'] ?: $user['username'];
+        (new AdminUser())->recordLogin((int) $user['id']);
 
         $this->redirect('/admin/dashboard');
     }
@@ -397,6 +400,7 @@ class AdminController extends Controller
         }
 
         $this->view('admin/event_form', [
+            'isSystemAdmin' => $this->isSystemAdmin(),
             'mode'   => 'edit',
             'event'  => $event,
             'errors' => $this->takeFormErrors(),
@@ -430,6 +434,7 @@ class AdminController extends Controller
         ];
 
         $this->view('admin/event_form', [
+            'isSystemAdmin' => $this->isSystemAdmin(),
             'mode'   => 'new',
             'event'  => $blank,
             'errors' => $this->takeFormErrors(),
@@ -486,6 +491,13 @@ class AdminController extends Controller
         // orphaned file on disk, and kept out of $fields until they
         // succeed so a failed upload cannot blank an existing image.
         $existing = $isNew ? null : $eventModel->find($id);
+
+        // Branding belongs to system admins. A plain admin who crafts a
+        // multipart POST must not be able to replace the banner.
+        if (!$this->isSystemAdmin()) {
+            unset($_FILES['hero_banner'], $_FILES['favicon'],
+                  $_POST['remove_hero_banner'], $_POST['remove_favicon']);
+        }
 
         try {
             $banner = $this->handleImageField(

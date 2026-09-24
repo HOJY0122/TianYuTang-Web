@@ -69,9 +69,9 @@ class AdminController extends Controller
         $_SESSION['admin_display']  = $user['display_name'] ?: $user['username'];
         (new AdminUser())->recordLogin((int) $user['id']);
 
-        // Still on the password printed in the README? Then this login
-        // unlocks exactly one page: the one that replaces it.
-        if (hash_equals(AdminUser::DEFAULT_PASSWORD, $password)) {
+        // Still on a password published with the source code? Then this
+        // login unlocks exactly one page: the one that replaces it.
+        if (AdminUser::isDefaultPassword($password)) {
             $_SESSION['must_change_password'] = true;
             $this->redirect('/account/password');
         }

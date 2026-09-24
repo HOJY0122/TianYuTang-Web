@@ -46,6 +46,7 @@ class ReceiptReader
     public const PROVIDERS = [
         'anthropic' => ['Anthropic Claude', 'sk-ant-', 'https://console.anthropic.com/settings/keys'],
         'nvidia'    => ['NVIDIA (build.nvidia.com)', 'nvapi-', 'https://build.nvidia.com/'],
+        'google'    => ['Google Cloud Vision (OCR)', 'AIza', 'https://console.cloud.google.com/apis/credentials'],
     ];
 
     /** Vision models on NVIDIA's API that suit this job; the admin may type any other. */
@@ -94,7 +95,7 @@ class ReceiptReader
     public static function keySource(?string $provider = null): array
     {
         $provider = $provider ?? self::provider();
-        $name     = $provider === 'nvidia' ? 'NVIDIA_API_KEY' : 'ANTHROPIC_API_KEY';
+        $name     = ['nvidia' => 'NVIDIA_API_KEY', 'google' => 'GOOGLE_VISION_API_KEY'][$provider] ?? 'ANTHROPIC_API_KEY';
         $candidates = [
             'config'   => defined($name) ? (string) constant($name) : '',
             'env'      => (string) (getenv($name) ?: ''),
@@ -167,6 +168,20 @@ class ReceiptReader
         if ($key === '') {
             return ['ok' => false, 'message' => "還沒有金鑰。\nNo API key yet."];
         }
+        if ($provider === 'google') {
+            // A blank 1×1 picture: checks the key, that the Vision API is
+            // switched on for the project, and billing — within the free tier.
+            try {
+                $this->request(self::googleUrl(), ['requests' => [[
+                    'image'    => ['content' => 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=='],
+                    'features' => [['type' => 'TEXT_DETECTION']],
+                ]]], self::headers('google', $key));
+            } catch (RuntimeException $e) {
+                return ['ok' => false, 'message' => "Google Vision 測試失敗 Test failed:\n" . $e->getMessage()];
+            }
+            return ['ok' => true, 'message' => "✓ 一切正常：Google Cloud Vision 可以使用。每月首 1,000 張免費。\n"
+                . "All good — Google Cloud Vision works. The first 1,000 scans each month are free."];
+        }
         if ($provider === 'nvidia') {
             // NVIDIA has no free "does this key work" call, so one tiny
             // text request checks the key, the model and the account together.
@@ -203,6 +218,11 @@ class ReceiptReader
             . "All good — the key works and the account can use {$model}. You can scan receipts now."];
     }
 
+    private static function googleUrl(): string
+    {
+        return self::conf('GOOGLE_VISION_URL', 'https://vision.googleapis.com/v1/images:annotate');
+    }
+
     private static function nvidiaUrl(): string
     {
         return self::conf('NVIDIA_API_URL', 'https://integrate.api.nvidia.com/v1/chat/completions');
@@ -213,6 +233,10 @@ class ReceiptReader
     {
         if ($provider === 'nvidia') {
             return ['content-type: application/json', 'accept: application/json', 'authorization: Bearer ' . $key];
+        }
+        if ($provider === 'google') {
+            // In a header rather than ?key= so the key never appears in logged URLs.
+            return ['content-type: application/json', 'x-goog-api-key: ' . $key];
         }
         return [
             'content-type: application/json',
@@ -249,6 +273,9 @@ class ReceiptReader
         }
         if (self::provider() === 'nvidia') {
             return $this->readWithNvidia($file);
+        }
+        if (self::provider() === 'google') {
+            return $this->readWithGoogle($file);
         }
 
         $body = [
@@ -335,6 +362,51 @@ class ReceiptReader
                 . "\n（詳細 Detail: " . mb_substr(trim($text), 0, 150) . '）');
         }
         return self::clean($data);
+    }
+
+    /**
+     * Read the photo with Google Cloud Vision (DOCUMENT_TEXT_DETECTION —
+     * its handwriting-capable OCR), then let ReceiptOcrParser work out the
+     * fields from where each word sits. The full text comes back as 'text'
+     * so staff can see everything that was read.
+     */
+    private function readWithGoogle(string $file): array
+    {
+        $reply = $this->request(self::googleUrl(), ['requests' => [[
+            'image'        => ['content' => base64_encode((string) file_get_contents($file))],
+            'features'     => [['type' => 'DOCUMENT_TEXT_DETECTION']],
+            'imageContext' => ['languageHints' => ['zh-Hant', 'en']],
+        ]]], self::headers('google', self::apiKey('google')));
+
+        $res = $reply['responses'][0] ?? [];
+        if (!empty($res['error'])) {
+            throw new RuntimeException("Google 無法讀取這張相片。\nGoogle could not read this photo.\n（詳細 Detail: "
+                . mb_substr((string) ($res['error']['message'] ?? ''), 0, 200) . '）');
+        }
+        $words = [];
+        foreach ($res['fullTextAnnotation']['pages'] ?? [] as $page) {
+            foreach ($page['blocks'] ?? [] as $block) {
+                foreach ($block['paragraphs'] ?? [] as $para) {
+                    foreach ($para['words'] ?? [] as $word) {
+                        $text = implode('', array_map(static fn($sym) => (string) ($sym['text'] ?? ''), $word['symbols'] ?? []));
+                        $xs = array_map(static fn($v) => (int) ($v['x'] ?? 0), $word['boundingBox']['vertices'] ?? []);
+                        $ys = array_map(static fn($v) => (int) ($v['y'] ?? 0), $word['boundingBox']['vertices'] ?? []);
+                        if ($text === '' || !$xs) {
+                            continue;
+                        }
+                        $words[] = ['text' => $text, 'x1' => min($xs), 'x2' => max($xs), 'y1' => min($ys), 'y2' => max($ys)];
+                    }
+                }
+            }
+        }
+        if (!$words) {
+            throw new RuntimeException("相片中找不到文字，請拍清楚一點再試。\nNo text was found in the photo — please retake it more clearly.");
+        }
+        $parsed = ReceiptOcrParser::parse($words);
+        $text   = $parsed['text'];
+        $clean  = self::clean($parsed);
+        $clean['text'] = mb_substr($text, 0, 4000);
+        return $clean;
     }
 
     /** The first {...} object in a reply, ignoring code fences and chatter around it. */
@@ -460,6 +532,14 @@ class ReceiptReader
             $detail = is_string($detail) ? $detail : json_encode($detail);
             error_log("ReceiptReader HTTP {$status} {$type}: " . substr((string) $raw, 0, 500));
             throw new RuntimeException(match (true) {
+                $status === 400 && stripos($detail, 'API key not valid') !== false
+                                                 => "Google 金鑰無效，請檢查是否貼錯。\nThe Google API key is not valid — check it was pasted correctly.",
+                $status === 403 && (stripos($detail, 'has not been used') !== false || stripos($detail, 'disabled') !== false)
+                                                 => "這個 Google 專案還沒有啟用 Cloud Vision API：到 Google Cloud →「API 和服務」→ 啟用「Cloud Vision API」，幾分鐘後再試。\nCloud Vision API is not enabled for this Google project: Google Cloud → APIs & Services → enable “Cloud Vision API”, then try again in a few minutes.",
+                $status === 403 && stripos($detail, 'billing') !== false
+                                                 => "這個 Google 專案還沒有啟用帳單。請在 Google Cloud →「帳單」連結付款方式（每月首 1,000 張免費，不會收費）。\nBilling is not enabled for this Google project. Link a payment method under Google Cloud → Billing (the first 1,000 scans a month are free).",
+                $status === 403 && (stripos($detail, 'referer') !== false || stripos($detail, 'IP address') !== false || stripos($detail, 'blocked') !== false)
+                                                 => "這個 Google 金鑰設了「網站」或「IP」限制，伺服器被擋住了。請在金鑰設定把「應用程式限制」改為「無」，只保留「API 限制：Cloud Vision API」。\nThis Google key has a website or IP restriction that blocks the server. In the key's settings set Application restrictions to None and keep API restrictions: Cloud Vision API.",
                 $status === 401                  => "AI 金鑰無效（打錯、已刪除或已停用），請系統管理員到「網站設定」檢查。\nThe AI key was refused (mistyped, deleted or disabled) — the system admin can check it in Site settings.",
                 $status === 403                  => "這個金鑰沒有使用權限，請檢查 AI 帳戶。\nThis key is not allowed to do this — check the AI account.",
                 $status === 404                  => "找不到這個 AI 模型，或此金鑰不能使用它。請換一個模型名稱。\nThis AI model was not found, or this key cannot use it — try another model name.",

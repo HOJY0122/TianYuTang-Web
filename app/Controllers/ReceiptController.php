@@ -94,6 +94,7 @@ class ReceiptController extends Controller
                         ($read['unsure'] ? '不確定 Unsure: ' . implode(', ', $read['unsure']) . '. ' : '') . $read['notes']
                     ) ?: null;
                     $draft['unsure'] = $read['unsure'];
+                    $draft['ocr_text'] = $read['text'] ?? null;   // Google Vision: everything it read
                 } catch (RuntimeException $e) {
                     // The photo is still useful — type it in beside it.
                     $this->flash('error', 'AI 讀取失敗 AI could not read it', $e->getMessage());

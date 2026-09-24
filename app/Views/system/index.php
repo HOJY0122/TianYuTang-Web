@@ -152,7 +152,9 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
           <strong><?= h($pLabel) ?></strong>
           <small><?= $pKey === 'anthropic'
               ? '讀手寫中文最準確，按用量收費。Best at handwritten Chinese; paid per use.'
-              : '有免費額度，開源模型，手寫中文較不準。Free credits; open models, weaker on handwritten Chinese.' ?></small>
+              : ($pKey === 'nvidia'
+                  ? '有免費額度，開源模型，手寫中文較不準。Free credits; open models, weaker on handwritten Chinese.'
+                  : '每月首 1,000 張免費，手寫辨識好；只讀文字，欄位由系統按標籤推斷。First 1,000 a month free, good with handwriting; reads text only — fields are worked out from the printed labels.') ?></small>
           <span class="ai-key-state <?= $pKeyVal !== '' ? 'on' : 'off' ?>"><?= $pKeyVal !== ''
               ? '✓ 金鑰 Key ' . h(App\Core\ReceiptReader::mask($pKeyVal)) . ' · ' . h($aiFromText[$pWhere] ?? '')
               : '✕ 未有金鑰 No key' ?></span>
@@ -196,6 +198,27 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
       <span class="en">Pick from the list, or paste the name of any vision model on build.nvidia.com. If readings are poor, try another.</span></p>
     <?php if (App\Core\ReceiptReader::keySource('nvidia')[0] === 'settings'): ?>
       <label class="check-row" style="font-weight:600"><input type="checkbox" name="remove_nvidia_key" value="1" style="width:auto"> 移除已儲存的 NVIDIA 金鑰 <span class="en">Remove the saved key</span></label>
+    <?php endif; ?>
+  </div>
+
+  <div class="ai-panel" data-ai-panel="google">
+    <label for="google_api_key">Google Cloud API 金鑰 <span class="en">API key</span></label>
+    <div class="pw-field">
+      <input id="google_api_key" name="google_api_key" type="password" autocomplete="off" spellcheck="false"
+             placeholder="<?= App\Core\ReceiptReader::keySource('google')[0] === 'settings' ? '已儲存，留空保持不變 Saved — leave empty to keep it' : 'AIza…' ?>">
+      <button type="button" class="pw-eye" data-toggle-password="google_api_key" title="顯示 Show">👁</button>
+    </div>
+    <ol class="setup-steps">
+      <li>在 <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud</a> 選好專案，到「API 和服務 → 程式庫」啟用 <strong>Cloud Vision API</strong>。
+        <span class="en">Pick your project, then APIs &amp; Services → Library → enable <strong>Cloud Vision API</strong>.</span></li>
+      <li>到「帳單」確認已連結付款方式（每月首 1,000 張免費）。<span class="en">Under Billing, make sure a payment method is linked (the first 1,000 a month are free).</span></li>
+      <li>到「API 和服務 → 憑證」→「建立憑證 → API 金鑰」，複製 AIza 開頭的金鑰貼在上面。
+        <span class="en">APIs &amp; Services → Credentials → Create credentials → API key; paste the key (starts with AIza) above.</span></li>
+      <li>建議：編輯金鑰，「API 限制」選 Cloud Vision API；「應用程式限制」保持「無」（網站限制會擋住伺服器）。
+        <span class="en">Recommended: edit the key, restrict it to Cloud Vision API, and leave Application restrictions at None (a website restriction blocks the server).</span></li>
+    </ol>
+    <?php if (App\Core\ReceiptReader::keySource('google')[0] === 'settings'): ?>
+      <label class="check-row" style="font-weight:600"><input type="checkbox" name="remove_google_key" value="1" style="width:auto"> 移除已儲存的 Google 金鑰 <span class="en">Remove the saved key</span></label>
     <?php endif; ?>
   </div>
 

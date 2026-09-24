@@ -36,6 +36,10 @@ define('ANTHROPIC_API_URL', '');   // leave empty (only changed for testing)
 // settings → ⑤ AI. Its key can go there too, or here:
 define('NVIDIA_API_KEY', '');      // e.g. 'nvapi-xxxxxxxx'
 define('NVIDIA_API_URL', '');      // leave empty (only changed for testing)
+// Google Cloud Vision (free OCR, first 1,000 scans a month): choose it in
+// Site settings → ⑤ AI. Its key can go there too, or here:
+define('GOOGLE_VISION_API_KEY', '');   // e.g. 'AIzaSy…'
+define('GOOGLE_VISION_URL', '');       // leave empty (only changed for testing)
 
 // ---------- Time ----------
 // Every date and time in this system means Malaysian local time.

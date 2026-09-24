@@ -48,12 +48,13 @@ $payLabel   = ['cash' => '💵 現金 Cash', 'bank' => '🏦 轉帳 Bank-in', ''
     <?php endif; ?>
     <span class="spacer"></span>
     <a class="mini-btn ghost btn-lg" href="<?= url('/admin/receipts/excel') . '?' . h(http_build_query($pagerQuery)) ?>">📊 Excel</a>
-    <a class="mini-btn btn-lg" href="<?= url('/admin/receipts/new') ?>">📷 掃描收據 Scan receipt</a>
+    <a class="mini-btn btn-lg" href="<?= url('/admin/receipts/new') ?>"><?= $aiReady ? '🤖 AI 掃描收據 AI scan receipt' : '📷 新增收據 Add receipt' ?></a>
   </form>
 
   <?php if (!$aiReady): ?>
     <p class="flash info" style="margin:0 0 12px">🤖 AI 讀取尚未啟用，可以照常拍照並手動輸入。AI reading is off — you can still attach photos and type receipts in.<br>
       <?php if (!empty($isSystem)): ?>
+        <?= nl2br(h(ReceiptReader::whyOff())) ?><br>
         👉 <a href="<?= url('/system') ?>#ai">到「網站設定 → ⑤ AI」貼上金鑰並測試連線 Set the key in Site settings → ⑤ AI</a>
       <?php else: ?>
         請系統管理員在「網站設定 → ⑤ AI」設定金鑰。Ask a system admin to set the key in Site settings → ⑤ AI.

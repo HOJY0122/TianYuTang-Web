@@ -63,8 +63,8 @@ class SystemController extends Controller
 
     /**
      * POST /system/ai-test — check the AI key without reading a receipt.
-     * Uses the key just typed in the box if there is one (so it can be
-     * tried before saving), otherwise the key in use.
+     * Uses the key just typed in the box if there is one, otherwise the
+     * saved one. When the test passes, that service and key are saved.
      */
     public function aiTest(): void
     {
@@ -78,12 +78,27 @@ class SystemController extends Controller
         $model  = $provider === 'nvidia' && is_string($_POST['nvidia_model'] ?? null)
                   && preg_match('#^[A-Za-z0-9._\-/:]{3,120}$#', trim($_POST['nvidia_model'])) ? trim($_POST['nvidia_model']) : null;
         $result = (new ReceiptReader())->testConnection($typed !== '' ? $typed : null, $provider, $model);
-        $label  = ReceiptReader::PROVIDERS[$provider][0];
-        $note   = ($typed !== '' || $provider !== ReceiptReader::provider())
-            ? "\n（測試的是本頁剛選／輸入、尚未儲存的設定，記得按「儲存設定」。Tested what is on the page — remember to Save.）" : '';
+        [$label, $prefix] = ReceiptReader::PROVIDERS[$provider];
+        $note = '';
+        if ($result['ok']) {
+            // A setting that just passed the test is kept straight away:
+            // the key box is always empty after the page reloads, so asking
+            // for "Save" afterwards would save nothing and the receipt page
+            // would still find no key.
+            $setting = new Setting();
+            $setting->set('ai_provider', $provider);
+            if ($typed !== '' && str_starts_with($typed, $prefix) && preg_match('/^[A-Za-z0-9_\-]{12,}$/', $typed)) {
+                $setting->set($provider . '_api_key', $typed);
+            }
+            if ($model !== null) {
+                $setting->set('nvidia_model', $model);
+            }
+            $note = "\n\n已儲存並啟用：{$label}。收據頁現在可以用「🤖 AI 讀取」。\n"
+                  . "Saved and switched on: {$label}. Receipts → Scan receipt now shows “Read it with AI”.";
+        }
         $this->flash($result['ok'] ? 'success' : 'error',
             ($result['ok'] ? 'AI 連線成功 Connected' : 'AI 連線失敗 Not connected') . ' · ' . $label,
-            $result['message'] . ($result['ok'] ? $note : ''));
+            $result['message'] . $note);
         $this->redirect('/system#ai');
     }
 

@@ -95,6 +95,7 @@ $router->post('/admin/walkin/save', 'WalkinController@save');
 $router->get('/system',                'SystemController@index');
 $router->get('/system/users',          'SystemController@users');
 $router->post('/system/settings',      'SystemController@saveSettings');
+$router->post('/system/ai-test',       'SystemController@aiTest');
 $router->get('/system/wording',        'SystemController@wording');
 $router->post('/system/wording',       'SystemController@saveWording');
 $router->get('/system/wording/preview', 'SystemController@wordingPreview');

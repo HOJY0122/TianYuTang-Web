@@ -1,6 +1,7 @@
 <?php
 namespace App\Core;
 
+use App\Models\Setting;
 use RuntimeException;
 
 /**
@@ -36,16 +37,103 @@ class ReceiptReader
 
     public static function configured(): bool
     {
-        return self::conf('ANTHROPIC_API_KEY', '') !== '';
+        return self::apiKey() !== '';
     }
 
     /**
-     * A setting from config.php — or the environment, or a default — so an
-     * older config.php without the AI lines still works (AI simply off).
+     * The API key, from the first place that has one:
+     *   1. config/config.php  define('ANTHROPIC_API_KEY', '…')
+     *   2. the server's ANTHROPIC_API_KEY environment variable
+     *   3. 網站設定 Site settings → AI (saved by the system admin)
+     * Spaces, quotes and line breaks picked up while copying are removed.
      */
+    public static function apiKey(): string
+    {
+        return self::keySource()[1];
+    }
+
+    /** @return array{0:string,1:string} [where it came from, the key] */
+    public static function keySource(): array
+    {
+        $candidates = [
+            'config'   => defined('ANTHROPIC_API_KEY') ? (string) constant('ANTHROPIC_API_KEY') : '',
+            'env'      => (string) (getenv('ANTHROPIC_API_KEY') ?: ''),
+            'settings' => (string) ((new Setting())->all()['anthropic_api_key'] ?? ''),
+        ];
+        foreach ($candidates as $where => $key) {
+            $key = self::tidyKey($key);
+            if ($key !== '') {
+                return [$where, $key];
+            }
+        }
+        return ['', ''];
+    }
+
+    public static function tidyKey(string $key): string
+    {
+        $key = preg_replace('/^\s*(Bearer\s+|x-api-key:\s*)/i', '', $key);
+        return trim($key, " \t\n\r\0\x0B'\"`");
+    }
+
+    /** "sk-ant-api03-…wxyz" — enough to recognise a key, useless to anyone who sees it. */
+    public static function mask(string $key): string
+    {
+        return $key === '' ? '' : substr($key, 0, 12) . '…' . substr($key, -4);
+    }
+
+    /**
+     * Common set-up mistakes, found by looking at config.php itself.
+     * @return string[] bilingual hints for the system admin
+     */
+    public static function setupHints(): array
+    {
+        $hints = [];
+        $file = BASE_PATH . '/config/config.php';
+        $text = is_readable($file) ? (string) file_get_contents($file) : '';
+        if (preg_match("/getenv\\(\\s*['\"](sk-ant-[^'\"]+)['\"]\\s*\\)/", $text)) {
+            $hints[] = "config.php：金鑰被貼在 getenv('…') 裡面了，這樣讀不到。請改成 define('ANTHROPIC_API_KEY', 'sk-ant-…'); 或直接在下方貼上。\n"
+                     . "config.php: the key was pasted inside getenv('…'), where it is never read. Use define('ANTHROPIC_API_KEY', 'sk-ant-…'); or paste it below instead.";
+        }
+        if (preg_match("/define\\(\\s*['\"]sk-ant-/", $text)) {
+            $hints[] = "config.php：金鑰被貼在設定名稱的位置。第一組引號要保持 'ANTHROPIC_API_KEY'，金鑰放在第二組引號。\n"
+                     . "config.php: the key replaced the setting's NAME. Keep 'ANTHROPIC_API_KEY' in the first quotes and put the key in the second.";
+        }
+        [$where, $key] = self::keySource();
+        if ($key !== '' && !str_starts_with($key, 'sk-ant-')) {
+            $hints[] = "目前的金鑰不像 Anthropic 金鑰（應以 sk-ant- 開頭）。\nThe key in use does not look like an Anthropic key (they start with sk-ant-).";
+        }
+        if (!function_exists('curl_init') && !ini_get('allow_url_fopen')) {
+            $hints[] = "伺服器的 PHP 沒有 cURL，也不允許連外網址，無法連線。請在 php.ini 啟用 extension=curl。\n"
+                     . "This server's PHP has neither cURL nor allow_url_fopen, so it cannot connect. Enable extension=curl in php.ini.";
+        }
+        return $hints;
+    }
+
+    /**
+     * A free check that the key works and can use the model: asks the
+     * Models API about the model (no tokens are used, nothing is billed).
+     * @return array{ok:bool, message:string}
+     */
+    public function testConnection(?string $key = null): array
+    {
+        $key = self::tidyKey($key ?? self::apiKey());
+        if ($key === '') {
+            return ['ok' => false, 'message' => "還沒有金鑰。\nNo API key yet."];
+        }
+        $model = self::conf('ANTHROPIC_MODEL', 'claude-opus-5');
+        $url   = preg_replace('#/v1/messages$#', '/v1/models/' . rawurlencode($model), self::conf('ANTHROPIC_API_URL', 'https://api.anthropic.com/v1/messages'));
+        try {
+            $this->request($url, null, $key);
+            return ['ok' => true, 'message' => "✓ 連線成功，金鑰可以使用 {$model}。\nConnected — the key works and can use {$model}."];
+        } catch (RuntimeException $e) {
+            return ['ok' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /** A setting from config.php or the environment, or a default. */
     private static function conf(string $name, string $default): string
     {
-        if (defined($name)) {
+        if (defined($name) && (string) constant($name) !== '') {
             return (string) constant($name);
         }
         return getenv($name) ?: $default;
@@ -114,34 +202,59 @@ class ReceiptReader
     /** POST to the Messages API; returns the decoded reply or throws. */
     private function post(array $body): array
     {
+        return $this->request(self::conf('ANTHROPIC_API_URL', 'https://api.anthropic.com/v1/messages'), $body, self::apiKey());
+    }
+
+    /**
+     * One HTTPS request (POST with $body, or GET when $body is null).
+     * If this server cannot check HTTPS certificates — common on Windows
+     * XAMPP, whose PHP ships without a certificate list — it tries once
+     * more with the list bundled here (app/Core/cacert.pem, Mozilla's).
+     */
+    private function request(string $url, ?array $body, string $key): array
+    {
         $headers = [
             'content-type: application/json',
-            'x-api-key: ' . self::conf('ANTHROPIC_API_KEY', ''),
+            'x-api-key: ' . $key,
             'anthropic-version: 2023-06-01',
             'anthropic-beta: server-side-fallback-2026-07-01',
         ];
-        $json = json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        $url  = self::conf('ANTHROPIC_API_URL', 'https://api.anthropic.com/v1/messages');
+        $json   = $body === null ? null : json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $bundle = __DIR__ . '/cacert.pem';
 
         if (function_exists('curl_init')) {
-            $ch = curl_init($url);
-            curl_setopt_array($ch, [
-                CURLOPT_POST           => true,
-                CURLOPT_POSTFIELDS     => $json,
-                CURLOPT_HTTPHEADER     => $headers,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_CONNECTTIMEOUT => 15,
-                CURLOPT_TIMEOUT        => 180,   // reading a photo can take a minute
-            ]);
-            $raw    = curl_exec($ch);
-            $status = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
-            $netErr = $raw === false ? curl_error($ch) : '';
-            curl_close($ch);
+            $send = function (?string $caFile) use ($url, $json, $headers): array {
+                $ch = curl_init($url);
+                $opt = [
+                    CURLOPT_HTTPHEADER     => $headers,
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_CONNECTTIMEOUT => 15,
+                    CURLOPT_TIMEOUT        => 180,   // reading a photo can take a minute
+                ];
+                if ($json !== null) {
+                    $opt[CURLOPT_POST] = true;
+                    $opt[CURLOPT_POSTFIELDS] = $json;
+                }
+                if ($caFile !== null) {
+                    $opt[CURLOPT_CAINFO] = $caFile;
+                }
+                curl_setopt_array($ch, $opt);
+                $raw = curl_exec($ch);
+                $out = [$raw, (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE), curl_errno($ch), curl_error($ch)];
+                curl_close($ch);
+                return $out;
+            };
+            [$raw, $status, $errno, $netErr] = $send(null);
+            // 60 / 77: no usable certificate list on this server.
+            if ($raw === false && in_array($errno, [60, 77], true) && is_readable($bundle)) {
+                [$raw, $status, $errno, $netErr] = $send($bundle);
+            }
         } else {
-            $ctx = stream_context_create(['http' => [
-                'method' => 'POST', 'header' => implode("\r\n", $headers), 'content' => $json,
-                'timeout' => 180, 'ignore_errors' => true,
-            ]]);
+            $ctx = stream_context_create([
+                'http' => ['method' => $json === null ? 'GET' : 'POST', 'header' => implode("\r\n", $headers),
+                           'content' => (string) $json, 'timeout' => 180, 'ignore_errors' => true],
+                'ssl'  => is_readable($bundle) ? ['cafile' => $bundle] : [],
+            ]);
             $raw    = @file_get_contents($url, false, $ctx);
             $status = 0;
             foreach ($http_response_header ?? [] as $h) {
@@ -149,24 +262,30 @@ class ReceiptReader
                     $status = (int) $m[1];
                 }
             }
-            $netErr = $raw === false ? 'connection failed' : '';
+            $netErr = $raw === false ? (error_get_last()['message'] ?? 'connection failed') : '';
         }
 
         if ($raw === false || $status === 0) {
             error_log('ReceiptReader network error: ' . $netErr);
-            throw new RuntimeException("連不上 AI 服務，請檢查網絡後再試。\nCould not reach the AI service — check the connection and try again.");
+            throw new RuntimeException("連不上 AI 服務，請檢查網絡後再試。\nCould not reach the AI service — check the connection and try again."
+                . "\n（詳細 Detail: " . mb_substr($netErr, 0, 200) . '）');
         }
         $reply = json_decode((string) $raw, true);
         if ($status !== 200 || !is_array($reply)) {
-            $type = is_array($reply) ? (string) ($reply['error']['type'] ?? '') : '';
+            $type   = is_array($reply) ? (string) ($reply['error']['type'] ?? '') : '';
+            $detail = is_array($reply) ? (string) ($reply['error']['message'] ?? '') : mb_substr((string) $raw, 0, 200);
             error_log("ReceiptReader HTTP {$status} {$type}: " . substr((string) $raw, 0, 500));
             throw new RuntimeException(match (true) {
-                $status === 401, $status === 403 => "AI 金鑰無效，請聯絡系統管理員。\nThe AI key was refused — please tell the system admin.",
-                $status === 429                  => "AI 服務忙碌，請一分鐘後再試。\nThe AI service is busy — please try again in a minute.",
+                $status === 401                  => "AI 金鑰無效（打錯、已刪除或已停用），請系統管理員到「網站設定」檢查。\nThe AI key was refused (mistyped, deleted or disabled) — the system admin can check it in Site settings.",
+                $status === 403                  => "這個金鑰沒有使用權限，請檢查 Anthropic 帳戶。\nThis key is not allowed to do this — check the Anthropic account.",
+                $status === 404                  => "此金鑰無法使用這個 AI 模型。\nThis key cannot use this AI model.",
+                $status === 400 && str_contains($detail, 'credit')
+                                                 => "Anthropic 帳戶餘額不足，請先儲值。\nThe Anthropic account is out of credit — please top it up.",
+                $status === 429                  => "AI 服務忙碌或已達用量上限，請一分鐘後再試。\nThe AI service is busy or at its limit — please try again in a minute.",
                 $status === 413                  => "相片太大，請縮小後再試。\nThe photo is too large — please use a smaller one.",
                 $status >= 500                   => "AI 服務暫時無法使用，請稍後再試。\nThe AI service is having trouble — please try again shortly.",
-                default                          => "AI 無法處理這張相片（{$status}），請手動輸入。\nThe AI could not process this photo ({$status}) — please type it in.",
-            });
+                default                          => "AI 無法處理這個要求（{$status}）。\nThe AI could not process this request ({$status}).",
+            } . ($detail !== '' ? "\n（詳細 Detail: " . mb_substr($detail, 0, 200) . '）' : ''));
         }
         return $reply;
     }

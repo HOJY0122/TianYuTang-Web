@@ -26,8 +26,8 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     <a class="mini-btn ghost btn-lg" href="<?= url('/admin/receipts') ?>">返回 Back</a>
   </div>
   <?php if (!$aiReady): ?>
-    <p class="help">AI 讀取尚未啟用（config/config.php 未填 ANTHROPIC_API_KEY）。仍可附上相片並手動輸入。
-      <span class="en">AI reading is off (no ANTHROPIC_API_KEY in config/config.php). You can still attach the photo and type it in.</span></p>
+    <p class="help">AI 讀取尚未啟用：系統管理員可在「網站設定 → ⑤ AI」設定金鑰。仍可附上相片並手動輸入。
+      <span class="en">AI reading is off — a system admin can set the key in Site settings → ⑤ AI. You can still attach the photo and type it in.</span></p>
   <?php else: ?>
     <p class="help">AI 只會填好草稿，下一步請對照相片核對後才儲存。沒有相片也可以直接手動輸入。
       <span class="en">The AI only prepares a draft — you check it against the photo before saving. No photo? Just type it in.</span></p>

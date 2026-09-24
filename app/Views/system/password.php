@@ -3,7 +3,8 @@ $pageTitle = '變更密碼 Change Password';
 $nav       = 'password';
 require BASE_PATH . '/app/Views/layouts/admin_header.php';
 ?>
-<div class="panel form-panel" style="max-width:560px">
+<div class="page-grid pw-grid">
+<div class="panel form-panel">
   <?php if (!empty($forced)): ?>
     <div class="flash error">
       <strong>請先更改密碼 Please change your password first</strong><br>
@@ -55,6 +56,17 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
       <?php endif; ?>
     </div>
   </form>
+</div>
+
+<div class="panel guide">
+  <h2 style="margin-top:0">🔐 設定好密碼 <span class="en">A good password</span></h2>
+  <ul>
+    <li>用一句容易記的短句，例如「Tyt中壇2026平安」。<span class="en">A short phrase you can remember works well.</span></li>
+    <li>不要用生日、電話或 123456。<span class="en">Avoid birthdays, phone numbers or 123456.</span></li>
+    <li>不要與其他網站的密碼相同。<span class="en">Don't reuse a password from another site.</span></li>
+    <li>忘記密碼？請系統管理員在「帳號管理」重設。<span class="en">Forgot it? A system admin can reset it in User accounts.</span></li>
+  </ul>
+</div>
 </div>
 
 <script>

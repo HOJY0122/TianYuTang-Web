@@ -99,7 +99,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
               </form>
 
               <form method="POST" action="<?= url('/admin/photos/delete') ?>" style="margin:0"
-                    onsubmit="return confirm('確定要刪除這張相片嗎？此操作無法復原。\nDelete this photo? This cannot be undone.');">
+                    data-confirm="確定要刪除這張相片嗎？此操作無法復原。&#10;Delete this photo? This cannot be undone." data-danger>
                 <?= csrf_field() ?>
                 <input type="hidden" name="photo_id" value="<?= (int) $photo['id'] ?>">
                 <button class="mini-btn danger" type="submit" title="刪除 Delete">🗑</button>

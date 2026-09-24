@@ -32,12 +32,13 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   </form>
 <?php endif; ?>
 
-<form method="POST" action="<?= url('/admin/event/save') ?>" enctype="multipart/form-data" class="panel form-panel" style="max-width:900px">
+<form method="POST" action="<?= url('/admin/event/save') ?>" enctype="multipart/form-data" class="form-panel wide-form">
   <?= csrf_field() ?>
   <input type="hidden" name="id" value="<?= $isNew ? 0 : (int) $event['id'] ?>">
   <p class="help" style="margin-top:0">這裡的內容會直接顯示在網站上。Everything here appears on the public website.
     <?php if (!empty($isSystemAdmin)): ?><br>網站名稱、標誌、橫幅與頁尾在「網站設定」。Site name, logo, banner and footer are in Site settings.<?php endif; ?></p>
-
+  <div class="form-sections">
+  <section class="panel form-sec">
   <h3>① 基本資料 <span class="en">Basics</span></h3>
   <label for="name">活動名稱 <span class="en">Event name *</span></label>
   <input id="name" name="name" required maxlength="150" value="<?= h($v('name')) ?>" placeholder="中壇元帥千秋寶誕">
@@ -49,7 +50,8 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   </div>
   <label for="subtitle">英文副標題 <span class="en">English subtitle</span></label>
   <input id="subtitle" name="subtitle" maxlength="200" value="<?= h($v('subtitle')) ?>" placeholder="2026 Zhong Tan Marshal Birthday Celebration">
-
+  </section>
+  <section class="panel form-sec">
   <h3>② 日期與地點 <span class="en">Date &amp; venue</span></h3>
   <div class="form-grid">
     <div><label for="start_date">開始日期 <span class="en">Start date *</span></label>
@@ -68,7 +70,8 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   </div>
   <label for="location">地點 <span class="en">Venue *</span></label>
   <textarea id="location" name="location" rows="2" required maxlength="255"><?= h($v('location')) ?></textarea>
-
+  </section>
+  <section class="panel form-sec">
   <h3>③ 首頁內容 <span class="en">Home page content</span></h3>
   <label for="welcome_zh">歡迎詞（中文）<span class="en">Welcome text (Chinese)</span></label>
   <textarea id="welcome_zh" name="welcome_zh" rows="3" maxlength="3000"><?= h($v('welcome_zh')) ?></textarea>
@@ -80,7 +83,8 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     <div><label for="contact_info">聯絡電話 <span class="en">Contact number</span></label>
       <input id="contact_info" name="contact_info" maxlength="255" value="<?= h($v('contact_info')) ?>" placeholder="012-345 6789 (WhatsApp)"></div>
   </div>
-
+  </section>
+  <section class="panel form-sec">
   <h3>④ 導航 <span class="en">Directions (Waze &amp; Google Maps)</span></h3>
   <p class="help">在 Waze 或 Google 地圖按「分享」，複製連結貼在這裡。In Waze or Google Maps tap Share, copy the link, paste it here.</p>
   <div class="form-grid">
@@ -99,7 +103,8 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   <?php endif; ?>
   <input id="waze_qr" name="waze_qr" type="file" data-aspects="1:1,original" data-max-width="800" accept="image/jpeg,image/png,image/gif,image/webp">
   <p class="help">不上傳也可以：有 Waze 連結時，網站會自動產生 QR Code。Optional — without an image, a QR code is made from the Waze link automatically.</p>
-
+  </section>
+  <section class="panel form-sec">
   <h3>⑤ 報名與布施設定 <span class="en">Registration &amp; donation settings</span></h3>
   <div class="form-grid">
     <div><label for="merit_table_price">功德席每席價格 <span class="en">Price per merit seat (RM) *</span></label>
@@ -125,7 +130,8 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   <textarea id="rsvp_note" name="rsvp_note" rows="2" maxlength="3000" placeholder="席位有限，敬請提前登記。"><?= h($v('rsvp_note')) ?></textarea>
   <label for="donation_note">布施頁說明 <span class="en">Note on the donation page</span></label>
   <textarea id="donation_note" name="donation_note" rows="2" maxlength="3000" placeholder="例：銀行轉帳資料"><?= h($v('donation_note')) ?></textarea>
-
+  </section>
+  <section class="panel form-sec">
   <h3>⑥ 開放時間 <span class="en">When forms are open</span></h3>
   <p class="help">留空代表不限制。Leave blank for no limit. 時間以馬來西亞時間計算 Malaysia time.</p>
   <div class="form-grid">
@@ -138,8 +144,10 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     <div><label for="donation_closes_at">布施截止 <span class="en">Donation closes</span></label>
       <input id="donation_closes_at" name="donation_closes_at" type="datetime-local" value="<?= $dt('donation_closes_at') ?>"></div>
   </div>
+  </section>
+  </div>
 
-  <div class="form-actions">
+  <div class="form-actions sticky-actions wide-actions">
     <button class="primary" type="submit">💾 <?= $isNew ? '建立活動 Create event' : '儲存 Save changes' ?></button>
     <?php if (!$isNew): ?><a class="mini-btn ghost" href="<?= url('/') ?>" target="_blank">👀 查看網站 View site</a><?php endif; ?>
   </div>

@@ -181,7 +181,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
   document.getElementById('donationForm').addEventListener('submit', function (e) {
     if (!wantSeats.checked && !wantFree.checked) {
       e.preventDefault();
-      alert('請至少選擇一種布施方式。\nPlease choose at least one option.');
+      (window.TYTDialog ? TYTDialog.alert('請至少選擇一種布施方式：功德席、隨喜，或兩者。\nPlease choose merit seats, a freewill amount, or both.', { type: 'info', title: '請選擇布施方式 Choose an option' }) : alert('請至少選擇一種布施方式。'));
       return;
     }
     var seats = wantSeats.checked ? parseInt(seatsEl.value, 10) || 0 : 0;

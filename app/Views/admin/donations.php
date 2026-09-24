@@ -68,7 +68,7 @@ $here       = $pagerBase . '?' . http_build_query($pagerQuery + ['page' => $page
             <a class="mini-btn" href="<?= url('/admin/donations/edit') ?>?id=<?= (int) $d['id'] ?>">✏️ 編輯 Edit</a>
             <?php if ($d['status'] !== 'paid'): ?>
               <form method="POST" action="<?= url('/admin/donations/paid') ?>" style="margin:0"
-                    onsubmit="return confirm('確認已收到 <?= h(rm((float) $d['amount'])) ?>？\nConfirm payment received?');">
+                    data-confirm="確認已收到 <?= h(rm((float) $d['amount'])) ?>？&#10;Confirm payment received?">
                 <?= csrf_field() ?><input type="hidden" name="donation_id" value="<?= (int) $d['id'] ?>">
                 <input type="hidden" name="return" value="<?= h($here) ?>">
                 <button class="mini-btn ghost" type="submit">💵 已收款 Mark paid</button>

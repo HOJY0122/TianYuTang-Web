@@ -288,7 +288,8 @@ font:inherit;font-size:12.5px;padding:0}
 
 /* QR generator */
 .qr-wrap{max-width:1080px}
-.qr-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);gap:20px;align-items:start}
+.qr-layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(360px,1fr);gap:20px;align-items:start}
+.qr-controls.form-panel{max-width:none;margin:0}
 .qr-controls{margin:0}
 .qr-preview{position:sticky;top:20px;text-align:center}
 .qr-stage{display:grid;place-items:center;padding:18px;background:#fff;
@@ -408,7 +409,6 @@ h1 .en,h2 .en,h3 .en,h4 .en{font-family:var(--sans);font-size:.62em;font-weight:
 .side::-webkit-scrollbar-thumb{background:#5a4232;border-radius:6px}
 .side::-webkit-scrollbar-track{background:transparent}
 /* Wide screens: three charts/panels per row instead of two. */
-@media (min-width:1600px){ .kpis{grid-template-columns:repeat(5,minmax(0,1fr))} }
 /* Mid-size laptops / tablets in landscape: forms and tables use the space. */
 @media (max-width:1200px){ .form-panel{max-width:none} }
 
@@ -620,3 +620,44 @@ body.is-sorting,body.is-sorting *{cursor:grabbing!important;user-select:none}
   .word-preview{position:static;order:-1}
   .word-frame-wrap{height:60vh}
 }
+
+/* ================= Wide layouts: use the whole screen ================= */
+/* Long forms (Event details, Site settings): numbered sections become
+   cards, two across on a wide screen, one on a phone. */
+.form-panel.wide-form{max-width:none;margin:0}
+.form-sections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}
+.form-sec{margin:0}
+.form-sec.span-2{grid-column:1/-1}
+.form-panel .form-sec h3,.form-panel .form-sec h3:first-of-type{margin:0 0 6px;padding:0 0 10px;border-top:0;border-bottom:2px solid #eadcb5;font-size:18px}
+.wide-actions{margin-top:18px;padding:14px 18px;border:1px solid var(--line);border-radius:16px;background:rgba(255,250,240,.97);
+  box-shadow:0 -6px 20px rgba(67,39,18,.08)}
+@media (max-width:1180px){ .form-sections{grid-template-columns:1fr} }
+
+/* Two-column pages (check-in, walk-in, counter, users, password …) */
+.page-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px;align-items:start}
+.page-grid > *{margin-bottom:0}
+.page-grid .span-2{grid-column:1/-1}
+.page-col{display:flex;flex-direction:column;gap:18px;min-width:0}
+.page-col > .panel{margin-bottom:0}
+.content .checkin-wrap{max-width:none}
+.checkin-wrap{max-width:none}
+@media (max-width:1100px){ .page-grid{grid-template-columns:1fr} }
+
+/* Side "how it works" card */
+.guide{background:linear-gradient(180deg,#fffaf0,#fff4dc)}
+.guide ol,.guide ul{margin:.2rem 0 0;padding-left:1.2rem;line-height:1.75}
+.guide li + li{margin-top:.25rem}
+.guide .en{display:block;font-size:.85em;color:var(--muted)}
+.progress{height:14px;border-radius:999px;background:#efe3c6;overflow:hidden;margin:8px 0 4px}
+.progress > span{display:block;height:100%;background:linear-gradient(90deg,#2e7d4f,#58a86f);border-radius:999px}
+.big-number{font-size:40px;font-weight:800;color:var(--red);line-height:1.1}
+.page-col .form-panel{max-width:none;margin:0}
+.content .checkin-stats{max-width:none}
+@media (min-width:1101px){
+  .checkin-stats small{font-size:13px}
+  .checkin-stats strong{font-size:34px}
+  .checkin-stats div{padding:18px 10px}
+}
+
+.qr-preview{position:sticky;top:76px}
+.qr-stage canvas{max-width:min(100%,440px)!important}

@@ -9,7 +9,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
 
     <!-- ---------- Controls ---------- -->
     <div class="panel form-panel qr-controls">
-      <h2 style="margin-top:0">設定</h2>
+      <h2 style="margin-top:0">⚙️ 設定 <span class="en">Settings</span></h2>
 
       <label for="qrText">內容｜Content *</label>
       <textarea id="qrText" rows="3" oninput="render()"><?= h($siteUrl) ?></textarea>
@@ -23,7 +23,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
         <button class="mini-btn ghost" type="button"
                 onclick="setText(<?= json_encode($siteUrl . 'gallery', JSON_UNESCAPED_SLASHES) ?>)">相簿</button>
       </div>
-      <p class="help">可放網址、Waze 連結、電話、或任何文字。</p>
+      <p class="help">可放網址、Waze 連結、電話、或任何文字。Any link, Waze link, phone number or text.</p>
 
       <label for="qrStyle">樣式｜Style</label>
       <select id="qrStyle" onchange="render()">
@@ -38,11 +38,11 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
 
       <div class="form-row">
         <div>
-          <label for="qrDark">前景色</label>
+          <label for="qrDark">前景色 <span class="en">Dots</span></label>
           <input id="qrDark" type="color" value="#241b16" oninput="render()">
         </div>
         <div>
-          <label for="qrLight">背景色</label>
+          <label for="qrLight">背景色 <span class="en">Background</span></label>
           <input id="qrLight" type="color" value="#ffffff" oninput="render()">
         </div>
       </div>
@@ -71,11 +71,11 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
 
       <div class="form-row">
         <div>
-          <label for="qrSize">輸出尺寸 (px)</label>
+          <label for="qrSize">輸出尺寸 <span class="en">Size (px)</span></label>
           <input id="qrSize" type="number" min="200" max="3000" step="100" value="1200">
         </div>
         <div>
-          <label for="qrFilename">檔名</label>
+          <label for="qrFilename">檔名 <span class="en">File name</span></label>
           <input id="qrFilename" type="text" value="tianyutang-qr">
         </div>
       </div>
@@ -88,7 +88,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
 
     <!-- ---------- Preview ---------- -->
     <div class="panel qr-preview">
-      <h2 style="margin-top:0">預覽</h2>
+      <h2 style="margin-top:0">👀 預覽 <span class="en">Preview</span></h2>
       <div class="qr-stage">
         <canvas id="qrCanvas"></canvas>
       </div>

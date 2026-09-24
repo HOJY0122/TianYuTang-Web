@@ -12,11 +12,13 @@ $albumLink = $albumLink ?? null;
 <div class="album" id="album-<?= (int) $album['id'] ?>">
   <div class="album-head">
     <h3>
-      <?= h($album['year']) ?><?= !empty($album['year_label']) ? ' ' . h($album['year_label']) : '' ?>
+      <?php // Digits in a plain, even font — brush fonts draw numbers unevenly. ?>
+      <span class="album-year"><?= h($album['year']) ?></span>
+      <?php if (!empty($album['year_label'])): ?><span class="album-ganzhi"><?= h($album['year_label']) ?></span><?php endif; ?>
       <small><?= h($album['name']) ?></small>
     </h3>
     <?php if ($albumLink): ?>
-      <a href="<?= h($albumLink) ?>">查看全部 <?= (int) $album['photo_count'] ?> 張 View all →</a>
+      <a class="album-all" href="<?= h($albumLink) ?>">查看全部 <?= (int) $album['photo_count'] ?> 張 · View all →</a>
     <?php else: ?>
       <span class="help"><?= (int) $album['photo_count'] ?> 張相片 photos</span>
     <?php endif; ?>

@@ -29,6 +29,8 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     <div><small>合計人數 Total</small><strong><?= (int) $counts['walkin']['people'] + (int) $counts['online']['people'] ?></strong></div>
   </div>
 
+  <div class="page-grid">
+  <div class="page-col">
   <!-- ---------- Entry form ---------- -->
   <div class="panel form-panel">
     <h2 style="margin-top:0"><?= h($event['year']) ?> · <?= h($event['name']) ?></h2>
@@ -81,6 +83,8 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     </form>
   </div>
 
+  </div>
+  <div class="page-col">
   <!-- ---------- Recently registered ---------- -->
   <?php if ($recent): ?>
     <div class="panel">
@@ -110,6 +114,17 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     </div>
   <?php endif; ?>
 
+  <div class="panel guide">
+    <h2 style="margin-top:0">🧭 現場報名 <span class="en">Walk-in tips</span></h2>
+    <ul>
+      <li>適用於當天才到、沒有網上報名的善信。<span class="en">For people who did not register online.</span></li>
+      <li>儲存後即自動報到，不必再掃描。<span class="en">Saving also checks them in — no scan needed.</span></li>
+      <li>身份證與電話可留空，但有填寫較易查找。<span class="en">IC and phone are optional, but make finding them later easier.</span></li>
+      <li>已在網上報名？請用「現場報到」。<span class="en">Registered online? Use Check-in instead.</span></li>
+    </ul>
+  </div>
+  </div>
+  </div>
 </div>
 
 <script>

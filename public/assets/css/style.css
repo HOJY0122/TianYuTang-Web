@@ -416,3 +416,12 @@ input[aria-invalid="true"]{border-color:#c0392b;background:#fff6f5}
   background:var(--red);color:#fff;font-size:1.5rem;line-height:1;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.3)}
 @media (max-width:900px){ .news-strip{grid-auto-columns:calc((100% - .9rem) / 2)} }
 @media (max-width:560px){ .news-strip{grid-auto-columns:86%} }
+
+/* Album heading: a clean year badge, the 干支 in the heading font, then the event name */
+.album-head h3{display:flex;align-items:center;flex-wrap:wrap;gap:.35rem .7rem;font-size:1.5rem}
+.album-year{display:inline-block;padding:.12rem .8rem;border-radius:999px;background:var(--red);color:#fff8df;
+  font-family:var(--sans);font-weight:800;font-size:.8em;letter-spacing:.06em;line-height:1.4;font-variant-numeric:tabular-nums}
+.album-ganzhi{color:var(--red);letter-spacing:.12em}
+.album-head h3 small{font-family:var(--sans);font-size:.62em;color:var(--muted);margin:0;font-weight:600;letter-spacing:.02em}
+.album-all{font-weight:700;color:var(--red);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:.3rem .9rem;background:var(--card);white-space:nowrap}
+.album-all:hover{background:var(--gold-soft)}

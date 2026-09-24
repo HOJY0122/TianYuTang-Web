@@ -17,20 +17,20 @@ $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confi
     <a class="mini-btn ghost btn-lg" href="<?= url('/admin/event/new') ?>">＋ 新增活動 New event</a>
     <?php if (!$event['is_active']): ?>
       <form method="POST" action="<?= url('/admin/event/activate') ?>" style="margin:0"
-            onsubmit="return confirm('確定將此活動設為公開？網站首頁會立即切換。\nMake this event live on the website now?');">
+            data-confirm="確定將此活動設為公開？網站首頁會立即切換。&#10;Make this event live on the website now?">
         <?= csrf_field() ?><input type="hidden" name="event_id" value="<?= $eid ?>">
         <button class="mini-btn btn-lg" type="submit">🌐 設為公開 Make live</button>
       </form>
     <?php endif; ?>
     <?php if ($event['is_test']): ?>
       <form method="POST" action="<?= url('/admin/event/test-delete') ?>" style="margin:0"
-            onsubmit="return confirm('刪除此測試活動及其所有測試資料？此操作無法復原。\nDelete this test event and all its test data? This cannot be undone.');">
+            data-confirm="刪除此測試活動及其所有測試資料？此操作無法復原。&#10;Delete this test event and all its test data? This cannot be undone." data-danger>
         <?= csrf_field() ?><input type="hidden" name="event_id" value="<?= $eid ?>">
         <button class="mini-btn danger btn-lg" type="submit">🗑 刪除測試資料 Delete test data</button>
       </form>
     <?php else: ?>
       <form method="POST" action="<?= url('/admin/event/test-copy') ?>" style="margin:0"
-            onsubmit="return confirm('建立測試副本？測試資料不會計入正式統計。\nCreate a test copy? Test data is not counted.');">
+            data-confirm="建立測試副本？測試資料不會計入正式統計。&#10;Create a test copy? Test data is not counted.">
         <?= csrf_field() ?><input type="hidden" name="event_id" value="<?= $eid ?>">
         <button class="mini-btn ghost btn-lg" type="submit">🧪 建立測試副本 Test copy</button>
       </form>

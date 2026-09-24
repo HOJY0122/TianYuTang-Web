@@ -49,6 +49,7 @@ document.querySelectorAll('[data-toggle-password]').forEach(function (btn) {
   });
 });
 </script>
+<script src="<?= asset('js/dialog.js') ?>"></script>
 <script src="<?= asset('js/image-editor.js') ?>"></script>
 </body>
 </html>

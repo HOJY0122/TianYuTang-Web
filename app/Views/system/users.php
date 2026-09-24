@@ -31,7 +31,7 @@
             <button class="mini-btn ghost" type="button" onclick="document.getElementById('pw<?= (int) $u['id'] ?>').classList.toggle('hidden')">🔑 重設密碼 Reset password</button>
             <?php if (!$isSelf && !$isLastSystem): ?>
               <form method="POST" action="<?= url('/system/users/delete') ?>" style="margin:0"
-                    onsubmit="return confirm('確定刪除帳號 <?= h($u['username']) ?>？此操作無法復原。\nDelete this account? This cannot be undone.');">
+                    data-confirm="確定刪除帳號 <?= h($u['username']) ?>？此操作無法復原。&#10;Delete this account? This cannot be undone." data-danger>
                 <?= csrf_field() ?><input type="hidden" name="user_id" value="<?= (int) $u['id'] ?>">
                 <button class="mini-btn danger" type="submit">🗑 刪除 Delete</button>
               </form>
@@ -53,6 +53,7 @@
   </table>
 </div>
 
+<div class="page-grid">
 <div class="panel form-panel">
   <h2 style="margin-top:0">新增帳號 <span class="en">Add an account</span></h2>
   <form method="POST" action="<?= url('/system/users/create') ?>">
@@ -77,5 +78,21 @@
     </select>
     <div class="form-actions"><button class="primary" type="submit">＋ 建立帳號 Create account</button></div>
   </form>
+</div>
+<div class="panel guide">
+  <h2 style="margin-top:0">👥 兩種權限 <span class="en">The two roles</span></h2>
+  <ul>
+    <li><strong>管理員 Admin</strong>：報名、布施、報到、現場登記、消息、相簿、收據、活動資料。
+      <span class="en">Registrations, donations, check-in, counter, news, photos, receipts, event details.</span></li>
+    <li><strong>系統管理員 System admin</strong>：以上全部，加上網站設定、網站文字、帳號與 QR 產生器。
+      <span class="en">Everything above, plus site settings, wording, accounts and the QR generator.</span></li>
+  </ul>
+  <h2 style="margin:18px 0 8px">🔐 好習慣 <span class="en">Good habits</span></h2>
+  <ul>
+    <li>每位委員一個帳號，不要共用。<span class="en">One login per person — never shared.</span></li>
+    <li>密碼至少 8 個字元，含字母和數字。<span class="en">At least 8 characters, letters and numbers.</span></li>
+    <li>有人離開委員會時，刪除或重設其帳號。<span class="en">When someone leaves, delete or reset their account.</span></li>
+  </ul>
+</div>
 </div>
 <?php require BASE_PATH . '/app/Views/layouts/admin_footer.php'; ?>

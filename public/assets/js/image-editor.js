@@ -21,6 +21,8 @@
   'use strict';
   if (!window.DataTransfer || !HTMLCanvasElement.prototype.toBlob) return;   // very old browser: plain upload still works
 
+  function say(msg) { return window.TYTDialog ? TYTDialog.alert(msg, { type: 'error' }) : alert(msg); }
+
   var LABELS = {
     'original': '原比例 Original', '1:1': '正方 1:1', '4:3': '4:3', '3:4': '直 3:4',
     '16:9': '寬 16:9', '3:1': '橫幅 3:1', 'free': '自由 Free'
@@ -204,7 +206,7 @@
       layout(true);
       modal.querySelector('[data-act="apply"]').focus();
     };
-    img.onerror = function () { alert('無法讀取這張圖片。This picture could not be read.'); };
+    img.onerror = function () { say('無法讀取這張圖片，請換一張。\nThis picture could not be read — please choose another.'); };
     img.src = URL.createObjectURL(file);
   }
 
@@ -301,7 +303,7 @@
     var q = out.width / f.w;   // frame px → output px
     paint(oc, (canvas.width / 2 + state.ox - f.x) * q, (canvas.height / 2 + state.oy - f.y) * q, s * q);
     out.toBlob(function (blob) {
-      if (!blob) return alert('無法處理這張圖片。This picture could not be processed.');
+      if (!blob) return say('無法處理這張圖片。\nThis picture could not be processed.');
       var name = state.file.name.replace(/\.[^.]+$/, '') + (type === 'image/png' ? '.png' : '.jpg');
       var edited = new File([blob], name, { type: type, lastModified: Date.now() });
       var dt = new DataTransfer();

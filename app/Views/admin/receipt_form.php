@@ -128,10 +128,10 @@ $aiNotes = $isNew ? ($draft['ai_notes'] ?? null) : ($row['ai_notes'] ?? null);
 
 <?php if ($isNew): ?>
   <form id="cancelForm" method="POST" action="<?= url('/admin/receipts/cancel') ?>"
-        onsubmit="return confirm('放棄這張收據？相片也會刪除。\nDiscard this receipt? The photo will be deleted too.')"><?= csrf_field() ?></form>
+        data-confirm="放棄這張收據？相片也會刪除。&#10;Discard this receipt? The photo will be deleted too." data-danger><?= csrf_field() ?></form>
 <?php else: ?>
   <form id="deleteForm" method="POST" action="<?= url('/admin/receipts/delete') ?>"
-        onsubmit="return confirm('確定刪除這張收據？此動作無法復原。\nDelete this receipt? This cannot be undone.')">
+        data-confirm="確定刪除這張收據？此動作無法復原。&#10;Delete this receipt? This cannot be undone." data-danger>
     <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $row['id'] ?>"></form>
 <?php endif; ?>
 

@@ -30,5 +30,6 @@ $footerYear = isset($event['year']) ? (int) $event['year'] : (int) date('Y');
   </div>
   <?php endif; ?>
 </footer>
+<script src="<?= asset('js/dialog.js') ?>"></script>
 </body>
 </html>

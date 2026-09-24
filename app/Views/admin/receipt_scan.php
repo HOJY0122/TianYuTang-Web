@@ -48,7 +48,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     var ai = e.submitter && e.submitter.id === 'aiBtn';
     if (ai && !document.getElementById('photo').files.length) {
       e.preventDefault();
-      alert('請先選擇收據相片。\nPlease choose a photo of the receipt first.');
+      TYTDialog.alert('請先選擇收據相片。\nPlease choose a photo of the receipt first.', { type: 'info', title: '還沒有相片 No photo yet' });
       return;
     }
     if (ai) busy.hidden = false;

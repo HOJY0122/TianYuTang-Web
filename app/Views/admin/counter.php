@@ -21,6 +21,8 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     <div><small>現場筆數 Records</small><strong><?= (int) $totals['counter_count'] ?></strong></div>
   </div>
 
+  <div class="page-grid counter-grid">
+  <div class="page-col">
   <!-- ---------- ① Online pledge: donor shows their donation QR ---------- -->
   <div class="panel">
     <h2 style="margin-top:0">① 線上布施付款 <span class="en">Paying an online pledge</span></h2>
@@ -81,7 +83,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
                        data-aspects="original,3:4,4:3" data-max-width="1600"></div>
             </div>
             <button class="big-btn" type="submit"
-                    onclick="return confirm('確認已收到 <?= h(rm((float) $found['amount'])) ?>？\nConfirm <?= h(rm((float) $found['amount'])) ?> received?')">
+                    data-confirm="確認已收到 <?= h(rm((float) $found['amount'])) ?>？&#10;Confirm <?= h(rm((float) $found['amount'])) ?> received?">
               💵 確認收款 <?= rm((float) $found['amount']) ?> <span class="en">Confirm payment</span></button>
           </form>
         <?php elseif (!empty($found['receipt_path'])): ?>
@@ -91,6 +93,19 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     <?php endif; ?>
   </div>
 
+  <div class="panel guide">
+    <h2 style="margin-top:0">🧭 用哪一個？ <span class="en">Which one do I use?</span></h2>
+    <ul>
+      <li><strong>① 線上布施付款</strong>：善信已在網上登記布施，現在來付款 → 掃描他的布施 QR。
+        <span class="en">They pledged online and are paying now → scan their donation QR.</span></li>
+      <li><strong>② 現場布施</strong>：當場布施、之前沒有登記 → 在右邊填寫。
+        <span class="en">Giving on the spot with no online pledge → fill in the form on the right.</span></li>
+      <li>記得拍下紙本收據，日後可核對。<span class="en">Photograph the paper receipt so amounts can be checked later.</span></li>
+      <li>掃到報名 QR 會自動轉到「現場報到」。<span class="en">A registration QR opens Check-in automatically.</span></li>
+    </ul>
+  </div>
+  </div>
+  <div class="page-col">
   <!-- ---------- Entry form ---------- -->
   <div class="panel form-panel">
     <h2 style="margin-top:0">② 現場布施 <span class="en">New counter donation (walk-up, cash in hand)</span></h2>
@@ -152,6 +167,9 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
         <button class="primary" type="submit">💰 登記布施 Record donation</button>
       </div>
     </form>
+  </div>
+
+  </div>
   </div>
 
   <!-- ---------- Recently recorded ---------- -->

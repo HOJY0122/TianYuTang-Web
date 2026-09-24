@@ -42,11 +42,12 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
 
 <!-- enctype is required: without it the browser sends only the file
      NAME, never the file itself, and $_FILES arrives empty. -->
-<form method="POST" action="<?= url('/system/settings') ?>" enctype="multipart/form-data" class="panel form-panel" style="max-width:900px">
+<form method="POST" action="<?= url('/system/settings') ?>" enctype="multipart/form-data" class="form-panel wide-form">
   <?= csrf_field() ?>
   <p class="help" style="margin-top:0">這些設定屬於網站本身，換年度也不必重新設定。
     <span class="en">These belong to the site itself and carry over from year to year.</span></p>
-
+  <div class="form-sections">
+  <section class="panel form-sec">
   <h3>① 網站名稱 <span class="en">Site name &amp; header</span></h3>
   <div class="form-grid">
     <div><label for="site_name">網站名稱（中文）<span class="en">Site name *</span></label>
@@ -75,7 +76,8 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
   <input id="site_tagline" name="site_tagline" maxlength="255" value="<?= h($settings['site_tagline']) ?>">
   <p class="help">網站最上方的深紅色橫條。選「隱藏」即可不顯示，文字會保留，下次選「顯示」不必重打。
     The dark red strip at the very top. Choose Hide to take it away — the text is kept for next time.</p>
-
+  </section>
+  <section class="panel form-sec">
   <h3>② 圖片 <span class="en">Images</span></h3>
   <p class="help" style="margin-top:0">JPG、PNG、GIF、WebP，單檔 5MB 以內。上傳後系統會自動重新產生圖片。JPG / PNG / GIF / WebP up to 5 MB.</p>
 
@@ -96,7 +98,8 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
            data-max-width="<?= ['logo' => 600, 'hero_banner' => 1920, 'favicon' => 256][$input] ?>">
     <p class="help"><?= h($help) ?></p>
   <?php endforeach; ?>
-
+  </section>
+  <section class="panel form-sec">
   <h3>③ 頁尾 <span class="en">Footer</span></h3>
   <p class="help" style="margin-top:0">每一行都照你輸入的顯示；<strong>留空就不顯示</strong>。按「↺ 預設」可放回原本的文字。
     <span class="en">Every line shows exactly as typed; <strong>leave it empty to hide it</strong>. ↺ Default puts the original text back.</span></p>
@@ -116,7 +119,8 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
   <textarea id="footer_note_zh" name="footer_note_zh" rows="2" maxlength="500"><?= h($settings['footer_note_zh']) ?></textarea>
   <label for="footer_note_en">頁尾說明（英文）<span class="en">Footer note (English)</span></label>
   <textarea id="footer_note_en" name="footer_note_en" rows="2" maxlength="500"><?= h($settings['footer_note_en']) ?></textarea>
-
+  </section>
+  <section class="panel form-sec">
   <h3>④ 列印 / PDF 抬頭 <span class="en">Printout letterhead</span></h3>
   <p class="help" style="margin-top:0">報到名單、布施清單等列印文件頂部的抬頭。照你輸入的顯示，留空的行不印。文件標題在「網站文字」。
     <span class="en">The heading on printed lists and PDFs, exactly as typed — empty lines are left off. Document titles are in 網站文字 Wording.</span></p>
@@ -131,8 +135,10 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
   <?php $line('pdf_line1', '第一行', 'Line 1', 255); ?>
   <?php $line('pdf_line2', '第二行', 'Line 2', 255); ?>
   <?php $line('pdf_line3', '第三行', 'Line 3', 255); ?>
+  </section>
+  </div>
 
-  <div class="form-actions">
+  <div class="form-actions sticky-actions wide-actions">
     <button class="primary" type="submit">💾 儲存設定 Save settings</button>
     <a class="mini-btn ghost" href="<?= url('/') ?>" target="_blank">👀 查看網站 View site</a>
   </div>

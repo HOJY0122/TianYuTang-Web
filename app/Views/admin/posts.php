@@ -30,7 +30,7 @@
         <div class="actions-cell">
           <a class="mini-btn" href="<?= url('/admin/posts/edit') ?>?id=<?= (int) $p['id'] ?>">✏️ 編輯 Edit</a>
           <form method="POST" action="<?= url('/admin/posts/delete') ?>" style="margin:0"
-                onsubmit="return confirm('刪除這則消息？\nDelete this post?');">
+                data-confirm="刪除這則消息？&#10;Delete this post?" data-danger>
             <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $p['id'] ?>">
             <button class="mini-btn danger" type="submit">🗑 <span class="hide-sm">刪除 Delete</span></button>
           </form>

@@ -102,5 +102,6 @@ if ($isSystem) {
   </header>
   <div class="content">
   <?php if (!empty($flash)): ?>
-    <div class="flash <?= h($flash['type']) ?>"><strong><?= h($flash['title']) ?></strong> — <?= nl2br(h($flash['message'])) ?></div>
+    <?php // Shown as a pop-up card by js/dialog.js; stays as a plain line if scripts are off. ?>
+    <div class="flash <?= h($flash['type']) ?>" data-flash-modal="<?= h($flash['type']) ?>" data-flash-text="<?= h($flash['message']) ?>"><strong><?= h($flash['title']) ?></strong> — <?= nl2br(h($flash['message'])) ?></div>
   <?php endif; ?>

@@ -236,6 +236,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--red);box-shadow:0 0 0
 .attendee{border:2px solid #ead7a0;border-radius:14px;padding:1rem 1.1rem;margin-top:1rem;background:#fffdf5}
 .attendee h4{margin:0;color:var(--red);font-size:1.25rem}
 .attendee h4 .en{display:inline;margin-left:.4rem}
+/* "Person 1" number: a round badge in the plain font, like the album year */
+.num-pill{display:inline-flex;align-items:center;justify-content:center;min-width:1.7em;height:1.7em;padding:0 .45em;margin-right:.5rem;
+  border-radius:999px;background:var(--red);color:#fff8df;font-family:var(--sans);font-weight:800;font-size:.72em;line-height:1;
+  font-variant-numeric:tabular-nums;vertical-align:.12em;box-sizing:border-box}
+
 
 /* Donation choices: tick one or both */
 .choice{display:flex;gap:.9rem;align-items:flex-start;border:2px solid var(--line);border-radius:14px;padding:1rem 1.1rem;

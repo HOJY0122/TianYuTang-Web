@@ -28,7 +28,7 @@ $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confi
   <div id="people">
     <?php foreach ($people as $i => $p): ?>
       <div class="person-edit">
-        <h4>第 <?= $i + 1 ?> 位 <span class="en">Person <?= $i + 1 ?></span>
+        <h4><span class="num-pill"><?= $i + 1 ?></span>第<?= zh_num($i + 1) ?>位 <span class="en">Person <?= $i + 1 ?></span>
           <?= $p['checked_in_at'] ? '<span class="badge ok">✓ 已報到 Arrived ' . h(date('H:i', strtotime($p['checked_in_at']))) . '</span>' : '' ?></h4>
         <label class="checkline remove"><input type="checkbox" name="person_remove[<?= $i ?>]" value="1"> 移除 Remove</label>
         <input type="hidden" name="person_id[<?= $i ?>]" value="<?= (int) $p['id'] ?>">

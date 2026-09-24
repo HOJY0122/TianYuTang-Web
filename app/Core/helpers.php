@@ -112,3 +112,19 @@ function sort_th(string $label, string $key, array $query, string $path, string 
     return '<th' . ($class ? ' class="' . h($class) . '"' : '') . ' aria-sort="' . $aria . '"><a class="sort-link' . ($active ? ' is-active' : '') . '" href="' . h($href) . '"'
          . ' title="排序 Sort">' . $label . ' <span class="sort-arrow" aria-hidden="true">' . $arrow . '</span></a></th>';
 }
+
+/**
+ * 1 → 一, 12 → 十二, 25 → 二十五 — for "第一位" headings, which read
+ * naturally in the brush heading font where Latin digits do not.
+ */
+function zh_num(int $n): string
+{
+    $d = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+    if ($n <= 0 || $n >= 100) {
+        return (string) $n;
+    }
+    if ($n < 10) {
+        return $d[$n];
+    }
+    return ($n >= 20 ? $d[intdiv($n, 10)] : '') . '十' . $d[$n % 10];
+}

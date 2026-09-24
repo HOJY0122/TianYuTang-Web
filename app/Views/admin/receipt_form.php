@@ -67,7 +67,7 @@ $aiNotes = $isNew ? ($draft['ai_notes'] ?? null) : ($row['ai_notes'] ?? null);
     <div class="paper-head">
       <div><strong class="paper-title">收據 <span class="en">Receipt</span></strong></div>
       <label class="paper-no<?= $flag('receipt_no', 'number', 'no') ?>">No.
-        <input name="receipt_no" value="<?= $val('receipt_no') ?>" inputmode="numeric" maxlength="30" placeholder="例 e.g. 26432"></label>
+        <input name="receipt_no" value="<?= $val('receipt_no') ?>" inputmode="numeric" maxlength="30" placeholder="例 26432"></label>
     </div>
 
     <div class="form-grid">
@@ -103,6 +103,29 @@ $aiNotes = $isNew ? ($draft['ai_notes'] ?? null) : ($row['ai_notes'] ?? null);
         <input id="rTotal" name="total" value="<?= $money($v['total'] ?? '') ?>" inputmode="decimal" placeholder="0.00" class="total-input">
         <p class="help" id="sumHint"></p>
       </div>
+    </div>
+
+    <?php
+      $slipPath = $row['bank_slip_path'] ?? null;
+      $slipUrl  = $slipPath ? url('/admin/receipts/image') . '?id=' . (int) $row['id'] . '&slip=1' : null;
+      $isBank   = (string) ($v['payment'] ?? '') === 'bank';
+    ?>
+    <div class="bank-slip" id="bankSlip"<?= $isBank || $slipUrl ? '' : ' hidden' ?>>
+      <div class="bank-slip-head">📎 轉帳單據 <span class="en">Bank-in slip</span>
+        <span class="help">— 銀行的轉帳收據相片或截圖 <span class="en">a photo or screenshot of the bank's transaction receipt</span></span></div>
+      <?php if ($slipUrl): ?>
+        <div class="bank-slip-current">
+          <a href="<?= h($slipUrl) ?>" target="_blank" title="開啟原圖 Open full size"><img src="<?= h($slipUrl) ?>" alt="轉帳單據 Bank-in slip"></a>
+          <div>
+            <a class="mini-btn ghost" href="<?= h($slipUrl) ?>" target="_blank">↗ 查看 View</a>
+            <label class="check-inline"><input type="checkbox" name="remove_bank_slip" value="1"> 移除 <span class="en">Remove</span></label>
+            <?php if (!$isBank): ?><p class="help warn-text">此收據不是轉帳，單據仍保留。Not marked Bank-In — the slip is kept until removed.</p><?php endif; ?>
+          </div>
+        </div>
+      <?php endif; ?>
+      <label for="bankSlipFile"><?= $slipUrl ? '更換單據' : '上傳單據' ?> <span class="en"><?= $slipUrl ? 'Replace slip' : 'Upload slip' ?></span></label>
+      <input id="bankSlipFile" name="bank_slip" type="file" accept="image/jpeg,image/png,image/gif,image/webp" data-aspects="original" data-max-width="2000">
+      <p class="help">JPG / PNG / WebP，5MB 以內。只有登入的工作人員看得到。<span class="en">Up to 5 MB. Only signed-in staff can see it.</span></p>
     </div>
 
     <div class="<?= trim($flag('issued_by', 'issued')) ?>"><label for="rIssued">發據人 <span class="en">Issued by</span></label>
@@ -157,6 +180,16 @@ $aiNotes = $isNew ? ($draft['ai_notes'] ?? null) : ($row['ai_notes'] ?? null);
     hint.textContent = ok ? '✓ 各項合計相符 Boxes add up' : '⚠️ 各項合計 ' + rm(sum) + ' ≠ 總數。Boxes add up to ' + rm(sum) + '.';
     hint.className = ok ? 'help ok-text' : 'help warn-text';
   }
+  // Bank-In: show the slip upload box.
+  var slip = document.getElementById('bankSlip');
+  document.querySelectorAll('input[name="payment"]').forEach(function (r) {
+    r.addEventListener('change', function () {
+      var bank = r.checked && r.value === 'bank';
+      if (bank || !slip.querySelector('.bank-slip-current')) slip.hidden = !bank;
+      if (bank) document.getElementById('bankSlipFile').focus({ preventScroll: true });
+    });
+  });
+
   boxes.forEach(function (b) { b.addEventListener('input', check); });
   total.addEventListener('input', check);
   check();

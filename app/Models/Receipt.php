@@ -113,6 +113,12 @@ class Receipt extends Model
         $this->execute('UPDATE receipts SET image_path = ? WHERE id = ?', [$path, $id]);
     }
 
+    /** The bank's transaction receipt, for a Bank-In receipt (null removes it). */
+    public function setBankSlip(int $id, ?string $path): void
+    {
+        $this->execute('UPDATE receipts SET bank_slip_path = ? WHERE id = ?', [$path, $id]);
+    }
+
     public function delete(int $id): void
     {
         $this->execute('DELETE FROM receipts WHERE id = ?', [$id]);

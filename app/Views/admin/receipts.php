@@ -102,7 +102,12 @@ $payLabel   = ['cash' => '💵 現金 Cash', 'bank' => '🏦 轉帳 Bank-in', ''
         <td data-label="項目 Details"><?= h($r['item'] ?? '') ?>
           <?php if ($parts): ?><span class="sub-line"><?= h(implode(' · ', $parts)) ?></span><?php endif; ?></td>
         <td data-label="總數 Total" class="num"><strong><?= rm((float) $r['total']) ?></strong></td>
-        <td data-label="付款 Paid by"><?= $payLabel[$r['payment']] ?? '—' ?></td>
+        <td data-label="付款 Paid by"><?= $payLabel[$r['payment']] ?? '—' ?>
+          <?php if (!empty($r['bank_slip_path'])): ?>
+            <a class="sub-line" href="<?= url('/admin/receipts/image') ?>?id=<?= (int) $r['id'] ?>&amp;slip=1" target="_blank">📎 單據 Slip</a>
+          <?php elseif ($r['payment'] === 'bank'): ?>
+            <span class="sub-line warn-text">未附單據 No slip</span>
+          <?php endif; ?></td>
         <td data-label="加入 Added"><?= h(date('d/m H:i', strtotime($r['created_at']))) ?>
           <span class="sub-line"><?= h($r['created_by'] ?? '') ?></span></td>
       </tr>

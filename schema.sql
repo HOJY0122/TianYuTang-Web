@@ -228,7 +228,7 @@ WHERE NOT EXISTS (SELECT 1 FROM events WHERE year = 2026 AND is_test = FALSE);
 -- Default admin. Login: admin / tianyutang2026
 -- The app will not let this password be used for anything except
 -- choosing a new one: the first login goes straight to the
--- change-password page (see AdminUser::DEFAULT_PASSWORD).
+-- change-password page (see AdminUser::DEFAULT_PASSWORDS).
 INSERT INTO admin_users (username, password_hash, role, display_name) VALUES
 ('admin', '$2y$12$2peuIpyQnsls10rNrIOTU.8xcMbsvlnnhpCIxLsQZkia9EapTIvgW', 'system_admin', '系統管理員')
 ON DUPLICATE KEY UPDATE username = username;

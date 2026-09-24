@@ -20,12 +20,24 @@ class AdminUser extends Model
     public const ROLE_SYSTEM = 'system_admin';
 
     /**
-     * The password schema.sql ships with. It is published with the
-     * source, so anyone can read it — which is why logging in with it
-     * only unlocks the change-password page, and why no account may be
-     * given it again.
+     * Passwords that ship with the source code, so anyone can read them:
+     *   schema.sql     admin    / tianyutang2026
+     *   migration 006  sysadmin / tianyutang-sys2026
+     * Logging in with one only unlocks the change-password page, and no
+     * account may be given one again.
      */
-    public const DEFAULT_PASSWORD = 'tianyutang2026';
+    public const DEFAULT_PASSWORDS = ['tianyutang2026', 'tianyutang-sys2026'];
+
+    /** Is this one of the published default passwords? */
+    public static function isDefaultPassword(string $password): bool
+    {
+        foreach (self::DEFAULT_PASSWORDS as $default) {
+            if (hash_equals($default, $password)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
      * Check a username/password pair.
@@ -162,7 +174,7 @@ class AdminUser extends Model
         if (strlen($password) > 200) {
             $errors[] = '密碼過長。';
         }
-        if ($password === self::DEFAULT_PASSWORD) {
+        if (self::isDefaultPassword($password)) {
             $errors[] = '不可使用系統預設密碼，請另設一組。';
         }
         if ($password !== $confirm) {

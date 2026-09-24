@@ -214,11 +214,14 @@ class ReceiptController extends Controller
             }
         }
 
+        // Bank-In: the bank's transaction receipt (a photo or screenshot).
+        $slipMsg = $this->saveBankSlip($newId, $row['bank_slip_path'] ?? null);
+
         $warn = abs($sumBoxes - $v['total']) > 0.009 && $sumBoxes > 0
             ? "\n⚠️ 各項合計 " . rm($sumBoxes) . ' ≠ 總數 ' . rm($v['total']) . '。Boxes add up to ' . rm($sumBoxes) . ', not the total.'
             : '';
         $this->flash('success', '已儲存 Saved',
-            '收據 ' . ($v['receipt_no'] ? 'No. ' . $v['receipt_no'] : '#' . $newId) . ' · ' . ($v['name'] ?? '—') . ' · ' . rm($v['total']) . $warn);
+            '收據 ' . ($v['receipt_no'] ? 'No. ' . $v['receipt_no'] : '#' . $newId) . ' · ' . ($v['name'] ?? '—') . ' · ' . rm($v['total']) . $warn . $slipMsg);
         $this->redirect(!empty($_POST['next']) ? '/admin/receipts/new' : '/admin/receipts/edit?id=' . $newId);
     }
 
@@ -232,6 +235,7 @@ class ReceiptController extends Controller
         if ($row) {
             $model->delete((int) $row['id']);
             (new ImageUploader('receipts', true))->delete($row['image_path']);
+            (new ImageUploader('receipts/bank', true))->delete($row['bank_slip_path'] ?? null);
             $this->flash('success', '已刪除 Deleted',
                 '收據 ' . ($row['receipt_no'] ? 'No. ' . $row['receipt_no'] : '#' . $row['id']) . ' 已刪除。Receipt deleted.');
         }
@@ -249,17 +253,20 @@ class ReceiptController extends Controller
     }
 
     /**
-     * GET /admin/receipts/image?id=<id>  or  ?draft=1
-     * The only way to see a receipt photo: signed-in staff, looked up by
-     * id (or the caller's own unsaved draft) — never by a path from the browser.
+     * GET /admin/receipts/image?id=<id>  or  ?draft=1  or  ?id=<id>&slip=1
+     * The only way to see a receipt photo or bank slip: signed-in staff,
+     * looked up by id (or the caller's own unsaved draft) — never by a
+     * path from the browser.
      */
     public function image(): void
     {
         $this->requireAdmin();
+        $slip = !empty($_GET['slip']);
+        $row  = empty($_GET['draft']) ? (new Receipt())->find((int) ($_GET['id'] ?? 0)) : null;
         $path = !empty($_GET['draft'])
             ? ($_SESSION['receipt_draft']['image_path'] ?? null)
-            : ((new Receipt())->find((int) ($_GET['id'] ?? 0))['image_path'] ?? null);
-        $file = (new ImageUploader('receipts', true))->absolutePath($path);
+            : ($row[$slip ? 'bank_slip_path' : 'image_path'] ?? null);
+        $file = (new ImageUploader($slip ? 'receipts/bank' : 'receipts', true))->absolutePath($path);
         $info = $file !== null ? @getimagesize($file) : false;
         if ($info === false) {
             http_response_code(404);
@@ -288,14 +295,14 @@ class ReceiptController extends Controller
         $x = new XlsxWriter();
         $x->creator = (new \App\Models\Setting())->site()['site_name'];
         $s = $x->addSheet('Receipts 收據', [
-            'widths' => array_merge([12, 12, 22, 24], array_fill(0, count($cats), 12), [14, 10, 16, 30]),
+            'widths' => array_merge([12, 12, 22, 24], array_fill(0, count($cats), 12), [14, 12, 12, 16, 30]),
             'freeze' => 1, 'filter' => true, 'zebra' => true,
         ]);
         $head = ['No. 號碼', 'Date 日期', 'Name 姓名', 'Item 項目'];
         foreach ($cats as [$zh, $en]) {
             $head[] = $zh . ' ' . $en;
         }
-        array_push($head, 'Total 總數', 'Paid by 方式', 'Issued by 發據人', 'Notes 備註');
+        array_push($head, 'Total 總數', 'Paid by 方式', 'Bank slip 轉帳單據', 'Issued by 發據人', 'Notes 備註');
         $x->row($s, array_map(static fn($h) => [$h, 'header'], $head), 34);
         foreach ($rows as $r) {
             $cells = [
@@ -310,6 +317,7 @@ class ReceiptController extends Controller
             array_push($cells,
                 [(float) $r['total'], 'money'],
                 ['cash' => 'Cash 現金', 'bank' => 'Bank-in 轉帳'][$r['payment']] ?? '',
+                !empty($r['bank_slip_path']) ? 'Yes 有' : ($r['payment'] === 'bank' ? 'No 沒有' : ''),
                 $r['issued_by'] ?? '',
                 trim(($r['other_label'] ? '其他 Other: ' . $r['other_label'] . ' · ' : '') . ($r['notes'] ?? ''), ' ·'));
             $x->row($s, $cells, 20);
@@ -344,6 +352,34 @@ class ReceiptController extends Controller
 
     /** The AI's reading, as form values. */
     /** ['name', 'issued_by'] → "姓名 Name、發據人 Issued by" */
+    /**
+     * Store, replace or remove the bank-in slip after a receipt is saved.
+     * Only kept for Bank-In receipts; switching to cash leaves an existing
+     * slip alone (so a mis-tap loses nothing) until it is removed.
+     * @return string extra line for the "Saved" message
+     */
+    private function saveBankSlip(int $id, ?string $old): string
+    {
+        $model    = new Receipt();
+        $uploader = new ImageUploader('receipts/bank', true);
+        if (($_POST['payment'] ?? '') === 'bank' && ImageUploader::wasProvided($_FILES['bank_slip'] ?? null)) {
+            try {
+                $model->setBankSlip($id, $uploader->store($_FILES['bank_slip'], 2000));
+            } catch (RuntimeException $e) {
+                $this->flash('error', '轉帳單據未上傳 Bank slip not uploaded', $e->getMessage() . "\n（收據其他內容已儲存。Everything else was saved.）");
+                $this->redirect('/admin/receipts/edit?id=' . $id);
+            }
+            $uploader->delete($old);
+            return "\n📎 已附上轉帳單據。Bank slip attached.";
+        }
+        if ($old && !empty($_POST['remove_bank_slip'])) {
+            $model->setBankSlip($id, null);
+            $uploader->delete($old);
+            return "\n轉帳單據已移除。Bank slip removed.";
+        }
+        return '';
+    }
+
     private function fieldNames(array $keys): string
     {
         $names = [

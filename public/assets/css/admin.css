@@ -534,6 +534,16 @@ body.ie-open{overflow:hidden}
 .total-input{font-size:1.4rem!important;font-weight:800;color:#9f211b;text-align:right}
 .ok-text{color:#2e7d4f!important;font-weight:700}
 .warn-text{color:#a3281f!important;font-weight:700}
+/* Bank-In slip on a receipt: appears when 轉帳 Bank-In is chosen */
+.bank-slip{margin:14px 0 0;padding:12px 14px;border:2px dashed #c9a24a;border-radius:12px;background:#fffaf0}
+.bank-slip[hidden]{display:none}
+.bank-slip-head{font-weight:800;margin-bottom:8px}
+.bank-slip-head .help{font-weight:500}
+.bank-slip-current{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px}
+.bank-slip-current img{display:block;width:140px;max-height:180px;object-fit:contain;border-radius:8px;border:1px solid #eadcb5;background:#fff}
+.bank-slip-current > div{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.check-inline{display:flex;align-items:center;gap:8px;font-weight:600;cursor:pointer;margin:0}
+.check-inline input{width:20px;height:20px;accent-color:#9f211b}
 /* What the AI was unsure about: yellow, so eyes go there first */
 .is-unsure input,.is-unsure textarea,.amount-box.is-unsure,.paper-no.is-unsure,fieldset.is-unsure{background:#fff3b0!important;border-color:#c89432!important}
 @media (max-width:1100px){

@@ -31,5 +31,6 @@ $footerYear = isset($event['year']) ? (int) $event['year'] : (int) date('Y');
   <?php endif; ?>
 </footer>
 <script src="<?= asset('js/dialog.js') ?>"></script>
+<?php if (($activeNav ?? "") === "home"): ?><script src="<?= asset("js/banner.js") ?>"></script><?php endif; ?>
 </body>
 </html>

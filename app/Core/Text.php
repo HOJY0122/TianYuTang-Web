@@ -31,6 +31,7 @@ class Text
         'gallery'  => '相簿 Gallery',
         'help'     => 'ⓘ 說明視窗 Help panel',
         'pdf'      => '列印 / PDF Printouts',
+        'login'    => '登入頁 Login page',
     ];
 
     /**
@@ -123,6 +124,11 @@ class Text
         'pdf.attendees'    => ['pdf', '報名名單 · 現場報到表', 'Attendee list · Check-in sheet'],
         'pdf.donations'    => ['pdf', '布施名單 · 功德紀錄', 'Donation record'],
         'pdf.confidential' => ['pdf', '機密文件：內含個人資料，僅供本會內部使用，用後請妥善銷毀。', 'Confidential — contains personal data (PDPA). For internal use only; dispose of securely.', true],
+        // --- Admin login page. {site} = site name (Chinese), {site_en} = English name ---
+        'login.title'      => ['login', '{site}', '{site_en}'],
+        'login.sub'        => ['login', '管理登入', 'Admin Login'],
+        'login.button'     => ['login', '登入', 'Log in'],
+        'login.back'       => ['login', '← 返回網站首頁', 'Back to website'],
     ];
 
     /** The wording for $key in 'zh' or 'en', with {placeholders} filled. */

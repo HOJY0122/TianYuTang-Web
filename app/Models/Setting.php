@@ -27,7 +27,13 @@ class Setting extends Model
         'site_tagline'      => '🙏 感恩您的參與與支持　｜　Thank you for your kind support',
         'site_tagline_on'   => '1',          // the switch beside it: '1' shown, '0' hidden
         'site_logo_path'    => null,
-        'site_banner_path'  => null,
+        // Home page banner slideshow (pictures: see Banner / site_banners).
+        // Heights are % of the page width; 0 = the whole first picture.
+        'banner_height_desktop' => '0',
+        'banner_height_mobile'  => '0',
+        'banner_interval'       => '6',      // seconds per picture
+        'banner_effect'         => 'fade',   // fade | slide
+        'banner_controls'       => '1',      // arrows and dots
         'site_favicon_path' => null,
         // Heading typeface — see HEADING_FONTS
         'heading_font'      => 'brush',

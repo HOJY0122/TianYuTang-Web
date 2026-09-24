@@ -15,6 +15,7 @@ a{display:inline-block;margin-top:20px;background:#9f211b;color:#fff8df;padding:
 border-radius:999px;font-weight:800;text-decoration:none}
 a:hover{background:#711711}
 </style>
+<script src="<?= asset('js/fit-screen.js') ?>"></script>
 </head>
 <body>
   <div>

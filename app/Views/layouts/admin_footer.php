@@ -49,6 +49,18 @@ document.querySelectorAll('[data-toggle-password]').forEach(function (btn) {
   });
 });
 </script>
+<script>
+// Wide tables (donations, receipts …) scroll sideways inside their own box on
+// tablets and small laptops instead of pushing the whole page wider.
+// On phones they are cards already (see .records in admin.css).
+document.querySelectorAll('table.records').forEach(function (t) {
+  if (t.parentElement.classList.contains('table-scroll')) return;
+  var box = document.createElement('div');
+  box.className = 'table-scroll';
+  t.parentNode.insertBefore(box, t);
+  box.appendChild(t);
+});
+</script>
 <script src="<?= asset('js/dialog.js') ?>"></script>
 <script src="<?= asset('js/image-editor.js') ?>"></script>
 <script src="<?= asset('js/trad-check.js') ?>"></script>

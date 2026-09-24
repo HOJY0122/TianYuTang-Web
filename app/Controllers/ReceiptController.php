@@ -91,7 +91,7 @@ class ReceiptController extends Controller
                     $draft['source'] = 'ai';
                     $draft['values'] = $this->fromReading($read);
                     $draft['ai_notes'] = trim(
-                        ($read['unsure'] ? '不確定 Unsure: ' . implode(', ', $read['unsure']) . '. ' : '') . $read['notes']
+                        ($read['unsure'] ? '請再看一眼 Please double-check: ' . $this->fieldNames($read['unsure']) . '。' : '') . $read['notes']
                     ) ?: null;
                     $draft['unsure'] = $read['unsure'];
                     $draft['ocr_text'] = $read['text'] ?? null;   // Google Vision: everything it read
@@ -343,6 +343,20 @@ class ReceiptController extends Controller
     }
 
     /** The AI's reading, as form values. */
+    /** ['name', 'issued_by'] → "姓名 Name、發據人 Issued by" */
+    private function fieldNames(array $keys): string
+    {
+        $names = [
+            'receipt_no' => '號碼 No.', 'date' => '日期 Date', 'item' => '項目 Item', 'name' => '姓名 Name',
+            'payment' => '付款方式 Paid by', 'total' => '總數 Total', 'issued_by' => '發據人 Issued by',
+            'other_label' => '其他 Other',
+        ];
+        foreach (ReceiptReader::CATEGORIES as $k => [$zh, $en]) {
+            $names[$k] = "{$zh} {$en}";
+        }
+        return implode('、', array_map(static fn($k) => $names[$k] ?? $k, $keys));
+    }
+
     private function fromReading(array $r): array
     {
         $v = [

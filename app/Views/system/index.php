@@ -167,7 +167,7 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
   <?php endif; ?>
   <div class="ai-actions">
     <button type="submit" class="mini-btn btn-lg" formaction="<?= url('/system/ai-test') ?>" formnovalidate>🔌 測試連線 <span class="en">Test connection</span></button>
-    <span class="help">免費檢查，不會讀取任何收據。A free check — no receipt is read, nothing is billed.</span>
+    <span class="help">檢查金鑰與帳戶餘額：不讀取收據，只送出一個極小的要求（遠低於 RM 0.01）。Checks the key and that the account has credit, with one tiny request (well under RM 0.01) — no receipt is read.</span>
   </div>
   </section>
   </div>

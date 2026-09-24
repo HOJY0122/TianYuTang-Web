@@ -110,8 +110,11 @@ class ReceiptReader
     }
 
     /**
-     * A free check that the key works and can use the model: asks the
-     * Models API about the model (no tokens are used, nothing is billed).
+     * Check everything a receipt scan needs, in two steps:
+     *   1. the key is valid and may use the model (Models API — free)
+     *   2. the account can actually run a request: one tiny message
+     *      (a few dozen tokens, well under RM 0.01). Step 1 alone passes
+     *      even when the account has no credit, which is misleading.
      * @return array{ok:bool, message:string}
      */
     public function testConnection(?string $key = null): array
@@ -121,13 +124,26 @@ class ReceiptReader
             return ['ok' => false, 'message' => "還沒有金鑰。\nNo API key yet."];
         }
         $model = self::conf('ANTHROPIC_MODEL', 'claude-opus-5');
-        $url   = preg_replace('#/v1/messages$#', '/v1/models/' . rawurlencode($model), self::conf('ANTHROPIC_API_URL', 'https://api.anthropic.com/v1/messages'));
+        $base  = self::conf('ANTHROPIC_API_URL', 'https://api.anthropic.com/v1/messages');
         try {
-            $this->request($url, null, $key);
-            return ['ok' => true, 'message' => "✓ 連線成功，金鑰可以使用 {$model}。\nConnected — the key works and can use {$model}."];
+            $this->request(preg_replace('#/v1/messages$#', '/v1/models/' . rawurlencode($model), $base), null, $key);
         } catch (RuntimeException $e) {
-            return ['ok' => false, 'message' => $e->getMessage()];
+            return ['ok' => false, 'message' => "① 金鑰檢查失敗 Key check failed:\n" . $e->getMessage()];
         }
+        try {
+            $reply = $this->request($base, [
+                'model'      => $model,
+                'max_tokens' => 16,
+                'messages'   => [['role' => 'user', 'content' => 'Reply with the word OK.']],
+            ], $key);
+        } catch (RuntimeException $e) {
+            return ['ok' => false, 'message' => "✓ 金鑰正確，但無法執行讀取。\nThe key is valid, but the account cannot run requests yet.\n" . $e->getMessage()];
+        }
+        if (($reply['stop_reason'] ?? '') === 'refusal') {
+            return ['ok' => false, 'message' => "金鑰正確，但 AI 拒絕了測試要求，請稍後再試。\nThe key is valid, but the test request was declined — please try again later."];
+        }
+        return ['ok' => true, 'message' => "✓ 一切正常：金鑰有效、帳戶可以使用 {$model}，可以開始掃描收據。\n"
+            . "All good — the key works and the account can use {$model}. You can scan receipts now."];
     }
 
     /** A setting from config.php or the environment, or a default. */

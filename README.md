@@ -100,6 +100,13 @@ The temple's paper receipt book, kept online.
 The list can be searched, filtered by date and payment, sorted by any
 column, and exported to Excel. Photos are private (`storage/receipts`).
 
+**Choosing the AI service:** Site settings → ⑤ AI offers **Anthropic Claude**
+(most accurate on handwritten Chinese, paid per use) or **NVIDIA**
+(build.nvidia.com, free credits, open vision models such as
+`meta/llama-3.2-90b-vision-instruct` — expect more corrections). Each has
+its own key box; NVIDIA also has a model box. Test connection checks the
+service that is selected.
+
 **Turning AI reading on:** a system admin opens 網站設定 Site settings →
 ⑤ AI, pastes an API key from console.anthropic.com, presses
 **🔌 測試連線 Test connection** (a free check), then Save. The key can also go in

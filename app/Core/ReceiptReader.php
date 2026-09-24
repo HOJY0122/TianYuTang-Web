@@ -6,14 +6,21 @@ use RuntimeException;
 
 /**
  * ReceiptReader — reads a photo of the temple's handwritten receipt with
- * Claude (Anthropic's AI) and returns the fields as plain PHP values.
+ * an AI service and returns the fields as plain PHP values.
  *
- * One HTTPS request to the Messages API: the photo as an image block,
- * a short description of the receipt's layout, and a JSON schema the
- * answer must follow (structured outputs), so the reply can always be
- * decoded — no fishing for JSON in free text.
+ * Two services can be chosen in 網站設定 Site settings → ⑤ AI:
  *
- * Plain cURL rather than the Anthropic PHP SDK on purpose: this project
+ *  - anthropic: Claude, via the Messages API. The photo goes as an image
+ *    block with a JSON schema the answer must follow (structured
+ *    outputs), so the reply always decodes.
+ *  - nvidia: NVIDIA's hosted models (build.nvidia.com), via their
+ *    OpenAI-style chat completions API. Structured output is not
+ *    guaranteed there, so the JSON is asked for in the instructions and
+ *    picked out of the reply carefully. Open vision models read Chinese
+ *    handwriting less reliably than Claude — the draft will need more
+ *    checking.
+ *
+ * Plain cURL rather than an SDK on purpose: this project
  * runs on shared hosting without Composer (see XlsxWriter for the same
  * choice). The request is small and the reply is one JSON document.
  *
@@ -35,30 +42,63 @@ class ReceiptReader
         'other'    => ['其他', 'Other'],
     ];
 
+    /** The services that can read receipts: key => [label, key prefix, where to get a key]. */
+    public const PROVIDERS = [
+        'anthropic' => ['Anthropic Claude', 'sk-ant-', 'https://console.anthropic.com/settings/keys'],
+        'nvidia'    => ['NVIDIA (build.nvidia.com)', 'nvapi-', 'https://build.nvidia.com/'],
+    ];
+
+    /** Vision models on NVIDIA's API that suit this job; the admin may type any other. */
+    public const NVIDIA_MODELS = [
+        'meta/llama-3.2-90b-vision-instruct',
+        'meta/llama-4-maverick-17b-128e-instruct',
+        'meta/llama-3.2-11b-vision-instruct',
+        'microsoft/phi-4-multimodal-instruct',
+    ];
+
     public static function configured(): bool
     {
         return self::apiKey() !== '';
     }
 
+    /** Which service reads receipts (Site settings → ⑤ AI). */
+    public static function provider(): string
+    {
+        $p = (string) ((new Setting())->all()['ai_provider'] ?? '');
+        return isset(self::PROVIDERS[$p]) ? $p : 'anthropic';
+    }
+
+    /** The model used for a service. */
+    public static function model(?string $provider = null): string
+    {
+        if (($provider ?? self::provider()) === 'nvidia') {
+            $saved = trim((string) ((new Setting())->all()['nvidia_model'] ?? ''));
+            return $saved !== '' ? $saved : self::conf('NVIDIA_MODEL', self::NVIDIA_MODELS[0]);
+        }
+        return self::conf('ANTHROPIC_MODEL', 'claude-opus-5');
+    }
+
     /**
-     * The API key, from the first place that has one:
-     *   1. config/config.php  define('ANTHROPIC_API_KEY', '…')
-     *   2. the server's ANTHROPIC_API_KEY environment variable
-     *   3. 網站設定 Site settings → AI (saved by the system admin)
+     * The API key for the chosen service, from the first place that has one:
+     *   1. config/config.php  define('ANTHROPIC_API_KEY' / 'NVIDIA_API_KEY', '…')
+     *   2. the server's environment variable of the same name
+     *   3. 網站設定 Site settings → ⑤ AI (saved by the system admin)
      * Spaces, quotes and line breaks picked up while copying are removed.
      */
-    public static function apiKey(): string
+    public static function apiKey(?string $provider = null): string
     {
-        return self::keySource()[1];
+        return self::keySource($provider)[1];
     }
 
     /** @return array{0:string,1:string} [where it came from, the key] */
-    public static function keySource(): array
+    public static function keySource(?string $provider = null): array
     {
+        $provider = $provider ?? self::provider();
+        $name     = $provider === 'nvidia' ? 'NVIDIA_API_KEY' : 'ANTHROPIC_API_KEY';
         $candidates = [
-            'config'   => defined('ANTHROPIC_API_KEY') ? (string) constant('ANTHROPIC_API_KEY') : '',
-            'env'      => (string) (getenv('ANTHROPIC_API_KEY') ?: ''),
-            'settings' => (string) ((new Setting())->all()['anthropic_api_key'] ?? ''),
+            'config'   => defined($name) ? (string) constant($name) : '',
+            'env'      => (string) (getenv($name) ?: ''),
+            'settings' => (string) ((new Setting())->all()[$provider . '_api_key'] ?? ''),
         ];
         foreach ($candidates as $where => $key) {
             $key = self::tidyKey($key);
@@ -98,9 +138,11 @@ class ReceiptReader
             $hints[] = "config.php：金鑰被貼在設定名稱的位置。第一組引號要保持 'ANTHROPIC_API_KEY'，金鑰放在第二組引號。\n"
                      . "config.php: the key replaced the setting's NAME. Keep 'ANTHROPIC_API_KEY' in the first quotes and put the key in the second.";
         }
-        [$where, $key] = self::keySource();
-        if ($key !== '' && !str_starts_with($key, 'sk-ant-')) {
-            $hints[] = "目前的金鑰不像 Anthropic 金鑰（應以 sk-ant- 開頭）。\nThe key in use does not look like an Anthropic key (they start with sk-ant-).";
+        $provider = self::provider();
+        [$label, $prefix] = self::PROVIDERS[$provider];
+        [$where, $key] = self::keySource($provider);
+        if ($key !== '' && !str_starts_with($key, $prefix)) {
+            $hints[] = "目前的金鑰不像 {$label} 金鑰（應以 {$prefix} 開頭）。\nThe key in use does not look like a {$label} key (they start with {$prefix}).";
         }
         if (!function_exists('curl_init') && !ini_get('allow_url_fopen')) {
             $hints[] = "伺服器的 PHP 沒有 cURL，也不允許連外網址，無法連線。請在 php.ini 啟用 extension=curl。\n"
@@ -117,16 +159,31 @@ class ReceiptReader
      *      even when the account has no credit, which is misleading.
      * @return array{ok:bool, message:string}
      */
-    public function testConnection(?string $key = null): array
+    public function testConnection(?string $key = null, ?string $provider = null, ?string $model = null): array
     {
-        $key = self::tidyKey($key ?? self::apiKey());
+        $provider = $provider ?? self::provider();
+        $key      = self::tidyKey($key ?? self::apiKey($provider));
+        $model    = $model ?: self::model($provider);
         if ($key === '') {
             return ['ok' => false, 'message' => "還沒有金鑰。\nNo API key yet."];
         }
-        $model = self::conf('ANTHROPIC_MODEL', 'claude-opus-5');
-        $base  = self::conf('ANTHROPIC_API_URL', 'https://api.anthropic.com/v1/messages');
+        if ($provider === 'nvidia') {
+            // NVIDIA has no free "does this key work" call, so one tiny
+            // text request checks the key, the model and the account together.
+            try {
+                $this->request(self::nvidiaUrl(), [
+                    'model' => $model, 'max_tokens' => 8, 'temperature' => 0,
+                    'messages' => [['role' => 'user', 'content' => 'Reply with the word OK.']],
+                ], self::headers('nvidia', $key));
+            } catch (RuntimeException $e) {
+                return ['ok' => false, 'message' => "NVIDIA 測試失敗 Test failed ({$model}):\n" . $e->getMessage()];
+            }
+            return ['ok' => true, 'message' => "✓ 一切正常：NVIDIA 金鑰有效，可以使用 {$model}。\n"
+                . "All good — the NVIDIA key works with {$model}. You can scan receipts now."];
+        }
+        $base = self::conf('ANTHROPIC_API_URL', 'https://api.anthropic.com/v1/messages');
         try {
-            $this->request(preg_replace('#/v1/messages$#', '/v1/models/' . rawurlencode($model), $base), null, $key);
+            $this->request(preg_replace('#/v1/messages$#', '/v1/models/' . rawurlencode($model), $base), null, self::headers('anthropic', $key));
         } catch (RuntimeException $e) {
             return ['ok' => false, 'message' => "① 金鑰檢查失敗 Key check failed:\n" . $e->getMessage()];
         }
@@ -135,7 +192,7 @@ class ReceiptReader
                 'model'      => $model,
                 'max_tokens' => 16,
                 'messages'   => [['role' => 'user', 'content' => 'Reply with the word OK.']],
-            ], $key);
+            ], self::headers('anthropic', $key));
         } catch (RuntimeException $e) {
             return ['ok' => false, 'message' => "✓ 金鑰正確，但無法執行讀取。\nThe key is valid, but the account cannot run requests yet.\n" . $e->getMessage()];
         }
@@ -144,6 +201,25 @@ class ReceiptReader
         }
         return ['ok' => true, 'message' => "✓ 一切正常：金鑰有效、帳戶可以使用 {$model}，可以開始掃描收據。\n"
             . "All good — the key works and the account can use {$model}. You can scan receipts now."];
+    }
+
+    private static function nvidiaUrl(): string
+    {
+        return self::conf('NVIDIA_API_URL', 'https://integrate.api.nvidia.com/v1/chat/completions');
+    }
+
+    /** Request headers for a service. */
+    private static function headers(string $provider, string $key): array
+    {
+        if ($provider === 'nvidia') {
+            return ['content-type: application/json', 'accept: application/json', 'authorization: Bearer ' . $key];
+        }
+        return [
+            'content-type: application/json',
+            'x-api-key: ' . $key,
+            'anthropic-version: 2023-06-01',
+            'anthropic-beta: server-side-fallback-2026-07-01',
+        ];
     }
 
     /** A setting from config.php or the environment, or a default. */
@@ -171,9 +247,12 @@ class ReceiptReader
         if ($info === false || !in_array($info['mime'], ['image/jpeg', 'image/png', 'image/gif', 'image/webp'], true)) {
             throw new RuntimeException("無法讀取這張相片。\nThis photo could not be read.");
         }
+        if (self::provider() === 'nvidia') {
+            return $this->readWithNvidia($file);
+        }
 
         $body = [
-            'model'      => self::conf('ANTHROPIC_MODEL', 'claude-opus-5'),
+            'model'      => self::model('anthropic'),
             'max_tokens' => 16000,
             // If Claude Opus 5's safety check ever declines a request, the
             // API retries it on Anthropic's recommended fallback model.
@@ -218,7 +297,98 @@ class ReceiptReader
     /** POST to the Messages API; returns the decoded reply or throws. */
     private function post(array $body): array
     {
-        return $this->request(self::conf('ANTHROPIC_API_URL', 'https://api.anthropic.com/v1/messages'), $body, self::apiKey());
+        return $this->request(self::conf('ANTHROPIC_API_URL', 'https://api.anthropic.com/v1/messages'), $body,
+            self::headers('anthropic', self::apiKey('anthropic')));
+    }
+
+    /**
+     * Read the photo with an NVIDIA-hosted vision model. The answer is
+     * asked for as JSON in the instructions (not enforced by the API), so
+     * the first {...} in the reply is taken and then tidied like Claude's.
+     */
+    private function readWithNvidia(string $file): array
+    {
+        $shape = json_encode(self::example(), JSON_UNESCAPED_UNICODE);
+        $reply = $this->request(self::nvidiaUrl(), [
+            'model'       => self::model('nvidia'),
+            'max_tokens'  => 1500,
+            'temperature' => 0.1,
+            'messages'    => [
+                ['role' => 'system', 'content' => self::INSTRUCTIONS
+                    . "\n\nReply with ONE JSON object only — no other text, no code fences — shaped exactly like this example:\n" . $shape],
+                ['role' => 'user', 'content' => [
+                    ['type' => 'text', 'text' => 'Read this receipt and fill in the fields.'],
+                    ['type' => 'image_url', 'image_url' => ['url' => 'data:image/jpeg;base64,' . self::smallJpegBase64($file)]],
+                ]],
+            ],
+        ], self::headers('nvidia', self::apiKey('nvidia')));
+
+        $choice = $reply['choices'][0] ?? [];
+        if (($choice['finish_reason'] ?? '') === 'length') {
+            throw new RuntimeException("AI 回覆不完整，請再試一次或手動輸入。\nThe AI's answer was cut short — try again or type it in.");
+        }
+        $text = (string) ($choice['message']['content'] ?? '');
+        $data = self::firstJsonObject($text);
+        if ($data === null) {
+            error_log('ReceiptReader NVIDIA non-JSON reply: ' . mb_substr($text, 0, 500));
+            throw new RuntimeException("AI 回覆格式不正確，請再試一次或換一個模型。\nThe AI's answer could not be understood — try again or choose another model."
+                . "\n（詳細 Detail: " . mb_substr(trim($text), 0, 150) . '）');
+        }
+        return self::clean($data);
+    }
+
+    /** The first {...} object in a reply, ignoring code fences and chatter around it. */
+    private static function firstJsonObject(string $text): ?array
+    {
+        $text  = preg_replace('/```(?:json)?/i', '', $text);
+        $start = strpos($text, '{');
+        $end   = strrpos($text, '}');
+        if ($start === false || $end === false || $end <= $start) {
+            return null;
+        }
+        $data = json_decode(substr($text, $start, $end - $start + 1), true);
+        return is_array($data) ? $data : null;
+    }
+
+    /**
+     * The photo as a JPEG small enough to send inline. NVIDIA's hosted
+     * API accepts images inside the request only up to about 180 KB of
+     * base64, so the photo is scaled down step by step until it fits
+     * (a receipt stays readable at 1000–1400 px).
+     */
+    private static function smallJpegBase64(string $file): string
+    {
+        $raw = (string) file_get_contents($file);
+        $img = @imagecreatefromstring($raw);
+        if ($img === false) {
+            return base64_encode($raw);
+        }
+        foreach ([[1400, 80], [1200, 75], [1000, 70], [850, 65], [700, 60]] as [$max, $quality]) {
+            $w = imagesx($img);
+            $h = imagesy($img);
+            $k = min(1, $max / max($w, $h));
+            $out = imagecreatetruecolor(max(1, (int) round($w * $k)), max(1, (int) round($h * $k)));
+            imagefill($out, 0, 0, imagecolorallocate($out, 255, 255, 255));
+            imagecopyresampled($out, $img, 0, 0, 0, 0, imagesx($out), imagesy($out), $w, $h);
+            ob_start();
+            imagejpeg($out, null, $quality);
+            $b64 = base64_encode((string) ob_get_clean());
+            imagedestroy($out);
+            if (strlen($b64) < 175000) {
+                break;
+            }
+        }
+        imagedestroy($img);
+        return $b64;
+    }
+
+    /** A filled-in example of the answer, for services without schema enforcement. */
+    private static function example(): array
+    {
+        $amounts = array_fill_keys(array_keys(self::CATEGORIES), 0);
+        $amounts['donation'] = 100;
+        return ['receipt_no' => '26432', 'date' => '2026-10-16', 'item' => '', 'name' => '陳大文', 'amounts' => $amounts,
+                'other_label' => '', 'payment' => 'cash', 'total' => 100, 'issued_by' => '', 'unsure' => ['issued_by'], 'notes' => ''];
     }
 
     /**
@@ -227,14 +397,8 @@ class ReceiptReader
      * XAMPP, whose PHP ships without a certificate list — it tries once
      * more with the list bundled here (app/Core/cacert.pem, Mozilla's).
      */
-    private function request(string $url, ?array $body, string $key): array
+    private function request(string $url, ?array $body, array $headers): array
     {
-        $headers = [
-            'content-type: application/json',
-            'x-api-key: ' . $key,
-            'anthropic-version: 2023-06-01',
-            'anthropic-beta: server-side-fallback-2026-07-01',
-        ];
         $json   = $body === null ? null : json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         $bundle = __DIR__ . '/cacert.pem';
 
@@ -288,15 +452,19 @@ class ReceiptReader
         }
         $reply = json_decode((string) $raw, true);
         if ($status !== 200 || !is_array($reply)) {
-            $type   = is_array($reply) ? (string) ($reply['error']['type'] ?? '') : '';
-            $detail = is_array($reply) ? (string) ($reply['error']['message'] ?? '') : mb_substr((string) $raw, 0, 200);
+            $type   = is_array($reply) ? (string) ($reply['error']['type'] ?? ($reply['title'] ?? '')) : '';
+            // Anthropic: {"error":{"message"}}; NVIDIA / OpenAI-style: {"error":{"message"}} or {"detail"} / {"title"}.
+            $detail = is_array($reply)
+                ? (string) ($reply['error']['message'] ?? (is_string($reply['error'] ?? null) ? $reply['error'] : ($reply['detail'] ?? ($reply['title'] ?? ''))))
+                : mb_substr((string) $raw, 0, 200);
+            $detail = is_string($detail) ? $detail : json_encode($detail);
             error_log("ReceiptReader HTTP {$status} {$type}: " . substr((string) $raw, 0, 500));
             throw new RuntimeException(match (true) {
                 $status === 401                  => "AI 金鑰無效（打錯、已刪除或已停用），請系統管理員到「網站設定」檢查。\nThe AI key was refused (mistyped, deleted or disabled) — the system admin can check it in Site settings.",
-                $status === 403                  => "這個金鑰沒有使用權限，請檢查 Anthropic 帳戶。\nThis key is not allowed to do this — check the Anthropic account.",
-                $status === 404                  => "此金鑰無法使用這個 AI 模型。\nThis key cannot use this AI model.",
-                $status === 400 && str_contains($detail, 'credit')
-                                                 => "Anthropic 帳戶餘額不足，請先儲值。\nThe Anthropic account is out of credit — please top it up.",
+                $status === 403                  => "這個金鑰沒有使用權限，請檢查 AI 帳戶。\nThis key is not allowed to do this — check the AI account.",
+                $status === 404                  => "找不到這個 AI 模型，或此金鑰不能使用它。請換一個模型名稱。\nThis AI model was not found, or this key cannot use it — try another model name.",
+                $status === 402 || (in_array($status, [400, 403, 429], true) && stripos($detail, 'credit') !== false)
+                                                 => "AI 帳戶的額度已用完，請先儲值或換一個服務。\nThe AI account is out of credit — top it up or switch service.",
                 $status === 429                  => "AI 服務忙碌或已達用量上限，請一分鐘後再試。\nThe AI service is busy or at its limit — please try again in a minute.",
                 $status === 413                  => "相片太大，請縮小後再試。\nThe photo is too large — please use a smaller one.",
                 $status >= 500                   => "AI 服務暫時無法使用，請稍後再試。\nThe AI service is having trouble — please try again shortly.",

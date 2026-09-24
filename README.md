@@ -300,6 +300,36 @@ phone in a crowded hall:
 The printed check-in sheet shows arrival state too, so paper and screen
 agree if the counter switches between them mid-event.
 
+### Walk-in registration (`/admin/walkin`)
+
+For people who never registered online and simply turn up. This is the
+registration counterpart of counter donations, and it behaves
+differently from an online submission on purpose:
+
+- **The submission window does not apply.** Walk-ins exist *because*
+  online registration has closed. The public form refuses a late
+  submission; this page still accepts one.
+- **Status is confirmed immediately.** They are standing at the counter;
+  there is nothing left to confirm.
+- **Everyone is checked in on the spot**, so the head count on the
+  check-in screen and the printed sheet includes them. Without this the
+  committee would be ordering food for the wrong number of people.
+- **The volunteer who entered it is stamped on the row** (`recorded_by`),
+  exactly as counter donations record who took the cash.
+- **Only the name is required.** Someone queuing at a temple counter on
+  a festival day will not always hand over an IC number, and a form that
+  demands one just gets fake numbers typed into it.
+
+Walk-ins carry `rsvp_groups.source = 'walkin'` and share the same
+`RSVP-####` numbering as online registrations, so a reference code is
+unique across the whole event however it was created. The Excel export
+and the printed sheet both show which way each person registered.
+
+The page shows live walk-in / online / total counts and the last dozen
+entries, so a volunteer can see their own work and spot a double entry
+immediately. A mistake is cancelled from the dashboard rather than
+deleted, keeping the record intact.
+
 ### Upgrading an existing v1 database
 
 A fresh install just loads `schema.sql`. If you already have a v1
@@ -314,14 +344,24 @@ mysql -u USER -p < migrations/002_add_event_photos.sql # photo gallery
 mysql -u USER -p < migrations/003_add_checkin.sql      # on-site check-in
 mysql -u USER -p < migrations/004_add_counter_donations.sql # cash at the counter
 mysql -u USER -p < migrations/005_add_roles_and_settings.sql # roles + site settings
+mysql -u USER -p < migrations/006_split_roles_and_walkin.sql # role split + walk-ins
 ```
 
 Run them in order. Each one is safe to run twice.
 
-Migration 005 promotes **every existing admin account to
-`system_admin`**, so nobody is locked out of the settings the moment it
-runs. Demote the accounts that should be plain admins afterwards, from
-系統設定 → 管理帳號.
+Migration 005 promotes every existing account to `system_admin` so
+nobody is locked out mid-upgrade; **006 then separates the two roles
+properly** — it creates a `sysadmin` account and returns `admin` to the
+plain admin role. It also moves the banner and favicon from the event
+row into site settings, copying the current values across so the site
+looks identical the moment it finishes.
+
+```
+sysadmin / tianyutang-sys2026     ← change this immediately
+```
+
+Running 006 twice stops with `Duplicate column name 'source'`. That
+error means it already ran; nothing is damaged.
 
 It prints a row count at the end; `rows_total` and `rows_with_event`
 must match for both tables.
@@ -386,27 +426,43 @@ Then open http://localhost:8000
 
 ### Admin roles
 
-There are two roles, and **system admin is a superset of admin** — not a
-parallel account type. A system admin can do everything an admin can,
-plus the settings below.
+These are **two separate accounts with two separate areas**. Neither can
+open the other's pages, and each lands on its own page at login.
 
 | | 管理員 admin | 系統管理員 system_admin |
 |---|---|---|
-| Dashboard, registrations, donations | ✅ | ✅ |
-| Excel export, print sheets, check-in, counter donations | ✅ | ✅ |
-| Create / edit events, activate, test mode | ✅ | ✅ |
-| Photo gallery upload and ordering | ✅ | ✅ |
+| Lands at login on | `/admin/dashboard` | `/system` |
+| Dashboard, registrations, donations | ✅ | ❌ |
+| Walk-in register, check-in, counter cash | ✅ | ❌ |
+| Excel export and print sheets | ✅ | ❌ |
+| Create / edit events, activate, test mode | ✅ | ❌ |
+| Photo gallery upload and ordering | ✅ | ❌ |
 | Hero banner and favicon | ❌ | ✅ |
 | Site name and tagline | ❌ | ✅ |
 | Admin accounts (create, promote, reset, delete) | ❌ | ✅ |
 | QR code generator | ❌ | ✅ |
+| Change own password (`/account/password`) | ✅ | ✅ |
 
-The split is enforced **server-side** in `SystemController` and in
-`AdminController::saveEvent()`, not by hiding buttons: a plain admin who
-crafts the POST by hand still cannot change branding or promote
-themselves. Two safety rails exist by design — you cannot delete your
-own account, and you cannot remove or demote the **last** system admin,
-so the system can never end up with nobody able to administer it.
+The one shared page is your own password, deliberately: nobody should
+have to ask someone else to change it, which is how passwords end up
+being passed around on WhatsApp.
+
+The split is enforced **server-side**, in `requireAdmin()` and
+`requireSystemAdmin()`, not by hiding buttons: an admin who crafts the
+POST by hand still cannot change branding or promote themselves, and a
+system admin cannot read anyone's registration data.
+
+Three safety rails exist by design:
+
+- you cannot delete your own account while logged into it;
+- you cannot delete or demote the **last system admin** — there would be
+  no way back short of editing the database by hand;
+- you cannot delete or promote the **last admin** — a system admin
+  cannot take registrations, so removing the last admin would mean
+  nobody could check anyone in on the day of the event.
+
+The buttons for those cases are hidden as well as refused, so nobody
+sits clicking one that always fails.
 
 Everyone should have their own account rather than sharing one. Counter
 donations record who took the money in `recorded_by`, and that column is
@@ -419,8 +475,9 @@ Username: admin
 Password: tianyutang2026
 ```
 
-**Change this immediately.** The easiest way is in the browser:
-log in, open **系統設定 → 更改我的密碼** (`/system/password`). Creating
+**Change this immediately**, and change `sysadmin` too. The easiest way
+is in the browser: log in, open **更改我的密碼** (`/account/password`),
+which both roles can reach. Creating
 the committee's individual accounts is on the same page's 管理帳號
 section, which also avoids anyone needing phpMyAdmin.
 
@@ -498,9 +555,11 @@ UPDATE admin_users SET password_hash = 'paste-the-hash-here' WHERE username = 'a
 | POST | `/system/users/role` | `SystemController@changeRole` |
 | POST | `/system/users/password` | `SystemController@resetPassword` |
 | POST | `/system/users/delete` | `SystemController@deleteUser` |
-| GET | `/system/password` | `SystemController@passwordForm` |
-| POST | `/system/password` | `SystemController@changeOwnPassword` |
 | GET | `/system/qr` | `SystemController@qrGenerator` |
+| GET | `/admin/walkin` | `WalkinController@index` |
+| POST | `/admin/walkin/save` | `WalkinController@save` |
+| GET | `/account/password` | `SystemController@passwordForm` |
+| POST | `/account/password` | `SystemController@changeOwnPassword` |
 
 To add a page: register the route in `public/index.php`, add the method
 to a controller, add the view under `app/Views/`.
@@ -529,3 +588,11 @@ to a controller, add the view under `app/Views/`.
 - Site name and tagline come from the `settings` table, read once per
   request by `Setting::all()`. Anything else that should be editable
   without a deploy belongs there too, rather than in `config.php`.
+- **Do not merge the two roles back into one "superuser".** The split
+  exists so that the person who can change the site's appearance and its
+  logins is not the same person browsing everyone's IC numbers. If a
+  committee member genuinely needs both, give them two accounts.
+- The last-admin and last-system-admin guards in `SystemController` are
+  not decoration. Without the last-admin one, a system admin can promote
+  every admin away and nobody can check anyone in — discovered, in
+  testing, by doing exactly that.

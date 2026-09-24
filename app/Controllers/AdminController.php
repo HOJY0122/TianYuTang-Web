@@ -23,7 +23,7 @@ class AdminController extends Controller
     public function loginForm(): void
     {
         if (!empty($_SESSION['admin_id'])) {
-            $this->redirect('/admin/dashboard');
+            $this->redirect($this->homePath());
         }
         $this->view('admin/login', ['error' => $this->takeLoginError()]);
     }
@@ -56,7 +56,9 @@ class AdminController extends Controller
         $_SESSION['admin_display']  = $user['display_name'] ?: $user['username'];
         (new AdminUser())->recordLogin((int) $user['id']);
 
-        $this->redirect('/admin/dashboard');
+        // Each role lands in its own area. Sending a system admin to the
+        // event dashboard would only bounce them straight back out.
+        $this->redirect($this->homePath());
     }
 
     /** GET /admin/logout */
@@ -353,20 +355,12 @@ class AdminController extends Controller
             }
         }
 
-        // Remove the test event's uploads too, or they sit on disk
-        // forever with nothing pointing at them — but ONLY if no other
-        // event still uses the same file. A test copy inherits the
-        // original's banner path, so deleting blindly here would strip
-        // the live event's banner.
-        foreach ([
-            'hero_banner_path' => 'banners',
-            'favicon_path'     => 'favicons',
-        ] as $column => $subdir) {
-            $path = $event[$column] ?? null;
-            if ($path && $eventModel->countOtherEventsUsingImage($path, $id) === 0) {
-                (new ImageUploader($subdir))->delete($path);
-            }
-        }
+        // The banner and favicon columns are left alone on purpose. They
+        // are historical values now — branding lives in site settings —
+        // and a test copy inherits the original's paths, so deleting the
+        // files here could strip the banner the live site is still
+        // showing. An unused file on disk is a far smaller problem than
+        // a blank homepage on the morning of the event.
 
         // Photo ROWS cascade with the event, but the files on disk do
         // not — collect their paths before the rows disappear.
@@ -490,38 +484,9 @@ class AdminController extends Controller
         // Done after validation so a rejected form never leaves an
         // orphaned file on disk, and kept out of $fields until they
         // succeed so a failed upload cannot blank an existing image.
-        $existing = $isNew ? null : $eventModel->find($id);
-
-        // Branding belongs to system admins. A plain admin who crafts a
-        // multipart POST must not be able to replace the banner.
-        if (!$this->isSystemAdmin()) {
-            unset($_FILES['hero_banner'], $_FILES['favicon'],
-                  $_POST['remove_hero_banner'], $_POST['remove_favicon']);
-        }
-
-        try {
-            $banner = $this->handleImageField(
-                'hero_banner', 'banners', 1920,
-                $existing['hero_banner_path'] ?? null,
-                !empty($_POST['remove_hero_banner']),
-                $id
-            );
-            if ($banner !== false) {
-                $fields['hero_banner_path'] = $banner;
-            }
-
-            $favicon = $this->handleImageField(
-                'favicon', 'favicons', 180,
-                $existing['favicon_path'] ?? null,
-                !empty($_POST['remove_favicon']),
-                $id
-            );
-            if ($favicon !== false) {
-                $fields['favicon_path'] = $favicon;
-            }
-        } catch (RuntimeException $e) {
-            $errors[] = $e->getMessage();
-        }
+        // Banner and favicon are NOT handled here any more. They are site
+        // settings owned by the system admin (/system), not event fields,
+        // so this form cannot change them however the POST is crafted.
 
         if ($errors) {
             $_SESSION['event_form_errors'] = $errors;
@@ -542,63 +507,6 @@ class AdminController extends Controller
         $eventModel->update($id, $fields);
         $this->flash('success', '已儲存', '活動資料已更新，網站已同步顯示。');
         $this->redirect("/admin/dashboard?event={$id}");
-    }
-
-    /**
-     * Process one optional image field on the event form.
-     *
-     * Returns the new stored path, null when the image is being removed,
-     * or FALSE meaning "leave whatever is already there alone" — which is
-     * why the caller checks `!== false` rather than truthiness. Without
-     * that distinction, saving the form without touching the file input
-     * would wipe an existing banner.
-     *
-     * @return string|null|false
-     */
-    private function handleImageField(
-        string $inputName,
-        string $subdir,
-        int $maxWidth,
-        ?string $currentPath,
-        bool $removeRequested,
-        int $eventId
-    ) {
-        $uploader = new ImageUploader($subdir);
-        $file     = $_FILES[$inputName] ?? null;
-
-        if ($removeRequested && !ImageUploader::wasProvided($file)) {
-            $this->deleteImageIfUnshared($uploader, $currentPath, $eventId);
-            return null;
-        }
-
-        if (!ImageUploader::wasProvided($file)) {
-            return false;   // nothing chosen — keep what is stored
-        }
-
-        $newPath = $uploader->store($file, $maxWidth);
-
-        // Only once the new file is safely written do we drop the old
-        // one, so a failure mid-way never leaves the event with neither.
-        if ($currentPath && $currentPath !== $newPath) {
-            $this->deleteImageIfUnshared($uploader, $currentPath, $eventId);
-        }
-
-        return $newPath;
-    }
-
-    /**
-     * Delete an uploaded file only when no other event still points at
-     * it. Test copies share their original's image paths, so an
-     * unconditional delete here would strip the live event's banner.
-     */
-    private function deleteImageIfUnshared(ImageUploader $uploader, ?string $path, int $eventId): void
-    {
-        if (empty($path)) {
-            return;
-        }
-        if ((new Event())->countOtherEventsUsingImage($path, $eventId) === 0) {
-            $uploader->delete($path);
-        }
     }
 
     /**

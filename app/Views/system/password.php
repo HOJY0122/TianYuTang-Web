@@ -13,7 +13,7 @@
   <h1>🔑 變更密碼</h1>
   <div style="display:flex;align-items:center;gap:14px">
     <span class="who"><?= h($_SESSION['admin_display'] ?? $_SESSION['admin_username']) ?></span>
-    <a class="logout" href="<?= url('/admin/dashboard') ?>">← 返回後台</a>
+    <a class="logout" href="<?= url($homePath ?? '/admin/dashboard') ?>">← 返回</a>
   </div>
 </div>
 
@@ -31,7 +31,7 @@
       變更後仍會保持登入狀態。
     </p>
 
-    <form method="POST" action="<?= url('/admin/password') ?>">
+    <form method="POST" action="<?= url('/account/password') ?>">
       <?= csrf_field() ?>
 
       <label for="current_password">目前密碼｜Current Password *</label>

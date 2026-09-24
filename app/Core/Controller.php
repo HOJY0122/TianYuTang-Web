@@ -68,32 +68,60 @@ abstract class Controller
         }
     }
 
-    /** Send the visitor to the admin login page unless already signed in. */
-    protected function requireAdmin(): void
+    // ------------------------------------------------------------------
+    // Roles
+    //
+    // The two roles are separate areas, not two levels of the same one:
+    //
+    //   admin         /admin/*   runs the event
+    //   system_admin  /system/*  runs the site
+    //
+    // Neither can open the other's pages. A system admin who needs
+    // something changed on the event asks an admin, and an admin who
+    // needs the banner replaced asks a system admin — which is the point
+    // of separating them. Nobody gets stranded: a system admin can reset
+    // any admin's password and create accounts of either role.
+    //
+    // All three checks below run on the SERVER. Hiding a menu item stops
+    // an honest person wandering in; it does nothing about someone who
+    // types the URL, and the browser's session already knows its role.
+    // ------------------------------------------------------------------
+
+    /** Signed in at all, either role. For pages both roles share. */
+    protected function requireLogin(): void
     {
         if (empty($_SESSION['admin_id'])) {
             $this->redirect('/admin/login');
         }
     }
 
-    /**
-     * Restrict a page to system administrators.
-     *
-     * Checked on the SERVER for every system route, not just by hiding
-     * the menu item. Hiding a link stops an honest person wandering in;
-     * it does nothing about someone who types the URL, and the session
-     * already tells the browser which role it holds.
-     */
+    /** Restrict a page to the event administrators' area. */
+    protected function requireAdmin(): void
+    {
+        $this->requireLogin();
+
+        if ($this->isSystemAdmin()) {
+            http_response_code(403);
+            $this->flash(
+                'error',
+                '這是管理員頁面',
+                '系統管理員帳號負責網站設定，不處理報名與布施資料。請改用管理員帳號登入。'
+            );
+            $this->redirect('/system');
+        }
+    }
+
+    /** Restrict a page to the system administrators' area. */
     protected function requireSystemAdmin(): void
     {
-        $this->requireAdmin();
+        $this->requireLogin();
 
         if (!$this->isSystemAdmin()) {
             http_response_code(403);
             $this->flash(
                 'error',
                 '權限不足',
-                '此功能僅限系統管理員使用。如需存取，請聯絡系統管理員。'
+                '此功能僅限系統管理員使用。如需更改網站設定，請聯絡系統管理員。'
             );
             $this->redirect('/admin/dashboard');
         }
@@ -103,5 +131,15 @@ abstract class Controller
     protected function isSystemAdmin(): bool
     {
         return ($_SESSION['admin_role'] ?? 'admin') === 'system_admin';
+    }
+
+    /**
+     * Where a signed-in user belongs. Used by the login page and by
+     * anything that needs a "back to where I came from" link, so neither
+     * role is ever sent to a page it will immediately bounce off.
+     */
+    protected function homePath(): string
+    {
+        return $this->isSystemAdmin() ? '/system' : '/admin/dashboard';
     }
 }

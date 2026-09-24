@@ -12,7 +12,9 @@ require BASE_PATH . '/app/Views/layouts/header.php';
 <?php
 // An uploaded banner becomes the hero background. Without one the hero
 // keeps its original gradient, so the site looks finished either way.
-$bannerPath = $event['hero_banner_path'] ?? null;
+// $siteHeroBanner is resolved in the header: the site setting first,
+// falling back to the event's own column on a pre-006 database.
+$bannerPath = $siteHeroBanner ?? null;
 $heroStyle  = $bannerPath
     ? ' style="background-image:linear-gradient(rgba(255,247,217,.86),rgba(255,250,240,.93)), url(\''
       . h(BASE_URL . '/' . $bannerPath) . '\');background-size:cover;background-position:center"'

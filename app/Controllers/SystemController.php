@@ -2,9 +2,11 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\ImageUploader;
 use App\Models\AdminUser;
 use App\Models\Event;
 use App\Models\Setting;
+use RuntimeException;
 
 /**
  * SystemController — the system administrator's area.
@@ -27,10 +29,22 @@ class SystemController extends Controller
 
         $users = new AdminUser();
 
+        // A system admin can no longer open the event dashboard, so the
+        // one fact they still need about the event — which one is live —
+        // is shown here. Read-only: it is context, not a control.
+        $activeEvent = null;
+        try {
+            $activeEvent = (new Event())->active();
+        } catch (\Throwable $e) {
+            // No event set up yet. The settings below still work.
+        }
+
         $this->view('system/index', [
             'settings'    => (new Setting())->all(),
             'users'       => $users->all(),
             'systemCount' => $users->countSystemAdmins(),
+            'adminCount'  => $users->countAdmins(),
+            'activeEvent' => $activeEvent,
             'flash'       => $this->takeFlash(),
         ]);
     }
@@ -43,6 +57,16 @@ class SystemController extends Controller
     public function saveSettings(): void
     {
         $this->requireSystemAdmin();
+
+        // An oversized banner empties $_POST entirely, which would make
+        // the CSRF check below fire and send the system admin hunting a
+        // "form expired" bug that is really a file-size limit.
+        if (empty($_POST) && empty($_FILES) && ($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
+            $this->flash('error', '圖片太大',
+                '上傳的圖片超過伺服器限制（' . ini_get('post_max_size') . '）。請先縮小再試。');
+            $this->redirect('/system');
+        }
+
         $this->requireCsrf();
 
         $setting = new Setting();
@@ -58,8 +82,89 @@ class SystemController extends Controller
         $setting->set('site_name', $siteName);
         $setting->set('site_tagline', mb_substr($tagline, 0, 255));
 
-        $this->flash('success', '已儲存', '網站設定已更新。');
+        // Images are done after the text has been saved, so a rejected
+        // upload never discards a perfectly good name change.
+        $imageNotes = [];
+        foreach ([
+            ['hero_banner', 'site_banner_path',  'banners',  1920, '首頁橫幅'],
+            ['favicon',     'site_favicon_path', 'favicons', 180,  '網站小圖示'],
+        ] as [$input, $key, $subdir, $maxWidth, $label]) {
+            try {
+                $note = $this->storeBrandingImage($setting, $input, $key, $subdir, $maxWidth, $label);
+                if ($note !== null) {
+                    $imageNotes[] = $note;
+                }
+            } catch (RuntimeException $e) {
+                $this->flash('error', $label . '上傳失敗',
+                    $e->getMessage() . '　（其他設定已儲存。）');
+                $this->redirect('/system');
+            }
+        }
+
+        $this->flash(
+            'success',
+            '已儲存',
+            '網站設定已更新。' . ($imageNotes ? '　' . implode('　', $imageNotes) : '')
+        );
         $this->redirect('/system');
+    }
+
+    /**
+     * Replace or remove one branding image.
+     *
+     * Returns a short note for the confirmation message, or null when
+     * the field was left untouched — the common case, and the one that
+     * must not wipe the stored image.
+     */
+    private function storeBrandingImage(
+        Setting $setting,
+        string $inputName,
+        string $settingKey,
+        string $subdir,
+        int $maxWidth,
+        string $label
+    ): ?string {
+        $uploader = new ImageUploader($subdir);
+        $current  = $setting->get($settingKey);
+        $file     = $_FILES[$inputName] ?? null;
+        $remove   = !empty($_POST['remove_' . $inputName]);
+
+        if (!ImageUploader::wasProvided($file)) {
+            if (!$remove) {
+                return null;                      // untouched — keep it
+            }
+            $setting->set($settingKey, null);
+            $this->deleteUnreferenced($uploader, $current);
+            return $label . '已移除。';
+        }
+
+        // The new file is written first. Only once it is safely on disk
+        // is the old one removed, so a failure mid-way can never leave
+        // the site with neither image.
+        $newPath = $uploader->store($file, $maxWidth);
+        $setting->set($settingKey, $newPath);
+
+        if ($current && $current !== $newPath) {
+            $this->deleteUnreferenced($uploader, $current);
+        }
+
+        return $label . '已更新。';
+    }
+
+    /**
+     * Delete an old branding file, but only if nothing else still points
+     * at it. Migration 006 copied these paths out of the events table,
+     * so the very same file may still be an old event's stored banner.
+     */
+    private function deleteUnreferenced(ImageUploader $uploader, ?string $path): void
+    {
+        if (empty($path)) {
+            return;
+        }
+        if ((new Event())->countOtherEventsUsingImage($path, 0) > 0) {
+            return;
+        }
+        $uploader->delete($path);
     }
 
     // ------------------------------------------------------------------
@@ -134,6 +239,23 @@ class SystemController extends Controller
             $this->redirect('/system');
         }
 
+        // And never leave it without an ADMINISTRATOR either. Since the
+        // two roles were separated, a system admin cannot open the event
+        // pages — so promoting the last admin would mean nobody could
+        // take a registration or check anyone in. That is the kind of
+        // thing discovered at 8am on the day of the event.
+        if ($user['role'] === AdminUser::ROLE_ADMIN
+            && $role !== AdminUser::ROLE_ADMIN
+            && $users->countAdmins() <= 1) {
+            $this->flash(
+                'error',
+                '無法變更',
+                '這是最後一位管理員。若升為系統管理員，將沒有人能處理報名、現場登記與報到。'
+                . '請先建立另一個管理員帳號。'
+            );
+            $this->redirect('/system');
+        }
+
         $users->updateRole($id, $role);
 
         // Changing your OWN role has to take effect immediately, or the
@@ -203,6 +325,17 @@ class SystemController extends Controller
             $this->redirect('/system');
         }
 
+        // Same reasoning as the role change above: no admins left means
+        // nobody can run the event.
+        if ($user['role'] === AdminUser::ROLE_ADMIN && $users->countAdmins() <= 1) {
+            $this->flash(
+                'error',
+                '無法刪除',
+                '這是最後一位管理員，無法刪除。請先建立另一個管理員帳號。'
+            );
+            $this->redirect('/system');
+        }
+
         $users->delete($id);
 
         $this->flash('success', '帳號已刪除', "{$user['username']} 已移除。");
@@ -215,17 +348,20 @@ class SystemController extends Controller
     // password; that is how passwords end up shared over WhatsApp.
     // ------------------------------------------------------------------
 
-    /** GET /admin/password */
+    /** GET /account/password — both roles */
     public function passwordForm(): void
     {
-        $this->requireAdmin();
-        $this->view('system/password', ['flash' => $this->takeFlash()]);
+        $this->requireLogin();
+        $this->view('system/password', [
+            'flash'    => $this->takeFlash(),
+            'homePath' => $this->homePath(),
+        ]);
     }
 
-    /** POST /admin/password */
+    /** POST /account/password — both roles */
     public function changeOwnPassword(): void
     {
-        $this->requireAdmin();
+        $this->requireLogin();
         $this->requireCsrf();
 
         $users   = new AdminUser();
@@ -239,20 +375,20 @@ class SystemController extends Controller
         // enough to lock the real owner out.
         if ($users->verify((string) ($_SESSION['admin_username'] ?? ''), $current) === null) {
             $this->flash('error', '密碼錯誤', '目前的密碼不正確。');
-            $this->redirect('/admin/password');
+            $this->redirect('/account/password');
         }
 
         $errors = AdminUser::validatePassword($new, $confirm);
         if ($errors) {
             $this->flash('error', '無法變更密碼', implode(' ', $errors));
-            $this->redirect('/admin/password');
+            $this->redirect('/account/password');
         }
 
         $users->updatePassword($id, $new);
         session_regenerate_id(true);
 
         $this->flash('success', '密碼已變更', '您的密碼已更新。');
-        $this->redirect('/admin/dashboard');
+        $this->redirect($this->homePath());
     }
 
     // ------------------------------------------------------------------

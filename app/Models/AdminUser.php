@@ -129,6 +129,20 @@ class AdminUser extends Model
         );
     }
 
+    /**
+     * How many plain admin accounts exist.
+     *
+     * Worth showing on the system page: with the two roles separated, a
+     * site with zero admins has nobody who can actually run the event,
+     * and a system admin cannot cover for them.
+     */
+    public function countAdmins(): int
+    {
+        return (int) $this->scalar(
+            "SELECT COUNT(*) FROM admin_users WHERE role = 'admin'"
+        );
+    }
+
     /** Password rules, kept here so create and change agree. */
     public static function validatePassword(string $password, string $confirm): array
     {

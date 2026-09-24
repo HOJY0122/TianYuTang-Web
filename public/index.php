@@ -61,6 +61,10 @@ $router->get('/admin/event/edit',   'AdminController@editEvent');
 $router->get('/admin/event/new',    'AdminController@newEvent');
 $router->post('/admin/event/save',  'AdminController@saveEvent');
 
+// Walk-in registration at the counter
+$router->get('/admin/walkin',       'WalkinController@index');
+$router->post('/admin/walkin/save', 'WalkinController@save');
+
 // System administration (system_admin only — enforced in the controller)
 $router->get('/system',                'SystemController@index');
 $router->post('/system/settings',      'SystemController@saveSettings');
@@ -70,9 +74,10 @@ $router->post('/system/users/password','SystemController@resetPassword');
 $router->post('/system/users/delete',  'SystemController@deleteUser');
 $router->get('/system/qr',             'SystemController@qrGenerator');
 
-// Own password — any signed-in user
-$router->get('/admin/password',        'SystemController@passwordForm');
-$router->post('/admin/password',       'SystemController@changeOwnPassword');
+// Own password — the one page BOTH roles share, so it sits under
+// neither area's prefix.
+$router->get('/account/password',      'SystemController@passwordForm');
+$router->post('/account/password',     'SystemController@changeOwnPassword');
 
 // Counter (cash) donations
 $router->get('/admin/counter',      'CounterController@index');

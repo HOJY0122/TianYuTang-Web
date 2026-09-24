@@ -118,46 +118,10 @@ $v = static fn(string $key, $fallback = '') => $old[$key] ?? ($event[$key] ?? $f
         </div>
       </div>
 
-      <?php if (!empty($isSystemAdmin)): ?>
-      <h3>圖片</h3>
-      <p class="help" style="margin-top:0">
-        支援 JPG、PNG、GIF、WebP，單檔 5MB 以內。上傳後系統會自動重新產生圖片並調整尺寸。
-      </p>
-
-      <label for="hero_banner">首頁橫幅｜Hero Banner</label>
-      <?php $currentBanner = $event['hero_banner_path'] ?? null; ?>
-      <?php if ($currentBanner): ?>
-        <div class="image-preview">
-          <img src="<?= h(BASE_URL . '/' . $currentBanner) ?>" alt="目前的橫幅">
-          <label class="remove-check">
-            <input type="checkbox" name="remove_hero_banner" value="1"> 移除這張橫幅
-          </label>
-        </div>
-      <?php endif; ?>
-      <input id="hero_banner" name="hero_banner" type="file" accept="image/jpeg,image/png,image/gif,image/webp">
-      <p class="help">建議寬度 1600–1920px。過寬的圖片會自動縮小到 1920px。<?= $currentBanner ? '選擇新檔案即可取代現有橫幅。' : '' ?></p>
-
-      <label for="favicon">網站小圖示｜Favicon</label>
-      <?php $currentFavicon = $event['favicon_path'] ?? null; ?>
-      <?php if ($currentFavicon): ?>
-        <div class="image-preview favicon">
-          <img src="<?= h(BASE_URL . '/' . $currentFavicon) ?>" alt="目前的圖示">
-          <label class="remove-check">
-            <input type="checkbox" name="remove_favicon" value="1"> 移除這個圖示
-          </label>
-        </div>
-      <?php endif; ?>
-      <input id="favicon" name="favicon" type="file" accept="image/jpeg,image/png,image/gif,image/webp">
-      <p class="help">
-        建議正方形，180×180px 以上。
-        <strong>注意：</strong>瀏覽器會長時間快取小圖示，更換後可能需要強制重新整理（Ctrl+F5）才看得到新的。
-      </p>
-
-      <?php else: ?>
       <div class="note-box">
-        🔒 橫幅與網站小圖示由<strong>系統管理員</strong>設定。如需更換，請聯絡系統管理員。
+        🔒 <strong>首頁橫幅</strong>與<strong>網站小圖示</strong>屬於網站設定，
+        由系統管理員在系統管理頁面更換，不隨活動年度改變。如需更換，請聯絡系統管理員。
       </div>
-      <?php endif; ?>
 
       <h3>線上開放時間</h3>
       <p class="help" style="margin-top:0">

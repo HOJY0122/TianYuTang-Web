@@ -9,17 +9,20 @@ use App\Core\Model;
  * The header name is the clear case: the temple's name does not change
  * from year to year, so putting it on an event row would mean retyping
  * it every time a new event is created, with the chance of a typo each
- * time. Per-year branding (banner, favicon) stays on the event; things
- * true of the site itself live here.
+ * time. Branding lives here too — the banner and the favicon belong to
+ * the site, and are the system administrator's to change, not something
+ * re-uploaded on every new event.
  */
 class Setting extends Model
 {
+    /** Shared per-request cache, cleared whenever a value is written. */
+    private static ?array $cache = null;
+
     /** Everything, as key => value. Cached per request. */
     public function all(): array
     {
-        static $cache = null;
-        if ($cache !== null) {
-            return $cache;
+        if (self::$cache !== null) {
+            return self::$cache;
         }
 
         $rows = $this->fetchAll('SELECT setting_key, setting_value FROM settings');
@@ -27,7 +30,7 @@ class Setting extends Model
         foreach ($rows as $r) {
             $out[$r['setting_key']] = $r['setting_value'];
         }
-        return $cache = $out;
+        return self::$cache = $out;
     }
 
     public function get(string $key, ?string $default = null): ?string
@@ -45,5 +48,10 @@ class Setting extends Model
              ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)',
             [$key, $value]
         );
+
+        // Drop the cache, or anything reading a setting later in this
+        // same request would still see the old value — which is exactly
+        // what happens when two settings are saved by one form.
+        self::$cache = null;
     }
 }

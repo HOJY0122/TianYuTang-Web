@@ -9,8 +9,8 @@
   --red:#9f211b; --deep-red:#711711; --gold:#b58a35; --dark:#241b16;
   --muted:#6b5c50; --line:#e4c979; --green:#2f6b3a; --paper:#fffaf0; --card:#fffdf7;
   --side:#2b1e18; --side-2:#3b2a21;
-  --kai:"LXGW WenKai TC","BiauKai","DFKai-SB","標楷體",serif;
-  --sans:"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif;
+  --kai:"LXGW WenKai TC","BiauKai","DFKai-SB","標楷體","KaiTi","STKaiti",serif;
+  --sans:"Noto Sans TC","Noto Sans SC","Microsoft JhengHei","PingFang TC",sans-serif;
 }
 html{font-size:16px;-webkit-text-size-adjust:100%}
 .hidden{display:none!important}

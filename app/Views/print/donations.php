@@ -8,7 +8,7 @@ $seatPrice = (float) $event['merit_table_price'];
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>布施名單｜<?= h($event['year']) ?> <?= h($event['name']) ?></title>
-<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@700&family=Noto+Sans+TC:wght@400;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@700&family=Noto+Sans+TC:wght@400;700;800&family=Noto+Sans+SC:wght@400;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= asset('css/print.css') ?>">
 <style>
 /* More columns than the check-in sheet: landscape keeps names on one line. */

@@ -2,7 +2,7 @@
 <p style="margin:0 0 12px"><a class="mini-btn ghost" href="<?= url('/admin/posts') ?>">← 返回 Back</a></p>
 <?php foreach ($errors as $e): ?><div class="flash error"><?= h($e) ?></div><?php endforeach; ?>
 
-<form method="POST" action="<?= url('/admin/posts/save') ?>" enctype="multipart/form-data" class="panel form-panel">
+<form method="POST" action="<?= url('/admin/posts/save') ?>" data-trad-check enctype="multipart/form-data" class="panel form-panel">
   <?= csrf_field() ?>
   <input type="hidden" name="id" value="<?= (int) $post['id'] ?>">
 

@@ -32,7 +32,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   </form>
 <?php endif; ?>
 
-<form method="POST" action="<?= url('/admin/event/save') ?>" enctype="multipart/form-data" class="form-panel wide-form">
+<form method="POST" action="<?= url('/admin/event/save') ?>" data-trad-check enctype="multipart/form-data" class="form-panel wide-form">
   <?= csrf_field() ?>
   <input type="hidden" name="id" value="<?= $isNew ? 0 : (int) $event['id'] ?>">
   <p class="help" style="margin-top:0">這裡的內容會直接顯示在網站上。Everything here appears on the public website.

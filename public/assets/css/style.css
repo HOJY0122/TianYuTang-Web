@@ -11,8 +11,8 @@
   --dark:#241b16; --muted:#6b5c50; --line:#e4c979; --green:#2f6b3a;
   --shadow:0 10px 30px rgba(67,39,18,.12);
   --radius:18px;
-  --kai:"LXGW WenKai TC","BiauKai","DFKai-SB","標楷體","KaiTi",serif;
-  --sans:"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif;
+  --kai:"LXGW WenKai TC","BiauKai","DFKai-SB","標楷體","KaiTi","STKaiti",serif;
+  --sans:"Noto Sans TC","Noto Sans SC","Microsoft JhengHei","PingFang TC",sans-serif;
 }
 html{font-size:18px;scroll-behavior:smooth;-webkit-text-size-adjust:100%}
 html.text-lg{font-size:21px}

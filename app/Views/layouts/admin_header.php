@@ -53,7 +53,7 @@ if ($isSystem) {
 <title><?= h(($pageTitle ?? '管理 Admin') . '｜' . $site['site_name']) ?></title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;800<?= $nav === 'system' ? '&family=Yuji+Boku&family=Yuji+Syuku' : '' ?>&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;800&family=Noto+Sans+SC:wght@400;500;700;800<?= $nav === 'system' ? '&family=Yuji+Boku&family=Yuji+Syuku' : '' ?>&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= asset('css/admin.css') ?>">
 <?php if ($adminFavicon): ?>
 <link rel="icon" href="<?= h($versioned($adminFavicon)) ?>">

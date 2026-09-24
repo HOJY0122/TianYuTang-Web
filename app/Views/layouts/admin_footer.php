@@ -49,5 +49,6 @@ document.querySelectorAll('[data-toggle-password]').forEach(function (btn) {
   });
 });
 </script>
+<script src="<?= asset('js/image-editor.js') ?>"></script>
 </body>
 </html>

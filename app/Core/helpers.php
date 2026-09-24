@@ -80,3 +80,19 @@ function info_tip(string $zh, string $en): string
          . '<span aria-hidden="true">i</span><span class="sr-only">說明 More info</span></button>'
          . '<span class="info-pop" id="' . $id . '" role="note" hidden>' . h($zh) . '<span class="en">' . h($en) . '</span></span>';
 }
+
+/** Site wording (see App\Core\Text) — plain text, not yet escaped. */
+function t(string $key, string $lang = 'zh', array $vars = []): string
+{
+    return App\Core\Text::get($key, $lang, $vars);
+}
+
+/**
+ * Bilingual wording as HTML: the Chinese, then the English in a
+ * <span class="en"> (left out when the English has been cleared).
+ */
+function tb(string $key, array $vars = []): string
+{
+    $en = t($key, 'en', $vars);
+    return h(t($key, 'zh', $vars)) . ($en !== '' ? '<span class="en">' . h($en) . '</span>' : '');
+}

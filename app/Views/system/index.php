@@ -44,9 +44,14 @@ $img = static fn(?string $p): string => $p ? BASE_URL . '/' . $p : '';
   </div>
   <p class="help">用於網站名稱與各段標題，內文維持清晰的黑體。Used for the site name and headings; body text stays in a clear sans-serif.</p>
 
-  <label for="site_tagline">頂部標語 <span class="en">Top bar text</span></label>
+  <div class="label-row">
+    <label for="site_tagline">頂部標語 <span class="en">Top bar text</span></label>
+    <label class="switch"><input type="checkbox" name="site_tagline_on" value="1"<?= $settings['site_tagline_on'] === '1' ? ' checked' : '' ?>>
+      <span class="switch-ui" aria-hidden="true"></span> 顯示 <span class="en">Show</span></label>
+  </div>
   <input id="site_tagline" name="site_tagline" maxlength="255" value="<?= h($settings['site_tagline']) ?>">
-  <p class="help">網站最上方的深紅色橫條，留空即不顯示。The dark red strip at the very top. Leave empty to hide it.</p>
+  <p class="help">網站最上方的深紅色橫條。關閉開關即可隱藏，文字會保留，下次打開不必重打。
+    The dark red strip at the very top. Switch it off to hide it — the text is kept for next time.</p>
 
   <h3>② 圖片 <span class="en">Images</span></h3>
   <p class="help" style="margin-top:0">JPG、PNG、GIF、WebP，單檔 5MB 以內。上傳後系統會自動重新產生圖片。JPG / PNG / GIF / WebP up to 5 MB.</p>
@@ -63,12 +68,22 @@ $img = static fn(?string $p): string => $p ? BASE_URL . '/' . $p : '';
         <label class="remove-check"><input type="checkbox" name="remove_<?= $input ?>" value="1"> 移除 Remove</label>
       </div>
     <?php endif; ?>
-    <input id="<?= $input ?>" name="<?= $input ?>" type="file" accept="image/jpeg,image/png,image/gif,image/webp">
+    <input id="<?= $input ?>" name="<?= $input ?>" type="file" accept="image/jpeg,image/png,image/gif,image/webp"
+           data-aspects="<?= ['logo' => '1:1,original', 'hero_banner' => 'original,16:9,3:1', 'favicon' => '1:1'][$input] ?>"
+           data-max-width="<?= ['logo' => 600, 'hero_banner' => 1920, 'favicon' => 256][$input] ?>">
     <p class="help"><?= h($help) ?></p>
   <?php endforeach; ?>
 
   <h3>③ 頁尾 <span class="en">Footer</span></h3>
   <p class="help" style="margin-top:0">留空的項目不會顯示。Empty lines are not shown.</p>
+  <div class="form-grid">
+    <div><label for="footer_title">頁尾標題 <span class="en">Footer heading</span></label>
+      <input id="footer_title" name="footer_title" maxlength="120" value="<?= h($settings['footer_title']) ?>" placeholder="🙏 <?= h($settings['site_name']) ?>">
+      <p class="help">留空＝「🙏 網站名稱」。Blank = 🙏 + site name.</p></div>
+    <div><label for="footer_copyright">版權行 <span class="en">Copyright line</span></label>
+      <input id="footer_copyright" name="footer_copyright" maxlength="200" value="<?= h($settings['footer_copyright']) ?>" placeholder="© {year} <?= h($settings['footer_org'] ?: $settings['site_name']) ?>">
+      <p class="help">{year} 會換成活動年份。留空＝自動。{year} becomes the event year. Blank = automatic.</p></div>
+  </div>
   <label for="footer_org">機構名稱 <span class="en">Organisation name</span></label>
   <input id="footer_org" name="footer_org" maxlength="150" value="<?= h($settings['footer_org']) ?>">
   <div class="form-grid">
@@ -81,6 +96,25 @@ $img = static fn(?string $p): string => $p ? BASE_URL . '/' . $p : '';
   <textarea id="footer_note_zh" name="footer_note_zh" rows="2" maxlength="500"><?= h($settings['footer_note_zh']) ?></textarea>
   <label for="footer_note_en">頁尾說明（英文）<span class="en">Footer note (English)</span></label>
   <textarea id="footer_note_en" name="footer_note_en" rows="2" maxlength="500"><?= h($settings['footer_note_en']) ?></textarea>
+
+  <h3>④ 列印 / PDF 抬頭 <span class="en">Printout letterhead</span></h3>
+  <p class="help" style="margin-top:0">報到名單、布施清單等列印文件頂部的抬頭。留空的行會沿用上面的網站名稱與頁尾資料。
+    <span class="en">The heading on printed lists and PDFs. Blank lines reuse the site name and footer details above.
+    Document titles are in 網站文字 Wording.</span></p>
+  <label class="switch" style="margin:.6rem 0"><input type="checkbox" name="pdf_show_logo" value="1"<?= $settings['pdf_show_logo'] === '1' ? ' checked' : '' ?>>
+    <span class="switch-ui" aria-hidden="true"></span> 顯示標誌 <span class="en">Show the logo</span></label>
+  <div class="form-grid">
+    <div><label for="pdf_name">抬頭名稱 <span class="en">Heading name</span></label>
+      <input id="pdf_name" name="pdf_name" maxlength="80" value="<?= h($settings['pdf_name']) ?>" placeholder="<?= h($settings['site_name']) ?>"></div>
+    <div><label for="pdf_name_en">英文名稱 <span class="en">English name</span></label>
+      <input id="pdf_name_en" name="pdf_name_en" maxlength="120" value="<?= h($settings['pdf_name_en']) ?>" placeholder="<?= h($settings['site_name_en']) ?>"></div>
+  </div>
+  <label for="pdf_line1">第一行 <span class="en">Line 1</span></label>
+  <input id="pdf_line1" name="pdf_line1" maxlength="255" value="<?= h($settings['pdf_line1']) ?>" placeholder="<?= h($settings['footer_org']) ?>">
+  <label for="pdf_line2">第二行 <span class="en">Line 2</span></label>
+  <input id="pdf_line2" name="pdf_line2" maxlength="255" value="<?= h($settings['pdf_line2']) ?>" placeholder="<?= h($settings['footer_address'] ?: '地址 Address') ?>">
+  <label for="pdf_line3">第三行 <span class="en">Line 3</span></label>
+  <input id="pdf_line3" name="pdf_line3" maxlength="255" value="<?= h($settings['pdf_line3']) ?>" placeholder="<?= h($settings['footer_contact'] ?: '電話 Phone · 電郵 Email') ?>">
 
   <div class="form-actions">
     <button class="primary" type="submit">💾 儲存設定 Save settings</button>

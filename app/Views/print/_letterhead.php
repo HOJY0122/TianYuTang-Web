@@ -7,7 +7,13 @@
  * (system admin), so a new logo appears on paper with no code change.
  */
 $lh      = (new App\Models\Setting())->site();
-$lhLogo  = $lh['site_logo_path'] ?: $lh['site_favicon_path'];
+$lhLogo  = $lh['pdf_show_logo'] === '1' ? ($lh['site_logo_path'] ?: $lh['site_favicon_path']) : null;
+// Each letterhead line can be set on its own (Site settings → Printouts);
+// a blank one falls back to the matching site / footer value.
+$lhOr    = static fn(string $own, string $fallback): string => $lh[$own] !== '' ? $lh[$own] : $lh[$fallback];
+$lhName  = $lhOr('pdf_name', 'site_name');
+$lhNameEn= $lhOr('pdf_name_en', 'site_name_en');
+$lhLines = array_filter([$lhOr('pdf_line1', 'footer_org'), $lhOr('pdf_line2', 'footer_address'), $lhOr('pdf_line3', 'footer_contact')]);
 $lhDates = App\Models\Event::formatDateLines($event);
 $lhBy    = $_SESSION['admin_display'] ?? ($_SESSION['admin_username'] ?? '');
 ?>
@@ -15,12 +21,9 @@ $lhBy    = $_SESSION['admin_display'] ?? ($_SESSION['admin_username'] ?? '');
   <div class="lh-org">
     <?php if ($lhLogo): ?><img src="<?= h(BASE_URL . '/' . $lhLogo) ?>" alt=""><?php endif; ?>
     <div>
-      <div class="lh-name"><?= h($lh['site_name']) ?></div>
-      <?php if ($lh['site_name_en'] !== ''): ?><div class="lh-en"><?= h($lh['site_name_en']) ?></div><?php endif; ?>
-      <?php if ($lh['footer_org'] !== ''): ?><div class="lh-line"><?= h($lh['footer_org']) ?></div><?php endif; ?>
-      <?php if ($lh['footer_address'] !== '' || $lh['footer_contact'] !== ''): ?>
-        <div class="lh-line"><?= h(implode('　·　', array_filter([$lh['footer_address'], $lh['footer_contact']]))) ?></div>
-      <?php endif; ?>
+      <div class="lh-name"><?= h($lhName) ?></div>
+      <?php if ($lhNameEn !== ''): ?><div class="lh-en"><?= h($lhNameEn) ?></div><?php endif; ?>
+      <?php foreach ($lhLines as $lhLine): ?><div class="lh-line"><?= h($lhLine) ?></div><?php endforeach; ?>
     </div>
   </div>
   <div class="lh-doc">
@@ -35,7 +38,7 @@ $lhBy    = $_SESSION['admin_display'] ?? ($_SESSION['admin_username'] ?? '');
 </header>
 <?php
 // Running footer text for the @page margin boxes (see print.css).
-$lhFooter = $lh['site_name'] . ' · ' . $docTitleZh . ' ' . $docTitleEn;
+$lhFooter = $lhName . ' · ' . $docTitleZh . ' ' . $docTitleEn;
 ?>
 <style>
 @page { @bottom-left { content: <?= json_encode($lhFooter, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>; } }

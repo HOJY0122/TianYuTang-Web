@@ -7,7 +7,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
 
 
   <?php if ($event['is_test']): ?>
-    <div class="flash test">🧪 測試活動 — 此處的報到紀錄不列入正式統計。</div>
+    <div class="flash test">🧪 測試活動 — 此處的報到紀錄不列入正式統計。Test event — check-ins here are not counted.</div>
   <?php endif; ?>
 
   <!-- ---------- Running count ---------- -->
@@ -20,24 +20,26 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
 
   <!-- ---------- Lookup ---------- -->
   <div class="panel">
+    <h2 style="margin-top:0">🔎 查詢報名 <span class="en">Find a registration</span></h2>
     <form method="GET" action="<?= url('/admin/checkin') ?>" class="lookup-form">
       <input type="hidden" name="event" value="<?= (int) $event['id'] ?>">
-      <input type="text" name="ref" value="<?= h($ref) ?>" autofocus
+      <input type="text" name="ref" value="<?= h($ref) ?>" autofocus aria-label="報名編號 Reference"
              autocomplete="off" autocapitalize="characters" spellcheck="false"
-             placeholder="輸入報名編號，例如 RSVP-0007">
-      <button class="mini-btn" type="submit">查詢</button>
-      <button class="mini-btn ghost" type="button" id="scanBtn">📷 掃描 QR</button>
+             placeholder="報名編號 Reference，例 e.g. RSVP-0007">
+      <button class="mini-btn btn-lg" type="submit">查詢 Find</button>
+      <button class="mini-btn ghost btn-lg" type="button" data-scan>📷 掃描 Scan QR</button>
     </form>
+    <p class="help" style="margin-bottom:0">掃到布施 QR 會自動轉到「現場布施」。A donation QR opens the counter page automatically.</p>
 
     <!-- Camera panel. Hidden until asked for: it needs HTTPS, a
          permission grant and decent light, none of which are certain
          in a temple hall — so it never blocks the manual path. -->
-    <div id="scanPanel" class="scan-panel hidden">
-      <video id="scanVideo" playsinline muted></video>
-      <canvas id="scanCanvas" class="hidden"></canvas>
+    <div id="scanPanel" class="scan-panel" hidden>
+      <video playsinline muted></video>
+      <canvas class="hidden"></canvas>
       <div class="scan-row">
-        <span id="scanStatus" class="help">正在啟動相機…</span>
-        <button class="mini-btn ghost" type="button" id="scanStop">停止</button>
+        <span data-scan-status class="help"></span>
+        <button class="mini-btn ghost" type="button" data-scan-stop>停止 Stop</button>
       </div>
     </div>
   </div>
@@ -45,10 +47,10 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   <!-- ---------- Result ---------- -->
   <?php if ($notFound): ?>
     <div class="panel result-miss">
-      <h2>查無此編號</h2>
+      <h2>查無此編號 <span class="en">Not found</span></h2>
       <p class="help">
-        找不到 <strong><?= h($ref) ?></strong>。請確認編號是否正確，
-        或該報名是否屬於其他年度的活動。
+        找不到 <strong><?= h($ref) ?></strong>。請確認編號是否正確，或該報名是否屬於其他年度的活動。<br>
+        No registration <strong><?= h($ref) ?></strong> in this event. Check the number, or whether it belongs to another year.
       </p>
     </div>
 
@@ -63,9 +65,9 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
         <div>
           <h2><?= h($group['ref_code']) ?></h2>
           <div class="help">
-            <?= (int) $group['attendee_count'] ?> 位 ·
-            <?= $group['status'] === 'confirmed' ? '已確認' : ($group['status'] === 'cancelled' ? '已取消' : '待確認') ?>
-            · 已報到 <?= $arrived ?>/<?= count($people) ?>
+            <?= (int) $group['attendee_count'] ?> 位 people ·
+            <?= $group['status'] === 'confirmed' ? '已確認 Confirmed' : ($group['status'] === 'cancelled' ? '已取消 Cancelled' : '待確認 Pending') ?>
+            · 已報到 Arrived <?= $arrived ?>/<?= count($people) ?>
           </div>
         </div>
         <?php if (!$allIn): ?>
@@ -74,10 +76,10 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
             <input type="hidden" name="group_id" value="<?= (int) $group['id'] ?>">
             <input type="hidden" name="event_id" value="<?= (int) $event['id'] ?>">
             <input type="hidden" name="ref" value="<?= h($ref) ?>">
-            <button class="big-btn" type="submit">✅ 全部報到</button>
+            <button class="big-btn" type="submit">✅ 全部報到 Check in all</button>
           </form>
         <?php else: ?>
-          <span class="badge">全部已報到</span>
+          <span class="badge">全部已報到 All arrived</span>
         <?php endif; ?>
       </div>
 
@@ -90,7 +92,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
               <span class="help"><?= h($p['ic_no']) ?> · <?= h($p['contact_no']) ?></span>
               <?php if ($in): ?>
                 <span class="help arrived-at">
-                  已報到 <?= h(date('H:i', strtotime($p['checked_in_at']))) ?>
+                  ✓ 已報到 Arrived <?= h(date('H:i', strtotime($p['checked_in_at']))) ?>
                 </span>
               <?php endif; ?>
             </div>
@@ -101,9 +103,9 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
               <input type="hidden" name="ref" value="<?= h($ref) ?>">
               <?php if ($in): ?>
                 <input type="hidden" name="undo" value="1">
-                <button class="mini-btn ghost" type="submit">取消報到</button>
+                <button class="mini-btn ghost" type="submit">取消報到 Undo</button>
               <?php else: ?>
-                <button class="big-btn" type="submit">報到</button>
+                <button class="big-btn" type="submit">報到 Check in</button>
               <?php endif; ?>
             </form>
           </div>
@@ -115,7 +117,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   <!-- ---------- Recent arrivals ---------- -->
   <?php if ($recent): ?>
     <div class="panel">
-      <h2>最近報到</h2>
+      <h2>最近報到 <span class="en">Recent arrivals</span></h2>
       <div class="recent-list">
         <?php foreach ($recent as $r): ?>
           <div class="recent-item">
@@ -130,82 +132,11 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
 </div>
 
 <script src="<?= asset('js/jsqr.min.js') ?>"></script>
+<script src="<?= asset('js/scanner.js') ?>"></script>
 <script>
-(function () {
-  const btn    = document.getElementById('scanBtn');
-  const panel  = document.getElementById('scanPanel');
-  const video  = document.getElementById('scanVideo');
-  const canvas = document.getElementById('scanCanvas');
-  const status = document.getElementById('scanStatus');
-  const stopBtn= document.getElementById('scanStop');
-  const form   = document.querySelector('.lookup-form');
-  const input  = form.querySelector('input[name="ref"]');
-
-  let stream = null;
-  let raf    = null;
-
-  // Cameras need a secure context. Say so plainly rather than letting
-  // the volunteer tap a button that silently does nothing.
-  const secure = window.isSecureContext ||
-                 location.hostname === 'localhost' ||
-                 location.hostname === '127.0.0.1';
-
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !secure) {
-    btn.disabled = true;
-    btn.title = secure ? '此裝置不支援相機' : '相機需要 HTTPS 才能使用，請改用手動輸入編號';
-  }
-
-  btn.addEventListener('click', start);
-  stopBtn.addEventListener('click', stop);
-
-  async function start() {
-    panel.classList.remove('hidden');
-    status.textContent = '正在啟動相機…';
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' }   // rear camera on a phone
-      });
-      video.srcObject = stream;
-      await video.play();
-      status.textContent = '請將 QR Code 對準畫面';
-      tick();
-    } catch (e) {
-      status.textContent = '無法使用相機（' + (e.name || 'error') + '）。請改用手動輸入編號。';
-    }
-  }
-
-  function stop() {
-    if (raf) cancelAnimationFrame(raf);
-    raf = null;
-    if (stream) stream.getTracks().forEach(t => t.stop());
-    stream = null;
-    panel.classList.add('hidden');
-  }
-
-  function tick() {
-    if (!stream) return;
-    if (video.readyState === video.HAVE_ENOUGH_DATA) {
-      canvas.width  = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d', { willReadFrequently: true });
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const hit = window.TYTScanQR(img.data, img.width, img.height);
-
-      if (hit && hit.data) {
-        // The QR carries just the reference code, so this is a direct
-        // lookup — no parsing, nothing to trust from the scanned value
-        // beyond putting it in a field the server validates anyway.
-        input.value = hit.data.trim();
-        status.textContent = '已讀取：' + hit.data;
-        stop();
-        form.submit();
-        return;
-      }
-    }
-    raf = requestAnimationFrame(tick);
-  }
-})();
+TYTScanner({
+  form: document.querySelector('.lookup-form'), here: 'rsvp', eventId: <?= (int) $event['id'] ?>,
+  urls: { rsvp: <?= json_encode(url('/admin/checkin')) ?>, don: <?= json_encode(url('/admin/counter')) ?> }
+});
 </script>
 <?php require BASE_PATH . '/app/Views/layouts/admin_footer.php'; ?>

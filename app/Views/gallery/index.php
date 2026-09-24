@@ -10,15 +10,15 @@ require BASE_PATH . '/app/Views/layouts/header.php';
 <main id="main">
 <section class="section">
   <div class="section-title">
-    <h2>相簿回顧<span class="en">Photo Albums</span></h2>
-    <p>歷年活動留影，左右滑動看更多，點一下放大。<span class="en">Photos from every year. Swipe for more, tap to enlarge.</span></p>
+    <h2><?= tb('gallery.title') ?></h2>
+    <p><?= tb('gallery.hint') ?></p>
   </div>
 
   <?php if (!$albums): ?>
     <div class="card closed-card">
       <div class="closed-icon">📷</div>
-      <h3>相簿準備中<span class="en">Photos coming soon</span></h3>
-      <p>活動後將上傳精彩留影，敬請期待。Photos will be added after the event.</p>
+      <h3><?= tb('gallery.empty_title') ?></h3>
+      <p><?= h(t('gallery.empty_text') . ' ' . t('gallery.empty_text', 'en')) ?></p>
     </div>
   <?php else: ?>
     <?php if (count($albums) > 1): ?>

@@ -182,7 +182,7 @@ class AdminController extends Controller
         $donationId = (int) ($_POST['donation_id'] ?? 0);
         $donation = new Donation();
         $eventId = $donation->eventIdOf($donationId);
-        $donation->markPaid($donationId);
+        $donation->markPaid($donationId, $_SESSION['admin_username'] ?? null);
         $this->backToEventDashboard($eventId);
     }
 
@@ -507,6 +507,8 @@ class AdminController extends Controller
             'location'          => trim((string) ($_POST['location'] ?? '')),
             'start_date'        => (string) ($_POST['start_date'] ?? ''),
             'end_date'          => (string) ($_POST['end_date'] ?? ''),
+            'date_text_zh'      => mb_substr(trim((string) ($_POST['date_text_zh'] ?? '')), 0, 255) ?: null,
+            'date_text_en'      => mb_substr(trim((string) ($_POST['date_text_en'] ?? '')), 0, 255) ?: null,
             'counter_note'      => trim((string) ($_POST['counter_note'] ?? '')) ?: null,
             'merit_table_price' => (float) ($_POST['merit_table_price'] ?? 0),
             'max_attendees'     => (int) ($_POST['max_attendees'] ?? 0),

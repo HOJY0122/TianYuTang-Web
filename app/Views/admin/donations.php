@@ -38,7 +38,7 @@ $here       = $pagerBase . '?' . http_build_query($pagerQuery + ['page' => $page
       <a class="mini-btn ghost btn-lg" href="<?= url('/admin/donations') ?>?event=<?= $eid ?>">清除 Clear</a>
     <?php endif; ?>
     <span class="spacer"></span>
-    <a class="mini-btn ghost btn-lg" href="<?= url('/admin/export/donations.xlsx') ?>?event=<?= $eid ?>">📊 Excel</a>
+    <a class="mini-btn ghost btn-lg" href="<?= url('/admin/export/donations-excel') ?>?event=<?= $eid ?>">📊 Excel</a>
     <a class="mini-btn ghost btn-lg" href="<?= url('/admin/export/donations') ?>?event=<?= $eid ?>">⬇️ CSV</a>
     <a class="mini-btn ghost btn-lg" href="<?= url('/admin/counter') ?>?event=<?= $eid ?>">＋ 現場布施 Counter</a>
   </form>

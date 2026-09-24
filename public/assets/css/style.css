@@ -53,9 +53,14 @@ button,input,select,textarea{font:inherit;color:inherit}
 .site-nav a.active small{color:#ffe9b8}
 /* Accessibility button (universal access icon) and its panel */
 .a11y{position:relative;flex:none}
-.a11y-btn{display:grid;place-items:center;width:3.2rem;height:3.2rem;border-radius:50%;border:2px solid var(--line);
-  background:var(--card);color:var(--red);cursor:pointer}
-.a11y-btn:hover,.a11y-btn[aria-expanded="true"]{background:var(--red);color:#fff8df;border-color:var(--red)}
+/* Looks like one more menu item at the end of the nav — no ring, same size. */
+.a11y-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.05rem;min-width:4.2rem;min-height:3.2rem;
+  padding:.25rem .6rem;border:0;border-radius:14px;background:transparent;color:var(--red);cursor:pointer;font:inherit}
+.a11y-btn small{font-size:.66rem;font-weight:700;color:var(--muted);line-height:1.1}
+.a11y-btn:hover,.a11y-btn[aria-expanded="true"]{background:var(--gold-soft)}
+.a11y-btn[aria-expanded="true"]{background:var(--red);color:#fff8df}
+.a11y-btn[aria-expanded="true"] small{color:#ffe9b8}
+.site-header .a11y{border-left:1px solid var(--line);padding-left:.35rem;margin-left:-.3rem}
 .a11y-panel{position:absolute;right:0;top:calc(100% + .5rem);z-index:50;width:17.5rem;background:#fffdf7;border:2px solid var(--line);
   border-radius:16px;padding:1rem;box-shadow:0 14px 40px rgba(40,20,10,.25)}
 .a11y-title{font-weight:800;font-size:1.05rem;margin-bottom:.6rem}
@@ -103,7 +108,8 @@ main{display:block}
 .section.narrow{max-width:860px}
 .section-title{text-align:center;margin-bottom:1.6rem}
 .section-title h2{font-size:clamp(1.7rem,4.2vw,2.3rem);margin:0;color:var(--red);letter-spacing:.08em}
-.section-title h2 .en{font-size:.5em;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-top:.2rem}
+.section-title h2 .en{display:inline-block;font-size:.5em;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);
+  margin-left:.6rem;vertical-align:.2em}
 .section-title p{color:var(--muted);margin:.5rem auto 0;max-width:40rem}
 
 /* ---------- Welcome ---------- */
@@ -156,21 +162,28 @@ main{display:block}
 .btn small{font-weight:500;opacity:.85}
 
 /* ---------- News feed (social-media style) ---------- */
-.feed{display:grid;gap:1.1rem;max-width:760px;margin:auto}
-.post{padding:0;overflow:hidden}
+.feed{display:grid;gap:1.1rem;max-width:680px;margin:auto}
+.card.post{padding:0;overflow:hidden}
 .post-head{display:flex;align-items:center;gap:.75rem;padding:1rem 1.2rem .4rem}
 .post-avatar{width:2.8rem;height:2.8rem;border-radius:50%;background:var(--gold-soft);display:grid;place-items:center;
   overflow:hidden;flex:none;font-family:var(--kai);color:var(--red);font-weight:700}
 .post-avatar img{width:100%;height:100%;object-fit:cover}
 .post-meta strong{display:block;line-height:1.2}
 .post-meta span{font-size:.8rem;color:var(--muted)}
-.pin{margin-left:auto;font-size:.75rem;background:var(--gold-soft);color:var(--deep-red);border-radius:999px;padding:.15rem .6rem;font-weight:700}
+.pin{margin-left:auto;white-space:nowrap;flex:none;font-size:.75rem;background:var(--gold-soft);color:var(--deep-red);border-radius:999px;padding:.15rem .6rem;font-weight:700}
 .post-body{padding:.2rem 1.2rem 1.1rem}
-.post-body h3{margin:.2rem 0 .4rem;font-size:1.35rem;color:var(--dark)}
-.post-body h3 .en{font-size:.68em;margin-top:.1rem}
+/* Post titles are typed by the committee — sometimes in Simplified
+   characters the brush font lacks — so they use the clear body font. */
+.post-body h3{margin:.2rem 0 .4rem;font-family:var(--sans);font-weight:800;font-size:1.2rem;color:var(--dark);letter-spacing:.02em}
+.post-body h3 .en{display:inline;font-size:.8em;margin-left:.4rem}
 .post-body p{margin:0;white-space:pre-line}
 .post-body p.en{margin-top:.6rem;font-size:.9em}
-.post-image{display:block;width:100%;max-height:34rem;object-fit:cover;background:#f3e7c4;cursor:zoom-in}
+/* Like a social-media post: the photo fills the card edge to edge, at a
+   comfortable height; tap for the whole picture in the lightbox. */
+.post-media{position:relative;display:block;width:100%;padding:0;border:0;border-top:1px solid var(--line);background:#f3e7c4;cursor:zoom-in}
+.post-image{display:block;width:100%;aspect-ratio:4/3;max-height:22rem;object-fit:cover;object-position:top center}
+.post-media .zoom-hint{position:absolute;right:.6rem;bottom:.6rem;padding:.25rem .6rem;border-radius:999px;background:rgba(36,27,22,.72);
+  color:#fff;font-size:.78rem;font-weight:700;pointer-events:none}
 
 /* ---------- Photo albums: one row per year, swipe for more ---------- */
 .album{margin-bottom:2rem}
@@ -350,8 +363,33 @@ input[aria-invalid="true"]{border-color:#c0392b;background:#fff6f5}
 .limit-note{margin-top:.6rem;padding:.7rem .9rem;border-radius:10px;background:#fff5d0;border-left:5px solid var(--gold);
   font-size:.9rem;white-space:pre-line}
 /* [hidden] must win over the display rules above (it otherwise loses to them). */
-.info-pop[hidden],.a11y-panel[hidden]{display:none!important}
+.info-pop[hidden],.a11y-panel[hidden],.help-panel[hidden]{display:none!important}
+
+/* ---------- ⓘ floating help, bottom-right on every page ---------- */
+.help-fab{position:fixed;right:1rem;bottom:1rem;z-index:60}
+.help-btn{display:grid;place-items:center;width:3.4rem;height:3.4rem;border:0;border-radius:50%;background:var(--red);color:#fff8df;
+  font:italic 800 1.6rem/1 Georgia,"Times New Roman",serif;cursor:pointer;box-shadow:0 6px 18px rgba(80,20,10,.35)}
+.help-btn:hover,.help-btn[aria-expanded="true"]{background:var(--deep-red)}
+.help-panel{position:absolute;right:0;bottom:calc(100% + .7rem);width:min(22rem,calc(100vw - 2rem));max-height:70vh;overflow:auto;
+  background:#fffdf7;border:2px solid var(--line);border-radius:16px;padding:1rem 1.1rem;box-shadow:0 14px 40px rgba(40,20,10,.28);
+  font-family:var(--sans)}
+.help-title{font-weight:800;font-size:1.05rem;color:var(--red);padding-right:2rem;margin-bottom:.5rem}
+.help-title .en{display:inline;margin-left:.4rem}
+.help-panel p{margin:.4rem 0;white-space:pre-line;line-height:1.6}
+.help-panel .help-en{color:var(--muted);font-size:.9em}
+.help-contact{font-weight:700}
+.help-close{position:absolute;top:.5rem;right:.5rem;width:2.2rem;height:2.2rem;border:0;border-radius:50%;background:var(--gold-soft);
+  font-size:1.3rem;line-height:1;cursor:pointer}
+.site-footer{padding-bottom:5rem}   /* room for the ⓘ button */
+.loc-title{margin:0;color:var(--red);font-size:1.4rem}
+.loc-title .en{display:inline;font-size:.6em;margin-left:.4rem}
 @media (max-width:760px){
   /* On a phone the panel spans the screen instead of hanging off one edge. */
   .a11y-panel{position:fixed;left:.75rem;right:.75rem;top:4.2rem;width:auto}
+  /* Phone: accessibility sits top-right beside the name; the menu wraps below. */
+  .site-header .a11y{order:2;border-left:0;padding-left:0;margin-left:0}
+  .a11y-btn{min-width:3.4rem;min-height:3rem;padding:.2rem .3rem}
+  .section-title h2 .en{display:block;margin:.25rem 0 0;vertical-align:0}
+  .help-fab{right:.75rem;bottom:.75rem}
+  .help-btn{width:3.1rem;height:3.1rem}
 }

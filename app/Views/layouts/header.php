@@ -22,11 +22,13 @@ $siteLogo       = $site['site_logo_path'];
 $uploadUrl = static fn(string $path): string => BASE_URL . '/' . $path . '?v=' . substr(md5($path), 0, 8);
 
 $navItems = [
-    'home'     => ['/',         '首頁', 'Home'],
-    'register' => ['/register', '報名', 'Register'],
-    'donate'   => ['/donate',   '布施', 'Donate'],
-    'gallery'  => ['/gallery',  '相簿', 'Gallery'],
+    'home'     => ['/',         t('nav.home'),     t('nav.home', 'en')],
+    'register' => ['/register', t('nav.register'), t('nav.register', 'en')],
+    'donate'   => ['/donate',   t('nav.donate'),   t('nav.donate', 'en')],
+    'gallery'  => ['/gallery',  t('nav.gallery'),  t('nav.gallery', 'en')],
 ];
+// Which ⓘ help text this page shows (see the floating button below).
+$helpKey = in_array($activeNav, ['home', 'register', 'donate', 'gallery'], true) ? 'help.' . $activeNav : 'help.other';
 ?>
 <!DOCTYPE html>
 <html lang="zh-Hant">
@@ -67,7 +69,7 @@ try {
     Submissions here are <strong>not</strong> real records.
   </div>
 <?php endif; ?>
-<?php if (($site['site_tagline'] ?? '') !== ''): ?>
+<?php if (($site['site_tagline'] ?? '') !== '' && ($site['site_tagline_on'] ?? '1') === '1'): ?>
   <div class="topbar"><?= h($site['site_tagline']) ?></div>
 <?php endif; ?>
 
@@ -85,15 +87,23 @@ try {
       </span>
     </a>
 
+    <nav class="site-nav" aria-label="主選單 Main menu">
+      <?php // Prefixed loop variables: this file shares scope with the page.
+      foreach ($navItems as $_nKey => [$_nHref, $_nZh, $_nEn]): ?>
+        <a href="<?= url($_nHref) ?>"<?= $activeNav === $_nKey ? ' class="active" aria-current="page"' : '' ?>>
+          <?= h($_nZh) ?><small><?= h($_nEn) ?></small>
+        </a>
+      <?php endforeach; unset($_nKey, $_nHref, $_nZh, $_nEn); ?>
+    </nav>
     <div class="a11y">
       <button type="button" class="a11y-btn" id="a11yBtn" aria-expanded="false" aria-controls="a11yPanel"
               title="無障礙設定 Accessibility">
-        <!-- Universal access symbol: a person with open arms, in a circle -->
-        <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true" focusable="false">
-          <circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" stroke-width="2"/>
-          <circle cx="12" cy="6.3" r="1.7" fill="currentColor"/>
-          <path d="M6.5 9.2l5.5 1.3 5.5-1.3M12 10.5v3.6M12 14.1l-2.6 4.6M12 14.1l2.6 4.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- Universal access symbol: a person with open arms -->
+        <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="3.6" r="2.3" fill="currentColor"/>
+          <path d="M3.5 7.6l8.5 1.8 8.5-1.8M12 9.4v5.2M12 14.6l-3.6 6.6M12 14.6l3.6 6.6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
+        <small aria-hidden="true">無障礙</small>
         <span class="sr-only">無障礙設定 Accessibility</span>
       </button>
       <div class="a11y-panel" id="a11yPanel" role="dialog" aria-label="無障礙設定 Accessibility" hidden>
@@ -109,16 +119,25 @@ try {
       </div>
     </div>
 
-    <nav class="site-nav" aria-label="主選單 Main menu">
-      <?php // Prefixed loop variables: this file shares scope with the page.
-      foreach ($navItems as $_nKey => [$_nHref, $_nZh, $_nEn]): ?>
-        <a href="<?= url($_nHref) ?>"<?= $activeNav === $_nKey ? ' class="active" aria-current="page"' : '' ?>>
-          <?= h($_nZh) ?><small><?= h($_nEn) ?></small>
-        </a>
-      <?php endforeach; unset($_nKey, $_nHref, $_nZh, $_nEn); ?>
-    </nav>
   </div>
 </header>
+
+<!-- ⓘ Floating help: always in the same corner, explains the page you are on.
+     The wording is the system admin's to change (網站文字 Wording). -->
+<div class="help-fab">
+  <div class="help-panel" id="helpPanel" role="dialog" aria-labelledby="helpTitle" hidden>
+    <button type="button" class="help-close" id="helpClose" aria-label="關閉 Close">×</button>
+    <div class="help-title" id="helpTitle"><?= tb('help.title') ?></div>
+    <p class="help-zh"><?= h(t($helpKey)) ?></p>
+    <?php if (t($helpKey, 'en') !== ''): ?><p class="help-en"><?= h(t($helpKey, 'en')) ?></p><?php endif; ?>
+    <?php if (!empty($event['contact_info'])): ?>
+      <p class="help-contact">📞 <?= h($event['contact_info']) ?></p>
+    <?php endif; ?>
+  </div>
+  <button type="button" class="help-btn" id="helpBtn" aria-expanded="false" aria-controls="helpPanel" title="說明 Help">
+    <span aria-hidden="true">i</span><span class="sr-only">說明 Help</span>
+  </button>
+</div>
 <script>
 (function () {
   var root = document.documentElement, btn = document.getElementById('a11yBtn'), panel = document.getElementById('a11yPanel');
@@ -137,14 +156,22 @@ try {
   function open(show) { panel.hidden = !show; btn.setAttribute('aria-expanded', show ? 'true' : 'false'); }
   var state = load();
   apply(state);
-  btn.addEventListener('click', function (e) { e.stopPropagation(); open(panel.hidden); });
+  btn.addEventListener('click', function (e) { e.stopPropagation(); help(false); open(panel.hidden); });
   panel.addEventListener('click', function (e) { e.stopPropagation(); });
   panel.querySelectorAll('[data-size]').forEach(function (b) {
     b.addEventListener('click', function () { state.size = b.dataset.size; apply(state); });
   });
   contrast.addEventListener('change', function () { state.hc = contrast.checked; apply(state); });
   document.getElementById('a11yReset').addEventListener('click', function () { state = {}; apply(state); });
-  document.addEventListener('click', function () { open(false); });
+  // ⓘ help panel — same open/close manners as the accessibility panel.
+  var hBtn = document.getElementById('helpBtn'), hPanel = document.getElementById('helpPanel');
+  function help(show) { hPanel.hidden = !show; hBtn.setAttribute('aria-expanded', show ? 'true' : 'false'); }
+  hBtn.addEventListener('click', function (e) { e.stopPropagation(); open(false); help(hPanel.hidden); });
+  hPanel.addEventListener('click', function (e) { e.stopPropagation(); });
+  document.getElementById('helpClose').addEventListener('click', function () { help(false); hBtn.focus(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !hPanel.hidden) { help(false); hBtn.focus(); } });
+
+  document.addEventListener('click', function () { open(false); help(false); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !panel.hidden) { open(false); btn.focus(); } });
 
   // ⓘ info buttons anywhere on the page: tap to show, tap again / elsewhere to hide.

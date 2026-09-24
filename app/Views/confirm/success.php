@@ -9,15 +9,9 @@ require BASE_PATH . '/app/Views/layouts/header.php';
 <section class="confirm-wrap">
   <div class="card confirm-card">
     <div class="confirm-icon"><?= $isRsvp ? '✅' : '🙏' ?></div>
-    <h1><?= $isRsvp ? '報名成功' : '感恩您的布施' ?><span class="en"><?= $isRsvp ? 'Registration complete' : 'Thank you for your donation' ?></span></h1>
+    <h1><?= tb($isRsvp ? 'success.rsvp_title' : 'success.don_title') ?></h1>
     <p class="confirm-sub">
-      <?php if ($isRsvp): ?>
-        請截圖或列印此頁，活動當日出示 QR Code 即可報到。
-        <span class="en">Please screenshot or print this page and show the QR code at the counter.</span>
-      <?php else: ?>
-        您的布施資料已收到，工作人員會盡快與您聯繫確認付款。
-        <span class="en">We have received your donation details. Our staff will contact you about payment.</span>
-      <?php endif; ?>
+      <?= tb($isRsvp ? 'success.rsvp_text' : 'success.don_text') ?>
     </p>
 
     <!-- The QR carries the reference code only — nothing personal. -->
@@ -67,8 +61,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     </div>
 
     <p class="confirm-note no-print">
-      離開後本頁面將無法再次開啟，請先截圖保存。
-      <span class="en">This page cannot be opened again once you leave — please save a screenshot.</span>
+      <?= tb('success.leave') ?>
     </p>
   </div>
 </section>

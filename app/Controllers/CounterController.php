@@ -38,7 +38,20 @@ class CounterController extends Controller
 
         $donation = new Donation();
 
+        // Looking up an online pledge by its donation QR / reference.
+        $ref   = strtoupper(trim((string) ($_GET['ref'] ?? '')));
+        $found = null;
+        if ($ref !== '') {
+            // A registration reference belongs to the check-in desk.
+            if (preg_match('/(^|-)RSVP-\d+$/', $ref)) {
+                $this->redirect('/admin/checkin?event=' . $eventId . '&ref=' . urlencode($ref));
+            }
+            $found = $donation->findByRef($ref, $eventId);
+        }
+
         $this->view('admin/counter', [
+            'ref'       => $ref,
+            'found'     => $found,
             'event'     => $event,
             'allEvents' => $eventModel->all(),
             'totals'    => $donation->totalsBySource($eventId),
@@ -135,6 +148,58 @@ class CounterController extends Controller
             . ($receiptPath ? '　（收據已附 receipt attached）' : '')
         );
         $this->redirect("/admin/counter?event={$eventId}");
+    }
+
+    /**
+     * POST /admin/counter/receive
+     *
+     * The donor pledged online, then shows their donation QR at the
+     * counter and pays. Staff confirm the amount, optionally photograph
+     * the paper receipt, and tick it paid — with their name and the time.
+     */
+    public function receive(): void
+    {
+        $this->requireAdmin();
+        if (empty($_POST) && empty($_FILES) && ($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
+            $this->flash('error', '相片太大 Photo too large',
+                '收據相片超過伺服器限制（' . ini_get('post_max_size') . '）。The receipt photo is over the server limit.');
+            $this->redirect('/admin/counter');
+        }
+        $this->requireCsrf();
+
+        $model    = new Donation();
+        $id       = (int) ($_POST['donation_id'] ?? 0);
+        $eventId  = (int) ($_POST['event_id'] ?? 0);
+        $donation = $model->find($id);
+        $back     = '/admin/counter?event=' . $eventId . '&ref=' . urlencode((string) ($donation['ref_code'] ?? ''));
+
+        // The donation must belong to the event on screen (a stale tab or
+        // crafted POST must not touch another year's records).
+        if ($donation === null || (int) $donation['event_id'] !== $eventId) {
+            $this->flash('error', '找不到資料 Not found', '找不到這筆布施。This donation could not be found.');
+            $this->redirect('/admin/counter?event=' . $eventId);
+        }
+        if ($donation['status'] === 'paid') {
+            $this->flash('info', '已付款 Already paid', "{$donation['ref_code']} 早前已標記為已付款。This donation was already marked paid.");
+            $this->redirect($back);
+        }
+
+        $receiptPath = null;
+        if (ImageUploader::wasProvided($_FILES['receipt'] ?? null)) {
+            try {
+                $receiptPath = (new ImageUploader('receipts', true))->store($_FILES['receipt'], 1600);
+            } catch (RuntimeException $e) {
+                $this->flash('error', '收據相片 Receipt photo', $e->getMessage());
+                $this->redirect($back);
+            }
+        }
+        $note = trim((string) ($_POST['notes'] ?? ''));
+        $by   = (string) ($_SESSION['admin_username'] ?? 'admin');
+        $model->receiveAtCounter($id, $by, $receiptPath, $note !== '' ? mb_substr('櫃台 ' . $note, 0, 120) : null);
+
+        $this->flash('success', '已收款 Payment received',
+            "{$donation['ref_code']}　{$donation['name']}　" . rm((float) $donation['amount']) . '　✓');
+        $this->redirect($back);
     }
 
     /**

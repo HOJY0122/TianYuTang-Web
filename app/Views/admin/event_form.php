@@ -57,6 +57,15 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     <div><label for="end_date">結束日期 <span class="en">End date *</span></label>
       <input id="end_date" name="end_date" type="date" required value="<?= h($v('end_date')) ?>"></div>
   </div>
+  <p class="help" style="margin:14px 0 0"><strong>首頁日期文字 Date line on the home page</strong> —
+    留空會自動顯示「2026年10月16日（星期五） 起 · 3 天」。想寫農曆或其他說法，可在這裡自訂。<br>
+    <span class="en">Blank shows the automatic line (e.g. "16, 17 &amp; 18 October 2026"). Fill in to use your own wording, such as the lunar date.</span></p>
+  <div class="form-grid">
+    <div><label for="date_text_zh">日期文字（中文）<span class="en">Date line (Chinese)</span></label>
+      <input id="date_text_zh" name="date_text_zh" maxlength="255" value="<?= h((string) $v('date_text_zh')) ?>" placeholder="例 e.g. 農曆九月初七至初九（10月16–18日）"></div>
+    <div><label for="date_text_en">日期文字（英文）<span class="en">Date line (English)</span></label>
+      <input id="date_text_en" name="date_text_en" maxlength="255" value="<?= h((string) $v('date_text_en')) ?>" placeholder="e.g. 16 – 18 October 2026 (Fri – Sun)"></div>
+  </div>
   <label for="location">地點 <span class="en">Venue *</span></label>
   <textarea id="location" name="location" rows="2" required maxlength="255"><?= h($v('location')) ?></textarea>
 
@@ -88,7 +97,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
       <label class="remove-check"><input type="checkbox" name="remove_waze_qr" value="1"> 移除 Remove</label>
     </div>
   <?php endif; ?>
-  <input id="waze_qr" name="waze_qr" type="file" accept="image/jpeg,image/png,image/gif,image/webp">
+  <input id="waze_qr" name="waze_qr" type="file" data-aspects="1:1,original" data-max-width="800" accept="image/jpeg,image/png,image/gif,image/webp">
   <p class="help">不上傳也可以：有 Waze 連結時，網站會自動產生 QR Code。Optional — without an image, a QR code is made from the Waze link automatically.</p>
 
   <h3>⑤ 報名與布施設定 <span class="en">Registration &amp; donation settings</span></h3>

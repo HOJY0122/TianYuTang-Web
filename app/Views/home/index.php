@@ -33,9 +33,21 @@ $showMap    = $hasQrImage || $wazeUrl !== '' || $mapsUrl !== '';
   <?php if (!empty($event['subtitle'])): ?>
     <p class="subtitle"><?= h($event['subtitle']) ?></p>
   <?php endif; ?>
-  <?php if ($dateLines): ?>
-    <div class="dates">📅 <?= h($dateLines[0]) ?><?= count($dateLines) > 1 ? ' <span class="nw">起 · ' . count($dateLines) . ' 天</span>' : '' ?>
-      <?php if ($dateRange): ?><span class="en"><?= h($dateRange . ' ' . $event['year']) ?></span><?php endif; ?></div>
+  <?php
+  // The date line is written for you from the event's dates; the admin
+  // can replace either language in Event details (e.g. "農曆九月初七至初九").
+  $dateZh = trim((string) ($event['date_text_zh'] ?? ''));
+  $dateEn = trim((string) ($event['date_text_en'] ?? ''));
+  if ($dateZh === '' && $dateLines) {
+      $dateZh = $dateLines[0] . (count($dateLines) > 1 ? ' ' . t('home.days', 'zh', ['n' => count($dateLines)]) : '');
+  }
+  if ($dateEn === '' && $dateRange) {
+      $dateEn = $dateRange . ' ' . $event['year'];
+  }
+  ?>
+  <?php if ($dateZh !== '' || $dateEn !== ''): ?>
+    <div class="dates">📅 <?= h($dateZh) ?>
+      <?php if ($dateEn !== ''): ?><span class="en"><?= h($dateEn) ?></span><?php endif; ?></div>
   <?php endif; ?>
 
   <?php if (!empty($event['welcome_zh']) || !empty($event['welcome_en'])): ?>
@@ -44,22 +56,19 @@ $showMap    = $hasQrImage || $wazeUrl !== '' || $mapsUrl !== '';
       <?php if (!empty($event['welcome_en'])): ?><span class="en"><?= h($event['welcome_en']) ?></span><?php endif; ?>
     </div>
   <?php else: ?>
-    <div class="welcome-text">
-      誠邀十方善信共襄盛舉，同結善緣，共種福田。
-      <span class="en">All are warmly welcome to join us in this celebration.</span>
-    </div>
+    <div class="welcome-text"><?= tb('home.welcome') ?></div>
   <?php endif; ?>
 
   <div class="cta-grid">
     <a class="cta" href="<?= url('/register') ?>">
       <span class="icon">📝</span>
-      <strong>報名參加</strong>
-      <span><?= $rsvpWindow['open'] ? 'Register to Attend' : ($rsvpWindow['reason'] === 'not_yet' ? '尚未開放 Opening soon' : '已截止 Closed') ?></span>
+      <strong><?= h(t('home.cta_register')) ?></strong>
+      <span><?= h($rsvpWindow['open'] ? t('home.cta_register', 'en') : ($rsvpWindow['reason'] === 'not_yet' ? t('home.opening_soon') . ' ' . t('home.opening_soon', 'en') : t('home.closed') . ' ' . t('home.closed', 'en'))) ?></span>
     </a>
     <a class="cta" href="<?= url('/donate') ?>">
       <span class="icon">🙏</span>
-      <strong>功德布施</strong>
-      <span><?= $donationWindow['open'] ? 'Make a Donation' : ($donationWindow['reason'] === 'not_yet' ? '尚未開放 Opening soon' : '已截止 Closed') ?></span>
+      <strong><?= h(t('home.cta_donate')) ?></strong>
+      <span><?= h($donationWindow['open'] ? t('home.cta_donate', 'en') : ($donationWindow['reason'] === 'not_yet' ? t('home.opening_soon') . ' ' . t('home.opening_soon', 'en') : t('home.closed') . ' ' . t('home.closed', 'en'))) ?></span>
     </a>
   </div>
 </section>
@@ -67,43 +76,44 @@ $showMap    = $hasQrImage || $wazeUrl !== '' || $mapsUrl !== '';
 <!-- ============ Event information ============ -->
 <section class="section" id="info">
   <div class="section-title">
-    <h2>活動資料<span class="en">Event Information</span></h2>
+    <h2><?= tb('home.info') ?></h2>
   </div>
 
   <div class="info-grid">
     <div class="card info-card">
-      <h3>📅 日期<span class="en">Date</span></h3>
-      <p><?php foreach ($dateLines as $i => $line): ?><?= $i ? "\n" : '' ?><?= h($line) ?><?php endforeach; ?></p>
-      <?php if ($dateRange): ?><p class="help"><?= h($dateRange) ?></p><?php endif; ?>
+      <h3><?= tb('home.date') ?></h3>
+      <?php if (trim((string) ($event['date_text_zh'] ?? '')) !== ''): ?>
+        <p><?= h($event['date_text_zh']) ?></p>
+      <?php else: ?>
+        <p><?php foreach ($dateLines as $i => $line): ?><?= $i ? "\n" : '' ?><?= h($line) ?><?php endforeach; ?></p>
+      <?php endif; ?>
+      <?php if ($dateEn !== ''): ?><p class="help"><?= h($dateEn) ?></p><?php endif; ?>
     </div>
     <div class="card info-card">
-      <h3>📍 地點<span class="en">Venue</span></h3>
+      <h3><?= tb('home.venue') ?></h3>
       <p><?= h($event['location']) ?></p>
     </div>
     <div class="card info-card">
-      <h3>🙏 現場詢問<span class="en">Enquiries</span></h3>
-      <p><?= !empty($event['counter_note']) ? h($event['counter_note']) : '歡迎於活動當日親臨櫃台詢問。' ?></p>
+      <h3><?= tb('home.enquiry') ?></h3>
+      <p><?= h(!empty($event['counter_note']) ? $event['counter_note'] : t('home.enquiry_text')) ?></p>
       <?php if (!empty($event['contact_info'])): ?>
         <p class="help">📞 <?= h($event['contact_info']) ?></p>
       <?php endif; ?>
-      <p class="help">Walk-in registration is available at the counter on the day.</p>
+      <?php if (t('home.enquiry_text', 'en') !== ''): ?><p class="help"><?= h(t('home.enquiry_text', 'en')) ?></p><?php endif; ?>
     </div>
   </div>
 
   <?php if ($showMap): ?>
     <div class="card location-card">
       <div>
-        <h3 class="kai" style="margin:0;color:var(--red);font-size:1.4rem">🚗 如何前往<?= info_tip('用手機相機對準 QR Code，點出現的連結，就會打開 Waze 導航到會場。', 'Point your phone camera at the QR code and tap the link that appears — Waze will open with directions to the venue.') ?><span class="en">Getting there</span></h3>
-        <p style="margin:.5rem 0 0">
-          用手機掃描右邊的 QR Code，或按下面的按鈕開啟導航。
-          <span class="en">Scan the QR code with your phone, or tap a button below to open navigation.</span>
-        </p>
+        <h3 class="loc-title"><?= tb('home.directions') ?></h3>
+        <p style="margin:.5rem 0 0"><?= tb('home.directions_text') ?></p>
         <div class="map-buttons">
           <?php if ($wazeUrl !== ''): ?>
-            <a class="btn waze" href="<?= h($wazeUrl) ?>" target="_blank" rel="noopener">🚙 Waze 導航</a>
+            <a class="btn waze" href="<?= h($wazeUrl) ?>" target="_blank" rel="noopener"><?= h(t('home.waze')) ?></a>
           <?php endif; ?>
           <?php if ($mapsUrl !== ''): ?>
-            <a class="btn ghost" href="<?= h($mapsUrl) ?>" target="_blank" rel="noopener">🗺️ Google 地圖 Maps</a>
+            <a class="btn ghost" href="<?= h($mapsUrl) ?>" target="_blank" rel="noopener"><?= h(t('home.maps') . ' ' . t('home.maps', 'en')) ?></a>
           <?php endif; ?>
         </div>
       </div>
@@ -114,7 +124,7 @@ $showMap    = $hasQrImage || $wazeUrl !== '' || $mapsUrl !== '';
           <?php else: ?>
             <canvas id="wazeQr" aria-label="Waze QR Code"></canvas>
           <?php endif; ?>
-          <small>掃描導航 Scan for Waze</small>
+          <small><?= h(t('home.scan') . ' ' . t('home.scan', 'en')) ?></small>
         </div>
       <?php endif; ?>
     </div>
@@ -125,7 +135,7 @@ $showMap    = $hasQrImage || $wazeUrl !== '' || $mapsUrl !== '';
 <!-- ============ News feed ============ -->
 <section class="section" id="news">
   <div class="section-title">
-    <h2>最新消息<span class="en">News &amp; Announcements</span></h2>
+    <h2><?= tb('home.news') ?></h2>
   </div>
   <div class="feed">
     <?php foreach ($posts as $post): ?>
@@ -138,7 +148,7 @@ $showMap    = $hasQrImage || $wazeUrl !== '' || $mapsUrl !== '';
             <strong><?= h($siteName) ?></strong>
             <span><?= h(date('Y-m-d', strtotime($post['created_at']))) ?></span>
           </div>
-          <?php if ($post['is_pinned']): ?><span class="pin">📌 置頂 Pinned</span><?php endif; ?>
+          <?php if ($post['is_pinned']): ?><span class="pin"><?= h(t('home.pinned') . ' ' . t('home.pinned', 'en')) ?></span><?php endif; ?>
         </div>
         <div class="post-body">
           <h3><?= h($post['title_zh']) ?><?php if (!empty($post['title_en'])): ?><span class="en"><?= h($post['title_en']) ?></span><?php endif; ?></h3>
@@ -146,9 +156,12 @@ $showMap    = $hasQrImage || $wazeUrl !== '' || $mapsUrl !== '';
           <?php if (!empty($post['body_en'])): ?><p class="en"><?= h($post['body_en']) ?></p><?php endif; ?>
         </div>
         <?php if (!empty($post['image_path'])): ?>
-          <img class="post-image" src="<?= h(BASE_URL . '/' . $post['image_path']) ?>"
-               data-lightbox="<?= h(BASE_URL . '/' . $post['image_path']) ?>"
-               alt="<?= h($post['title_zh']) ?>" loading="lazy">
+          <div class="post-media">
+            <img class="post-image" src="<?= h(BASE_URL . '/' . $post['image_path']) ?>"
+                 data-lightbox="<?= h(BASE_URL . '/' . $post['image_path']) ?>"
+                 alt="<?= h($post['title_zh']) ?>" loading="lazy">
+            <span class="zoom-hint" aria-hidden="true">🔍 點擊放大 Tap to enlarge</span>
+          </div>
         <?php endif; ?>
       </article>
     <?php endforeach; ?>
@@ -160,15 +173,15 @@ $showMap    = $hasQrImage || $wazeUrl !== '' || $mapsUrl !== '';
 <!-- ============ Photo albums, one row per year ============ -->
 <section class="section" id="photos">
   <div class="section-title">
-    <h2>活動留影<span class="en">Photo Albums</span></h2>
-    <p>左右滑動看更多相片，點一下放大。<span class="en">Swipe for more photos. Tap a photo to enlarge.</span></p>
+    <h2><?= tb('home.photos') ?></h2>
+    <p><?= tb('home.photos_hint') ?></p>
   </div>
   <?php foreach ($albums as $album): ?>
     <?php $albumLink = url('/gallery') . '#album-' . (int) $album['id']; ?>
     <?php require BASE_PATH . '/app/Views/partials/album.php'; ?>
   <?php endforeach; ?>
   <div style="text-align:center">
-    <a class="btn ghost" href="<?= url('/gallery') ?>">📸 瀏覽全部相簿 View all albums</a>
+    <a class="btn ghost" href="<?= url('/gallery') ?>"><?= h(t('home.all_albums') . ' ' . t('home.all_albums', 'en')) ?></a>
   </div>
 </section>
 <?php endif; ?>

@@ -224,6 +224,8 @@ class Event extends Model
         'rsvp_note', 'donation_note',
         // Online donation limits (migration 009)
         'seats_min', 'seats_max', 'free_min', 'free_max',
+        // Own wording for the date line (migration 010)
+        'date_text_zh', 'date_text_en',
     ];
 
     /**

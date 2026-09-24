@@ -262,6 +262,22 @@ class SystemController extends Controller
                 $setting->set($key, $_POST[$key] === '1' ? '1' : '0');
             }
         }
+        // Footer look: numbers kept within range, choices from the known lists.
+        $num = static fn($v, array $r, string $def): string
+            => is_numeric($v) ? (string) max($r[0], min($r[1], (int) round((float) $v))) : $def;
+        if (isset($_POST['footer_pad'])) {
+            $setting->set('footer_pad', $num($_POST['footer_pad'], Setting::FOOTER_PAD, '38'));
+        }
+        if (isset($_POST['footer_size'])) {
+            $setting->set('footer_size', $num($_POST['footer_size'], Setting::FOOTER_SIZE, '100'));
+        }
+        if (in_array($_POST['footer_align'] ?? '', ['center', 'left'], true)) {
+            $setting->set('footer_align', $_POST['footer_align']);
+        }
+        if (isset(Setting::FOOTER_THEMES[$_POST['footer_theme'] ?? ''])) {
+            $setting->set('footer_theme', $_POST['footer_theme']);
+        }
+
         // Heading font: only one of the known choices can be stored.
         $font = is_string($_POST['heading_font'] ?? null) ? $_POST['heading_font'] : '';
         if (isset(Setting::HEADING_FONTS[$font])) {

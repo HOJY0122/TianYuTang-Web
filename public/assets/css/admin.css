@@ -1,0 +1,194 @@
+/* ==========================================================
+   天玉堂 2026 — admin area styles
+   ========================================================== */
+
+:root{
+  --red:#9f211b; --deep-red:#711711; --gold:#b58a35; --dark:#241b16;
+  --muted:#75665a; --line:#e4c979; --green:#426b49;
+}
+.hidden{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#fff7d9,#fffaf0 45%,#f7e8b6);
+color:var(--dark);font-family:"Noto Sans TC",sans-serif}
+a{text-decoration:none;color:inherit}
+button,input{font:inherit}
+
+/* ---------- Login ---------- */
+body.login{min-height:100vh;display:grid;place-items:center}
+.login-card{background:rgba(255,250,240,.92);border:1px solid var(--line);border-radius:18px;
+padding:36px;max-width:380px;width:92%;box-shadow:0 14px 35px rgba(67,39,18,.12)}
+.login-card h1{font-family:"Noto Serif TC",serif;color:var(--red);font-size:24px;margin:0 0 4px;text-align:center}
+.login-card .sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:22px}
+.login-card label{display:block;font-weight:700;margin:14px 0 6px;font-size:14px}
+.login-card input{width:100%;padding:13px 14px;border:1px solid #d8bf79;border-radius:10px;background:#fffdf6;outline:none}
+.login-card input:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(159,33,27,.1)}
+.login-card button{width:100%;border:0;border-radius:10px;padding:14px;background:var(--red);
+color:#fff8df;font-weight:800;cursor:pointer;margin-top:20px;font-size:15px}
+.login-card button:hover{background:var(--deep-red)}
+.error{background:#fbdede;border-left:4px solid #c0392b;color:#7a2020;padding:10px 13px;border-radius:8px;font-size:14px;margin-top:16px}
+.back{display:block;text-align:center;margin-top:18px;color:var(--muted);font-size:13px}
+
+/* ---------- Dashboard ---------- */
+.adminbar{display:flex;justify-content:space-between;align-items:center;max-width:1180px;margin:auto;padding:18px 22px;gap:14px;flex-wrap:wrap}
+.adminbar h1{font-family:"Noto Serif TC",serif;color:var(--red);font-size:22px;margin:0}
+.adminbar .who{color:var(--muted);font-size:13px}
+.logout{background:var(--red);color:#fff8df;padding:9px 16px;border-radius:999px;font-weight:700;font-size:13px}
+.logout:hover{background:var(--deep-red)}
+.wrap{max-width:1180px;margin:auto;padding:0 22px 60px}
+
+.statboard{background:#2b1e18;color:#fff3c2;border-radius:24px;padding:28px;margin-bottom:26px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.stat{background:#4a3024;border:1px solid #76573c;border-radius:14px;padding:18px}
+.stat small{opacity:.7}
+.stat strong{display:block;font-size:28px;margin-top:7px}
+.stat .sub{font-size:12px;opacity:.65;margin-top:4px}
+
+.panel{background:rgba(255,250,240,.9);border:1px solid var(--line);border-radius:18px;
+padding:22px;margin-bottom:22px;box-shadow:0 14px 35px rgba(67,39,18,.1)}
+.panel h2{font-family:"Noto Serif TC",serif;color:var(--red);font-size:20px;margin:0 0 14px}
+
+/* Event switcher bar */
+.eventbar{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.eventbar .help{font-size:13px;color:var(--muted)}
+.eventbar-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.eventbar select{padding:9px 12px;border:1px solid #d8bf79;border-radius:10px;background:#fffdf6;font:inherit;font-size:13px}
+
+/* Event details form */
+.form-panel{max-width:760px;margin:0 auto}
+.form-panel h3{font-family:"Noto Serif TC",serif;color:var(--red);font-size:17px;
+margin:26px 0 4px;padding-top:18px;border-top:1px solid #eadcb5}
+.form-panel h3:first-of-type{border-top:0;padding-top:0;margin-top:18px}
+.form-panel label{display:block;font-weight:800;margin:16px 0 6px;font-size:14px}
+.form-panel input,.form-panel textarea{width:100%;padding:12px 14px;border:1px solid #d8bf79;
+border-radius:10px;background:#fffdf6;outline:none;font:inherit}
+.form-panel textarea{resize:vertical;line-height:1.6}
+.form-panel input:focus,.form-panel textarea:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(159,33,27,.1)}
+.form-panel .help{font-size:12.5px;color:var(--muted);margin:6px 0 0;line-height:1.6}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-actions{display:flex;align-items:center;gap:12px;margin-top:26px;padding-top:20px;border-top:1px solid #eadcb5}
+.form-actions .primary{width:auto;margin:0;padding:14px 28px;border:0;border-radius:10px;
+background:var(--red);color:#fff8df;font-weight:800;cursor:pointer}
+.form-actions .primary:hover{background:var(--deep-red)}
+.form-actions .mini-btn{padding:14px 20px}
+.note-box{background:#fff5d0;border-left:5px solid var(--gold);padding:14px 17px;
+border-radius:8px;line-height:1.8;margin-top:22px;font-size:14px}
+
+/* Flash message on admin pages */
+.flash{padding:13px 16px;border-radius:10px;margin-bottom:18px;font-size:14px;line-height:1.7}
+.flash.success{background:#e8efdf;border-left:4px solid var(--green);color:#2f4a34}
+.flash.error{background:#fbdede;border-left:4px solid #c0392b;color:#7a2020}
+
+@media(max-width:700px){.form-row{grid-template-columns:1fr}}
+.scroll{overflow:auto}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:11px 10px;border-bottom:1px solid #eadcb5;font-size:13px;white-space:nowrap}
+th{background:#f0d98c;color:var(--deep-red)}
+.empty{color:var(--muted);white-space:normal}
+
+.badge{display:inline-block;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:800;background:#e8efdf;color:var(--green)}
+.badge.pending{background:#fbeecb;color:#8a5a12}
+.badge.cancelled{background:#f0e2e2;color:#8a3030}
+
+.actions-cell{display:flex;gap:6px}
+.mini-btn{display:inline-block;border:0;border-radius:8px;padding:7px 11px;background:var(--red);color:#fff8df;font-weight:700;font-size:12px;cursor:pointer;line-height:1.5}
+.mini-btn:hover{background:var(--deep-red)}
+.mini-btn.ghost{background:#e8dcc0;color:#6b5330}
+.mini-btn.ghost:hover{background:#dbcba7}
+
+@media(max-width:760px){
+  .stats{grid-template-columns:1fr 1fr}
+  .adminbar h1{font-size:18px}
+}
+
+/* Test mode */
+.flash.test{background:#efe4f5;border-left:4px solid #6b4b8a;color:#4a3161}
+.mini-btn.danger{background:#8a3030}
+.mini-btn.danger:hover{background:#6e2626}
+
+/* Image upload previews */
+.image-preview{margin:10px 0 12px;padding:12px;border:1px solid #ead7a0;border-radius:12px;background:#fffdf5}
+.image-preview img{display:block;max-width:100%;max-height:170px;border-radius:8px;border:1px solid #eadcb5}
+.image-preview.favicon img{max-height:64px;width:auto}
+.image-preview .remove-check{display:flex;align-items:center;gap:8px;margin:10px 0 0;
+font-weight:600;font-size:13px;color:#8a3030}
+.image-preview .remove-check input{width:auto;margin:0}
+.form-panel input[type=file]{padding:10px 12px;background:#fffdf6;cursor:pointer}
+
+/* Photo gallery admin */
+.file-input{width:100%;padding:14px;border:2px dashed #d8bf79;border-radius:12px;
+background:#fffdf6;cursor:pointer}
+.admin-photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.admin-photo{border:1px solid #ead7a0;border-radius:14px;overflow:hidden;background:#fffdf5}
+.admin-photo img{display:block;width:100%;height:160px;object-fit:cover;background:#f3e7c4}
+.caption-form{display:flex;gap:6px;padding:10px;border-top:1px solid #eadcb5}
+.caption-form input{flex:1;padding:8px 10px;border:1px solid #d8bf79;border-radius:8px;
+background:#fffdf6;font-size:13px;min-width:0}
+.caption-form .mini-btn{white-space:nowrap}
+.admin-photo-actions{display:flex;gap:6px;padding:0 10px 10px}
+.admin-photo-actions button:disabled{opacity:.35;cursor:not-allowed}
+
+/* Action buttons beside panel headings */
+.panel-actions{float:right;display:flex;gap:6px;font-size:12px;margin-top:-2px}
+
+/* ---------- Check-in screen ---------- */
+.checkin-wrap{max-width:760px;overflow-x:hidden}
+.checkin-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:20px}
+.checkin-stats div{background:#2b1e18;color:#fff3c2;border-radius:14px;padding:14px 8px;
+text-align:center;min-width:0}
+.checkin-stats small{opacity:.7;font-size:11px;display:block;line-height:1.35}
+.checkin-stats strong{display:block;font-size:28px;margin-top:4px}
+
+.lookup-form{display:flex;gap:8px;flex-wrap:wrap}
+.lookup-form input[name=ref]{flex:1 1 100%;min-width:0;padding:15px 16px;border:1px solid #d8bf79;
+border-radius:11px;background:#fffdf6;font:inherit;font-size:17px;letter-spacing:.05em;text-transform:uppercase}
+.lookup-form input[name=ref]:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(159,33,27,.1);outline:none}
+.lookup-form .mini-btn{padding:15px 20px;font-size:14px}
+
+.scan-panel{margin-top:14px}
+.scan-panel video{width:100%;max-height:330px;background:#000;border-radius:12px;object-fit:cover}
+.scan-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px}
+
+.result-miss h2{color:#8a3030}
+.result-hit{border-color:var(--green)}
+.result-hit.all-in{background:#eef4e9}
+.result-head{display:flex;justify-content:space-between;align-items:center;gap:16px;
+flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid #eadcb5;margin-bottom:6px}
+.result-head h2{margin:0;font-family:ui-monospace,"Courier New",monospace;font-size:22px}
+
+/* Big targets: this is tapped on a phone, quickly, by someone standing up. */
+.big-btn{border:0;border-radius:11px;padding:14px 24px;background:var(--green);color:#fff;
+font-weight:800;font-size:15px;cursor:pointer}
+.big-btn:hover{background:#365a3c}
+
+.person-list{display:flex;flex-direction:column}
+.person{display:flex;justify-content:space-between;align-items:center;gap:14px;
+padding:15px 2px;border-bottom:1px solid #eadcb5;flex-wrap:wrap}
+.person:last-child{border-bottom:0}
+.person.is-in{opacity:.62}
+.person-info{display:flex;flex-direction:column;gap:2px;min-width:0}
+.person-info strong{font-size:17px}
+.arrived-at{color:var(--green);font-weight:700}
+
+.recent-list{display:flex;flex-direction:column;gap:2px}
+.recent-item{display:flex;justify-content:space-between;gap:12px;padding:9px 2px;
+border-bottom:1px solid #f0e6cc;font-size:14px}
+
+@media(max-width:620px){
+  .checkin-stats strong{font-size:22px}
+  .checkin-stats small{font-size:10.5px}
+  .person{padding:13px 2px}
+  .person form{width:100%}
+  .big-btn{width:100%}
+  .lookup-form .mini-btn{flex:1 1 0;min-width:0}
+  .result-head{flex-direction:column;align-items:stretch}
+  .result-head form{width:100%}
+}
+
+/* Counter donation entry */
+.counter-total{display:flex;justify-content:space-between;align-items:center;
+background:#f7e6a8;border-radius:12px;padding:15px 16px;margin-top:18px;font-weight:800}
+.counter-total strong{font-size:26px;color:var(--red)}
+.form-panel select{width:100%;padding:12px 14px;border:1px solid #d8bf79;border-radius:10px;
+background:#fffdf6;font:inherit}
+.receipt-link{color:var(--red);font-weight:700;text-decoration:underline}
+.badge.counter{background:#e3ecf5;color:#2d4f75}

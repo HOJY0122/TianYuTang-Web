@@ -1,0 +1,47 @@
+# ==========================================================
+# Uploads directory — data only, never code.
+#
+# Everything here was written by the server after being decoded and
+# re-encoded through GD, so it should already be impossible for an
+# executable file to exist in this folder. This is the second lock on
+# the same door: even if something slipped through, Apache must refuse
+# to run it.
+# ==========================================================
+
+# Never hand a request here to a script interpreter.
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag engine off
+</IfModule>
+
+# Strip any handler that would execute these files.
+<FilesMatch "\.(php|php\d|phtml|phps|pht|phar|cgi|pl|py|rb|sh|asp|aspx|jsp)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+RemoveHandler .php .php3 .php4 .php5 .php7 .php8 .phtml .pht .phar
+RemoveType    .php .php3 .php4 .php5 .php7 .php8 .phtml .pht .phar
+<IfModule mod_mime.c>
+    AddType text/plain .php .phtml .phar
+</IfModule>
+
+# Serve only what we expect to be here.
+<FilesMatch "\.(jpe?g|png|gif|webp|ico)$">
+    <IfModule mod_authz_core.c>
+        Require all granted
+    </IfModule>
+</FilesMatch>
+
+# No browsing the folder.
+Options -Indexes -ExecCGI

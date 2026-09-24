@@ -1,0 +1,181 @@
+/* ==========================================================
+   天玉堂 — printable sheets for the on-site counter
+   ==========================================================
+   Screen styles keep the page readable while the committee checks it;
+   the @media print block strips everything that costs ink and makes
+   the table survive being split across pages.
+   ========================================================== */
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 26px;
+  background: #fff;
+  color: #1a1a1a;
+  font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+/* ---------- Header ---------- */
+.sheet-head {
+  border-bottom: 2px solid #1a1a1a;
+  padding-bottom: 12px;
+  margin-bottom: 18px;
+}
+.sheet-head h1 {
+  font-family: "Noto Serif TC", serif;
+  font-size: 21px;
+  margin: 0 0 4px;
+}
+.sheet-head .meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+  color: #444;
+}
+.sheet-head .meta strong { color: #1a1a1a; }
+
+/* ---------- Summary line ---------- */
+.summary {
+  display: flex;
+  gap: 26px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+.summary span { white-space: nowrap; }
+.summary b { font-size: 16px; }
+
+/* ---------- Table ---------- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th, td {
+  border: 1px solid #999;
+  padding: 7px 9px;
+  text-align: left;
+  vertical-align: middle;
+}
+th {
+  background: #eee;
+  font-size: 12.5px;
+  font-weight: 800;
+}
+td { font-size: 13px; }
+
+tbody tr:nth-child(even) td { background: #fafafa; }
+
+/* The tick column: a real box people can pen a mark into.
+   Wide enough that the two-character heading does not wrap. */
+.tick { width: 48px; text-align: center; white-space: nowrap; }
+.tick-box {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 1.6px solid #333;
+  border-radius: 3px;
+}
+
+.num     { width: 34px; color: #666; text-align: right; }
+.ref     { width: 108px; font-family: ui-monospace, "Courier New", monospace; font-size: 12px; }
+.amount  { text-align: right; white-space: nowrap; }
+.muted   { color: #666; }
+.empty   { text-align: center; color: #666; padding: 28px; }
+
+/* ---------- Signature block ---------- */
+.signoff {
+  margin-top: 30px;
+  display: flex;
+  gap: 40px;
+  font-size: 12.5px;
+}
+.signoff div { flex: 1; }
+.sign-line {
+  margin-top: 34px;
+  border-top: 1px solid #333;
+  padding-top: 5px;
+}
+
+/* ---------- On-screen only ---------- */
+.toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed #ccc;
+}
+.toolbar button, .toolbar a {
+  border: 1px solid #999;
+  background: #f4f4f4;
+  color: #1a1a1a;
+  padding: 9px 16px;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: none;
+}
+.toolbar button.primary { background: #9f211b; border-color: #9f211b; color: #fff; font-weight: 700; }
+.toolbar .hint { color: #666; font-size: 12.5px; }
+
+/* ==========================================================
+   PRINT
+   ========================================================== */
+@media print {
+
+  /* A4 with sane margins; the header repeats itself via thead. */
+  @page {
+    size: A4;
+    margin: 14mm 12mm 16mm;
+  }
+
+  body {
+    padding: 0;
+    font-size: 11.5pt;
+  }
+
+  /* Anything interactive is noise on paper. */
+  .toolbar,
+  .no-print { display: none !important; }
+
+  /* Repeat the column headings at the top of every printed page —
+     a check-in sheet whose second page has no headings is useless. */
+  thead { display: table-header-group; }
+  tfoot { display: table-footer-group; }
+
+  /* Never split a person across two pages. */
+  tr    { page-break-inside: avoid; break-inside: avoid; }
+  table { page-break-inside: auto; }
+
+  /* Zebra striping eats toner and reduces contrast on paper. */
+  tbody tr:nth-child(even) td { background: transparent; }
+
+  th { background: #e8e8e8 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  .sheet-head { page-break-after: avoid; }
+  .signoff    { page-break-inside: avoid; }
+
+  a { text-decoration: none; color: inherit; }
+}
+
+/* Already checked in via the screen — the paper agrees with the app. */
+.tick-box.ticked{
+  border-color:#1a1a1a;
+  background:#1a1a1a;
+  color:#fff;
+  font-size:12px;
+  line-height:14px;
+  text-align:center;
+  -webkit-print-color-adjust:exact;
+  print-color-adjust:exact;
+}

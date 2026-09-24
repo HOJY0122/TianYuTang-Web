@@ -1,0 +1,24 @@
+# ==========================================================
+# Root .htaccess
+#
+# Ideally your hosting's document root points straight at /public.
+# On shared hosting where you cannot change the document root (you just
+# drop the whole project into public_html), this file quietly forwards
+# every request into /public so the site still works — and app/ and
+# config/ still stay unreachable from the browser.
+# ==========================================================
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # If the request already points inside /public, leave it alone.
+    RewriteCond %{REQUEST_URI} ^/?public/ [OR]
+    RewriteCond %{REQUEST_URI} ^/?$
+    RewriteRule ^$ public/index.php [L]
+
+    # Forward everything else into /public.
+    RewriteCond %{REQUEST_URI} !^/?public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+Options -Indexes

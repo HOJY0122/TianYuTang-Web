@@ -85,6 +85,15 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     });
   }
 
+  // 1 → 一, 12 → 十二: Chinese numerals suit the brush heading font; the
+  // digit itself goes in the round badge, in the plain font.
+  function zhNum(n) {
+    var d = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+    if (n < 10) return d[n];
+    if (n >= 100) return String(n);
+    return (n >= 20 ? d[Math.floor(n / 10)] : '') + '十' + d[n % 10];
+  }
+
   function render() {
     collect();
     var n = Math.min(MAX, Math.max(1, parseInt(countEl.value, 10) || 1));
@@ -92,7 +101,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     var html = '';
     for (var i = 0; i < n; i++) {
       html += '<div class="attendee">'
-        + '<h4>第 ' + (i + 1) + ' 位' + (i === 0 ? '（聯絡人）' : '')
+        + '<h4><span class="num-pill">' + (i + 1) + '</span>第' + zhNum(i + 1) + '位' + (i === 0 ? '（聯絡人）' : '')
         + '<span class="en">Person ' + (i + 1) + (i === 0 ? ' (main contact)' : '') + '</span></h4>'
         + '<label>姓名<span class="en">Full name</span></label>'
         + '<input name="attendee_name[]" required maxlength="100" autocomplete="name" value="' + esc(OLD.names[i]) + '">'

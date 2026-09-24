@@ -170,8 +170,8 @@ class Event extends Model
         }
         return (int) $this->scalar(
             'SELECT COUNT(*) FROM events
-             WHERE id <> ? AND (hero_banner_path = ? OR favicon_path = ?)',
-            [$excludeEventId, $path, $path]
+             WHERE id <> ? AND (hero_banner_path = ? OR favicon_path = ? OR waze_qr_path = ?)',
+            [$excludeEventId, $path, $path, $path]
         );
     }
 
@@ -218,6 +218,10 @@ class Event extends Model
         'hero_banner_path', 'favicon_path',
         'rsvp_opens_at', 'rsvp_closes_at',
         'donation_opens_at', 'donation_closes_at',
+        // Home-page content (migration 008)
+        'welcome_zh', 'welcome_en', 'contact_info',
+        'maps_url', 'waze_url', 'waze_qr_path',
+        'rsvp_note', 'donation_note',
     ];
 
     /** Update the editable fields of an event. */
@@ -362,6 +366,25 @@ class Event extends Model
             if ($opensTs && $closesTs && $closesTs <= $opensTs) {
                 $errors[] = "{$label}截止時間必須晚於開放時間。";
             }
+        }
+
+        // Links must be real web addresses. Anything else (javascript:…)
+        // would become a clickable button on the public page.
+        foreach (['maps_url' => 'Google Maps', 'waze_url' => 'Waze'] as $key => $label) {
+            $link = trim((string) ($input[$key] ?? ''));
+            if ($link !== '' && (!preg_match('#^https://#i', $link) || mb_strlen($link) > 500
+                    || filter_var($link, FILTER_VALIDATE_URL) === false)) {
+                $errors[] = "{$label} 連結必須以 https:// 開頭。{$label} link must start with https://";
+            }
+        }
+        foreach (['welcome_zh', 'welcome_en', 'rsvp_note', 'donation_note'] as $key) {
+            if (mb_strlen((string) ($input[$key] ?? '')) > 3000) {
+                $errors[] = '文字內容過長（3000 字以內）。Text is too long (max 3000).';
+                break;
+            }
+        }
+        if (mb_strlen((string) ($input['contact_info'] ?? '')) > 255) {
+            $errors[] = '聯絡資料過長。Contact info is too long.';
         }
 
         return $errors;

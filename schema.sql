@@ -43,6 +43,16 @@ CREATE TABLE IF NOT EXISTS events (
     end_date          DATE NOT NULL,
     counter_note      VARCHAR(255) NULL,              -- e.g. 現場詢問處開放時間：16/10 及 17/10
 
+    -- Home-page content, edited by admins (migration 008)
+    welcome_zh        TEXT         NULL,              -- welcome paragraph, Chinese
+    welcome_en        TEXT         NULL,              -- welcome paragraph, English
+    contact_info      VARCHAR(255) NULL,              -- enquiry line (phone / WhatsApp)
+    maps_url          VARCHAR(500) NULL,              -- Google Maps link
+    waze_url          VARCHAR(500) NULL,              -- Waze link (QR drawn from it)
+    waze_qr_path      VARCHAR(255) NULL,              -- optional uploaded Waze QR image
+    rsvp_note         TEXT         NULL,              -- note above the registration form
+    donation_note     TEXT         NULL,              -- note above the donation form
+
     -- Money and limits (per event — prices change between years)
     merit_table_price DECIMAL(10,2) NOT NULL DEFAULT 500.00,
     max_attendees     TINYINT UNSIGNED NOT NULL DEFAULT 10,
@@ -128,8 +138,9 @@ CREATE TABLE IF NOT EXISTS donations (
     ref_code VARCHAR(20) NULL UNIQUE,           -- DON-0001, set from id right after insert
     name VARCHAR(100) NOT NULL,
     contact_no VARCHAR(30) NOT NULL,
-    method ENUM('free','table') NOT NULL,
-    table_count SMALLINT UNSIGNED DEFAULT NULL, -- only when method = 'table'
+    method ENUM('free','table','mixed') NOT NULL,  -- mixed = seats AND a freewill amount
+    table_count SMALLINT UNSIGNED DEFAULT NULL, -- merit seats (table / mixed)
+    free_amount DECIMAL(10,2) NULL DEFAULT NULL, -- freewill part (free / mixed)
     amount DECIMAL(10,2) NOT NULL,
     status ENUM('pending','paid') NOT NULL DEFAULT 'pending',
 
@@ -207,6 +218,49 @@ CREATE TABLE IF NOT EXISTS login_attempts (
     attempted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_ip_time (ip, attempted_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- posts — news / announcements on the home page (migration 008)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS posts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title_zh     VARCHAR(200) NOT NULL,
+    title_en     VARCHAR(200) NULL,
+    body_zh      TEXT         NULL,
+    body_en      TEXT         NULL,
+    image_path   VARCHAR(255) NULL,
+    is_published BOOLEAN NOT NULL DEFAULT TRUE,
+    is_pinned    BOOLEAN NOT NULL DEFAULT FALSE,
+    created_by   VARCHAR(50)  NULL,
+    created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_feed (is_published, is_pinned, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- schema_migrations — which files in migrations/ are already in
+-- this database. This file already contains every migration listed
+-- below, so they are recorded as done; `php bin/migrate.php` then runs
+-- only what is added later.
+--
+-- ADDING A MIGRATION? Put its change in this file too, and add its
+-- filename to the INSERT below.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS schema_migrations (
+    filename   VARCHAR(191) PRIMARY KEY,
+    how        ENUM('ran','detected') NOT NULL,
+    applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT IGNORE INTO schema_migrations (filename, how) VALUES
+    ('001_add_events.sql',                     'detected'),
+    ('002_add_event_photos.sql',               'detected'),
+    ('003_add_checkin.sql',                    'detected'),
+    ('004_add_counter_donations.sql',          'detected'),
+    ('005_add_roles_and_settings.sql',         'detected'),
+    ('006_split_roles_and_walkin.sql',         'detected'),
+    ('007_add_login_attempts.sql',             'detected'),
+    ('008_site_content_and_mixed_donations.sql','detected');
 
 -- ============================================================
 -- Seed data

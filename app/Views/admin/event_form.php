@@ -2,175 +2,123 @@
 /**
  * Event details form — used for both editing and creating.
  * $mode is 'edit' or 'new'; $old holds the values of a rejected submit.
+ * Everything here appears on the public site without touching code.
  */
-$isNew = ($mode === 'new');
-$v = static fn(string $key, $fallback = '') => $old[$key] ?? ($event[$key] ?? $fallback);
+$isNew     = ($mode === 'new');
+$v         = static fn(string $key, $fallback = '') => $old[$key] ?? ($event[$key] ?? $fallback);
+$dt        = static fn(string $key): string => h(str_replace(' ', 'T', substr((string) $v($key), 0, 16)));
+$pageTitle = $isNew ? '新增活動 New Event' : '活動資料 Event Details';
+$nav       = 'event';
+require BASE_PATH . '/app/Views/layouts/admin_header.php';
 ?>
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title><?= $isNew ? '新增活動' : '編輯活動' ?>｜天玉堂管理</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700;900&family=Noto+Sans+TC:wght@400;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="<?= asset('css/admin.css') ?>">
-</head>
-<body>
-
-<div class="adminbar">
-  <h1>🙏 <?= $isNew ? '新增活動 New Event' : '編輯活動 Edit Event' ?></h1>
-  <div style="display:flex;align-items:center;gap:14px">
-    <span class="who">您好，<?= h($_SESSION['admin_username']) ?></span>
-    <a class="logout" href="<?= url('/admin/dashboard') ?>">← 返回後台</a>
+<?php if (!empty($errors)): ?>
+  <div class="flash error"><strong>請修正以下問題 Please fix:</strong>
+    <ul style="margin:6px 0 0;padding-left:20px"><?php foreach ($errors as $e): ?><li><?= h($e) ?></li><?php endforeach; ?></ul>
   </div>
-</div>
+<?php endif; ?>
 
-<div class="wrap">
-  <div class="panel form-panel">
+<?php if (!$isNew && !empty($allEvents) && count($allEvents) > 1): ?>
+  <form method="GET" action="<?= url('/admin/event/edit') ?>" class="panel toolbar" style="padding:12px 16px">
+    <label class="field">正在編輯 Editing
+      <select name="id" onchange="this.form.submit()">
+        <?php foreach ($allEvents as $e): ?>
+          <option value="<?= (int) $e['id'] ?>"<?= (int) $e['id'] === (int) $event['id'] ? ' selected' : '' ?>>
+            <?= h($e['year']) ?> — <?= h($e['name']) ?><?= $e['is_test'] ? '（測試 Test）' : '' ?><?= $e['is_active'] ? ' ✓ 公開 Live' : '' ?></option>
+        <?php endforeach; ?>
+      </select>
+    </label>
+    <span class="spacer"></span>
+    <a class="mini-btn ghost btn-lg" href="<?= url('/admin/event/new') ?>">＋ 新增活動 New event</a>
+  </form>
+<?php endif; ?>
 
-    <?php if (!empty($errors)): ?>
-      <div class="error">
-        <strong>請修正以下問題：</strong>
-        <ul style="margin:8px 0 0;padding-left:20px">
-          <?php foreach ($errors as $e): ?><li><?= h($e) ?></li><?php endforeach; ?>
-        </ul>
-      </div>
-    <?php endif; ?>
+<form method="POST" action="<?= url('/admin/event/save') ?>" enctype="multipart/form-data" class="panel form-panel" style="max-width:900px">
+  <?= csrf_field() ?>
+  <input type="hidden" name="id" value="<?= $isNew ? 0 : (int) $event['id'] ?>">
+  <p class="help" style="margin-top:0">這裡的內容會直接顯示在網站上。Everything here appears on the public website.
+    <?php if (!empty($isSystemAdmin)): ?><br>網站名稱、標誌、橫幅與頁尾在「網站設定」。Site name, logo, banner and footer are in Site settings.<?php endif; ?></p>
 
-    <p class="help" style="margin-top:0">
-      這裡修改的內容會直接顯示在網站首頁，不需要改動程式碼。
-    </p>
-
-    <!-- enctype is required: without it the browser sends only the file
-         NAME, never the file itself, and $_FILES arrives empty. -->
-    <form method="POST" action="<?= url('/admin/event/save') ?>" enctype="multipart/form-data">
-      <?= csrf_field() ?>
-      <input type="hidden" name="id" value="<?= $isNew ? 0 : (int) $event['id'] ?>">
-
-      <h3>基本資料</h3>
-
-      <label for="name">活動名稱｜Event Name *</label>
-      <input id="name" name="name" required maxlength="150"
-             value="<?= h($v('name')) ?>" placeholder="中壇元帥 · 千秋寶誕">
-
-      <div class="form-row">
-        <div>
-          <label for="year">年份｜Year *</label>
-          <input id="year" name="year" type="number" required min="2000" max="2100"
-                 value="<?= h((string) $v('year')) ?>">
-        </div>
-        <div>
-          <label for="year_label">農曆年｜Lunar Year</label>
-          <input id="year_label" name="year_label" maxlength="50"
-                 value="<?= h($v('year_label')) ?>" placeholder="丙午年">
-        </div>
-      </div>
-
-      <label for="subtitle">英文副標｜English Subtitle</label>
-      <input id="subtitle" name="subtitle" maxlength="200"
-             value="<?= h($v('subtitle')) ?>"
-             placeholder="2026 Zhong Tan Marshal Birthday Celebration">
-
-      <label for="location">地點｜Location *</label>
-      <textarea id="location" name="location" required rows="2"
-                placeholder="PERSATUAN PENGANUT DEWA TAI ZHI&#10;KUALA LUMPUR"><?= h($v('location')) ?></textarea>
-      <p class="help">可分兩行輸入，網站會照樣換行顯示。</p>
-
-      <h3>日期</h3>
-
-      <div class="form-row">
-        <div>
-          <label for="start_date">開始日期｜Start Date *</label>
-          <input id="start_date" name="start_date" type="date" required
-                 value="<?= h($v('start_date')) ?>">
-        </div>
-        <div>
-          <label for="end_date">結束日期｜End Date *</label>
-          <input id="end_date" name="end_date" type="date" required
-                 value="<?= h($v('end_date')) ?>">
-        </div>
-      </div>
-      <p class="help">
-        網站會自動列出這段期間的每一天，並附上星期幾。單日活動請將兩個日期填相同。
-      </p>
-
-      <label for="counter_note">現場詢問處說明｜Counter Note</label>
-      <input id="counter_note" name="counter_note" maxlength="255"
-             value="<?= h($v('counter_note')) ?>"
-             placeholder="現場詢問處開放時間：16/10 及 17/10">
-
-      <h3>報名與布施設定</h3>
-
-      <div class="form-row">
-        <div>
-          <label for="merit_table_price">功德席價格 (RM)｜Merit Seat Price *</label>
-          <input id="merit_table_price" name="merit_table_price" type="number"
-                 required min="0" max="100000" step="0.01"
-                 value="<?= h((string) $v('merit_table_price')) ?>">
-          <p class="help">改了這裡，網站的下拉選單和自動計算的總額都會跟著改。</p>
-        </div>
-        <div>
-          <label for="max_attendees">每次報名人數上限｜Max Attendees *</label>
-          <input id="max_attendees" name="max_attendees" type="number"
-                 required min="1" max="50"
-                 value="<?= h((string) $v('max_attendees')) ?>">
-          <p class="help">一次報名最多可填幾位參加者。</p>
-        </div>
-      </div>
-
-      <div class="note-box">
-        🔒 <strong>首頁橫幅</strong>與<strong>網站小圖示</strong>屬於網站設定，
-        由系統管理員在系統管理頁面更換，不隨活動年度改變。如需更換，請聯絡系統管理員。
-      </div>
-
-      <h3>線上開放時間</h3>
-      <p class="help" style="margin-top:0">
-        設定線上報名與布施的開放與截止時間，就像演唱會售票一樣。
-        <strong>留空表示不限制</strong>：兩欄都空白，該項目就一直開放。<br>
-        時間一律以馬來西亞時間（<?= h(APP_TIMEZONE) ?>）為準。
-      </p>
-
-      <div class="form-row">
-        <div>
-          <label for="rsvp_opens_at">報名開放時間｜RSVP Opens</label>
-          <input id="rsvp_opens_at" name="rsvp_opens_at" type="datetime-local"
-                 value="<?= h(str_replace(' ', 'T', (string) $v('rsvp_opens_at'))) ?>">
-        </div>
-        <div>
-          <label for="rsvp_closes_at">報名截止時間｜RSVP Closes</label>
-          <input id="rsvp_closes_at" name="rsvp_closes_at" type="datetime-local"
-                 value="<?= h(str_replace(' ', 'T', (string) $v('rsvp_closes_at'))) ?>">
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div>
-          <label for="donation_opens_at">布施開放時間｜Donation Opens</label>
-          <input id="donation_opens_at" name="donation_opens_at" type="datetime-local"
-                 value="<?= h(str_replace(' ', 'T', (string) $v('donation_opens_at'))) ?>">
-        </div>
-        <div>
-          <label for="donation_closes_at">布施截止時間｜Donation Closes</label>
-          <input id="donation_closes_at" name="donation_closes_at" type="datetime-local"
-                 value="<?= h(str_replace(' ', 'T', (string) $v('donation_closes_at'))) ?>">
-        </div>
-      </div>
-
-      <?php if ($isNew): ?>
-        <div class="note-box">
-          新活動建立後<strong>不會立即公開</strong>。確認資料無誤後，請在後台按「設為公開」，
-          網站才會切換到這個活動。
-        </div>
-      <?php endif; ?>
-
-      <div class="form-actions">
-        <button class="primary" type="submit">
-          <?= $isNew ? '建立活動 Create Event' : '儲存變更 Save Changes' ?>
-        </button>
-        <a class="mini-btn ghost" href="<?= url('/admin/dashboard') ?>">取消 Cancel</a>
-      </div>
-    </form>
+  <h3>① 基本資料 <span class="en">Basics</span></h3>
+  <label for="name">活動名稱 <span class="en">Event name *</span></label>
+  <input id="name" name="name" required maxlength="150" value="<?= h($v('name')) ?>" placeholder="中壇元帥千秋寶誕">
+  <div class="form-grid">
+    <div><label for="year">年份 <span class="en">Year *</span></label>
+      <input id="year" name="year" type="number" required min="2000" max="2100" value="<?= h((string) $v('year')) ?>"></div>
+    <div><label for="year_label">干支年 <span class="en">Year label</span></label>
+      <input id="year_label" name="year_label" maxlength="50" value="<?= h($v('year_label')) ?>" placeholder="丙午年"></div>
   </div>
-</div>
-</body>
-</html>
+  <label for="subtitle">英文副標題 <span class="en">English subtitle</span></label>
+  <input id="subtitle" name="subtitle" maxlength="200" value="<?= h($v('subtitle')) ?>" placeholder="2026 Zhong Tan Marshal Birthday Celebration">
+
+  <h3>② 日期與地點 <span class="en">Date &amp; venue</span></h3>
+  <div class="form-grid">
+    <div><label for="start_date">開始日期 <span class="en">Start date *</span></label>
+      <input id="start_date" name="start_date" type="date" required value="<?= h($v('start_date')) ?>"></div>
+    <div><label for="end_date">結束日期 <span class="en">End date *</span></label>
+      <input id="end_date" name="end_date" type="date" required value="<?= h($v('end_date')) ?>"></div>
+  </div>
+  <label for="location">地點 <span class="en">Venue *</span></label>
+  <textarea id="location" name="location" rows="2" required maxlength="255"><?= h($v('location')) ?></textarea>
+
+  <h3>③ 首頁內容 <span class="en">Home page content</span></h3>
+  <label for="welcome_zh">歡迎詞（中文）<span class="en">Welcome text (Chinese)</span></label>
+  <textarea id="welcome_zh" name="welcome_zh" rows="3" maxlength="3000"><?= h($v('welcome_zh')) ?></textarea>
+  <label for="welcome_en">歡迎詞（英文）<span class="en">Welcome text (English)</span></label>
+  <textarea id="welcome_en" name="welcome_en" rows="3" maxlength="3000"><?= h($v('welcome_en')) ?></textarea>
+  <div class="form-grid">
+    <div><label for="counter_note">現場詢問說明 <span class="en">Counter / enquiry note</span></label>
+      <input id="counter_note" name="counter_note" maxlength="255" value="<?= h($v('counter_note')) ?>" placeholder="現場詢問處開放時間：16/10 及 17/10"></div>
+    <div><label for="contact_info">聯絡電話 <span class="en">Contact number</span></label>
+      <input id="contact_info" name="contact_info" maxlength="255" value="<?= h($v('contact_info')) ?>" placeholder="012-345 6789 (WhatsApp)"></div>
+  </div>
+
+  <h3>④ 導航 <span class="en">Directions (Waze &amp; Google Maps)</span></h3>
+  <p class="help">在 Waze 或 Google 地圖按「分享」，複製連結貼在這裡。In Waze or Google Maps tap Share, copy the link, paste it here.</p>
+  <div class="form-grid">
+    <div><label for="waze_url">Waze 連結 <span class="en">Waze link</span></label>
+      <input id="waze_url" name="waze_url" type="url" maxlength="500" value="<?= h($v('waze_url')) ?>" placeholder="https://waze.com/ul/..."></div>
+    <div><label for="maps_url">Google 地圖連結 <span class="en">Google Maps link</span></label>
+      <input id="maps_url" name="maps_url" type="url" maxlength="500" value="<?= h($v('maps_url')) ?>" placeholder="https://maps.app.goo.gl/..."></div>
+  </div>
+  <label for="waze_qr">Waze QR Code 圖片 <span class="en">Waze QR image (optional)</span></label>
+  <?php $qr = $event['waze_qr_path'] ?? null; ?>
+  <?php if ($qr): ?>
+    <div class="image-preview favicon">
+      <img src="<?= h(BASE_URL . '/' . $qr) ?>" alt="Waze QR" style="max-height:120px">
+      <label class="remove-check"><input type="checkbox" name="remove_waze_qr" value="1"> 移除 Remove</label>
+    </div>
+  <?php endif; ?>
+  <input id="waze_qr" name="waze_qr" type="file" accept="image/jpeg,image/png,image/gif,image/webp">
+  <p class="help">不上傳也可以：有 Waze 連結時，網站會自動產生 QR Code。Optional — without an image, a QR code is made from the Waze link automatically.</p>
+
+  <h3>⑤ 報名與布施設定 <span class="en">Registration &amp; donation settings</span></h3>
+  <div class="form-grid">
+    <div><label for="merit_table_price">功德席每席價格 <span class="en">Price per merit seat (RM) *</span></label>
+      <input id="merit_table_price" name="merit_table_price" type="number" required min="0" max="100000" step="0.01" value="<?= h((string) $v('merit_table_price')) ?>"></div>
+    <div><label for="max_attendees">每次報名最多人數 <span class="en">Max people per registration *</span></label>
+      <input id="max_attendees" name="max_attendees" type="number" required min="1" max="50" value="<?= h((string) $v('max_attendees')) ?>"></div>
+  </div>
+  <label for="rsvp_note">報名頁說明 <span class="en">Note on the registration page</span></label>
+  <textarea id="rsvp_note" name="rsvp_note" rows="2" maxlength="3000" placeholder="席位有限，敬請提前登記。"><?= h($v('rsvp_note')) ?></textarea>
+  <label for="donation_note">布施頁說明 <span class="en">Note on the donation page</span></label>
+  <textarea id="donation_note" name="donation_note" rows="2" maxlength="3000" placeholder="例：銀行轉帳資料"><?= h($v('donation_note')) ?></textarea>
+
+  <h3>⑥ 開放時間 <span class="en">When forms are open</span></h3>
+  <p class="help">留空代表不限制。Leave blank for no limit. 時間以馬來西亞時間計算 Malaysia time.</p>
+  <div class="form-grid">
+    <div><label for="rsvp_opens_at">報名開始 <span class="en">Registration opens</span></label>
+      <input id="rsvp_opens_at" name="rsvp_opens_at" type="datetime-local" value="<?= $dt('rsvp_opens_at') ?>"></div>
+    <div><label for="rsvp_closes_at">報名截止 <span class="en">Registration closes</span></label>
+      <input id="rsvp_closes_at" name="rsvp_closes_at" type="datetime-local" value="<?= $dt('rsvp_closes_at') ?>"></div>
+    <div><label for="donation_opens_at">布施開始 <span class="en">Donation opens</span></label>
+      <input id="donation_opens_at" name="donation_opens_at" type="datetime-local" value="<?= $dt('donation_opens_at') ?>"></div>
+    <div><label for="donation_closes_at">布施截止 <span class="en">Donation closes</span></label>
+      <input id="donation_closes_at" name="donation_closes_at" type="datetime-local" value="<?= $dt('donation_closes_at') ?>"></div>
+  </div>
+
+  <div class="form-actions">
+    <button class="primary" type="submit">💾 <?= $isNew ? '建立活動 Create event' : '儲存 Save changes' ?></button>
+    <?php if (!$isNew): ?><a class="mini-btn ghost" href="<?= url('/') ?>" target="_blank">👀 查看網站 View site</a><?php endif; ?>
+  </div>
+</form>
+<?php require BASE_PATH . '/app/Views/layouts/admin_footer.php'; ?>

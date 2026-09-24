@@ -13,6 +13,6 @@ $isError = ($flash['type'] ?? '') === 'error';
     <div class="icon"><?= $isError ? '⚠️' : '🙏' ?></div>
     <h2 class="kai"><?= h($flash['title']) ?></h2>
     <p><?= h($flash['message']) ?></p>
-    <button class="primary" onclick="document.getElementById('resultModal').remove()">返回網站</button>
+    <button class="primary" onclick="document.getElementById('resultModal').remove()">好的 OK</button>
   </div>
 </div>

@@ -75,7 +75,6 @@ class CounterController extends Controller
 
         $name    = trim((string) ($_POST['name'] ?? ''));
         $contact = trim((string) ($_POST['contact'] ?? ''));
-        $method  = (string) ($_POST['method'] ?? '');
         $notes   = trim((string) ($_POST['notes'] ?? ''));
 
         $errors = [];
@@ -88,30 +87,16 @@ class CounterController extends Controller
         if ($contact !== '' && mb_strlen($contact) > 30) {
             $errors[] = '聯絡號碼過長。';
         }
-        if (!in_array($method, ['free', 'table'], true)) {
-            $errors[] = '請選擇布施方式。';
-        }
-
-        $freeAmount = 0.0;
-        $tableCount = null;
+        // Seats, freewill, or both — two numbers, like the public form.
         $seatPrice  = (float) $event['merit_table_price'];
-
-        if ($method === 'free') {
-            // Rounded BEFORE the check: 0.001 would pass "> 0" and then be
-            // stored by the DECIMAL(10,2) column as a RM 0.00 donation.
-            $freeAmount = round((float) ($_POST['free_amount'] ?? 0), 2);
-            if ($freeAmount <= 0 || $freeAmount > 1000000) {
-                $errors[] = '請輸入有效的布施金額。';
-            }
-        } elseif ($method === 'table') {
-            $tableCount = (int) ($_POST['table_count'] ?? 0);
-            if ($tableCount <= 0 || $tableCount > 200) {
-                $errors[] = '請輸入有效的功德席數量。';
-            }
-        }
+        $tableCount = max(0, (int) ($_POST['table_count'] ?? 0));
+        // Rounded BEFORE the check: 0.001 would pass "> 0" and then be
+        // stored by the DECIMAL(10,2) column as a RM 0.00 donation.
+        $freeAmount = round((float) ($_POST['free_amount'] ?? 0), 2);
+        $errors = array_merge($errors, Donation::validateParts($tableCount, $freeAmount));
 
         if ($errors) {
-            $this->backWithErrors($eventId, $errors, compact('name', 'contact', 'method', 'notes'));
+            $this->backWithErrors($eventId, $errors, compact('name', 'contact', 'notes'));
         }
 
         // Receipt photo is optional but strongly encouraged.
@@ -126,7 +111,7 @@ class CounterController extends Controller
                 $receiptPath = (new ImageUploader('receipts', true))->store($_FILES['receipt'], 1600);
             } catch (RuntimeException $e) {
                 $this->backWithErrors($eventId, ['收據相片：' . $e->getMessage()],
-                    compact('name', 'contact', 'method', 'notes'));
+                    compact('name', 'contact', 'notes'));
             }
         }
 
@@ -134,9 +119,8 @@ class CounterController extends Controller
             $eventId,
             $name,
             $contact !== '' ? $contact : '—',
-            $method,
-            $freeAmount,
             $tableCount,
+            $freeAmount,
             $seatPrice,
             (string) ($_SESSION['admin_username'] ?? 'admin'),
             $receiptPath,
@@ -146,9 +130,9 @@ class CounterController extends Controller
 
         $this->flash(
             'success',
-            '已記錄',
+            '已記錄 Recorded',
             "{$result['ref_code']}　{$name}　" . rm($result['amount'])
-            . ($receiptPath ? '　（收據已附）' : '')
+            . ($receiptPath ? '　（收據已附 receipt attached）' : '')
         );
         $this->redirect("/admin/counter?event={$eventId}");
     }

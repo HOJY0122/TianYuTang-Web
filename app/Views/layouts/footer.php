@@ -1,14 +1,28 @@
 <?php
-// $event is in scope when rendered from the public site; fall back for safety.
-$footerTitle = isset($event['name']) ? ($siteName ?? '天玉堂') . $event['name'] : ($siteName ?? SITE_NAME);
-$footerYear  = isset($event['year']) ? (int) $event['year'] : (int) date('Y');
+/**
+ * Public site footer. Every line is a site setting the system admin
+ * edits at /system (Footer section); empty lines are simply skipped.
+ */
+$site       = $site ?? (new App\Models\Setting())->site();
+$footerYear = isset($event['year']) ? (int) $event['year'] : (int) date('Y');
 ?>
-<footer>
-  <div class="footer-title">🙏 <?= h($footerTitle) ?></div>
-  <div><?= nl2br(h($event['location'] ?? 'PERSATUAN PENGANUT DEWA TAI ZHI KUALA LUMPUR')) ?></div>
-  <div style="margin-top:12px">活動報名　•　功德布施</div>
-  <div style="margin-top:12px;font-size:13px;opacity:.8">
-    © <?= $footerYear ?> PERSATUAN PENGANUT DEWA TAI ZHI KUALA LUMPUR
+<footer class="site-footer">
+  <div class="f-name">🙏 <?= h($site['site_name']) ?></div>
+  <?php if ($site['footer_org'] !== ''): ?>
+    <div class="f-org"><?= h($site['footer_org']) ?></div>
+  <?php endif; ?>
+  <?php if ($site['footer_address'] !== ''): ?>
+    <p>📍 <?= h($site['footer_address']) ?></p>
+  <?php endif; ?>
+  <?php if ($site['footer_contact'] !== ''): ?>
+    <p>📞 <?= h($site['footer_contact']) ?></p>
+  <?php endif; ?>
+  <?php if ($site['footer_note_zh'] !== '' || $site['footer_note_en'] !== ''): ?>
+    <p class="f-note"><?= h($site['footer_note_zh']) ?><?php if ($site['footer_note_en'] !== ''): ?><br><?= h($site['footer_note_en']) ?><?php endif; ?></p>
+  <?php endif; ?>
+  <div class="f-small">
+    © <?= $footerYear ?> <?= h($site['footer_org'] !== '' ? $site['footer_org'] : $site['site_name']) ?>
+    　·　<a href="<?= url('/admin/login') ?>">管理登入 Admin</a>
   </div>
 </footer>
 </body>

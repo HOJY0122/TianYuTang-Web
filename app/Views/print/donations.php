@@ -64,8 +64,8 @@ $seatPrice = (float) $event['merit_table_price'];
           <td><?= ($d['source'] ?? 'online') === 'counter' ? '現場' : '線上' ?></td>
           <td><strong><?= h($d['name']) ?></strong></td>
           <td><?= h($d['contact_no']) ?></td>
-          <td><?= $d['method'] === 'table' ? '功德席' : '隨喜布施' ?></td>
-          <td><?= $d['method'] === 'table' ? ((int) $d['table_count'] . ' 席') : '—' ?></td>
+          <td><?= ['table' => '功德席', 'free' => '隨喜布施', 'mixed' => '功德席+隨喜'][$d['method']] ?? h($d['method']) ?></td>
+          <td><?= h(App\Models\Donation::describe($d)) ?></td>
           <td class="amount"><?= number_format((float) $d['amount'], 2) ?></td>
           <td><?= $d['status'] === 'paid' ? '已付' : '待付' ?></td>
         </tr>

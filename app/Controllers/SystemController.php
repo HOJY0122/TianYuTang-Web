@@ -22,16 +22,12 @@ use RuntimeException;
  */
 class SystemController extends Controller
 {
-    /** GET /system — landing page */
+    /** GET /system — site settings (identity, images, footer) */
     public function index(): void
     {
         $this->requireSystemAdmin();
 
-        $users = new AdminUser();
-
-        // A system admin can no longer open the event dashboard, so the
-        // one fact they still need about the event — which one is live —
-        // is shown here. Read-only: it is context, not a control.
+        // The one fact about the event worth showing here: which is live.
         $activeEvent = null;
         try {
             $activeEvent = (new Event())->active();
@@ -40,11 +36,25 @@ class SystemController extends Controller
         }
 
         $this->view('system/index', [
-            'settings'    => (new Setting())->all(),
+            'pageTitle'   => '網站設定 Site Settings',
+            'nav'         => 'system',
+            'settings'    => (new Setting())->site(),
+            'activeEvent' => $activeEvent,
+            'flash'       => $this->takeFlash(),
+        ]);
+    }
+
+    /** GET /system/users — who has a login */
+    public function users(): void
+    {
+        $this->requireSystemAdmin();
+        $users = new AdminUser();
+        $this->view('system/users', [
+            'pageTitle'   => '帳號管理 User Accounts',
+            'nav'         => 'users',
             'users'       => $users->all(),
             'systemCount' => $users->countSystemAdmins(),
             'adminCount'  => $users->countAdmins(),
-            'activeEvent' => $activeEvent,
             'flash'       => $this->takeFlash(),
         ]);
     }
@@ -71,23 +81,35 @@ class SystemController extends Controller
 
         $setting = new Setting();
 
-        $siteName = trim((string) ($_POST['site_name'] ?? ''));
-        $tagline  = trim((string) ($_POST['site_tagline'] ?? ''));
-
-        if ($siteName === '' || mb_strlen($siteName) > 80) {
-            $this->flash('error', '無法儲存', '網站名稱不可空白，且不可超過 80 字。');
+        // Text settings: every key the pages use, with a length limit each.
+        $limits = [
+            'site_name' => 80, 'site_name_en' => 120, 'site_tagline' => 255,
+            'footer_org' => 150, 'footer_address' => 255, 'footer_contact' => 150,
+            'footer_note_zh' => 500, 'footer_note_en' => 500,
+        ];
+        $values = [];
+        foreach ($limits as $key => $max) {
+            $values[$key] = is_string($_POST[$key] ?? null) ? trim($_POST[$key]) : '';
+            if (mb_strlen($values[$key]) > $max) {
+                $this->flash('error', '無法儲存 Not saved', "內容過長（最多 {$max} 字）。Text too long (max {$max}).");
+                $this->redirect('/system');
+            }
+        }
+        if ($values['site_name'] === '') {
+            $this->flash('error', '無法儲存 Not saved', '網站名稱不可空白。The site name cannot be empty.');
             $this->redirect('/system');
         }
-
-        $setting->set('site_name', $siteName);
-        $setting->set('site_tagline', mb_substr($tagline, 0, 255));
+        foreach ($values as $key => $value) {
+            $setting->set($key, $value);
+        }
 
         // Images are done after the text has been saved, so a rejected
         // upload never discards a perfectly good name change.
         $imageNotes = [];
         foreach ([
-            ['hero_banner', 'site_banner_path',  'banners',  1920, '首頁橫幅'],
-            ['favicon',     'site_favicon_path', 'favicons', 180,  '網站小圖示'],
+            ['logo',        'site_logo_path',    'logos',    400,  '網站標誌 Logo'],
+            ['hero_banner', 'site_banner_path',  'banners',  1920, '首頁橫幅 Banner'],
+            ['favicon',     'site_favicon_path', 'favicons', 180,  '網站小圖示 Favicon'],
         ] as [$input, $key, $subdir, $maxWidth, $label]) {
             try {
                 $note = $this->storeBrandingImage($setting, $input, $key, $subdir, $maxWidth, $label);
@@ -104,7 +126,7 @@ class SystemController extends Controller
         $this->flash(
             'success',
             '已儲存',
-            '網站設定已更新。' . ($imageNotes ? '　' . implode('　', $imageNotes) : '')
+            "網站設定已更新。Site settings saved." . ($imageNotes ? '　' . implode('　', $imageNotes) : '')
         );
         $this->redirect('/system');
     }
@@ -152,9 +174,10 @@ class SystemController extends Controller
     }
 
     /**
-     * Delete an old branding file, but only if nothing else still points
-     * at it. Migration 006 copied these paths out of the events table,
-     * so the very same file may still be an old event's stored banner.
+     * Delete an old branding file, but only if nothing else — no event and
+     * no other site setting — still points at it. Migration 006 copied
+     * these paths out of the events table, so the very same file may
+     * still be an old event's stored banner.
      */
     private function deleteUnreferenced(ImageUploader $uploader, ?string $path): void
     {
@@ -162,6 +185,13 @@ class SystemController extends Controller
             return;
         }
         if ((new Event())->countOtherEventsUsingImage($path, 0) > 0) {
+            return;
+        }
+        // …nor another site setting. The same picture is often used as
+        // both logo and favicon; replacing the logo must not delete the
+        // file the favicon still points at. (The setting being changed
+        // has already been saved with its new value, so it won't match.)
+        if (in_array($path, (new Setting())->all(), true)) {
             return;
         }
         $uploader->delete($path);
@@ -196,7 +226,7 @@ class SystemController extends Controller
 
         if ($errors) {
             $this->flash('error', '無法建立帳號', implode(' ', $errors));
-            $this->redirect('/system');
+            $this->redirect('/system/users');
         }
 
         $users->create($username, $password, $role, $displayName !== '' ? $displayName : null);
@@ -207,7 +237,7 @@ class SystemController extends Controller
             "{$username} 已建立（" . ($role === AdminUser::ROLE_SYSTEM ? '系統管理員' : '管理員') . '）。'
             . '請將密碼親自交給對方，不要用訊息傳送。'
         );
-        $this->redirect('/system');
+        $this->redirect('/system/users');
     }
 
     /** POST /system/users/role */
@@ -223,7 +253,7 @@ class SystemController extends Controller
 
         if ($user === null) {
             $this->flash('error', '找不到帳號', '找不到這個帳號。');
-            $this->redirect('/system');
+            $this->redirect('/system/users');
         }
 
         // Never leave the system without a system administrator. There
@@ -236,25 +266,9 @@ class SystemController extends Controller
                 '無法變更',
                 '這是最後一位系統管理員。請先指派另一位系統管理員，再變更此帳號。'
             );
-            $this->redirect('/system');
+            $this->redirect('/system/users');
         }
 
-        // And never leave it without an ADMINISTRATOR either. Since the
-        // two roles were separated, a system admin cannot open the event
-        // pages — so promoting the last admin would mean nobody could
-        // take a registration or check anyone in. That is the kind of
-        // thing discovered at 8am on the day of the event.
-        if ($user['role'] === AdminUser::ROLE_ADMIN
-            && $role !== AdminUser::ROLE_ADMIN
-            && $users->countAdmins() <= 1) {
-            $this->flash(
-                'error',
-                '無法變更',
-                '這是最後一位管理員。若升為系統管理員，將沒有人能處理報名、現場登記與報到。'
-                . '請先建立另一個管理員帳號。'
-            );
-            $this->redirect('/system');
-        }
 
         $users->updateRole($id, $role);
 
@@ -266,7 +280,7 @@ class SystemController extends Controller
         }
 
         $this->flash('success', '已更新', "{$user['username']} 的權限已變更。");
-        $this->redirect('/system');
+        $this->redirect('/system/users');
     }
 
     /** POST /system/users/password — reset someone else's password. */
@@ -283,19 +297,19 @@ class SystemController extends Controller
 
         if ($user === null) {
             $this->flash('error', '找不到帳號', '找不到這個帳號。');
-            $this->redirect('/system');
+            $this->redirect('/system/users');
         }
 
         $errors = AdminUser::validatePassword($password, $confirm);
         if ($errors) {
             $this->flash('error', '無法重設密碼', implode(' ', $errors));
-            $this->redirect('/system');
+            $this->redirect('/system/users');
         }
 
         $users->updatePassword($id, $password);
 
         $this->flash('success', '密碼已重設', "{$user['username']} 的密碼已更新。請親自交給對方。");
-        $this->redirect('/system');
+        $this->redirect('/system/users');
     }
 
     /** POST /system/users/delete */
@@ -310,36 +324,26 @@ class SystemController extends Controller
 
         if ($user === null) {
             $this->flash('error', '找不到帳號', '找不到這個帳號。');
-            $this->redirect('/system');
+            $this->redirect('/system/users');
         }
 
         // Deleting yourself mid-session leaves a logged-in browser with
         // an account that no longer exists.
         if ($id === (int) ($_SESSION['admin_id'] ?? 0)) {
             $this->flash('error', '無法刪除', '不能刪除自己目前登入的帳號。');
-            $this->redirect('/system');
+            $this->redirect('/system/users');
         }
 
         if ($user['role'] === AdminUser::ROLE_SYSTEM && $users->countSystemAdmins() <= 1) {
             $this->flash('error', '無法刪除', '這是最後一位系統管理員，無法刪除。');
-            $this->redirect('/system');
+            $this->redirect('/system/users');
         }
 
-        // Same reasoning as the role change above: no admins left means
-        // nobody can run the event.
-        if ($user['role'] === AdminUser::ROLE_ADMIN && $users->countAdmins() <= 1) {
-            $this->flash(
-                'error',
-                '無法刪除',
-                '這是最後一位管理員，無法刪除。請先建立另一個管理員帳號。'
-            );
-            $this->redirect('/system');
-        }
 
         $users->delete($id);
 
         $this->flash('success', '帳號已刪除', "{$user['username']} 已移除。");
-        $this->redirect('/system');
+        $this->redirect('/system/users');
     }
 
     // ------------------------------------------------------------------

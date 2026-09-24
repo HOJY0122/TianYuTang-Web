@@ -2,32 +2,13 @@
 $seatPrice = (float) $event['merit_table_price'];
 $v = static fn(string $k, $d = '') => $old['values'][$k] ?? $d;
 ?>
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>現場布施登記｜天玉堂</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700;900&family=Noto+Sans+TC:wght@400;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="<?= asset('css/admin.css') ?>">
-</head>
-<body>
-
-<div class="adminbar">
-  <h1>💰 現場布施登記</h1>
-  <div style="display:flex;align-items:center;gap:14px">
-    <span class="who"><?= h($_SESSION['admin_username']) ?></span>
-    <a class="logout" href="<?= url('/admin/dashboard') ?>">← 後台</a>
-  </div>
-</div>
-
+<?php
+$pageTitle = '現場布施 Counter Donation';
+$nav = 'counter';
+require BASE_PATH . '/app/Views/layouts/admin_header.php';
+?>
 <div class="wrap checkin-wrap">
 
-  <?php if (!empty($flash)): ?>
-    <div class="flash <?= h($flash['type']) ?>">
-      <strong><?= h($flash['title']) ?></strong> — <?= h($flash['message']) ?>
-    </div>
-  <?php endif; ?>
 
   <?php if ($event['is_test']): ?>
     <div class="flash test">🧪 測試活動 — 此處登記不列入正式統計。</div>
@@ -71,28 +52,21 @@ $v = static fn(string $k, $d = '') => $old['values'][$k] ?? $d;
              value="<?= h($v('contact')) ?>" placeholder="例如：012 345 6789">
       <p class="help">現場布施者未必願意留電話，留空即可。</p>
 
-      <label for="method">布施方式｜Method *</label>
-      <?php $m = $v('method', 'free'); ?>
-      <select id="method" name="method" onchange="updateCounter()">
-        <option value="free"<?= $m === 'free' ? ' selected' : '' ?>>隨喜布施 Freewill</option>
-        <option value="table"<?= $m === 'table' ? ' selected' : '' ?>>功德席 RM<?= number_format($seatPrice, 0) ?> / 席</option>
-      </select>
-
-      <div id="freeWrap">
-        <label for="free_amount">金額 (RM)｜Amount *</label>
-        <input id="free_amount" name="free_amount" type="number" min="1" step="0.01"
-               inputmode="decimal" value="<?= h((string) $v('free_amount')) ?>"
-               oninput="updateCounter()" placeholder="收到的金額">
+      <p class="help" style="margin:16px 0 0">填寫功德席、隨喜金額，或兩者皆填。Fill in seats, freewill, or both.</p>
+      <div class="form-row">
+        <div>
+          <label for="table_count">功德席數量 <span class="en">Merit seats (RM<?= number_format($seatPrice, 0) ?> each)</span></label>
+          <input id="table_count" name="table_count" type="number" min="0" max="200"
+                 inputmode="numeric" value="<?= h((string) $v('table_count', '0')) ?>" oninput="updateCounter()">
+        </div>
+        <div>
+          <label for="free_amount">隨喜金額 <span class="en">Freewill (RM)</span></label>
+          <input id="free_amount" name="free_amount" type="number" min="0" step="0.01"
+                 inputmode="decimal" value="<?= h((string) $v('free_amount')) ?>" oninput="updateCounter()" placeholder="0">
+        </div>
       </div>
 
-      <div id="tableWrap" class="hidden">
-        <label for="table_count">功德席數量｜Seats *</label>
-        <input id="table_count" name="table_count" type="number" min="1" max="200"
-               inputmode="numeric" value="<?= h((string) $v('table_count', '1')) ?>"
-               oninput="updateCounter()">
-      </div>
-
-      <div class="total counter-total"><span>合計</span><strong id="counterTotal">RM 0</strong></div>
+      <div class="total counter-total"><span>合計 Total</span><strong id="counterTotal">RM 0</strong></div>
 
       <label for="receipt">收據相片｜Receipt Photo（建議）</label>
       <input id="receipt" name="receipt" type="file" class="file-input"
@@ -125,7 +99,7 @@ $v = static fn(string $k, $d = '') => $old['values'][$k] ?? $d;
               <tr>
                 <td><?= h($d['ref_code']) ?></td>
                 <td><?= h($d['name']) ?></td>
-                <td><?= $d['method'] === 'table' ? ((int) $d['table_count'] . ' 席') : '隨喜' ?></td>
+                <td><?= h(App\Models\Donation::describe($d)) ?></td>
                 <td><?= rm((float) $d['amount']) ?></td>
                 <td>
                   <?php if (!empty($d['receipt_path'])): ?>
@@ -150,25 +124,12 @@ $v = static fn(string $k, $d = '') => $old['values'][$k] ?? $d;
 const SEAT_PRICE = <?= (float) $seatPrice ?>;
 
 function updateCounter() {
-  const method = document.getElementById('method').value;
-  const free   = document.getElementById('free_amount');
-  const seats  = document.getElementById('table_count');
-
-  document.getElementById('freeWrap').classList.toggle('hidden', method !== 'free');
-  document.getElementById('tableWrap').classList.toggle('hidden', method !== 'table');
-
-  // Only the field in use is submitted, so the unused one cannot fail
-  // validation or send a stray value.
-  free.disabled  = (method !== 'free');
-  seats.disabled = (method !== 'table');
-
-  const total = (method === 'free')
-    ? (Number(free.value) || 0)
-    : (Number(seats.value) || 0) * SEAT_PRICE;
-
-  document.getElementById('counterTotal').textContent = 'RM ' + total.toLocaleString('en-MY');
+  const seats = Math.max(0, parseInt(document.getElementById('table_count').value, 10) || 0);
+  const free  = Math.max(0, parseFloat(document.getElementById('free_amount').value) || 0);
+  const total = seats * SEAT_PRICE + free;
+  document.getElementById('counterTotal').textContent =
+    'RM ' + total.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 updateCounter();
 </script>
-</body>
-</html>
+<?php require BASE_PATH . '/app/Views/layouts/admin_footer.php'; ?>

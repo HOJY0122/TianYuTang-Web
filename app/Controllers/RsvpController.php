@@ -7,14 +7,34 @@ use App\Models\Rsvp;
 use Exception;
 
 /**
- * RsvpController — validates and stores event registrations.
+ * RsvpController — the registration page and its submission.
  *
- * Note the split of responsibilities:
+ * One submission = one registration group with ONE reference code,
+ * holding every person in it: a family of four gets RSVP-0012 and four
+ * attendee rows, each with their own name, IC and contact number.
+ *
  *   Controller = check the input is sane, decide what the visitor sees
  *   Model      = how it is actually written to the database
  */
 class RsvpController extends Controller
 {
+    /** GET /register */
+    public function form(): void
+    {
+        $event = (new Event())->active();
+
+        $old = $_SESSION['rsvp_old'] ?? [];
+        unset($_SESSION['rsvp_old']);
+
+        $this->view('register/index', [
+            'event'      => $event,
+            'activeNav'  => 'register',
+            'window'     => Event::windowStatus($event, Event::SECTION_RSVP),
+            'old'        => $old,
+            'flash'      => $this->takeFlash(),
+        ]);
+    }
+
     /** POST /rsvp/submit */
     public function submit(): void
     {
@@ -33,10 +53,10 @@ class RsvpController extends Controller
         if (!$window['open']) {
             $this->flash(
                 'error',
-                $window['reason'] === 'not_yet' ? '報名尚未開放' : '報名已截止',
+                $window['reason'] === 'not_yet' ? '報名尚未開放 Not open yet' : '報名已截止 Registration closed',
                 Event::windowMessage($window, Event::SECTION_RSVP)
             );
-            $this->redirect('/#rsvp');
+            $this->redirect('/register');
         }
 
         $count    = (int) ($_POST['attendee_count'] ?? 0);
@@ -49,10 +69,10 @@ class RsvpController extends Controller
 
         // --- Validate the submission as a whole ---
         if ($count < 1 || $count > $maxAttendees) {
-            $this->fail('報名人數不正確，請重新選擇。');
+            $this->fail("報名人數不正確（1–{$maxAttendees} 位）。\nPlease choose between 1 and {$maxAttendees} people.");
         }
         if (count($names) !== $count || count($ics) !== $count || count($contacts) !== $count) {
-            $this->fail('參加者資料不完整，請確認每位參加者都已填寫。');
+            $this->fail("參加者資料不完整，請確認每位參加者都已填寫。\nPlease fill in the details for every person.");
         }
 
         // --- Validate each attendee ---
@@ -61,21 +81,21 @@ class RsvpController extends Controller
             // Each entry must be plain text. attendee_name[0][]=x would
             // arrive as a nested array and become the string "Array".
             if (!is_string($names[$i]) || !is_string($ics[$i]) || !is_string($contacts[$i])) {
-                $this->fail('參加者資料格式不正確，請重新填寫。');
+                $this->fail("參加者資料格式不正確，請重新填寫。\nPlease check the details and try again.");
             }
-            $name    = trim((string) $names[$i]);
-            $ic      = trim((string) $ics[$i]);
-            $contact = trim((string) $contacts[$i]);
-            $position = $i + 1;
+            $name    = trim($names[$i]);
+            $ic      = trim($ics[$i]);
+            $contact = trim($contacts[$i]);
+            $n       = $i + 1;
 
             if ($name === '' || mb_strlen($name) > 100) {
-                $this->fail("第 {$position} 位參加者：請填寫有效的姓名。");
+                $this->fail("第 {$n} 位參加者：請填寫姓名。\nPerson {$n}: please enter a name.");
             }
             if (!$this->looksLikeIc($ic)) {
-                $this->fail("第 {$position} 位參加者：身份證號碼格式不正確。");
+                $this->fail("第 {$n} 位參加者：身份證號碼格式不正確。\nPerson {$n}: the IC / passport number does not look right.");
             }
             if (!$this->looksLikePhone($contact)) {
-                $this->fail("第 {$position} 位參加者：聯絡號碼格式不正確。");
+                $this->fail("第 {$n} 位參加者：聯絡號碼格式不正確。\nPerson {$n}: the contact number does not look right.");
             }
 
             $attendees[] = ['name' => $name, 'ic' => $ic, 'contact' => $contact];
@@ -92,17 +112,20 @@ class RsvpController extends Controller
             if (DEBUG_MODE) {
                 die('RSVP save failed: ' . $e->getMessage());
             }
-            $this->fail('報名失敗，請稍後再試。');
+            $this->fail("報名失敗，請稍後再試。\nSomething went wrong, please try again later.");
         }
 
         // Hand the details to the confirmation page through the SESSION,
         // not the URL — reference codes are sequential and guessable, so
         // a ?ref= page would let anyone read other people's names and
-        // IC numbers.
+        // IC numbers. IC numbers are masked even here.
         $_SESSION['rsvp_confirmation'] = [
-            'ref_code' => $refCode,
-            'count'    => $count,
-            'lead'     => $attendees[0]['name'] ?? '',
+            'ref_code'  => $refCode,
+            'count'     => $count,
+            'attendees' => array_map(
+                static fn($a) => ['name' => $a['name'], 'ic' => mask_ic($a['ic']), 'contact' => $a['contact']],
+                $attendees
+            ),
         ];
         $this->redirect('/rsvp/success');
     }
@@ -129,11 +152,23 @@ class RsvpController extends Controller
         return $len >= 9 && $len <= 15;
     }
 
-    /** Send the visitor back to the form with an explanation. */
+    /**
+     * Send the visitor back with an explanation — and everything they
+     * typed, so a family of eight is never retyped over one wrong digit.
+     */
     private function fail(string $message): void
     {
-        $_SESSION['old_input'] = ['rsvp_count' => (int) ($_POST['attendee_count'] ?? 1)];
-        $this->flash('error', '報名未完成', $message);
-        $this->redirect('/#rsvp');
+        $text = static fn($list): array => array_values(array_map(
+            static fn($v) => is_string($v) ? mb_substr($v, 0, 100) : '',
+            is_array($list) ? $list : []
+        ));
+        $_SESSION['rsvp_old'] = [
+            'count'    => max(1, (int) ($_POST['attendee_count'] ?? 1)),
+            'names'    => $text($_POST['attendee_name'] ?? []),
+            'ics'      => $text($_POST['attendee_ic'] ?? []),
+            'contacts' => $text($_POST['attendee_contact'] ?? []),
+        ];
+        $this->flash('error', '報名未完成 Not submitted', $message);
+        $this->redirect('/register');
     }
 }

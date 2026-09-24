@@ -41,6 +41,8 @@ $router = new App\Core\Router();
 // Public site
 $router->get('/',                   'HomeController@index');
 $router->get('/gallery',            'GalleryController@index');
+$router->get('/register',           'RsvpController@form');
+$router->get('/donate',             'DonationController@form');
 $router->post('/rsvp/submit',       'RsvpController@submit');
 $router->post('/donation/submit',   'DonationController@submit');
 $router->get('/rsvp/success',       'ConfirmController@rsvp');
@@ -61,12 +63,30 @@ $router->get('/admin/event/edit',   'AdminController@editEvent');
 $router->get('/admin/event/new',    'AdminController@newEvent');
 $router->post('/admin/event/save',  'AdminController@saveEvent');
 
+// Records: search, filter and edit every registration and donation
+$router->get('/admin/registrations',        'RecordsController@registrations');
+$router->get('/admin/registrations/edit',   'RecordsController@editRegistration');
+$router->post('/admin/registrations/save',  'RecordsController@saveRegistration');
+$router->post('/admin/registrations/status','RecordsController@registrationStatus');
+$router->get('/admin/donations',            'RecordsController@donations');
+$router->get('/admin/donations/edit',       'RecordsController@editDonation');
+$router->post('/admin/donations/save',      'RecordsController@saveDonation');
+$router->post('/admin/donations/paid',      'RecordsController@donationPaid');
+
+// News posts on the home page
+$router->get('/admin/posts',          'PostController@index');
+$router->get('/admin/posts/new',      'PostController@form');
+$router->get('/admin/posts/edit',     'PostController@form');
+$router->post('/admin/posts/save',    'PostController@save');
+$router->post('/admin/posts/delete',  'PostController@delete');
+
 // Walk-in registration at the counter
 $router->get('/admin/walkin',       'WalkinController@index');
 $router->post('/admin/walkin/save', 'WalkinController@save');
 
 // System administration (system_admin only — enforced in the controller)
 $router->get('/system',                'SystemController@index');
+$router->get('/system/users',          'SystemController@users');
 $router->post('/system/settings',      'SystemController@saveSettings');
 $router->post('/system/users/create',  'SystemController@createUser');
 $router->post('/system/users/role',    'SystemController@changeRole');

@@ -131,4 +131,27 @@ class Photo extends Model
              ORDER BY e.year DESC, e.id DESC"
         );
     }
+
+    /**
+     * Albums for the public pages: one per year that has photos, newest
+     * first, each carrying its photos. A new event never hides an older
+     * album — 2026 stays visible after 2027 is created.
+     *
+     * @param int $maxAlbums 0 = every year
+     * @param int $perAlbum  0 = every photo; otherwise the first N
+     */
+    public function albums(int $maxAlbums = 0, int $perAlbum = 0): array
+    {
+        $years = $this->eventsWithPhotos();
+        if ($maxAlbums > 0) {
+            $years = array_slice($years, 0, $maxAlbums);
+        }
+        foreach ($years as &$year) {
+            $year['photos'] = $perAlbum > 0
+                ? $this->previewForEvent((int) $year['id'], $perAlbum)
+                : $this->forEvent((int) $year['id']);
+        }
+        unset($year);
+        return $years;
+    }
 }

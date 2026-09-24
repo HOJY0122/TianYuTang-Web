@@ -129,7 +129,7 @@ $v = static fn(string $k, $d = '') => $old['values'][$k] ?? $d;
                 <td><?= rm((float) $d['amount']) ?></td>
                 <td>
                   <?php if (!empty($d['receipt_path'])): ?>
-                    <a href="<?= h(BASE_URL . '/' . $d['receipt_path']) ?>" target="_blank" class="receipt-link">📄 查看</a>
+                    <a href="<?= url('/admin/receipt?id=' . (int) $d['id']) ?>" target="_blank" class="receipt-link">📄 查看</a>
                   <?php else: ?>
                     <span class="help">—</span>
                   <?php endif; ?>

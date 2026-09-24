@@ -173,6 +173,19 @@ CREATE TABLE IF NOT EXISTS admin_users (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================
+-- login_attempts — failed admin logins, for rate limiting.
+-- Five failures from one IP within 15 minutes locks it out
+-- until the oldest ages out. Old rows are pruned by the app.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS login_attempts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ip           VARCHAR(45) NOT NULL,
+    username     VARCHAR(50) NOT NULL,
+    attempted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_ip_time (ip, attempted_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
 -- Seed data
 -- ============================================================
 
@@ -189,8 +202,10 @@ SELECT
     500.00, 10, TRUE, FALSE
 WHERE NOT EXISTS (SELECT 1 FROM events WHERE year = 2026 AND is_test = FALSE);
 
--- Default admin. CHANGE THIS PASSWORD after first login.
--- Login: admin / tianyutang2026
+-- Default admin. Login: admin / tianyutang2026
+-- The app will not let this password be used for anything except
+-- choosing a new one: the first login goes straight to the
+-- change-password page (see AdminUser::DEFAULT_PASSWORD).
 INSERT INTO admin_users (username, password_hash) VALUES
 ('admin', '$2y$12$2peuIpyQnsls10rNrIOTU.8xcMbsvlnnhpCIxLsQZkia9EapTIvgW')
 ON DUPLICATE KEY UPDATE username = username;

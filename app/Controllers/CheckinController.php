@@ -76,8 +76,8 @@ class CheckinController extends Controller
         // Confirm the person really belongs to the event being worked on
         // before touching them.
         $eventId = $rsvp->eventIdOfAttendee($attendeeId);
-        if ($eventId === null) {
-            $this->flash('error', '找不到資料', '找不到這位參加者。');
+        if ($eventId === null || $eventId !== $this->eventOnScreen()) {
+            $this->flash('error', '找不到資料', '找不到這位參加者，或該參加者不屬於目前的活動。');
             $this->redirect('/admin/checkin');
         }
 
@@ -101,8 +101,8 @@ class CheckinController extends Controller
         $ref     = trim((string) ($_POST['ref'] ?? ''));
 
         $eventId = $rsvp->eventIdOf($groupId);
-        if ($eventId === null) {
-            $this->flash('error', '找不到資料', '找不到這筆報名。');
+        if ($eventId === null || $eventId !== $this->eventOnScreen()) {
+            $this->flash('error', '找不到資料', '找不到這筆報名，或該報名不屬於目前的活動。');
             $this->redirect('/admin/checkin');
         }
 
@@ -110,6 +110,16 @@ class CheckinController extends Controller
         $this->flash('success', '報到完成', "已為 {$n} 位參加者完成報到。");
 
         $this->backToLookup($eventId, $ref);
+    }
+
+    /**
+     * The event the volunteer's screen was showing when they tapped.
+     * A tab left open on last year's event, or a crafted POST, must not
+     * be able to check in someone from a different event.
+     */
+    private function eventOnScreen(): int
+    {
+        return (int) ($_POST['event_id'] ?? 0);
     }
 
     /** Return to the lookup, keeping the reference on screen. */

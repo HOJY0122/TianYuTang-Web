@@ -1,0 +1,17 @@
+# Receipt photos uploaded before they moved to storage/ may still sit
+# here. They are financial records, so direct URLs are refused; admins
+# view them through /admin/receipt, which checks the login first.
+#
+# Wrapped in <FilesMatch> on purpose: the parent uploads/.htaccess
+# GRANTS image files inside a <FilesMatch>, and Apache applies <Files>
+# sections after directory rules — a bare "Require all denied" here
+# would be overridden for every .jpg and .png.
+<FilesMatch ".*">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>

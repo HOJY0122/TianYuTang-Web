@@ -50,7 +50,9 @@ class DonationController extends Controller
         $tableCount = null;
 
         if ($method === 'free') {
-            $freeAmount = (float) ($_POST['free_amount'] ?? 0);
+            // Rounded BEFORE the check: 0.001 would pass "> 0" and then be
+            // stored by the DECIMAL(10,2) column as a RM 0.00 donation.
+            $freeAmount = round((float) ($_POST['free_amount'] ?? 0), 2);
             if ($freeAmount <= 0) {
                 $this->fail('請輸入有效的布施金額。');
             }

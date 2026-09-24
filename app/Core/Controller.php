@@ -62,17 +62,29 @@ abstract class Controller
     {
         $sent = $_POST['csrf_token'] ?? '';
         $held = $_SESSION['csrf_token'] ?? '';
-        if ($sent === '' || $held === '' || !hash_equals($held, $sent)) {
+        // is_string(): a crafted csrf_token[]=x arrives as an ARRAY, and
+        // hash_equals() throws a TypeError on anything but a string —
+        // a 500 page instead of a clean refusal.
+        if (!is_string($sent) || $sent === '' || $held === '' || !hash_equals($held, $sent)) {
             http_response_code(419);
             die('表單已過期，請返回重新提交。 / Form expired, please go back and submit again.');
         }
     }
 
-    /** Send the visitor to the admin login page unless already signed in. */
-    protected function requireAdmin(): void
+    /**
+     * Send the visitor to the admin login page unless already signed in.
+     *
+     * An admin still on the default password is held on the change-
+     * password page until they pick a new one. Only that page passes
+     * $passwordPage = true — every other admin page redirects there.
+     */
+    protected function requireAdmin(bool $passwordPage = false): void
     {
         if (empty($_SESSION['admin_id'])) {
             $this->redirect('/admin/login');
+        }
+        if (!$passwordPage && !empty($_SESSION['must_change_password'])) {
+            $this->redirect('/admin/password');
         }
     }
 }

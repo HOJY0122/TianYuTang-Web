@@ -13,7 +13,11 @@
   <h1>🙏 天玉堂 2026 管理系統</h1>
   <div style="display:flex;align-items:center;gap:14px">
     <span class="who">您好，<?= h($_SESSION['admin_username']) ?></span>
-    <a class="logout" href="<?= url('/admin/logout') ?>">登出 Logout</a>
+    <a class="logout" href="<?= url('/admin/password') ?>">更改密碼</a>
+    <form class="logout-form" method="POST" action="<?= url('/admin/logout') ?>">
+      <?= csrf_field() ?>
+      <button type="submit" class="logout">登出 Logout</button>
+    </form>
   </div>
 </div>
 
@@ -235,7 +239,7 @@
                 <?php if (($d['source'] ?? 'online') === 'counter'): ?>
                   <span class="badge counter">現場</span>
                   <?php if (!empty($d['receipt_path'])): ?>
-                    <a href="<?= h(BASE_URL . '/' . $d['receipt_path']) ?>" target="_blank" title="查看收據">📄</a>
+                    <a href="<?= url('/admin/receipt?id=' . (int) $d['id']) ?>" target="_blank" title="查看收據">📄</a>
                   <?php endif; ?>
                 <?php else: ?>
                   <span class="help">線上</span>

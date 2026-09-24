@@ -446,12 +446,6 @@ class Event extends Model
         return $result;
     }
 
-    /** Convenience wrapper — true if the section accepts submissions now. */
-    public static function isOpen(array $event, string $section): bool
-    {
-        return self::windowStatus($event, $section)['open'];
-    }
-
     /**
      * A bilingual message explaining why a section is unavailable,
      * suitable for showing to a visitor.

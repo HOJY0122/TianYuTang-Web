@@ -6,6 +6,7 @@ use App\Core\ImageUploader;
 use App\Models\AdminUser;
 use App\Models\Donation;
 use App\Models\Event;
+use App\Models\LoginAttempt;
 use App\Models\Photo;
 use App\Models\Rsvp;
 use RuntimeException;
@@ -35,6 +36,15 @@ class AdminController extends Controller
 
         $username = trim((string) ($_POST['username'] ?? ''));
         $password = (string) ($_POST['password'] ?? '');
+        $ip       = (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+        $attempts = new LoginAttempt();
+
+        // Checked BEFORE the password, so a locked-out address learns
+        // nothing — not even whether a guess would have been right.
+        if ($attempts->isLockedOut($ip)) {
+            $_SESSION['login_error'] = '登入失敗次數過多，請 ' . LoginAttempt::WINDOW_MINUTES . ' 分鐘後再試。';
+            $this->redirect('/admin/login');
+        }
 
         if ($username === '' || $password === '') {
             $_SESSION['login_error'] = '請輸入帳號與密碼。';
@@ -44,24 +54,87 @@ class AdminController extends Controller
         $user = (new AdminUser())->verify($username, $password);
 
         if ($user === null) {
+            $attempts->recordFailure($ip, $username);
             $_SESSION['login_error'] = '帳號或密碼錯誤。';
             $this->redirect('/admin/login');
         }
+
+        $attempts->clear($ip);
 
         // Fresh session ID on privilege change — blocks session fixation.
         session_regenerate_id(true);
         $_SESSION['admin_id']       = $user['id'];
         $_SESSION['admin_username'] = $user['username'];
 
+        // Still on the password printed in the README? Then this login
+        // unlocks exactly one page: the one that replaces it.
+        if (hash_equals(AdminUser::DEFAULT_PASSWORD, $password)) {
+            $_SESSION['must_change_password'] = true;
+            $this->redirect('/admin/password');
+        }
+
         $this->redirect('/admin/dashboard');
     }
 
-    /** GET /admin/logout */
+    /**
+     * POST /admin/logout
+     *
+     * POST with a CSRF token, not a plain link: a GET logout can be
+     * triggered by any web page (an <img src=".../admin/logout">), which
+     * would sign the committee out mid-task.
+     */
     public function logout(): void
     {
+        $this->requireCsrf();
         $_SESSION = [];
         session_destroy();
         $this->redirect('/admin/login');
+    }
+
+    /** GET /admin/password */
+    public function passwordForm(): void
+    {
+        $this->requireAdmin(true);
+
+        $errors = $_SESSION['password_errors'] ?? [];
+        unset($_SESSION['password_errors']);
+
+        $this->view('admin/password', [
+            'forced' => !empty($_SESSION['must_change_password']),
+            'errors' => $errors,
+        ]);
+    }
+
+    /** POST /admin/password */
+    public function changePassword(): void
+    {
+        $this->requireAdmin(true);
+        $this->requireCsrf();
+
+        $current = (string) ($_POST['current_password'] ?? '');
+        $new     = (string) ($_POST['new_password'] ?? '');
+        $confirm = (string) ($_POST['confirm_password'] ?? '');
+
+        $userModel = new AdminUser();
+        $userId    = (int) $_SESSION['admin_id'];
+
+        // Asking for the current password again means a borrowed,
+        // unlocked laptop is not enough to take the account over.
+        $errors = $userModel->checkPassword($userId, $current)
+            ? AdminUser::validateNewPassword((string) $_SESSION['admin_username'], $new, $confirm)
+            : ['目前密碼不正確。'];
+
+        if ($errors) {
+            $_SESSION['password_errors'] = $errors;
+            $this->redirect('/admin/password');
+        }
+
+        $userModel->updatePassword($userId, $new);
+        session_regenerate_id(true);
+        unset($_SESSION['must_change_password']);
+
+        $this->flash('success', '密碼已更新', '請記住新密碼，下次登入時使用。');
+        $this->redirect('/admin/dashboard');
     }
 
     /** GET /admin/dashboard  (optionally ?event=<id>) */
@@ -470,10 +543,10 @@ class AdminController extends Controller
 
         $errors = Event::validate($fields);
 
-        // Editing an event that already has registrations? Lowering the
-        // attendee cap below a group that is already booked would leave
-        // the dashboard showing a number the form says is impossible.
-        if (!$isNew && !$errors) {
+        // Editing? Then the event must still exist — it may have been a
+        // test event deleted in another tab.
+        $existing = null;
+        if (!$isNew) {
             $existing = $eventModel->find($id);
             if ($existing === null) {
                 $this->flash('error', '找不到活動', '找不到該活動。');
@@ -482,53 +555,76 @@ class AdminController extends Controller
         }
 
         // ---- Image uploads ----
-        // Done after validation so a rejected form never leaves an
-        // orphaned file on disk, and kept out of $fields until they
-        // succeed so a failed upload cannot blank an existing image.
-        $existing = $isNew ? null : $eventModel->find($id);
+        // Two lists, because deleting a file cannot be undone:
+        //   $newFiles  written during this request. If the save does not
+        //              happen they belong to nothing, so they are removed.
+        //   $oldFiles  the images being replaced or removed. Deleted only
+        //              AFTER the new values are saved — deleting them any
+        //              earlier left the live site pointing at a file that
+        //              no longer existed whenever the form was rejected.
+        // Skipped entirely when a text field is already wrong, so a
+        // rejected form never touches the disk at all.
+        $newFiles = [];
+        $oldFiles = [];
 
-        try {
-            $banner = $this->handleImageField(
-                'hero_banner', 'banners', 1920,
-                $existing['hero_banner_path'] ?? null,
-                !empty($_POST['remove_hero_banner']),
-                $id
-            );
-            if ($banner !== false) {
-                $fields['hero_banner_path'] = $banner;
+        if (!$errors) {
+            $imageFields = [
+                'hero_banner' => ['hero_banner_path', 'banners', 1920],
+                'favicon'     => ['favicon_path',     'favicons', 180],
+            ];
+            try {
+                foreach ($imageFields as $input => [$column, $subdir, $maxWidth]) {
+                    $result = $this->handleImageField($input, $subdir, $maxWidth, !empty($_POST["remove_{$input}"]));
+                    if ($result === false) {
+                        continue;   // untouched — keep what is stored
+                    }
+                    $fields[$column] = $result;
+                    if ($result !== null) {
+                        $newFiles[] = [$subdir, $result];
+                    }
+                    $current = $existing[$column] ?? null;
+                    if ($current && $current !== $result) {
+                        $oldFiles[] = [$subdir, $current];
+                    }
+                }
+            } catch (RuntimeException $e) {
+                $errors[] = $e->getMessage();
             }
-
-            $favicon = $this->handleImageField(
-                'favicon', 'favicons', 180,
-                $existing['favicon_path'] ?? null,
-                !empty($_POST['remove_favicon']),
-                $id
-            );
-            if ($favicon !== false) {
-                $fields['favicon_path'] = $favicon;
-            }
-        } catch (RuntimeException $e) {
-            $errors[] = $e->getMessage();
         }
 
         if ($errors) {
+            // e.g. the banner uploaded fine, then the favicon was rejected:
+            // nothing will ever point at that banner, so take it back off.
+            foreach ($newFiles as [$subdir, $path]) {
+                (new ImageUploader($subdir))->delete($path);
+            }
+            unset($fields['hero_banner_path'], $fields['favicon_path']);
+
             $_SESSION['event_form_errors'] = $errors;
             $_SESSION['event_form_old']    = $fields;
             $this->redirect($isNew ? '/admin/event/new' : "/admin/event/edit?id={$id}");
         }
 
         if ($isNew) {
-            $newId = $eventModel->create($fields);
+            $id = $eventModel->create($fields);
+        } else {
+            $eventModel->update($id, $fields);
+        }
+
+        // The new values are safely stored — only now drop the old files.
+        foreach ($oldFiles as [$subdir, $path]) {
+            $this->deleteImageIfUnshared(new ImageUploader($subdir), $path, $id);
+        }
+
+        if ($isNew) {
             $this->flash(
                 'success',
                 '活動已新增',
                 '新活動已建立，但尚未公開。確認資料無誤後，請按「設為公開」。'
             );
-            $this->redirect("/admin/dashboard?event={$newId}");
+        } else {
+            $this->flash('success', '已儲存', '活動資料已更新，網站已同步顯示。');
         }
-
-        $eventModel->update($id, $fields);
-        $this->flash('success', '已儲存', '活動資料已更新，網站已同步顯示。');
         $this->redirect("/admin/dashboard?event={$id}");
     }
 
@@ -541,37 +637,19 @@ class AdminController extends Controller
      * that distinction, saving the form without touching the file input
      * would wipe an existing banner.
      *
+     * This method never deletes anything; saveEvent() decides that once
+     * it knows the save went through.
+     *
      * @return string|null|false
      */
-    private function handleImageField(
-        string $inputName,
-        string $subdir,
-        int $maxWidth,
-        ?string $currentPath,
-        bool $removeRequested,
-        int $eventId
-    ) {
-        $uploader = new ImageUploader($subdir);
-        $file     = $_FILES[$inputName] ?? null;
+    private function handleImageField(string $inputName, string $subdir, int $maxWidth, bool $removeRequested)
+    {
+        $file = $_FILES[$inputName] ?? null;
 
-        if ($removeRequested && !ImageUploader::wasProvided($file)) {
-            $this->deleteImageIfUnshared($uploader, $currentPath, $eventId);
-            return null;
+        if (ImageUploader::wasProvided($file)) {
+            return (new ImageUploader($subdir))->store($file, $maxWidth);
         }
-
-        if (!ImageUploader::wasProvided($file)) {
-            return false;   // nothing chosen — keep what is stored
-        }
-
-        $newPath = $uploader->store($file, $maxWidth);
-
-        // Only once the new file is safely written do we drop the old
-        // one, so a failure mid-way never leaves the event with neither.
-        if ($currentPath && $currentPath !== $newPath) {
-            $this->deleteImageIfUnshared($uploader, $currentPath, $eventId);
-        }
-
-        return $newPath;
+        return $removeRequested ? null : false;
     }
 
     /**

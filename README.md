@@ -71,7 +71,8 @@ tianyutang/
 │   ├── Models/
 │   │   ├── Rsvp.php            ← registrations + attendees
 │   │   ├── Donation.php        ← donations + merit tables
-│   │   └── AdminUser.php       ← committee login accounts
+│   │   ├── AdminUser.php       ← committee login accounts
+│   │   └── LoginAttempt.php    ← failed-login counter (rate limiting)
 │   │
 │   ├── Controllers/
 │   │   ├── HomeController.php
@@ -86,6 +87,7 @@ tianyutang/
 │       ├── admin/              ← login.php, dashboard.php
 │       └── errors/404.php
 │
+├── storage/receipts/           ← PRIVATE uploads (receipt photos), outside the web root
 ├── config/config.php           ← the only file you edit per environment
 ├── schema.sql                  ← database structure
 ├── server.php                  ← local dev server helper (delete before upload)
@@ -267,7 +269,12 @@ A counter donation differs from a public one, deliberately:
 - **Stamped with the admin who entered it** (`recorded_by`). Cash
   without an owner is how money goes missing.
 - **The paper receipt can be photographed and attached**, so a disputed
-  amount can be checked against the original.
+  amount can be checked against the original. Receipt photos are
+  financial records, so they are stored in `storage/receipts/` —
+  **outside the web root** — and viewed only through the admin-only
+  `/admin/receipt?id=` route. Receipts uploaded before this change
+  stay in `public/uploads/receipts/`, where a deny-all `.htaccess` now
+  blocks direct URLs; the same route still shows them.
 - **Submission windows do not apply** — the counter runs on the day,
   often after online registration has closed.
 - Contact number is **optional**; refusing a donation over a missing
@@ -313,6 +320,7 @@ mysql -u USER -p < migrations/001_add_events.sql       # events table
 mysql -u USER -p < migrations/002_add_event_photos.sql # photo gallery
 mysql -u USER -p < migrations/003_add_checkin.sql      # on-site check-in
 mysql -u USER -p < migrations/004_add_counter_donations.sql # cash at the counter
+mysql -u USER -p < migrations/005_add_login_attempts.sql    # login rate limiting
 ```
 
 Run them in order. Both are safe to run twice.
@@ -371,9 +379,14 @@ Then open http://localhost:8000
 
 ## 4. Before going live — checklist
 
-- [ ] `config/config.php` → set `DEBUG_MODE` to **`false`**
-      (otherwise PHP errors, including SQL, are shown to visitors)
-- [ ] Log in and change the default admin password
+- [ ] `config/config.php` → `DEBUG_MODE` must be **`false`** (it ships
+      that way; if you turned it on locally, turn it off again).
+      Otherwise PHP errors, including SQL, are shown to visitors
+- [ ] Log in once with the default password — the site makes you
+      choose a new one before anything else works
+- [ ] Serve the site over **HTTPS** (the session cookie is then marked
+      `secure` automatically, and the check-in camera needs it)
+- [ ] Make sure the web server can write to `storage/receipts/`
 - [ ] Confirm `app/` and `config/` are not browsable
       (try `yoursite.com/config/config.php` — it must not display)
 - [ ] Verify the event dates (16, 17 & 18 Oct 2026), venue and 功德席 price
@@ -385,7 +398,12 @@ Username: admin
 Password: tianyutang2026
 ```
 
-**Change this immediately.** To generate a replacement hash:
+The first login with this password goes straight to a **change-password
+page**, and every other admin page redirects back there until a new
+password (at least 10 characters) is saved. Afterwards the password can
+be changed any time from the **更改密碼** button on the dashboard.
+
+Locked out entirely? Generate a replacement hash by hand:
 
 ```bash
 php -r "echo password_hash('your-new-password', PASSWORD_DEFAULT);"
@@ -411,6 +429,12 @@ UPDATE admin_users SET password_hash = 'paste-the-hash-here' WHERE username = 'a
 | Username enumeration | Login returns the same message and takes similar time whether the user exists or not |
 | Source code exposure | `app/` and `config/` outside the web root, plus deny-all `.htaccess` |
 | Password storage | bcrypt via `password_hash()` — plain passwords are never stored |
+| Password guessing | 5 failed logins from one IP within 15 minutes locks that IP out (`login_attempts` table — not the session, which an attacker can discard) |
+| Default password | Logging in with the published default only unlocks the change-password page |
+| Session theft | `HttpOnly`, `SameSite=Lax`, and `Secure` whenever the request is HTTPS |
+| Forced logout | Logout is a CSRF-protected POST, so another site cannot sign an admin out |
+| Receipt privacy | Receipt photos stored outside the web root, served only to signed-in admins |
+| Error leakage | `DEBUG_MODE` off by default; errors go to the server log, not the page |
 
 ---
 
@@ -423,7 +447,9 @@ UPDATE admin_users SET password_hash = 'paste-the-hash-here' WHERE username = 'a
 | POST | `/donation/submit` | `DonationController@submit` |
 | GET | `/admin/login` | `AdminController@loginForm` |
 | POST | `/admin/login` | `AdminController@login` |
-| GET | `/admin/logout` | `AdminController@logout` |
+| POST | `/admin/logout` | `AdminController@logout` |
+| GET | `/admin/password` | `AdminController@passwordForm` |
+| POST | `/admin/password` | `AdminController@changePassword` |
 | GET | `/admin/dashboard` | `AdminController@dashboard` |
 | POST | `/admin/rsvp/confirm` | `AdminController@confirmRsvp` |
 | POST | `/admin/rsvp/cancel` | `AdminController@cancelRsvp` |
@@ -435,6 +461,7 @@ UPDATE admin_users SET password_hash = 'paste-the-hash-here' WHERE username = 'a
 | GET | `/gallery` | `GalleryController@index` |
 | GET | `/admin/counter` | `CounterController@index` |
 | POST | `/admin/counter/save` | `CounterController@save` |
+| GET | `/admin/receipt?id=` | `CounterController@receipt` |
 | GET | `/admin/checkin` | `CheckinController@index` |
 | POST | `/admin/checkin/person` | `CheckinController@person` |
 | POST | `/admin/checkin/group` | `CheckinController@group` |
@@ -466,5 +493,3 @@ to a controller, add the view under `app/Views/`.
 - `MAX_ATTENDEES` and `MERIT_TABLE_PRICE` live in `config/config.php`.
   Changing the price there updates the form, the running total and the
   stored amount together — do not hard-code it anywhere else.
-#   T i a n Y u T a n g - W e b  
- 

@@ -29,18 +29,32 @@ define('APP_TIMEZONE', 'Asia/Kuala_Lumpur');
 date_default_timezone_set(APP_TIMEZONE);
 
 // ---------- Environment ----------
-// Set to false before going live so PHP errors are never shown to visitors.
-define('DEBUG_MODE', true);
+// Off by default, so a fresh upload never shows PHP errors (and the SQL
+// inside them) to visitors. Turn it on only on your own machine while
+// developing — and never commit it as true.
+define('DEBUG_MODE', false);
 
 if (DEBUG_MODE) {
     ini_set('display_errors', '1');
     error_reporting(E_ALL);
 } else {
+    // Hidden from visitors, but still written to the server's error log
+    // so a problem on the live site can actually be diagnosed.
     ini_set('display_errors', '0');
-    error_reporting(0);
+    ini_set('log_errors', '1');
+    error_reporting(E_ALL);
 }
 
 // ---------- Session hardening ----------
 ini_set('session.cookie_httponly', '1');
 ini_set('session.use_strict_mode', '1');
 ini_set('session.cookie_samesite', 'Lax');
+
+// Over HTTPS, tell the browser never to send the session cookie over
+// plain HTTP, where anyone on the same wifi could read it and take over
+// an admin login. Decided per request rather than hard-coded, so local
+// http://localhost testing still works.
+$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+ini_set('session.cookie_secure', $isHttps ? '1' : '0');
+unset($isHttps);

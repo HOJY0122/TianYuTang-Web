@@ -67,7 +67,7 @@ $aiNotes = $isNew ? ($draft['ai_notes'] ?? null) : ($row['ai_notes'] ?? null);
     <div class="paper-head">
       <div><strong class="paper-title">收據 <span class="en">Receipt</span></strong></div>
       <label class="paper-no<?= $flag('receipt_no', 'number', 'no') ?>">No.
-        <input name="receipt_no" value="<?= $val('receipt_no') ?>" inputmode="numeric" maxlength="30" placeholder="26432"></label>
+        <input name="receipt_no" value="<?= $val('receipt_no') ?>" inputmode="numeric" maxlength="30" placeholder="例 e.g. 26432"></label>
     </div>
 
     <div class="form-grid">

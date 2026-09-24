@@ -28,7 +28,7 @@ class ReceiptOcrParser
         'lotus'    => '蓮花燈|莲花灯|蓮花灯|蓮花|莲花',
         'oil'      => '添油',
         'dragon'   => '龍香|龙香',
-        'tower'    => '塔香',
+        'tower'    => '塔香|大香',   // 大香: OCR often misreads 塔 as 大
         'gift'     => '樂捐|乐捐',
         'meal'     => '施齋|施斋|施齊',
         'other'    => '其他|其它',
@@ -82,7 +82,8 @@ class ReceiptOcrParser
 
         // No. 26432 — the printed red number.
         $no = '';
-        if (preg_match('/N[o0]\s*[.．:：]?\s*(\d{4,7})/u', $all, $m)) {
+        // "No.:270801" — the dot and colon can both be there.
+        if (preg_match('/N[o0]\s*[.．:：]*\s*(\d{4,7})/u', $all, $m)) {
             $no = $m[1];
         }
 
@@ -98,8 +99,9 @@ class ReceiptOcrParser
             }
         }
 
-        $name   = self::after($texts, '姓名|姓\s*名', 60);
-        $item   = self::after($texts, '項目|项目', 120);
+        // The name is written on the "Name:" line, just above "姓名:".
+        $name   = self::tidy(preg_replace('/姓\s*名\s*[:：]?/u', '', self::after($texts, '姓\s*名|Name', 60)));
+        $item   = self::item(self::after($texts, '項目|项目', 120));
         $issued = self::issuedBy($lines);
 
         $boxes = array_sum($amounts);
@@ -172,6 +174,24 @@ class ReceiptOcrParser
         return $lines;
     }
 
+    /** OCR puts spaces between Chinese characters: 中 壇元帥 千秋 → 中壇元帥千秋 */
+    private static function tidy(string $s): string
+    {
+        return trim(preg_replace('/(?<=\p{Han})\s+(?=\p{Han})/u', '', $s));
+    }
+
+    /**
+     * The 項目 line ends with a printed "□其它 ____" box: drop that label,
+     * and keep anything written after it as the "other" purpose.
+     */
+    private static function item(string $s): string
+    {
+        $parts = preg_split('/[□☐☑✓✔]?\s*其[它他]\s*[:：]?/u', $s, 2);
+        $item  = self::tidy($parts[0]);
+        $other = self::tidy(trim($parts[1] ?? '', " \t_-—"));
+        return $other !== '' ? trim($item . ' · 其它 ' . $other, ' ·') : $item;
+    }
+
     /** The first amount in a stretch of text: "RM 1,200.50" → 1200.5 */
     private static function firstAmount(string $s): ?float
     {
@@ -194,6 +214,9 @@ class ReceiptOcrParser
         foreach ($texts as $line) {
             if (preg_match('/(?:' . $label . ')\s*[:：]?\s*(.+)$/u', $line, $m)) {
                 $v = trim(preg_replace('/^(Name|Item)\s*[:：]?\s*/i', '', $m[1]), " \t:：_-—");
+                if (preg_match('/^(姓\s*名|Name)\s*[:：]?$/iu', $v)) {
+                    continue;   // "Name: 姓名:" — only labels on this line
+                }
                 if ($v !== '') {
                     return mb_substr($v, 0, $max);
                 }
@@ -209,7 +232,7 @@ class ReceiptOcrParser
             if (!preg_match('/Issued|發據人|发据人/u', $line['text'])) {
                 continue;
             }
-            $same = trim(preg_replace('/Issued\s*By|發據人|发据人|[:：]/u', '', $line['text']));
+            $same = trim(preg_replace('/Issued\s*By|發據人|发据人|[:：]/iu', '', $line['text']));
             if ($same !== '') {
                 return mb_substr($same, 0, 40);
             }

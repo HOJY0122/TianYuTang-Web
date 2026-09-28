@@ -39,7 +39,7 @@ $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confi
 </div>
 
 <!-- ---------- Headline numbers ---------- -->
-<div class="kpis">
+<div class="kpis" id="dashKpis" data-live="rsvp_groups rsvp_attendees donations events">
   <div class="kpi">
     <div class="k-label">參加人數<span class="en">People registered</span></div>
     <div class="k-value"><?= number_format($totalAttendees) ?></div>
@@ -70,7 +70,7 @@ $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confi
 </div>
 
 <!-- ---------- Trends ---------- -->
-<div class="grid-2">
+<div class="grid-2" id="dashGrid1" data-live="rsvp_groups rsvp_attendees donations events">
   <div class="panel"><?php chart_columns([
       'title' => '每日報名人數', 'subtitle' => 'People registered per day', 'unit' => '人 people',
       'rows'  => array_map(static fn($r) => ['day' => $r['day'], 'value' => $r['people']], $dailyPeople),
@@ -81,7 +81,7 @@ $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confi
   ]); ?></div>
 </div>
 
-<div class="grid-2">
+<div class="grid-2" id="dashGrid2" data-live="rsvp_groups rsvp_attendees donations events">
   <div class="panel"><?php chart_split([
       'title' => '布施類別', 'subtitle' => 'Merit seats vs freewill', 'money' => true,
       'parts' => [['label' => '功德席 Merit seats', 'value' => $byKind['seats']],
@@ -95,7 +95,7 @@ $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confi
 </div>
 
 <!-- ---------- Latest records ---------- -->
-<div class="grid-2">
+<div class="grid-2" id="dashGrid3" data-live="rsvp_groups rsvp_attendees donations events">
   <div class="panel">
     <h2>最新報名 <span class="en">Latest registrations</span></h2>
     <?php if (!$recentGroups): ?>

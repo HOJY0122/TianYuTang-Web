@@ -11,7 +11,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   <?php endif; ?>
 
   <!-- ---------- Running count ---------- -->
-  <div class="checkin-stats">
+  <div class="checkin-stats" id="liveStats" data-live="rsvp_groups rsvp_attendees events">
     <div><small>已報到 Arrived</small><strong><?= (int) $stats['arrived'] ?></strong></div>
     <div><small>應到 Expected</small><strong><?= (int) $stats['expected'] ?></strong></div>
     <div><small>尚未報到 Remaining</small>
@@ -129,13 +129,14 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   </div>
   <div class="page-col">
   <?php $pct = $stats['expected'] > 0 ? min(100, round($stats['arrived'] / $stats['expected'] * 100)) : 0; ?>
-  <div class="panel">
+  <div class="panel" id="liveProgress" data-live="rsvp_groups rsvp_attendees events">
     <h2 style="margin-top:0">📈 報到進度 <span class="en">Arrival progress</span></h2>
     <div class="big-number"><?= $pct ?>%</div>
     <div class="progress" role="progressbar" aria-valuenow="<?= $pct ?>" aria-valuemin="0" aria-valuemax="100"><span style="width:<?= $pct ?>%"></span></div>
     <p class="help" style="margin:0"><?= (int) $stats['arrived'] ?> / <?= (int) $stats['expected'] ?> 位已到 people arrived</p>
   </div>
   <!-- ---------- Recent arrivals ---------- -->
+  <div id="liveRecent" data-live="rsvp_groups rsvp_attendees events">
   <?php if ($recent): ?>
     <div class="panel">
       <h2>最近報到 <span class="en">Recent arrivals</span></h2>
@@ -149,6 +150,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
       </div>
     </div>
   <?php endif; ?>
+  </div>
 
   </div>
   </div>

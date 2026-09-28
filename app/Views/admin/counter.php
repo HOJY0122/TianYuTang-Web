@@ -15,7 +15,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   <?php endif; ?>
 
   <!-- ---------- Money in, by source ---------- -->
-  <div class="checkin-stats">
+  <div class="checkin-stats" id="liveStats" data-live="donations events">
     <div><small>現場現金 Counter</small><strong><?= rm($totals['counter']) ?></strong></div>
     <div><small>線上 Online</small><strong><?= rm($totals['online']) ?></strong></div>
     <div><small>現場筆數 Records</small><strong><?= (int) $totals['counter_count'] ?></strong></div>
@@ -139,21 +139,52 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
              value="<?= h($v('contact')) ?>" placeholder="例 e.g. 012 345 6789">
       <p class="help">現場布施者未必願意留電話，留空即可。Leave blank if the donor prefers not to give one.</p>
 
-      <p class="help" style="margin:16px 0 0">填寫功德席、隨喜金額，或兩者皆填。Fill in seats, freewill, or both.</p>
-      <div class="form-row">
-        <div>
-          <label for="table_count">功德席數量 <span class="en">Merit seats (RM<?= number_format($seatPrice, 0) ?> each)</span></label>
-          <input id="table_count" name="table_count" type="number" min="0" max="200"
-                 inputmode="numeric" value="<?= h((string) $v('table_count', '0')) ?>" oninput="updateCounter()">
+      <p class="help" style="margin:18px 0 8px">填寫功德席、隨喜金額，或兩者皆填。<span class="en">Fill in seats, freewill, or both.</span></p>
+      <div class="cd-grid">
+        <!-- Merit seats -->
+        <div class="cd-card" id="seatCard">
+          <div class="cd-card-head">
+            <span class="cd-icon" aria-hidden="true">🪑</span>
+            <div><label for="table_count" class="cd-title">功德席 <span class="en">Merit seats</span></label>
+              <span class="help">每席 RM <?= number_format($seatPrice, 0) ?> <span class="en">per seat</span></span></div>
+          </div>
+          <div class="cd-stepper">
+            <button type="button" data-seat="-1" aria-label="減少 Fewer">−</button>
+            <input id="table_count" name="table_count" type="number" min="0" max="200" inputmode="numeric"
+                   value="<?= h((string) $v('table_count', '0')) ?>" aria-label="席數 Number of seats">
+            <button type="button" data-seat="1" aria-label="增加 More">+</button>
+          </div>
+          <div class="cd-chips" aria-label="快速選擇席數 Quick seats">
+            <?php foreach ([1, 2, 3, 5, 10] as $n): ?><button type="button" data-seats="<?= $n ?>"><?= $n ?> 席</button><?php endforeach; ?>
+          </div>
+          <div class="cd-sub" id="seatSub">—</div>
         </div>
-        <div>
-          <label for="free_amount">隨喜金額 <span class="en">Freewill (RM)</span></label>
-          <input id="free_amount" name="free_amount" type="number" min="0" step="0.01"
-                 inputmode="decimal" value="<?= h((string) $v('free_amount')) ?>" oninput="updateCounter()" placeholder="0">
+
+        <!-- Freewill -->
+        <div class="cd-card" id="freeCard">
+          <div class="cd-card-head">
+            <span class="cd-icon" aria-hidden="true">🙏</span>
+            <div><label for="free_amount" class="cd-title">隨喜 <span class="en">Freewill</span></label>
+              <span class="help">任意金額 <span class="en">any amount</span></span></div>
+          </div>
+          <div class="cd-money">
+            <span aria-hidden="true">RM</span>
+            <input id="free_amount" name="free_amount" type="number" min="0" step="0.01" inputmode="decimal"
+                   value="<?= h((string) $v('free_amount')) ?>" placeholder="0.00" aria-label="隨喜金額 Freewill amount (RM)">
+          </div>
+          <div class="cd-chips" aria-label="快速金額 Quick amounts">
+            <?php foreach ([10, 20, 50, 100, 200, 500, 1000] as $amt): ?><button type="button" data-amount="<?= $amt ?>"><?= number_format($amt) ?></button><?php endforeach; ?>
+            <button type="button" data-amount="0" class="cd-clear">清除 Clear</button>
+          </div>
+          <div class="cd-sub" id="freeSub">—</div>
         </div>
       </div>
 
-      <div class="total counter-total"><span>合計 Total</span><strong id="counterTotal">RM 0</strong></div>
+      <div class="cd-total" aria-live="polite">
+        <div><span class="cd-total-label">合計 <span class="en">Total</span></span>
+          <small id="counterBreakdown">請選擇席數或輸入金額 Choose seats or enter an amount</small></div>
+        <strong id="counterTotal">RM 0.00</strong>
+      </div>
 
       <label for="receipt">收據相片 <span class="en">Receipt photo (recommended)</span></label>
       <input id="receipt" name="receipt" type="file" class="file-input" data-aspects="original,3:4,4:3" data-max-width="1600"
@@ -174,6 +205,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   </div>
 
   <!-- ---------- Recently recorded ---------- -->
+  <div id="liveRecent" data-live="donations events">
   <?php if ($recent): ?>
     <div class="panel">
       <h2>最近登記 <span class="en">Recently recorded</span></h2>
@@ -205,6 +237,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
       </div>
     </div>
   <?php endif; ?>
+  </div>
 
 </div>
 
@@ -217,13 +250,37 @@ TYTScanner({
 });
 const SEAT_PRICE = <?= (float) $seatPrice ?>;
 
-function updateCounter() {
-  const seats = Math.max(0, parseInt(document.getElementById('table_count').value, 10) || 0);
-  const free  = Math.max(0, parseFloat(document.getElementById('free_amount').value) || 0);
-  const total = seats * SEAT_PRICE + free;
-  document.getElementById('counterTotal').textContent =
-    'RM ' + total.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-updateCounter();
+// Counter donation: stepper, quick buttons and the live total (display
+// only — the server works the amount out again from the event's price).
+(function () {
+  var seats = document.getElementById('table_count'), free = document.getElementById('free_amount');
+  var money = function (n) { return 'RM ' + n.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+  function update() {
+    var n = Math.max(0, parseInt(seats.value, 10) || 0), f = Math.max(0, parseFloat(free.value) || 0);
+    document.getElementById('seatCard').classList.toggle('is-on', n > 0);
+    document.getElementById('freeCard').classList.toggle('is-on', f > 0);
+    document.getElementById('seatSub').textContent = n ? n + ' 席 × ' + money(SEAT_PRICE) + ' = ' + money(n * SEAT_PRICE) : '—';
+    document.getElementById('freeSub').textContent = f ? money(f) : '—';
+    var parts = [];
+    if (n) parts.push(n + ' 席 seats');
+    if (f) parts.push('隨喜 freewill ' + money(f));
+    document.getElementById('counterBreakdown').textContent = parts.length ? parts.join(' + ') : '請選擇席數或輸入金額 Choose seats or enter an amount';
+    document.getElementById('counterTotal').textContent = money(n * SEAT_PRICE + f);
+    document.querySelectorAll('[data-seats]').forEach(function (b) { b.classList.toggle('on', +b.dataset.seats === n); });
+    document.querySelectorAll('[data-amount]').forEach(function (b) { b.classList.toggle('on', +b.dataset.amount === f && f > 0); });
+    document.querySelector('[data-seat="-1"]').disabled = n <= 0;
+  }
+  document.querySelectorAll('[data-seat]').forEach(function (b) {
+    b.addEventListener('click', function () { seats.value = Math.min(200, Math.max(0, (parseInt(seats.value, 10) || 0) + +b.dataset.seat)); update(); });
+  });
+  document.querySelectorAll('[data-seats]').forEach(function (b) {
+    b.addEventListener('click', function () { seats.value = b.dataset.seats; update(); });
+  });
+  document.querySelectorAll('[data-amount]').forEach(function (b) {
+    b.addEventListener('click', function () { free.value = +b.dataset.amount ? b.dataset.amount : ''; update(); free.focus(); });
+  });
+  [seats, free].forEach(function (el) { el.addEventListener('input', update); });
+  update();
+})();
 </script>
 <?php require BASE_PATH . '/app/Views/layouts/admin_footer.php'; ?>

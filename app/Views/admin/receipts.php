@@ -9,7 +9,7 @@ $pagerBase  = '/admin/receipts';
 $pagerQuery = array_filter($filters, static fn($v) => $v !== '' && $v !== null);
 $payLabel   = ['cash' => '💵 現金 Cash', 'bank' => '🏦 轉帳 Bank-in', '' => '—'];
 ?>
-<div class="kpis">
+<div class="kpis" id="liveKpis" data-live="receipts">
   <div class="kpi"><div class="k-label">收據張數<span class="en">Receipts</span></div><div class="k-value"><?= number_format((int) $sum['n']) ?></div></div>
   <div class="kpi"><div class="k-label">總額<span class="en">Total</span></div><div class="k-value"><?= rm_compact((float) $sum['total']) ?></div></div>
   <?php
@@ -50,6 +50,7 @@ $payLabel   = ['cash' => '💵 現金 Cash', 'bank' => '🏦 轉帳 Bank-in', ''
     <a class="mini-btn ghost btn-lg" href="<?= url('/admin/receipts/excel') . '?' . h(http_build_query($pagerQuery)) ?>">📊 Excel</a>
     <a class="mini-btn btn-lg" href="<?= url('/admin/receipts/new') ?>"><?= $aiReady ? '🤖 AI 掃描收據 AI scan receipt' : '📷 新增收據 Add receipt' ?></a>
   </form>
+  <div id="liveList" data-live="receipts">
 
   <?php if (!$aiReady): ?>
     <p class="flash info" style="margin:0 0 12px">🤖 AI 讀取尚未啟用，可以照常拍照並手動輸入。AI reading is off — you can still attach photos and type receipts in.<br>
@@ -116,5 +117,6 @@ $payLabel   = ['cash' => '💵 現金 Cash', 'bank' => '🏦 轉帳 Bank-in', ''
   </table>
   <?php require BASE_PATH . '/app/Views/partials/pager.php'; ?>
   <?php endif; ?>
+  </div>
 </div>
 <?php require BASE_PATH . '/app/Views/layouts/admin_footer.php'; ?>

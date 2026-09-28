@@ -20,7 +20,11 @@
 <script>
 (function () {
   // ---- album rows: arrows page through, disabled at either end ----
-  document.querySelectorAll('.album-row').forEach(function (row) {
+  // bindRows / bindPhotos run on the page and again on any part that
+  // arrives with a realtime update (live:swap); each element once.
+  function bindRows(root) {
+  root.querySelectorAll('.album-row:not([data-bound])').forEach(function (row) {
+    row.setAttribute('data-bound', '');
     var strip = row.querySelector('.album-strip');
     var prev  = row.querySelector('.album-nav.prev');
     var next  = row.querySelector('.album-nav.next');
@@ -37,6 +41,7 @@
     window.addEventListener('resize', update);
     update();
   });
+  }
 
   // ---- lightbox ----
   var box = document.getElementById('lightbox');
@@ -61,18 +66,25 @@
     img.src = '';   // stop a large download continuing in the background
   }
 
-  document.querySelectorAll('.album-strip').forEach(function (strip) {
-    var figures = Array.prototype.slice.call(strip.querySelectorAll('figure'));
-    var items = figures.map(function (f) { return { full: f.dataset.full, caption: f.dataset.caption }; });
-    figures.forEach(function (f, i) {
-      f.addEventListener('click', function () { set = items; show(i); });
+  function bindPhotos(root) {
+    root.querySelectorAll('.album-strip:not([data-lb])').forEach(function (strip) {
+      strip.setAttribute('data-lb', '');
+      var figures = Array.prototype.slice.call(strip.querySelectorAll('figure[data-full]'));
+      var items = figures.map(function (f) { return { full: f.dataset.full, caption: f.dataset.caption }; });
+      figures.forEach(function (f, i) {
+        f.addEventListener('click', function () { set = items; show(i); });
+      });
     });
-  });
-  document.querySelectorAll('img[data-lightbox]').forEach(function (el) {
-    el.addEventListener('click', function () {
-      set = [{ full: el.dataset.lightbox, caption: el.alt }]; show(0);
+    root.querySelectorAll('img[data-lightbox]:not([data-lb])').forEach(function (el) {
+      el.setAttribute('data-lb', '');
+      el.addEventListener('click', function () {
+        set = [{ full: el.dataset.lightbox, caption: el.alt }]; show(0);
+      });
     });
-  });
+  }
+  bindRows(document);
+  bindPhotos(document);
+  document.addEventListener('live:swap', function (e) { bindRows(e.detail); bindPhotos(e.detail); });
 
   box.querySelector('.lb-close').addEventListener('click', close);
   box.querySelector('.lb-prev').addEventListener('click', function (e) { e.stopPropagation(); show(current - 1); });

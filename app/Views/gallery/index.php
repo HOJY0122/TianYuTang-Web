@@ -8,7 +8,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
 ?>
 
 <main id="main">
-<section class="section">
+<section class="section" id="liveGallery" data-live="event_photos events settings">
   <div class="section-title">
     <h2><?= tb('gallery.title') ?></h2>
     <p><?= tb('gallery.hint') ?></p>

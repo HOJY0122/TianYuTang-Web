@@ -1,5 +1,5 @@
 <?php require BASE_PATH . '/app/Views/layouts/admin_header.php'; ?>
-<div class="panel">
+<div class="panel" id="liveUsers" data-live="admin_users">
   <p class="help" style="margin-top:0">
     共 <?= count($users) ?> 個帳號：<?= (int) $adminCount ?> 位管理員、<?= (int) $systemCount ?> 位系統管理員。
     <strong>每位委員應有自己的帳號</strong>——現場布施與現場報名都會記錄是誰登記的。<br>

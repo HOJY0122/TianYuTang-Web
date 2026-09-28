@@ -10,7 +10,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
 ?>
 
 <main id="main">
-<section class="section narrow">
+<section class="section narrow" id="liveRegister" data-live="events settings" data-live-mode="reload">
   <div class="section-title">
     <h2><?= tb('register.title') ?></h2>
     <p><?= h($event['year']) ?> <?= h($event['name']) ?></p>

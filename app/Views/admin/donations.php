@@ -7,7 +7,7 @@ $pagerBase  = '/admin/donations';
 $pagerQuery = array_filter(['event' => $eid] + $filters, static fn($v) => $v !== '' && $v !== null);
 $here       = $pagerBase . '?' . http_build_query($pagerQuery + ['page' => $page]);
 ?>
-<div class="kpis">
+<div class="kpis" id="liveKpis" data-live="donations events">
   <div class="kpi"><div class="k-label">布施總額<span class="en">Total pledged</span></div><div class="k-value"><?= rm_compact($sum) ?></div></div>
   <div class="kpi"><div class="k-label">已收款<span class="en">Received</span></div><div class="k-value"><?= rm_compact($paid) ?></div></div>
   <div class="kpi"><div class="k-label">未收款<span class="en">Outstanding</span></div><div class="k-value"><?= rm_compact(max(0, $sum - $paid)) ?></div></div>
@@ -43,6 +43,7 @@ $here       = $pagerBase . '?' . http_build_query($pagerQuery + ['page' => $page
     <a class="mini-btn ghost btn-lg" href="<?= url('/admin/export/donations') ?>?event=<?= $eid ?>">⬇️ CSV</a>
     <a class="mini-btn ghost btn-lg" href="<?= url('/admin/counter') ?>?event=<?= $eid ?>">＋ 現場布施 Counter</a>
   </form>
+  <div id="liveList" data-live="donations events">
 
   <p class="help" style="margin:0 0 8px">共 <?= number_format($total) ?> 筆 · <?= number_format($total) ?> donation<?= $total === 1 ? '' : 's' ?></p>
 
@@ -59,13 +60,15 @@ $here       = $pagerBase . '?' . http_build_query($pagerQuery + ['page' => $page
           <span class="sub-line"><?= h(date('Y-m-d H:i', strtotime($d['created_at']))) ?></span></td>
         <td data-label="姓名 Name"><?= h($d['name']) ?><span class="sub-line"><?= h($d['contact_no']) ?></span></td>
         <td data-label="內容 Details"><?= h(App\Models\Donation::describe($d)) ?>
-          <?= $d['source'] === 'counter' ? '<span class="badge counter">現場 Counter</span>' : '' ?>
-          <?php if (!empty($d['receipt_path'])): ?><a href="<?= url('/admin/receipt') ?>?id=<?= (int) $d['id'] ?>" target="_blank">📄 收據 Receipt</a><?php endif; ?></td>
+          <?= $d['source'] === 'counter' ? '<span class="badge counter">現場 Counter</span>' : '' ?></td>
         <td data-label="金額 Amount" class="num"><strong><?= rm((float) $d['amount']) ?></strong></td>
         <td data-label="付款 Payment"><?= $d['status'] === 'paid' ? '<span class="badge ok">✓ 已付 Paid</span>' : '<span class="badge pending">待付 Pending</span>' ?></td>
         <td data-label="操作 Actions">
           <div class="actions-cell">
             <a class="mini-btn" href="<?= url('/admin/donations/edit') ?>?id=<?= (int) $d['id'] ?>">✏️ 編輯 Edit</a>
+            <?php if (!empty($d['receipt_path'])): ?>
+              <a class="mini-btn ghost" href="<?= url('/admin/receipt') ?>?id=<?= (int) $d['id'] ?>" target="_blank" title="收據相片 Receipt photo">🧾 收據 Receipt</a>
+            <?php endif; ?>
             <?php if ($d['status'] !== 'paid'): ?>
               <form method="POST" action="<?= url('/admin/donations/paid') ?>" style="margin:0"
                     data-confirm="確認已收到 <?= h(rm((float) $d['amount'])) ?>？&#10;Confirm payment received?">
@@ -82,5 +85,6 @@ $here       = $pagerBase . '?' . http_build_query($pagerQuery + ['page' => $page
   </table>
   <?php require BASE_PATH . '/app/Views/partials/pager.php'; ?>
   <?php endif; ?>
+  </div>
 </div>
 <?php require BASE_PATH . '/app/Views/layouts/admin_footer.php'; ?>

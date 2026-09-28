@@ -12,7 +12,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
 ?>
 
 <main id="main">
-<section class="section narrow">
+<section class="section narrow" id="liveDonate" data-live="events settings" data-live-mode="reload">
   <div class="section-title">
     <h2><?= tb('donate.title') ?></h2>
     <p><?= tb('donate.intro') ?></p>

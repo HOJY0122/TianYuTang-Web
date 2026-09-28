@@ -23,6 +23,7 @@ if (!$bannerSlides && $siteHeroBanner) {
         'pos_x' => 50, 'pos_y' => 50, 'zoom' => 100, 'caption_zh' => null, 'caption_en' => null, 'link_url' => null]]);
 }
 ?>
+<div id="liveBanner" data-live="site_banners settings">
 <?php if ($bannerSlides): ?>
   <?php $bannerSite = $site; $bannerAlt = $siteName; require BASE_PATH . '/app/Views/partials/banner_show.php'; ?>
 <?php else: ?>
@@ -31,9 +32,11 @@ if (!$bannerSlides && $siteHeroBanner) {
     <?php if (($site['site_name_en'] ?? '') !== ''): ?><p><?= h($site['site_name_en']) ?></p><?php endif; ?>
   </div>
 <?php endif; ?>
+</div>
+
 
 <!-- ============ Welcome ============ -->
-<section class="section narrow welcome">
+<section class="section narrow welcome" id="liveWelcome" data-live="events settings">
   <div class="year"><?= h($event['year']) ?><?= !empty($event['year_label']) ? ' ' . h($event['year_label']) : '' ?></div>
   <h1><?= h($event['name']) ?></h1>
   <?php if (!empty($event['subtitle'])): ?>
@@ -80,7 +83,7 @@ if (!$bannerSlides && $siteHeroBanner) {
 </section>
 
 <!-- ============ Event information ============ -->
-<section class="section" id="info">
+<section class="section" id="info" data-live="events settings" data-live-mode="reload">
   <div class="section-title">
     <h2><?= tb('home.info') ?></h2>
   </div>
@@ -137,6 +140,7 @@ if (!$bannerSlides && $siteHeroBanner) {
   <?php endif; ?>
 </section>
 
+<div id="liveNews" data-live="posts settings">
 <?php if ($posts): ?>
 <!-- ============ News: one row of cards, swipe or use the arrows — like the albums ============ -->
 <section class="section" id="news">
@@ -180,14 +184,16 @@ if (!$bannerSlides && $siteHeroBanner) {
     <button type="button" class="album-nav next" aria-label="下一則 Next" data-dir="1">&#10095;</button>
   </div>
 </section>
+<?php endif; ?>
+</div>
 
-<!-- A whole post, opened from "read more" -->
+<!-- A whole post, opened from "read more" (outside the live part, so it survives updates) -->
 <dialog class="post-dialog" id="postDialog" aria-label="<?= h(t('home.news')) ?>">
   <button type="button" class="post-dialog-close" aria-label="關閉 Close">×</button>
   <div class="post-dialog-body"></div>
 </dialog>
-<?php endif; ?>
 
+<div id="livePhotos" data-live="event_photos events settings">
 <?php if ($albums): ?>
 <!-- ============ Photo albums, one row per year ============ -->
 <section class="section" id="photos">
@@ -204,36 +210,42 @@ if (!$bannerSlides && $siteHeroBanner) {
   </div>
 </section>
 <?php endif; ?>
+</div>
+
 
 </main>
 
 <?php require BASE_PATH . '/app/Views/partials/modal.php'; ?>
 <?php require BASE_PATH . '/app/Views/partials/lightbox.php'; ?>
 
-<?php if ($posts): ?>
 <script>
 // News cards show the first few lines; "read more" appears only on the
 // cards whose text is actually cut off, and opens the whole post.
+// Runs again on cards that arrive with a realtime update (live:swap).
 (function () {
   var dlg = document.getElementById('postDialog');
   var body = dlg.querySelector('.post-dialog-body');
-  document.querySelectorAll('.news-card').forEach(function (card) {
-    var text = card.querySelector('.post-text'), more = card.querySelector('.read-more');
-    if (text.scrollHeight > text.clientHeight + 4) more.hidden = false;
-    more.addEventListener('click', function () {
-      body.innerHTML = '';
-      var copy = card.cloneNode(true);
-      copy.classList.add('is-full');
-      copy.querySelector('.read-more').remove();
-      body.appendChild(copy);
-      if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
+  function bind(root) {
+    root.querySelectorAll('.news-card:not([data-bound])').forEach(function (card) {
+      card.setAttribute('data-bound', '');
+      var text = card.querySelector('.post-text'), more = card.querySelector('.read-more');
+      if (text.scrollHeight > text.clientHeight + 4) more.hidden = false;
+      more.addEventListener('click', function () {
+        body.innerHTML = '';
+        var copy = card.cloneNode(true);
+        copy.classList.add('is-full');
+        copy.querySelector('.read-more').remove();
+        body.appendChild(copy);
+        if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
+      });
     });
-  });
+  }
+  bind(document);
+  document.addEventListener('live:swap', function (e) { bind(e.detail); });
   dlg.querySelector('.post-dialog-close').addEventListener('click', function () { dlg.close ? dlg.close() : dlg.removeAttribute('open'); });
   dlg.addEventListener('click', function (e) { if (e.target === dlg && dlg.close) dlg.close(); });
 })();
 </script>
-<?php endif; ?>
 
 <?php if (!$hasQrImage && $wazeUrl !== ''): ?>
 <script src="<?= asset('js/qrcode.min.js') ?>"></script>

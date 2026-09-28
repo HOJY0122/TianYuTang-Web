@@ -92,7 +92,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
           <div class="person<?= $in ? ' is-in' : '' ?>">
             <div class="person-info">
               <strong><?= h($p['name']) ?></strong>
-              <span class="help"><?= h($p['ic_no']) ?> · <?= h($p['contact_no']) ?></span>
+              <span class="help"><?= h(mask_ic($p['ic_no'])) ?> · <?= h($p['contact_no']) ?></span>
               <?php if ($in): ?>
                 <span class="help arrived-at">
                   ✓ 已報到 Arrived <?= h(date('H:i', strtotime($p['checked_in_at']))) ?>

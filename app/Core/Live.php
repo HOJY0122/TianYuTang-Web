@@ -24,7 +24,7 @@ namespace App\Core;
 final class Live
 {
     /** Tables whose changes do not concern any page. */
-    private const IGNORE = ['live_versions', 'login_attempts', 'schema_migrations', 'ocr_corrections'];
+    private const IGNORE = ['live_versions', 'login_attempts', 'schema_migrations', 'ocr_corrections', 'rate_limits'];
 
     /**
      * What visitors who are not signed in may ask about. Only "something

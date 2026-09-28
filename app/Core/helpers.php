@@ -147,3 +147,30 @@ function live_sig_end(): void
     echo $html, '<i hidden data-live-sig="', substr(md5($html), 0, 16), '"></i>';
 }
 
+/**
+ * The site's host name, for full addresses (printed QR codes, the HTTPS
+ * redirect). SITE_URL in config.php wins; otherwise the request's Host
+ * header — but only if it looks like a host name, so a forged header
+ * cannot put someone else's address on a QR poster.
+ */
+function site_host(): string
+{
+    if (defined('SITE_URL') && SITE_URL !== '') {
+        return (string) parse_url(SITE_URL, PHP_URL_HOST) . (parse_url(SITE_URL, PHP_URL_PORT) ? ':' . parse_url(SITE_URL, PHP_URL_PORT) : '');
+    }
+    $host = (string) ($_SERVER['HTTP_HOST'] ?? '');
+    if (!preg_match('/^[A-Za-z0-9.\-]{1,253}(:\d{1,5})?$/', $host)) {
+        $host = (string) ($_SERVER['SERVER_NAME'] ?? 'localhost');
+    }
+    return $host;
+}
+
+/** Full address of the site's home page, e.g. https://tianyutang.org/ */
+function site_url(): string
+{
+    if (defined('SITE_URL') && SITE_URL !== '') {
+        return rtrim(SITE_URL, '/') . '/';
+    }
+    return (App\Core\Session::isHttps() ? 'https' : 'http') . '://' . site_host() . BASE_URL . '/';
+}
+

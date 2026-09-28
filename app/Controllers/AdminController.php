@@ -75,12 +75,9 @@ class AdminController extends Controller
 
         $attempts->clear($ip);
 
-        // Fresh session ID on privilege change — blocks session fixation.
-        session_regenerate_id(true);
-        $_SESSION['admin_id']       = $user['id'];
-        $_SESSION['admin_username'] = $user['username'];
-        $_SESSION['admin_role']     = $user['role'] ?? 'admin';
-        $_SESSION['admin_display']  = $user['display_name'] ?: $user['username'];
+        // Fresh session id and form token on sign-in — blocks session
+        // fixation — plus the facts every later page checks (Session::guard).
+        \App\Core\Session::signIn($user);
         (new AdminUser())->recordLogin((int) $user['id']);
 
         // Still on a password published with the source code? Then this
@@ -105,8 +102,7 @@ class AdminController extends Controller
     public function logout(): void
     {
         $this->requireCsrf();
-        $_SESSION = [];
-        session_destroy();
+        \App\Core\Session::signOut();
         $this->redirect('/admin/login');
     }
 

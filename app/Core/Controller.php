@@ -98,6 +98,17 @@ abstract class Controller
         if (empty($_SESSION['admin_id'])) {
             $this->redirect('/admin/login');
         }
+        // Timeouts, stolen-cookie and revoked-account checks (App\Core\Session).
+        $ended = Session::guard();
+        if ($ended !== null) {
+            $_SESSION['login_error'] = ['message' => [
+                'idle'    => '閒置超過 ' . Session::IDLE_MINUTES . " 分鐘，已自動登出，請重新登入。\nSigned out after " . Session::IDLE_MINUTES . ' minutes without activity. Please sign in again.',
+                'expired' => '登入已超過 ' . Session::ABSOLUTE_HOURS . " 小時，請重新登入。\nYou have been signed in for " . Session::ABSOLUTE_HOURS . ' hours. Please sign in again.',
+                'browser' => "為了安全，請重新登入。\nFor your security, please sign in again.",
+                'revoked' => "您的密碼或權限已更改，請重新登入。\nYour password or role was changed. Please sign in again.",
+            ][$ended]];
+            $this->redirect('/admin/login');
+        }
         if (!$passwordPage && !empty($_SESSION['must_change_password'])) {
             $this->redirect('/account/password');
         }

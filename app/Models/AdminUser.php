@@ -48,7 +48,7 @@ class AdminUser extends Model
     public function verify(string $username, string $password): ?array
     {
         $user = $this->fetchOne(
-            'SELECT id, username, password_hash, role, display_name FROM admin_users WHERE username = ?',
+            'SELECT id, username, password_hash, role, display_name, session_version FROM admin_users WHERE username = ?',
             [$username]
         );
 
@@ -62,9 +62,19 @@ class AdminUser extends Model
         if (!password_verify($password, $user['password_hash'])) {
             return null;
         }
+        // Stored with an older, weaker setting? Re-hash now while we have the password.
+        if (password_needs_rehash($user['password_hash'], PASSWORD_DEFAULT)) {
+            $this->execute('UPDATE admin_users SET password_hash = ? WHERE id = ?', [password_hash($password, PASSWORD_DEFAULT), $user['id']]);
+        }
 
         unset($user['password_hash']);
         return $user;
+    }
+
+    /** Role and session version, checked on every staff page (App\Core\Session). */
+    public function sessionState(int $id): ?array
+    {
+        return $this->fetchOne('SELECT role, session_version FROM admin_users WHERE id = ?', [$id]);
     }
 
     public function recordLogin(int $id): void
@@ -108,7 +118,8 @@ class AdminUser extends Model
     public function updatePassword(int $id, string $newPassword): bool
     {
         return $this->execute(
-            'UPDATE admin_users SET password_hash = ? WHERE id = ?',
+            // A new password signs this person out everywhere else (see App\Core\Session).
+            'UPDATE admin_users SET password_hash = ?, session_version = session_version + 1 WHERE id = ?',
             [password_hash($newPassword, PASSWORD_DEFAULT), $id]
         ) >= 0;
     }
@@ -116,7 +127,8 @@ class AdminUser extends Model
     public function updateRole(int $id, string $role): bool
     {
         return $this->execute(
-            'UPDATE admin_users SET role = ? WHERE id = ?',
+            // A changed role takes effect at once: other sessions must sign in again.
+            'UPDATE admin_users SET role = ?, session_version = session_version + 1 WHERE id = ?',
             [$this->normaliseRole($role), $id]
         ) >= 0;
     }

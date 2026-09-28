@@ -17,11 +17,6 @@ define('BASE_URL', $scriptDir === '/' ? '' : $scriptDir);
 // ---------- 2. Configuration ----------
 require BASE_PATH . '/config/config.php';
 
-// Pages may only be shown inside a frame on THIS site (the Wording
-// page's live preview). Another website framing the admin pages could
-// trick a signed-in admin into clicking buttons they cannot see.
-header('X-Frame-Options: SAMEORIGIN');
-header("Content-Security-Policy: frame-ancestors 'self'");
 
 // ---------- 3. Autoloader ----------
 // Maps App\Controllers\RsvpController → app/Controllers/RsvpController.php
@@ -39,7 +34,47 @@ spl_autoload_register(static function (string $class): void {
 
 // ---------- 4. Helpers & session ----------
 require BASE_PATH . '/app/Core/helpers.php';
-session_start();
+// ---------- Security headers (every response) ----------
+// Pages may only be shown inside a frame on THIS site (the Wording
+// page's live preview). Another website framing the admin pages could
+// trick a signed-in admin into clicking buttons they cannot see.
+header_remove('X-Powered-By');
+header('X-Frame-Options: SAMEORIGIN');
+// Content Security Policy: scripts, styles, images and connections only
+// from this site (fonts from Google Fonts). Even if someone managed to
+// inject HTML, it could not load a script from elsewhere, send data to
+// another server, or post a form off-site.
+header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; "
+     . "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; "
+     . "img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; frame-src 'self'; worker-src 'self' blob:; "
+     . "frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self'");
+header('X-Content-Type-Options: nosniff');              // files are only what they say they are
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header('Permissions-Policy: camera=(self), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()');
+header('Cross-Origin-Opener-Policy: same-origin');
+if (App\Core\Session::isHttps()) {
+    header('Strict-Transport-Security: max-age=31536000');   // browsers stay on HTTPS for a year
+} elseif (defined('FORCE_HTTPS') && FORCE_HTTPS && PHP_SAPI !== 'cli') {
+    header('Location: https://' . site_host() . ($_SERVER['REQUEST_URI'] ?? '/'), true, 301);
+    exit;
+}
+
+// Any unexpected error: details go to the server's error log, the visitor
+// sees a plain message — never file paths, SQL or a stack trace.
+set_exception_handler(static function (Throwable $e): void {
+    error_log('Uncaught ' . get_class($e) . ': ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+    if (!headers_sent()) {
+        http_response_code(500);
+        header('Content-Type: text/html; charset=utf-8');
+    }
+    echo DEBUG_MODE
+        ? '<pre>' . htmlspecialchars((string) $e, ENT_QUOTES, 'UTF-8') . '</pre>'
+        : '<!doctype html><meta charset="utf-8"><title>系統錯誤 Error</title><div style="font-family:sans-serif;max-width:32rem;margin:4rem auto;text-align:center">'
+          . '<h1>系統暫時出錯</h1><p>請稍後再試，或返回<a href="' . htmlspecialchars(BASE_URL . '/', ENT_QUOTES) . '">首頁</a>。</p>'
+          . '<p>Something went wrong. Please try again later.</p></div>';
+});
+
+App\Core\Session::start();   // cookie settings and time limits: see app/Core/Session.php
 
 // ---------- 5. Routes ----------
 $router = new App\Core\Router();

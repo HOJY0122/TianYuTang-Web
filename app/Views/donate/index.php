@@ -28,6 +28,8 @@ require BASE_PATH . '/app/Views/layouts/header.php';
   <?php else: ?>
 
   <form class="card form-card" action="<?= url('/donation/submit') ?>" method="POST" id="donationForm">
+    <!-- Left empty by people (it is hidden); bots fill it in. -->
+    <div class="hp-field" aria-hidden="true"><label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
     <?= csrf_field() ?>
 
     <?php if (!empty($window['closes_at'])): ?>

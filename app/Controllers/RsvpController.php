@@ -41,6 +41,14 @@ class RsvpController extends Controller
     {
         $this->requireCsrf();
 
+        // Bots and floods: a hidden trap field, and at most 10 forms per
+        // address in 10 minutes (a family registering several groups is fine).
+        if (\App\Core\RateLimit::isBot() || !\App\Core\RateLimit::allow('rsvp', 10, 10)) {
+            $this->flash('error', '請稍後再試 Please try again later',
+                "提交次數太多，請過幾分鐘再試。\nToo many submissions from this connection — please try again in a few minutes.");
+            $this->redirect('/register');
+        }
+
         // Which event is this for? Always the active one — never a value
         // the browser supplies, or a visitor could register against a
         // closed or test event by editing the form.

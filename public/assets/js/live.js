@@ -17,6 +17,10 @@
  *
  * Checks pause while the tab is hidden and resume (with one immediate
  * check) when it comes back.
+ *
+ * <html data-live-quiet> (the public site): updates happen silently —
+ * no note, no highlight, no "tap to refresh"; a part in use simply
+ * waits until it is free. The admin side keeps the notices.
  */
 (function () {
   'use strict';
@@ -24,6 +28,7 @@
   if (!regions.length || !window.fetch || !window.DOMParser) return;
 
   var BASE = (document.documentElement.getAttribute('data-base') || '');
+  var QUIET = document.documentElement.hasAttribute('data-live-quiet');
   var EVERY = 4000;                       // ms between checks while the page is visible
   var topics = {};
   regions.forEach(function (r) { r.dataset.live.split(/\s+/).forEach(function (t) { if (t) topics[t] = 1; }); });
@@ -47,6 +52,7 @@
 
   // ---- small notices ----
   function toast(text) {
+    if (QUIET) return;
     var t = document.createElement('div');
     t.className = 'live-toast';
     t.setAttribute('role', 'status');
@@ -57,7 +63,7 @@
   }
   var note = null;
   function showNote() {
-    if (note) return;
+    if (note || QUIET) return;
     note = document.createElement('button');
     note.type = 'button';
     note.className = 'live-note';
@@ -98,8 +104,10 @@
           old.replaceWith(node);
           regions[regions.indexOf(old)] = node;
           delete pending[old.id];
-          node.classList.add('live-flash');
-          setTimeout(function () { node.classList.remove('live-flash'); }, 1600);
+          if (!QUIET) {
+            node.classList.add('live-flash');
+            setTimeout(function () { node.classList.remove('live-flash'); }, 1600);
+          }
           document.dispatchEvent(new CustomEvent('live:swap', { detail: node }));
           swapped++;
         });

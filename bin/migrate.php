@@ -87,7 +87,9 @@ if ($firstRun) {
        . " inspecting the tables.)\n\n";
 }
 
-$files = glob(BASE_PATH . '/migrations/*.sql');
+// .sql files change the tables; .php files change data that only PHP can
+// (e.g. encrypting existing values with the site key). Same order, same record.
+$files = array_merge(glob(BASE_PATH . '/migrations/*.sql') ?: [], glob(BASE_PATH . '/migrations/*.php') ?: []);
 sort($files, SORT_STRING);   // 001, 002, … — the numbers ARE the order
 
 $applied = $firstRun ? [] : array_column(
@@ -158,6 +160,17 @@ startTracking($db, $firstRun, $detected);
 foreach ($pending as $path) {
     $name = basename($path);
     echo "=== {$name}\n";
+
+    if (str_ends_with($name, '.php')) {
+        try {
+            (static function (PDO $db) use ($path): void { require $path; })($db);
+        } catch (Throwable $e) {
+            fail("FAILED in {$name}:\n\n" . $e->getMessage() . "\n\nThis step was NOT marked as done; fix the cause and run again.");
+        }
+        record($db, $name, 'ran');
+        echo "    ok\n\n";
+        continue;
+    }
 
     $statements = splitSql((string) file_get_contents($path));
 

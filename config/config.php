@@ -42,6 +42,19 @@ define('NVIDIA_API_URL', '');      // leave empty (only changed for testing)
 define('GOOGLE_VISION_API_KEY', '');   // e.g. 'AIzaSy…'
 define('GOOGLE_VISION_URL', '');       // leave empty (only changed for testing)
 
+// ---------- Security ----------
+// The site's public address, e.g. 'https://www.tianyutang.org' (no trailing
+// slash). Used on printed QR codes. Leave empty to use the address the
+// page was opened with (checked to be a proper host name).
+define('SITE_URL', '');
+// true on the real server once HTTPS works: every http:// visit is sent to
+// https://, and browsers are told to stay on HTTPS.
+define('FORCE_HTTPS', false);
+// Encryption key for IC numbers and AI keys (base64 of 32 random bytes).
+// Leave empty to use storage/keys/app.key, created automatically.
+// Either way: BACK IT UP WITH THE DATABASE — without it that data is unreadable.
+define('APP_KEY', '');
+
 // ---------- Time ----------
 // Every date and time in this system means Malaysian local time.
 // Servers commonly run in UTC (AWS Lightsail does), and MySQL DATETIME

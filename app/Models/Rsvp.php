@@ -2,6 +2,7 @@
 namespace App\Models;
 
 use App\Core\Model;
+use App\Core\Crypto;
 use Exception;
 
 /**
@@ -40,8 +41,8 @@ class Rsvp extends Model
 
             foreach ($attendees as $a) {
                 $this->execute(
-                    'INSERT INTO rsvp_attendees (group_id, name, ic_no, contact_no) VALUES (?, ?, ?, ?)',
-                    [$groupId, $a['name'], $a['ic'], $a['contact']]
+                    'INSERT INTO rsvp_attendees (group_id, name, ic_no, ic_hash, ic_last4, contact_no) VALUES (?, ?, ?, ?, ?, ?)',
+                    array_merge([$groupId, $a['name']], self::icColumns($a['ic']), [$a['contact']])
                 );
             }
 
@@ -94,9 +95,9 @@ class Rsvp extends Model
 
             foreach ($attendees as $a) {
                 $this->execute(
-                    'INSERT INTO rsvp_attendees (group_id, name, ic_no, contact_no, checked_in_at)
-                     VALUES (?, ?, ?, ?, NOW())',
-                    [$groupId, $a['name'], $a['ic'], $a['contact']]
+                    'INSERT INTO rsvp_attendees (group_id, name, ic_no, ic_hash, ic_last4, contact_no, checked_in_at)
+                     VALUES (?, ?, ?, ?, ?, ?, NOW())',
+                    array_merge([$groupId, $a['name']], self::icColumns($a['ic']), [$a['contact']])
                 );
             }
 
@@ -171,11 +172,11 @@ class Rsvp extends Model
     /** Every attendee in a given group. */
     public function attendeesOf(int $groupId): array
     {
-        return $this->fetchAll(
+        return self::openIc($this->fetchAll(
             'SELECT id, name, ic_no, contact_no, checked_in_at
              FROM rsvp_attendees WHERE group_id = ? ORDER BY id',
             [$groupId]
-        );
+        ));
     }
 
     // ------------------------------------------------------------------
@@ -309,7 +310,7 @@ class Rsvp extends Model
      */
     public function attendeeSheet(int $eventId): array
     {
-        return $this->fetchAll(
+        return self::openIc($this->fetchAll(
             "SELECT a.name, a.ic_no, a.contact_no, a.checked_in_at,
                     g.ref_code, g.status, g.source, g.attendee_count
              FROM rsvp_attendees a
@@ -317,7 +318,7 @@ class Rsvp extends Model
              WHERE g.event_id = ? AND g.status <> 'cancelled'
              ORDER BY a.name, g.ref_code",
             [$eventId]
-        );
+        ));
     }
 
     /**
@@ -398,9 +399,12 @@ class Rsvp extends Model
         $q = trim((string) ($filters['q'] ?? ''));
         if ($q !== '') {
             $like    = '%' . addcslashes($q, '%_\\') . '%';
+            // IC numbers are encrypted: found by their full number (keyed hash)
+            // or by their last four digits, never by a LIKE on the column.
+            $icNorm  = self::icNormal($q);
             $where[] = '(g.ref_code LIKE ? OR EXISTS (SELECT 1 FROM rsvp_attendees a
-                          WHERE a.group_id = g.id AND (a.name LIKE ? OR a.contact_no LIKE ? OR a.ic_no LIKE ?)))';
-            array_push($params, $like, $like, $like, $like);
+                          WHERE a.group_id = g.id AND (a.name LIKE ? OR a.contact_no LIKE ? OR a.ic_hash = ? OR a.ic_last4 = ?)))';
+            array_push($params, $like, $like, $like, Crypto::blindIndex($icNorm), strlen($icNorm) === 4 ? $icNorm : '-');
         }
         if (in_array($filters['status'] ?? '', ['pending', 'confirmed', 'cancelled'], true)) {
             $where[]  = 'g.status = ?';
@@ -437,15 +441,15 @@ class Rsvp extends Model
                 if ($id > 0) {
                     // group_id in the WHERE: an id from another group is ignored.
                     $this->execute(
-                        'UPDATE rsvp_attendees SET name = ?, ic_no = ?, contact_no = ?
+                        'UPDATE rsvp_attendees SET name = ?, ic_no = ?, ic_hash = ?, ic_last4 = ?, contact_no = ?
                          WHERE id = ? AND group_id = ?',
-                        [$a['name'], $a['ic'], $a['contact'], $id, $groupId]
+                        array_merge([$a['name']], self::icColumns($a['ic']), [$a['contact'], $id, $groupId])
                     );
                     $keep[] = $id;
                 } else {
                     $this->execute(
-                        'INSERT INTO rsvp_attendees (group_id, name, ic_no, contact_no) VALUES (?, ?, ?, ?)',
-                        [$groupId, $a['name'], $a['ic'], $a['contact']]
+                        'INSERT INTO rsvp_attendees (group_id, name, ic_no, ic_hash, ic_last4, contact_no) VALUES (?, ?, ?, ?, ?, ?)',
+                        array_merge([$groupId, $a['name']], self::icColumns($a['ic']), [$a['contact']])
                     );
                     $keep[] = (int) $this->db->lastInsertId();
                 }
@@ -510,14 +514,14 @@ class Rsvp extends Model
      */
     public function masterList(int $eventId): array
     {
-        return $this->fetchAll(
+        return self::openIc($this->fetchAll(
             'SELECT g.id AS group_id, g.ref_code, g.created_at, g.attendee_count, g.status, g.source, g.recorded_by,
                     a.id AS attendee_id, a.name, a.ic_no, a.contact_no, a.checked_in_at
              FROM rsvp_groups g JOIN rsvp_attendees a ON a.group_id = g.id
              WHERE g.event_id = ?
              ORDER BY g.id, a.id',
             [$eventId]
-        );
+        ));
     }
 
     /** @return array<int,int> group size => how many registrations of that size (not cancelled) */
@@ -532,5 +536,36 @@ class Rsvp extends Model
             $out[(int) $r['size']] = (int) $r['n'];
         }
         return $out;
+    }
+
+    // ------------------------------------------------------------------
+    // IC / passport numbers are personal data: stored encrypted (Crypto),
+    // with a keyed hash for exact lookups and the last four digits for
+    // searching and masked display.
+    // ------------------------------------------------------------------
+
+    public static function icNormal(string $ic): string
+    {
+        return strtoupper((string) preg_replace('/[^A-Za-z0-9]/', '', $ic));
+    }
+
+    /** [encrypted value, blind index, last 4] for the ic_no / ic_hash / ic_last4 columns. */
+    public static function icColumns(?string $ic): array
+    {
+        $ic   = trim((string) $ic);
+        $norm = self::icNormal($ic);
+        return [$ic === '' ? '' : Crypto::encrypt($ic), $norm === '' ? null : Crypto::blindIndex($norm), $norm === '' ? null : substr($norm, -4)];
+    }
+
+    /** Rows with ic_no decrypted for display. */
+    private static function openIc(array $rows): array
+    {
+        foreach ($rows as &$r) {
+            if (array_key_exists('ic_no', $r)) {
+                $r['ic_no'] = (string) Crypto::decrypt($r['ic_no']);
+            }
+        }
+        unset($r);
+        return $rows;
     }
 }

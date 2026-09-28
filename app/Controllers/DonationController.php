@@ -38,6 +38,14 @@ class DonationController extends Controller
     {
         $this->requireCsrf();
 
+        // Bots and floods: a hidden trap field, and at most 10 forms per
+        // address in 10 minutes (a family registering several groups is fine).
+        if (\App\Core\RateLimit::isBot() || !\App\Core\RateLimit::allow('donation', 10, 10)) {
+            $this->flash('error', '請稍後再試 Please try again later',
+                "提交次數太多，請過幾分鐘再試。\nToo many submissions from this connection — please try again in a few minutes.");
+            $this->redirect('/donate');
+        }
+
         // Always the active event, never a browser-supplied id.
         $event     = (new Event())->active();
         $seatPrice = (float) $event['merit_table_price'];

@@ -75,9 +75,7 @@ class PrintController extends Controller
         // Build the absolute public URL from the request, so the QR
         // works whether the site is on localhost, a staging host, or
         // the real domain — nobody has to remember to edit a constant.
-        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-        $host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
-        $siteUrl = $scheme . '://' . $host . (BASE_URL ?: '') . '/';
+        $siteUrl = site_url();   // SITE_URL, or a checked Host header
 
         $this->view('print/qr', [
             'event'   => $event,

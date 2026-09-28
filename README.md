@@ -128,3 +128,38 @@ key is billed per use by Anthropic.
 Photos and news posts are put in order by **dragging** (mouse or finger);
 the order saves when you let go. The ↑ ↓ buttons on photos still work.
 Registration, donation and receipt lists sort by clicking a column heading.
+
+## Security
+
+### What is protected, and how
+| Area | Protection |
+|---|---|
+| Sign-in | Passwords hashed with bcrypt (re-hashed automatically if the algorithm improves); same response time whether or not a username exists; lock-out after repeated failures; default passwords must be changed first |
+| Sessions | Own cookie `TYTSESS`, HttpOnly, SameSite=Lax, Secure on HTTPS, never in URLs, made-up ids refused; new id at sign-in and every 15 min; signed out after **60 min idle** or **12 h**; a cookie used from a different browser ends the session; changing a password or role, or deleting an account, signs that person out everywhere (`session_version`) |
+| Forms | Every POST needs the session's CSRF token; public forms have a hidden bot trap and a limit of 10 submissions per address per 10 minutes |
+| Redirects | Only to paths on this site (`/admin/…`); full addresses (QR posters) come from `SITE_URL` or a checked Host header |
+| Personal data | IC / passport numbers encrypted in the database (AES-256-GCM) with a keyed hash for lookups; masked on the check-in screen |
+| Secrets | AI service keys encrypted in the database, never sent back to the browser |
+| Files | Receipt photos, bank slips and scans live in `storage/` (outside the web folder) and are shown only to signed-in staff, looked up by record id — never by a path; uploads are re-encoded (no hidden code, no GPS/EXIF), randomly named, and cannot run as scripts |
+| Folders | `app/`, `config/`, `storage/`, `migrations/`, `bin/`, `.git`, `*.sql`, `*.md` are refused even if the whole project folder is served and mod_rewrite is off |
+| Browser | Content-Security-Policy (scripts, connections and form posts only to this site), X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy (camera only for the QR scanner), HSTS on HTTPS; admin pages are never cached |
+| Errors | Visitors see a plain message; details go only to the server's error log |
+
+### On the real server
+1. **HTTPS**, then in `config/config.php`: `define('FORCE_HTTPS', true);` and `define('SITE_URL', 'https://your-domain');`
+2. Point the document root at **`public/`** if the host allows it (the root `.htaccess` covers you if not).
+3. Use a database user with rights on this database only, and a strong password.
+4. **Back up `storage/keys/app.key` with every database backup.** It decrypts the IC numbers and AI keys; without it they cannot be read. Never commit it (it is git-ignored) and never share it.
+5. Keep `DEBUG_MODE` false.
+6. Never put API keys in `config.php` in git — paste them into Site settings → ⑤ AI. If a key was ever committed, replace it at the provider.
+
+### Nginx (it ignores .htaccess)
+```nginx
+root /path/to/project/public;
+index index.php;
+location / { try_files $uri /index.php?$query_string; }
+location ~ ^/uploads/.*\.(php|phtml|phar)$ { deny all; }
+location /uploads/receipts/ { deny all; }
+location ~ /\. { deny all; }
+location ~ \.php$ { include fastcgi_params; fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name; fastcgi_pass unix:/run/php/php-fpm.sock; }
+```

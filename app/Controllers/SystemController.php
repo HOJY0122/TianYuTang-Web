@@ -574,6 +574,9 @@ class SystemController extends Controller
         }
 
         $users->updatePassword($id, $new);
+        // Other sessions of this account are now signed out; this one carries on.
+        $_SESSION['session_version'] = (int) ($users->sessionState($id)['session_version'] ?? 0);
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         session_regenerate_id(true);
         unset($_SESSION['must_change_password']);   // released from the forced change
 
@@ -593,12 +596,10 @@ class SystemController extends Controller
         $eventModel = new Event();
         $event      = $eventModel->active();
 
-        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-        $host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
 
         $this->view('system/qr', [
             'event'    => $event,
-            'siteUrl'  => $scheme . '://' . $host . (BASE_URL ?: '') . '/',
+            'siteUrl'  => site_url(),   // SITE_URL, or a checked Host header
             'settings' => (new Setting())->all(),
         ]);
     }

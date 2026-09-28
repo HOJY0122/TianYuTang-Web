@@ -12,7 +12,8 @@ class LiveController extends Controller
 {
     public function poll(): void
     {
-        $signedIn = !empty($_SESSION['admin_id']);
+        // Checks never extend a session, and an idle or stolen one gets public answers only.
+        $signedIn = \App\Core\Session::isStaff();
         // Release the session lock at once: a check must never make the
         // person's own clicks and saves wait.
         session_write_close();

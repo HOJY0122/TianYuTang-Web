@@ -123,7 +123,9 @@ class Setting extends Model
         $rows = $this->fetchAll('SELECT setting_key, setting_value FROM settings');
         $out  = [];
         foreach ($rows as $r) {
-            $out[$r['setting_key']] = $r['setting_value'];
+            $out[$r['setting_key']] = in_array($r['setting_key'], self::SECRET_KEYS, true)
+                ? \App\Core\Crypto::decrypt($r['setting_value'])
+                : $r['setting_value'];
         }
         return self::$cache = $out;
     }
@@ -163,9 +165,18 @@ class Setting extends Model
         self::$cache = null;
     }
 
+    /**
+     * Settings stored encrypted (App\Core\Crypto): the AI service keys.
+     * A copy of the database alone does not give them away.
+     */
+    public const SECRET_KEYS = ['anthropic_api_key', 'nvidia_api_key', 'google_api_key'];
+
     /** Write one setting, creating it if it does not exist. */
     public function set(string $key, ?string $value): void
     {
+        if (in_array($key, self::SECRET_KEYS, true)) {
+            $value = \App\Core\Crypto::encrypt($value);
+        }
         $this->execute(
             'INSERT INTO settings (setting_key, setting_value) VALUES (?, ?)
              ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)',

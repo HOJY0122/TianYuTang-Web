@@ -15,3 +15,15 @@
 
 # Never list the contents of a folder.
 Options -Indexes
+
+# No hidden files (.htaccess, .git …) and no editor or backup leftovers.
+<FilesMatch "(?i)(^\.|\.(bak|swp|old|orig|sql|log|ini|md)$)">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    # Images and scripts are only what they claim to be.
+    Header always set X-Content-Type-Options "nosniff"
+</IfModule>

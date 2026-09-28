@@ -60,7 +60,7 @@ $aiNotes = $isNew ? ($draft['ai_notes'] ?? null) : ($row['ai_notes'] ?? null);
     </figure>
   <?php endif; ?>
 
-  <form method="POST" action="<?= url('/admin/receipts/save') ?>" enctype="multipart/form-data" class="panel form-panel paper" id="receiptForm">
+  <form method="POST" action="<?= url('/admin/receipts/save') ?>" enctype="multipart/form-data" class="panel form-panel paper" id="receiptForm" data-live="receipts" data-live-mode="form">
     <?= csrf_field() ?>
     <input type="hidden" name="id" value="<?= (int) ($row['id'] ?? 0) ?>">
 

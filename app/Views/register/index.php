@@ -10,7 +10,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
 ?>
 
 <main id="main">
-<section class="section narrow" id="liveRegister" data-live="events settings" data-live-mode="reload">
+<section class="section narrow" id="liveRegister" data-live="events settings" data-live-mode="reload"><?php live_sig_start(); ?>
   <div class="section-title">
     <h2><?= tb('register.title') ?></h2>
     <p><?= h($event['year']) ?> <?= h($event['name']) ?></p>
@@ -51,7 +51,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     <button class="primary" type="submit"><?= tb('register.submit') ?></button>
   </form>
   <?php endif; ?>
-</section>
+<?php live_sig_end(); ?></section>
 </main>
 
 <?php require BASE_PATH . '/app/Views/partials/modal.php'; ?>

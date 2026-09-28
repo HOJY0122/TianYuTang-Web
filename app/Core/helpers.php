@@ -128,3 +128,22 @@ function zh_num(int $n): string
     }
     return ($n >= 20 ? $d[intdiv($n, 10)] : '') . '十' . $d[$n % 10];
 }
+
+/**
+ * Realtime fingerprint for a part of a page (see js/live.js).
+ * Wrap the part's content in live_sig_start() … live_sig_end(): a hidden
+ * marker with a hash of exactly what was sent is added, so an open page
+ * reloads only when that part would really look different — not on every
+ * change to the tables it watches.
+ */
+function live_sig_start(): void
+{
+    ob_start();
+}
+
+function live_sig_end(): void
+{
+    $html = (string) ob_get_clean();
+    echo $html, '<i hidden data-live-sig="', substr(md5($html), 0, 16), '"></i>';
+}
+

@@ -83,7 +83,7 @@ if (!$bannerSlides && $siteHeroBanner) {
 </section>
 
 <!-- ============ Event information ============ -->
-<section class="section" id="info" data-live="events settings" data-live-mode="reload">
+<section class="section" id="info" data-live="events settings">
   <div class="section-title">
     <h2><?= tb('home.info') ?></h2>
   </div>
@@ -131,7 +131,7 @@ if (!$bannerSlides && $siteHeroBanner) {
           <?php if ($hasQrImage): ?>
             <img src="<?= h(BASE_URL . '/' . $event['waze_qr_path']) ?>" alt="Waze QR Code">
           <?php else: ?>
-            <canvas id="wazeQr" aria-label="Waze QR Code"></canvas>
+            <canvas id="wazeQr" data-url="<?= h($wazeUrl) ?>" aria-label="Waze QR Code"></canvas>
           <?php endif; ?>
           <small><?= h(t('home.scan') . ' ' . t('home.scan', 'en')) ?></small>
         </div>
@@ -253,11 +253,16 @@ if (!$bannerSlides && $siteHeroBanner) {
 // No uploaded QR image, so draw one from the Waze link. Same result for
 // the visitor, and nothing for the admin to regenerate if the link changes.
 (function () {
-  var canvas = document.getElementById('wazeQr');
-  if (!canvas || !window.TYTQRCode) return;
-  window.TYTQRCode.toCanvas(canvas, <?= json_encode($wazeUrl, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?>, {
-    width: 220, margin: 1, errorCorrectionLevel: 'M'
-  }).catch(function () { canvas.parentNode.style.display = 'none'; });
+  function draw() {
+    var canvas = document.getElementById('wazeQr');
+    if (!canvas || !window.TYTQRCode || canvas.dataset.drawn) return;
+    canvas.dataset.drawn = '1';
+    window.TYTQRCode.toCanvas(canvas, canvas.dataset.url || <?= json_encode($wazeUrl, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?>, {
+      width: 220, margin: 1, errorCorrectionLevel: 'M'
+    }).catch(function () { canvas.parentNode.style.display = 'none'; });
+  }
+  draw();
+  document.addEventListener('live:swap', draw);   // the info part was refreshed
 })();
 </script>
 <?php endif; ?>

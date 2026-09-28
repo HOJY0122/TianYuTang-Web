@@ -104,6 +104,8 @@
   function setPos(card, x, y) {
     card.querySelector('[data-pos=x]').value = Math.round(Math.max(0, Math.min(100, x)));
     card.querySelector('[data-pos=y]').value = Math.round(Math.max(0, Math.min(100, y)));
+    // Tell the page the form was edited (live.js then never reloads it away).
+    card.querySelector('[data-pos=x]').dispatchEvent(new Event('input', { bubbles: true }));
     paint(card);
   }
 

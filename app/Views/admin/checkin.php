@@ -47,6 +47,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   </div>
 
   <!-- ---------- Result ---------- -->
+  <div id="liveLookup" data-live="rsvp_groups rsvp_attendees">
   <?php if ($notFound): ?>
     <div class="panel result-miss">
       <h2>查無此編號 <span class="en">Not found</span></h2>
@@ -115,6 +116,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
       </div>
     </div>
   <?php endif; ?>
+  </div>
 
   <details class="panel guide">
     <summary><span>🧭 報到步驟 <span class="en">How to check in</span></span><span class="guide-toggle" aria-hidden="true">顯示 Show ▾</span></summary>

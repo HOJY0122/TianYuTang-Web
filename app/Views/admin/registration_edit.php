@@ -6,7 +6,7 @@ $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confi
 
 <?php foreach ($errors as $e): ?><div class="flash error"><?= h($e) ?></div><?php endforeach; ?>
 
-<form method="POST" action="<?= url('/admin/registrations/save') ?>" class="panel form-panel" style="max-width:860px">
+<form method="POST" id="liveEditForm" data-live="rsvp_groups rsvp_attendees" data-live-mode="form" action="<?= url('/admin/registrations/save') ?>" class="panel form-panel" style="max-width:860px">
   <?= csrf_field() ?>
   <input type="hidden" name="group_id" value="<?= (int) $group['id'] ?>">
 

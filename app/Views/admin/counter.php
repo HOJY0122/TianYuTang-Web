@@ -45,6 +45,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
       </div>
     </div>
 
+    <div id="liveLookup" data-live="donations">
     <?php if ($ref !== '' && !$found): ?>
       <div class="result-miss" style="margin-top:14px;padding:14px;border-radius:12px">
         <strong>查無此編號 Not found：<?= h($ref) ?></strong>
@@ -91,6 +92,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
         <?php endif; ?>
       </div>
     <?php endif; ?>
+    </div>
   </div>
 
   <details class="panel guide">

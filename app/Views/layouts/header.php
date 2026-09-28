@@ -73,13 +73,15 @@ try {
     Submissions here are <strong>not</strong> real records.
   </div>
 <?php endif; ?>
+<div id="liveTopbar" data-live="settings">
 <?php if (($site['site_tagline'] ?? '') !== '' && ($site['site_tagline_on'] ?? '1') === '1'): ?>
   <div class="topbar"><?= h($site['site_tagline']) ?></div>
 <?php endif; ?>
+</div>
 
 <header class="site-header">
   <div class="header-inner">
-    <a class="brand" href="<?= url('/') ?>" aria-label="<?= h($siteName) ?> 首頁 Home">
+    <a class="brand" id="liveBrand" data-live="settings" href="<?= url('/') ?>" aria-label="<?= h($siteName) ?> 首頁 Home">
       <?php if ($siteLogo): ?>
         <img src="<?= h($uploadUrl($siteLogo)) ?>" alt="">
       <?php endif; ?>
@@ -91,7 +93,7 @@ try {
       </span>
     </a>
 
-    <nav class="site-nav" aria-label="主選單 Main menu">
+    <nav class="site-nav" id="liveNav" data-live="settings" aria-label="主選單 Main menu">
       <?php // Prefixed loop variables: this file shares scope with the page.
       foreach ($navItems as $_nKey => [$_nHref, $_nZh, $_nEn]): ?>
         <a href="<?= url($_nHref) ?>"<?= $activeNav === $_nKey ? ' class="active" aria-current="page"' : '' ?>>

@@ -7,7 +7,7 @@ $free  = $d['free_amount'] !== null ? (float) $d['free_amount'] : ($d['method'] 
 
 <?php foreach ($errors as $e): ?><div class="flash error"><?= h($e) ?></div><?php endforeach; ?>
 
-<form method="POST" action="<?= url('/admin/donations/save') ?>" class="panel form-panel">
+<form method="POST" id="liveEditForm" data-live="donations" data-live-mode="form" action="<?= url('/admin/donations/save') ?>" class="panel form-panel">
   <?= csrf_field() ?>
   <input type="hidden" name="donation_id" value="<?= (int) $d['id'] ?>">
 

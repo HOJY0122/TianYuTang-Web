@@ -21,7 +21,7 @@ $hM = (int) $site['banner_height_mobile'];
     <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $s['id'] ?>"></form>
 <?php endforeach; ?>
 
-<form method="POST" action="<?= url('/system/banners/save') ?>" id="bannerForm" class="banner-admin form-panel">
+<form method="POST" action="<?= url('/system/banners/save') ?>" id="bannerForm" class="banner-admin form-panel" data-live="site_banners settings" data-live-mode="form">
   <?= csrf_field() ?>
 
   <!-- ① The real slideshow, as visitors will see it -->

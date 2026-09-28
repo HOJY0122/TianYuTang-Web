@@ -67,7 +67,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
         <span class="en"><strong>Drag a photo to a new place</strong> — the order saves as soon as you let go, and is the order visitors see. The ↑ ↓ buttons still work.</span>
       </p>
 
-      <div class="admin-photo-grid" data-sortable="<?= url('/admin/photos/reorder') ?>" data-extra='<?= h(json_encode(['event_id' => (int) $event['id']])) ?>'>
+      <div class="admin-photo-grid" id="livePhotoGrid" data-live="event_photos" data-sortable="<?= url('/admin/photos/reorder') ?>" data-extra='<?= h(json_encode(['event_id' => (int) $event['id']])) ?>'>
         <?php foreach ($photos as $i => $photo): ?>
           <div class="admin-photo" data-id="<?= (int) $photo['id'] ?>">
             <div class="drag-area" data-drag-handle title="拖曳排序 Drag to reorder">

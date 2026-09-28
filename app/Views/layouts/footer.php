@@ -12,7 +12,7 @@ $fTheme = App\Models\Setting::FOOTER_THEMES[$site['footer_theme']] ?? App\Models
 $fStyle = sprintf('--f-pad:%dpx;--f-size:%d%%;--f-bg:%s;--f-fg:%s;--f-accent:%s',
     (int) $site['footer_pad'], (int) $site['footer_size'], $fTheme[1], $fTheme[2], $fTheme[3]);
 ?>
-<footer class="site-footer<?= $site['footer_align'] === 'left' ? ' f-left' : '' ?>" style="<?= h($fStyle) ?>">
+<footer id="liveFooter" data-live="settings events" class="site-footer<?= $site['footer_align'] === 'left' ? ' f-left' : '' ?>" style="<?= h($fStyle) ?>">
   <?php $fTitle = App\Models\Setting::effective('footer_title', $site); ?>
   <?php if ($fTitle !== ''): ?><div class="f-name"><?= h($fTitle) ?></div><?php endif; ?>
   <?php if ($site['footer_org'] !== ''): ?>

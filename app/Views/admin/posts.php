@@ -10,7 +10,7 @@
     <p class="empty">還沒有消息。No posts yet — add the first one.</p>
   <?php else: ?>
   <?= csrf_field() ?>
-  <div class="post-sort-list" data-sortable="<?= url('/admin/posts/reorder') ?>">
+  <div class="post-sort-list" id="livePosts" data-live="posts" data-sortable="<?= url('/admin/posts/reorder') ?>">
     <?php foreach ($posts as $i => $p): ?>
       <div class="post-row" data-id="<?= (int) $p['id'] ?>">
         <button type="button" class="drag-handle" data-drag-handle title="拖曳排序 Drag to reorder" aria-label="拖曳排序 Drag to reorder">⠿</button>

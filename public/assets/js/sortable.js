@@ -45,6 +45,8 @@
   }
 
   function init(list) {
+    if (list._sortable) return;          // each list once, also after a realtime update
+    list._sortable = true;
     var dragging = null, ghost = null, startX = 0, startY = 0, offX = 0, offY = 0, moved = false, scrollTimer = null, lastY = 0;
 
     list.addEventListener('pointerdown', function (e) {
@@ -120,4 +122,9 @@
   }
 
   document.querySelectorAll('[data-sortable]').forEach(init);
+  // Lists replaced by a realtime update (js/live.js) can be dragged too.
+  document.addEventListener('live:swap', function (e) {
+    if (e.detail.matches('[data-sortable]')) init(e.detail);
+    e.detail.querySelectorAll('[data-sortable]').forEach(init);
+  });
 })();

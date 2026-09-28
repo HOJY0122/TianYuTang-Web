@@ -58,6 +58,7 @@ abstract class Model
     {
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
+        Live::touchFromSql($sql);   // open pages showing this table update themselves
         return $stmt->rowCount();
     }
 
@@ -77,6 +78,7 @@ abstract class Model
         }
         // Table name is supplied by our own code, never by a request.
         $this->db->exec("ALTER TABLE {$table} AUTO_INCREMENT = 1");
+        Live::touch($table);
         return true;
     }
 

@@ -38,30 +38,39 @@
 })();
 
 // Any password box with a 👁 button next to it can be shown / hidden.
-document.querySelectorAll('[data-toggle-password]').forEach(function (btn) {
-  btn.addEventListener('click', function () {
+// One listener for the whole page, so rows added by a realtime update work too.
+document.addEventListener('click', function (e) {
+  var btn = e.target.closest('[data-toggle-password]');
+  if (!btn) return;
+  (function () {
     var input = document.getElementById(btn.dataset.togglePassword);
     var show = input.type === 'password';
     input.type = show ? 'text' : 'password';
     btn.setAttribute('aria-pressed', show ? 'true' : 'false');
     btn.textContent = show ? '🙈' : '👁';
     btn.title = show ? '隱藏密碼 Hide password' : '顯示密碼 Show password';
-  });
+  })();
 });
 </script>
 <script>
 // Wide tables (donations, receipts …) scroll sideways inside their own box on
 // tablets and small laptops instead of pushing the whole page wider.
 // On phones they are cards already (see .records in admin.css).
-document.querySelectorAll('table.records').forEach(function (t) {
-  if (t.parentElement.classList.contains('table-scroll')) return;
-  var box = document.createElement('div');
-  box.className = 'table-scroll';
-  t.parentNode.insertBefore(box, t);
-  box.appendChild(t);
-});
+function tytWrapTables(root) {
+  root.querySelectorAll('table.records').forEach(function (t) {
+    if (t.parentElement.classList.contains('table-scroll')) return;
+    var box = document.createElement('div');
+    box.className = 'table-scroll';
+    t.parentNode.insertBefore(box, t);
+    box.appendChild(t);
+  });
+}
+tytWrapTables(document);
+// Tables that arrive with a realtime update (js/live.js) get the same box.
+document.addEventListener('live:swap', function (e) { tytWrapTables(e.detail); });
 </script>
 <script src="<?= asset('js/dialog.js') ?>"></script>
+<script src="<?= asset('js/live.js') ?>"></script>
 <script src="<?= asset('js/image-editor.js') ?>"></script>
 <script src="<?= asset('js/trad-check.js') ?>"></script>
 </body>

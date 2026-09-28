@@ -800,3 +800,43 @@ details.guide > :not(summary){margin:0 20px 18px}
 .fl-preview{min-width:0}
 .fl-preview-bar{font-weight:800;margin-bottom:6px}
 .fl-preview iframe{display:block;width:100%;height:320px;border:1px solid #d8bf79;border-radius:12px;background:#fffaf0}
+
+/* ---------- 現場布施 Counter donation: seats and freewill cards ---------- */
+.cd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:14px}
+.cd-card{border:2px solid #eadcb5;border-radius:16px;padding:14px 16px;background:#fffdf7;transition:border-color .2s,box-shadow .2s,background .2s}
+.cd-card.is-on{border-color:#9f211b;background:#fff8ec;box-shadow:0 0 0 3px rgba(159,33,27,.08)}
+.cd-card-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.cd-icon{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;background:#f6e7bd;font-size:22px;flex:none}
+.form-panel .cd-title,.cd-title{display:block;margin:0;font-size:18px;font-weight:800;color:#2b1d14}
+.cd-title .en{font-size:13px}
+.cd-stepper{display:grid;grid-template-columns:56px 1fr 56px;gap:8px}
+.cd-stepper button{height:56px;border-radius:12px;border:2px solid #9f211b;background:#fff;color:#9f211b;font-size:28px;font-weight:800;cursor:pointer;line-height:1}
+.cd-stepper button:disabled{opacity:.35;cursor:default}
+.cd-stepper button[data-seat="1"]{background:#9f211b;color:#fff}
+.form-panel .cd-stepper input,.cd-stepper input{height:56px;text-align:center;font-size:26px;font-weight:800;padding:0}
+.cd-money{display:flex;align-items:center;border:2px solid #d8bf79;border-radius:12px;background:#fff;padding:0 12px;height:56px}
+.cd-money:focus-within{border-color:#9f211b;box-shadow:0 0 0 3px rgba(159,33,27,.1)}
+.cd-money span{font-weight:800;color:#9f211b;font-size:18px}
+.form-panel .cd-money input,.cd-money input{border:0!important;box-shadow:none!important;background:transparent;font-size:24px;font-weight:800;text-align:right;height:52px;padding:0 0 0 8px}
+.cd-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.cd-chips button{min-height:38px;padding:6px 12px;border-radius:999px;border:1px solid #d8bf79;background:#fff;color:#5a3a1a;font-weight:700;cursor:pointer}
+.cd-chips button.on{background:#9f211b;border-color:#9f211b;color:#fff}
+.cd-chips .cd-clear{border-style:dashed;color:#7a6a58}
+.cd-sub{margin-top:10px;font-weight:700;color:#7a5a2a;min-height:1.4em}
+.cd-total{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:16px 0 4px;padding:16px 18px;border-radius:16px;
+  background:linear-gradient(135deg,#9f211b,#711711);color:#fff8df}
+.cd-total-label{display:block;font-size:18px;font-weight:800}
+.cd-total-label .en{color:#f3df9c}
+.cd-total small{display:block;margin-top:2px;color:#f3df9c;font-size:13px}
+.cd-total strong{font-size:30px;font-weight:800;white-space:nowrap}
+@media (max-width:420px){ .cd-total strong{font-size:24px} }
+
+/* ---------- Realtime updates (js/live.js) ---------- */
+.live-flash{animation:liveFlash 1.6s ease-out}
+@keyframes liveFlash{0%{box-shadow:0 0 0 3px rgba(212,160,23,.65);background-color:rgba(255,236,170,.55)}100%{box-shadow:0 0 0 0 rgba(212,160,23,0)}}
+.live-toast{position:fixed;left:50%;top:14px;z-index:9998;transform:translateX(-50%);padding:7px 16px;border-radius:999px;
+  background:#2e7d4f;color:#fff;font:700 13px/1.3 system-ui,sans-serif;box-shadow:0 6px 18px rgba(0,0,0,.2);transition:opacity .4s,transform .4s}
+.live-toast.out{opacity:0;transform:translate(-50%,-8px)}
+.live-note{position:fixed;left:50%;bottom:16px;z-index:9998;transform:translateX(-50%);max-width:calc(100% - 24px);padding:10px 18px;
+  border:0;border-radius:999px;background:#9f211b;color:#fff8df;font:700 14px/1.3 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.25);cursor:pointer}
+@media (prefers-reduced-motion:reduce){ .live-flash{animation:none} }

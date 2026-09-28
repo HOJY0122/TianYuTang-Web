@@ -31,7 +31,7 @@ $navItems = [
 $helpKey = in_array($activeNav, ['home', 'register', 'donate', 'gallery'], true) ? 'help.' . $activeNav : 'help.other';
 ?>
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" data-base="<?= h(BASE_URL) ?>">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">

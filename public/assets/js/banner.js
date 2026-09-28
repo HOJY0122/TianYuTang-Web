@@ -81,6 +81,8 @@
   }
 
   document.querySelectorAll('.banner-show').forEach(init);
+  // A banner replaced by a realtime update (live.js) starts playing too.
+  document.addEventListener('live:swap', function (e) { e.detail.querySelectorAll('.banner-show').forEach(init); });
   window.TYTBanner = {
     init: init,
     go: function (root, n) { init(root).go(n); },

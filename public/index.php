@@ -55,6 +55,8 @@ $router->get('/rsvp/success',       'ConfirmController@rsvp');
 $router->get('/donation/success',   'ConfirmController@donation');
 
 // Admin
+// Realtime: change counters for open pages (js/live.js)
+$router->get('/live',               'LiveController@poll');
 $router->get('/admin/login',        'AdminController@loginForm');
 $router->post('/admin/login',       'AdminController@login');
 $router->post('/admin/logout',      'AdminController@logout');

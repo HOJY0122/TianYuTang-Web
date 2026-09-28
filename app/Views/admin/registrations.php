@@ -39,6 +39,7 @@ $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confi
     <a class="mini-btn ghost btn-lg" href="<?= url('/admin/export/attendees') ?>?event=<?= $eid ?>">⬇️ CSV</a>
     <a class="mini-btn ghost btn-lg" href="<?= url('/admin/walkin') ?>?event=<?= $eid ?>">＋ 現場報名 Walk-in</a>
   </form>
+  <div id="liveList" data-live="rsvp_groups rsvp_attendees events">
 
   <p class="help" style="margin:0 0 8px">共 <?= number_format($total) ?> 筆 · <?= number_format($total) ?> registration<?= $total === 1 ? '' : 's' ?></p>
 
@@ -79,5 +80,6 @@ $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confi
   </table>
   <?php require BASE_PATH . '/app/Views/partials/pager.php'; ?>
   <?php endif; ?>
+  </div>
 </div>
 <?php require BASE_PATH . '/app/Views/layouts/admin_footer.php'; ?>

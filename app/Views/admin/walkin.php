@@ -23,7 +23,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   <?php endif; ?>
 
   <!-- ---------- Head count, by how they registered ---------- -->
-  <div class="checkin-stats">
+  <div class="checkin-stats" id="liveStats" data-live="rsvp_groups rsvp_attendees events">
     <div><small>現場登記 Walk-in</small><strong><?= (int) $counts['walkin']['people'] ?></strong></div>
     <div><small>線上報名 Online</small><strong><?= (int) $counts['online']['people'] ?></strong></div>
     <div><small>合計人數 Total</small><strong><?= (int) $counts['walkin']['people'] + (int) $counts['online']['people'] ?></strong></div>
@@ -86,6 +86,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   </div>
   <div class="page-col">
   <!-- ---------- Recently registered ---------- -->
+  <div id="liveRecent" data-live="rsvp_groups rsvp_attendees events">
   <?php if ($recent): ?>
     <div class="panel">
       <h2>最近現場登記 <span class="en">Recent walk-ins</span></h2>
@@ -119,6 +120,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
       <p class="help">登記後會顯示在這裡，方便核對。Each walk-in appears here once saved.</p>
     </div>
   <?php endif; ?>
+  </div>
 
   <details class="panel guide">
     <summary><span>🧭 現場報名 <span class="en">Walk-in tips</span></span><span class="guide-toggle" aria-hidden="true">顯示 Show ▾</span></summary>

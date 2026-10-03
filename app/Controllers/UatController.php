@@ -65,6 +65,8 @@ class UatController extends Controller
         $setting->set('uat_messages', $msgs === '' ? null : $msgs);
         $sec = (int) ($_POST['uat_interval'] ?? 4);
         $setting->set('uat_interval', (string) (in_array($sec, Uat::INTERVALS, true) ? $sec : 4));
+        $size = (int) ($_POST['uat_size'] ?? 100);
+        $setting->set('uat_size', (string) max(Uat::SIZE_MIN, min(Uat::SIZE_MAX, $size)));
         $this->flash('success', '已儲存 Saved', '測試公告已更新。The announcements are updated.');
         $this->redirect('/system/uat');
     }

@@ -78,6 +78,14 @@ $msgText = trim((string) ($site['uat_messages'] ?? '')) !== '' ? $site['uat_mess
       <?php endforeach; ?>
     </div>
 
+    <label for="uatSize">🔠 大小 <span class="en">Size</span></label>
+    <div class="fl-range uat-size">
+      <span class="help">小 A</span>
+      <input type="range" id="uatSize" name="uat_size" min="<?= Uat::SIZE_MIN ?>" max="<?= Uat::SIZE_MAX ?>" step="5" value="<?= Uat::size($site) ?>">
+      <span class="help" style="font-size:1.3em">大 A</span>
+      <output for="uatSize"><?= Uat::size($site) ?>%</output>
+    </div>
+
     <label>👀 預覽 <span class="en">Preview</span></label>
     <div class="uat-preview" id="uatPreview"></div>
 
@@ -103,12 +111,15 @@ $msgText = trim((string) ($site['uat_messages'] ?? '')) !== '' ? $site['uat_mess
       return '<li' + (i ? '' : ' class="is-on"') + '><strong>' + esc(zh) + '</strong>' + (en ? ' <span>' + esc(en) + '</span>' : '') + '</li>';
     }).join('');
     var dots = lines.length > 1 ? '<span class="uat-dots">' + lines.map(function (_, i) { return '<i' + (i ? '' : ' class="on"') + '></i>'; }).join('') + '</span>' : '';
-    prev.innerHTML = '<div class="uat-bar" data-interval="' + secs + '"><span class="uat-badge">🧪 UAT<small>測試中 Testing</small></span>'
+    var size = document.getElementById('uatSize').value;
+    document.querySelector('.uat-size output').textContent = size + '%';
+    prev.innerHTML = '<div class="uat-bar" data-interval="' + secs + '" style="--uat-scale:' + (size / 100) + '"><span class="uat-badge">🧪 UAT<small>測試中 Testing</small></span>'
       + '<div class="uat-track"><ul>' + items + '</ul></div>' + dots + '</div>';
     document.dispatchEvent(new CustomEvent('live:swap', { detail: prev }));   // uat.js starts it
   }
   var t; box.addEventListener('input', function () { clearTimeout(t); t = setTimeout(render, 300); });
   document.querySelectorAll('input[name=uat_interval]').forEach(function (r) { r.addEventListener('change', render); });
+  document.getElementById('uatSize').addEventListener('input', render);
   document.getElementById('uatDefault').addEventListener('click', function () { box.value = DEF; render(); });
   render();
 })();

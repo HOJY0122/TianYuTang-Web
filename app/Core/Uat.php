@@ -22,6 +22,14 @@ use App\Models\Setting;
 final class Uat
 {
     public const INTERVALS = [2, 3, 4, 5, 6, 8];
+    /** Bar size, % of normal (System → UAT → 大小 Size). */
+    public const SIZE_MIN = 80, SIZE_MAX = 160;
+
+    public static function size(?array $site = null): int
+    {
+        $site ??= (new Setting())->site();
+        return max(self::SIZE_MIN, min(self::SIZE_MAX, (int) ($site['uat_size'] ?? 100)));
+    }
 
     /** Shown when no messages have been written yet: "中文 | English" per line. */
     public const DEFAULT_MESSAGES = "🧪 系統測試中（UAT）— 現在看到的是測試資料 | System testing (UAT) — you are seeing test data\n"

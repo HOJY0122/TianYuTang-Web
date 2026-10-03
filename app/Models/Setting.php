@@ -50,6 +50,7 @@ class Setting extends Model
         // UAT test mode (System → UAT): switched by a system admin only
         'uat_mode'            => '0',
         'uat_interval'        => '4',        // seconds per announcement
+        'uat_size'            => '100',      // bar size, % (80–160)
         'uat_messages'        => null,       // one per line, "中文 | English"; null = the built-in ones
         'uat_event_id'        => null,       // the test copy used while UAT is on
         'uat_return_event_id' => null,       // the real event to bring back

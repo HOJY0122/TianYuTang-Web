@@ -26,6 +26,24 @@
     bar.addEventListener('mouseleave', function () { hold = false; });
     var timer = setInterval(function () { if (!document.body.contains(bar)) { clearInterval(timer); return; } next(); }, secs * 1000);
   }
+  // The site's sticky header sits just below the pinned bar: keep --uat-h
+  // equal to the bar's real height (it changes with the size setting, the
+  // screen width, and when UAT is switched on or off on an open page).
+  var html = document.documentElement;
+  function measure() {
+    var wrap = document.getElementById('liveUat');
+    var bar = wrap && wrap.querySelector('.uat-bar');
+    html.style.setProperty('--uat-h', (bar ? Math.round(wrap.getBoundingClientRect().height) : 0) + 'px');
+  }
+  if (window.ResizeObserver) {
+    var ro = new ResizeObserver(measure);
+    var watch = function () { var w = document.getElementById('liveUat'); if (w) ro.observe(w); };
+    watch();
+    document.addEventListener('live:swap', function () { ro.disconnect(); watch(); measure(); });
+  }
+  window.addEventListener('resize', measure);
+  measure();
+
   function scan(root) { (root.matches && root.matches('.uat-bar') ? [root] : []).concat([].slice.call(root.querySelectorAll('.uat-bar'))).forEach(init); }
   scan(document);
   document.addEventListener('live:swap', function (e) { scan(e.detail); });

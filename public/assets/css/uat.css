@@ -1,0 +1,38 @@
+/* ============================================================
+   UAT test-mode bar (partials/uat_banner.php, js/uat.js)
+   Amber warning stripes, a badge, and announcements that slide
+   up one after another.
+   ============================================================ */
+.uat-bar{position:relative;z-index:60;display:flex;align-items:center;gap:12px;min-height:40px;padding:4px 14px;
+  color:#3a2600;font:600 14px/1.35 "Noto Sans TC","Noto Sans SC",system-ui,sans-serif;
+  background:repeating-linear-gradient(-45deg,#ffcf3f 0 16px,#ffc21a 16px 32px);background-size:45px 45px;
+  animation:uatStripes 2.4s linear infinite;box-shadow:inset 0 -2px 0 rgba(58,38,0,.25)}
+@keyframes uatStripes{to{background-position:45px 0}}
+.uat-badge{flex:none;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:#3a2600;color:#ffd75e;
+  font-weight:800;letter-spacing:.06em;font-size:13px;white-space:nowrap}
+.uat-badge small{font-weight:600;letter-spacing:0;color:#ffe9a8;font-size:11.5px}
+.uat-track{position:relative;flex:1;min-width:0;height:32px;overflow:hidden}
+.uat-track ul{list-style:none;margin:0;padding:0}
+.uat-track li{position:absolute;inset:0;display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transform:translateY(110%);opacity:0;transition:transform .55s cubic-bezier(.3,.7,.3,1),opacity .55s}
+.uat-track li.is-on{transform:translateY(0);opacity:1}
+.uat-track li.is-out{transform:translateY(-110%);opacity:0}
+.uat-track li strong{font-weight:800}
+.uat-track li span{font-weight:500;opacity:.85}
+.uat-dots{flex:none;display:flex;gap:4px}
+.uat-dots i{width:6px;height:6px;border-radius:50%;background:rgba(58,38,0,.3);transition:width .3s,background .3s}
+.uat-dots i.on{width:16px;border-radius:999px;background:#3a2600}
+@media (max-width:640px){
+  .uat-bar{gap:8px;padding:4px 10px;font-size:13px;min-height:50px}
+  .uat-badge small{display:none}
+  .uat-track{height:42px}
+  .uat-track li{flex-direction:column;align-items:flex-start;justify-content:center;gap:0;white-space:normal;line-height:1.25}
+  .uat-track li span{font-size:11.5px}
+  .uat-dots{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .uat-bar{animation:none}
+  .uat-track li{transition:opacity .3s;transform:none}
+  .uat-track li.is-out{transform:none}
+}
+@media print{ .uat-bar{display:none} }

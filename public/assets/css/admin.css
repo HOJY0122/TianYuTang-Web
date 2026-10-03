@@ -841,3 +841,31 @@ details.guide > :not(summary){margin:0 20px 18px}
   border:0;border-radius:999px;background:#9f211b;color:#fff8df;font:700 14px/1.3 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.25);cursor:pointer}
 @media (prefers-reduced-motion:reduce){ .live-flash{animation:none} }
 .live-note.warn{background:#b8860b;color:#fff}
+
+/* ---------- System → UAT test mode ---------- */
+.uat-page{display:grid;gap:18px}
+.uat-status{border-width:2px}
+.uat-status.is-on{border-color:#e0a800;background:linear-gradient(180deg,#fff7d6,#fffaf0)}
+.uat-status-head{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+.uat-light{flex:none;width:18px;height:18px;border-radius:50%;background:#b9ad97;box-shadow:0 0 0 4px rgba(0,0,0,.05)}
+.uat-status.is-on .uat-light{background:#f2b400;box-shadow:0 0 0 4px rgba(242,180,0,.25),0 0 16px rgba(242,180,0,.8);animation:uatPulse 1.6s ease-in-out infinite}
+@keyframes uatPulse{50%{box-shadow:0 0 0 7px rgba(242,180,0,.12),0 0 22px rgba(242,180,0,.9)}}
+.uat-explain{margin:0 0 16px;padding-left:20px;line-height:1.7}
+.uat-explain .en{display:block}
+.uat-big{font-size:17px!important;padding:14px 22px!important}
+.uat-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:0 0 14px}
+.uat-stats div{background:#fff;border:1px solid #eadcb5;border-radius:12px;padding:10px 14px}
+.uat-stats small{display:block;color:var(--muted);font-weight:700}
+.uat-stats strong{font-size:18px}
+.uat-actions{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.uat-off-form{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.uat-msgs.form-panel{max-width:none;margin:0}
+.uat-msgs textarea{font-family:inherit;line-height:1.7}
+.uat-speed{flex-wrap:wrap}
+.uat-preview{border-radius:12px;overflow:hidden;border:1px solid #eadcb5}
+@media (prefers-reduced-motion:reduce){ .uat-status.is-on .uat-light{animation:none} }
+.uat-big{border:0;border-radius:12px;background:#9f211b;color:#fff8df;font-weight:800;cursor:pointer;box-shadow:0 6px 16px rgba(159,33,27,.25)}
+.uat-big .en{color:#f3df9c}
+.uat-big:hover{background:#86180f}
+.uat-status.is-off .uat-big{background:linear-gradient(135deg,#e0a800,#c98a00);color:#2b1d00;box-shadow:0 6px 16px rgba(201,138,0,.3)}
+.uat-status.is-off .uat-big .en{color:#4a3500}

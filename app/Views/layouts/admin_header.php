@@ -43,6 +43,7 @@ if ($isSystem) {
         ['wording','🔤', '網站文字', 'Wording',       '/system/wording'],
         ['users',  '👥', '帳號管理', 'User accounts', '/system/users'],
         ['qr',     '🔳', 'QR 產生器', 'QR generator', '/system/qr'],
+        ['uat',    '🧪', 'UAT 測試模式', 'UAT test mode', '/system/uat'],
     ];
 }
 ?>
@@ -56,6 +57,7 @@ if ($isSystem) {
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;800&family=Noto+Sans+SC:wght@400;500;700;800<?= $nav === 'system' ? '&family=Yuji+Boku&family=Yuji+Syuku' : '' ?>&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= asset('css/admin.css') ?>">
+<link rel="stylesheet" href="<?= asset('css/uat.css') ?>">
 <?php if ($adminFavicon): ?>
 <link rel="icon" href="<?= h($versioned($adminFavicon)) ?>">
 <?php endif; ?>
@@ -97,6 +99,7 @@ if ($isSystem) {
 <div class="side-backdrop" id="sideBackdrop"></div>
 
 <div class="main">
+  <?php require BASE_PATH . '/app/Views/partials/uat_banner.php'; ?>
   <header class="topbar-admin">
     <button type="button" class="menu-btn" id="menuBtn" aria-controls="sideMenu" aria-expanded="false">☰<span class="sr-only"> 選單 Menu</span></button>
     <h1><?= h($pageTitle ?? '管理 Admin') ?></h1>

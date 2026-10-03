@@ -38,6 +38,7 @@ $fStyle = sprintf('--f-pad:%dpx;--f-size:%d%%;--f-bg:%s;--f-fg:%s;--f-accent:%s'
 </footer>
 <script src="<?= asset('js/dialog.js') ?>"></script>
 <script src="<?= asset('js/live.js') ?>"></script>
+<script src="<?= asset('js/uat.js') ?>"></script>
 <?php if (($activeNav ?? "") === "home"): ?><script src="<?= asset("js/banner.js") ?>"></script><?php endif; ?>
 </body>
 </html>

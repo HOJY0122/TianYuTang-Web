@@ -47,6 +47,12 @@ class Setting extends Model
         // Once saved, the text is used exactly as typed — empty hides the line.
         'footer_title'      => null,         // default: "🙏 " + site name
         'footer_copyright'  => null,         // default: "© {year} " + organisation
+        // UAT test mode (System → UAT): switched by a system admin only
+        'uat_mode'            => '0',
+        'uat_interval'        => '4',        // seconds per announcement
+        'uat_messages'        => null,       // one per line, "中文 | English"; null = the built-in ones
+        'uat_event_id'        => null,       // the test copy used while UAT is on
+        'uat_return_event_id' => null,       // the real event to bring back
         // Footer look (Site settings → ③ Footer → 外觀 Look)
         'footer_pad'        => '38',         // px of space above the text; the space below follows
         'footer_size'       => '100',        // text size, %

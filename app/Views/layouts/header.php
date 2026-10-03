@@ -41,6 +41,7 @@ $helpKey = in_array($activeNav, ['home', 'register', 'donate', 'gallery'], true)
 <?php [$_hFamily, $_hParam] = (new App\Models\Setting())->headingFont(); ?>
 <link href="https://fonts.googleapis.com/css2?family=<?= $_hParam ?><?= $_hParam !== 'LXGW+WenKai+TC:wght@400;700' ? '&family=LXGW+WenKai+TC:wght@400;700' : '' ?>&family=Noto+Sans+TC:wght@400;500;700;800&family=Noto+Sans+SC:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= asset('css/style.css') ?>">
+<link rel="stylesheet" href="<?= asset('css/uat.css') ?>">
 <?php if (($activeNav ?? '') === 'home'): ?><link rel="stylesheet" href="<?= asset('css/banner.css') ?>"><?php endif; ?>
 <style>
 /* Heading typeface chosen by the system admin (Site settings). Rare
@@ -66,8 +67,9 @@ try {
 </head>
 <body>
 <a class="skip" href="#main">跳到內容 Skip to content</a>
+<?php require BASE_PATH . '/app/Views/partials/uat_banner.php'; ?>
 
-<?php if (!empty($event['is_test'])): ?>
+<?php if (!empty($event['is_test']) && !App\Core\Uat::isOn($site)): ?>
   <div class="testbar">
     ⚠️ 測試模式 TEST MODE — 此頁面僅供內部測試，所有報名與布施資料<strong>不會列入正式紀錄</strong>。
     Submissions here are <strong>not</strong> real records.

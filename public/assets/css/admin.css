@@ -1004,3 +1004,22 @@ details.guide > :not(summary){margin:0 20px 18px}
 .form-panel .protect-area{display:flex;flex-direction:row;align-items:center}
 .form-panel .protect-area .pa-text{display:flex}
 .form-panel .protect-areas > label:first-child{margin-bottom:2px}
+/* Site settings → footer look: phone group + device preview */
+.fl-preview-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fl-preview-bar .seg-mini{margin-left:auto}
+.fl-preview{display:flex;flex-direction:column;align-items:center}
+.fl-preview > *{align-self:stretch}
+.fl-preview iframe{max-width:100%;margin:0 auto;align-self:center;transition:width .2s}
+.fl-phone{margin:16px 0 4px;padding:4px 14px 14px;border:2px solid #eadcb5;border-radius:12px;background:#fffaf0}
+.fl-phone legend{padding:0 6px;font-weight:800;display:flex;align-items:center;gap:6px}
+.fl-hide{display:flex;flex-wrap:wrap;gap:6px}
+.fl-hide .check-chip{display:inline-flex;margin:0!important;cursor:pointer;font-weight:600!important}
+.fl-hide .check-chip input{position:absolute;opacity:0;pointer-events:none}
+.fl-hide .check-chip span{padding:6px 12px;border:1.5px solid #dcc48a;border-radius:999px;background:#fff;font-size:13px}
+.fl-hide .check-chip input:checked + span{background:#9f211b;border-color:#9f211b;color:#fff;text-decoration:line-through}
+.fl-hide .check-chip input:focus-visible + span{outline:3px solid var(--gold);outline-offset:2px}
+.fl-phone{min-width:0}
+.fl-controls{min-width:0}
+.fl-hide .check-chip{position:relative}
+.fl-hide .check-chip input{width:1px!important;height:1px;min-height:0;padding:0;margin:0;left:0;top:0}
+.protect-area input[type=checkbox]{width:1px!important;height:1px;min-height:0;padding:0;left:0;top:0}

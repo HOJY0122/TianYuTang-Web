@@ -154,9 +154,10 @@ if (!$bannerSlides && $siteHeroBanner) {
         <article class="card post news-card">
           <?php if (!empty($post['image_path'])): ?>
             <div class="post-media">
-              <img class="post-image" src="<?= h(media_url($post['image_path'])) ?>"
-                   data-lightbox="<?= h(media_url($post['image_path'])) ?>"
-                   alt="<?= h($post['title_zh']) ?>" loading="lazy">
+              <?= photo_img($post['image_path'], 'news', array_merge(['class' => 'post-image', 'alt' => $post['title_zh'], 'loading' => 'lazy'],
+                  App\Core\Media::guarded('news')
+                      ? ['data-lightbox' => App\Core\Media::url($post['image_path'], true), 'data-seed' => (string) App\Core\Media::seed($post['image_path'])]
+                      : ['data-lightbox' => media_url($post['image_path'])])) ?>
               <span class="zoom-hint" aria-hidden="true"><?= icon('search') ?></span>
             </div>
           <?php endif; ?>
@@ -236,6 +237,12 @@ if (!$bannerSlides && $siteHeroBanner) {
         copy.classList.add('is-full');
         copy.querySelector('.read-more').remove();
         body.appendChild(copy);
+        // A copied <canvas> (protected picture) arrives blank: paint it again.
+        var src = card.querySelectorAll('canvas'), dst = copy.querySelectorAll('canvas');
+        Array.prototype.forEach.call(dst, function (c, i) {
+          if (src[i] && src[i].classList.contains('is-drawn') && window.TYTPhoto) TYTPhoto.copy(src[i], c);
+          else if (window.TYTPhoto && c.dataset.src) TYTPhoto.draw(c, c.dataset.src, c.dataset.scr);
+        });
         if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
       });
     });

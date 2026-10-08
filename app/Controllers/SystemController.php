@@ -271,6 +271,16 @@ class SystemController extends Controller
         if (isset($_POST['footer_size'])) {
             $setting->set('footer_size', $num($_POST['footer_size'], Setting::FOOTER_SIZE, '100'));
         }
+        foreach ([['footer_pad_m', Setting::FOOTER_PAD_M, '22'], ['footer_size_m', Setting::FOOTER_SIZE_M, '90'],
+                  ['footer_gap', Setting::FOOTER_GAP, '6'], ['footer_width', Setting::FOOTER_WIDTH, '760']] as [$k, $r, $d]) {
+            if (isset($_POST[$k])) {
+                $setting->set($k, $num($_POST[$k], $r, $d));
+            }
+        }
+        if (isset($_POST['footer_look'])) {          // the look controls were on the page: an empty list is meaningful
+            $hide = array_values(array_intersect(array_keys(Setting::FOOTER_LINES), (array) ($_POST['footer_m_hide'] ?? [])));
+            $setting->set('footer_m_hide', implode(',', $hide));
+        }
         if (in_array($_POST['footer_align'] ?? '', ['center', 'left'], true)) {
             $setting->set('footer_align', $_POST['footer_align']);
         }

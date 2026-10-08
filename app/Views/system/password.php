@@ -64,7 +64,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     <li>用一句容易記的短句，例如「Tyt中壇2026平安」。<span class="en">A short phrase you can remember works well.</span></li>
     <li>不要用生日、電話或 123456。<span class="en">Avoid birthdays, phone numbers or 123456.</span></li>
     <li>不要與其他網站的密碼相同。<span class="en">Don't reuse a password from another site.</span></li>
-    <li>忘記密碼？請系統管理員在「帳號管理」重設。<span class="en">Forgot it? A system admin can reset it in User accounts.</span></li>
+    <li>忘記密碼？請聯繫系統管理員重設。<span class="en">Forgot password? Kindly contact system admin to reset it.</span></li>
   </ul>
 </div>
 </div>

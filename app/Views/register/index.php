@@ -100,21 +100,17 @@ require BASE_PATH . '/app/Views/layouts/header.php';
              placeholder="例 e.g. 吉隆坡某某會館"<?= $startType === 'organisation' ? ' required' : '' ?>>
     </div>
 
-    <div class="form-step"><b><?= $step++ ?></b> <span><?= h(t('register.step1')) ?></span><span class="en"><?= h(t('register.step1', 'en')) ?></span></div>
-    <div class="stepper">
-      <button type="button" data-step="-1" aria-label="減少 Fewer">−</button>
-      <input id="attendeeCount" name="attendee_count" type="number" inputmode="numeric"
-             min="1" max="<?= $maxByType[$startType] ?>" value="<?= $startCount ?>" aria-label="人數 Number of people">
-      <button type="button" data-step="1" aria-label="增加 More">+</button>
-    </div>
-    <p class="help" id="limitText"></p>
-
+    <input type="hidden" id="attendeeCount" name="attendee_count" value="<?= $startCount ?>">
     <div class="form-step"><b><?= $step++ ?></b> <span><?= h(t('register.step2')) ?></span><span class="en"><?= h(t('register.step2', 'en')) ?></span></div>
-    <div class="people-bar" id="peopleBar" hidden>
-      <div class="people-chips" id="peopleChips" aria-label="填寫進度 Progress"></div>
-      <button type="button" class="link-btn" id="allSame"><?= icon('phone') ?> 全部用第一位的電話 <span class="en">Everyone uses person 1's number</span></button>
+    <div class="people-head">
+      <span class="people-count" id="peopleCount" aria-live="polite"></span>
+      <span class="help" id="limitText"></span>
     </div>
-    <div id="attendees"></div>
+    <div id="attendees" class="people-list"></div>
+    <div class="people-tools">
+      <button type="button" class="add-person" id="addPerson"><span class="ap-plus"><?= icon('plus') ?></span><span class="ap-text">加一位參加者<span class="en">Add a person</span></span></button>
+      <button type="button" class="link-btn" id="allSame" hidden><?= icon('phone') ?> 全部用第一位的電話 <span class="en">Everyone uses person 1's number</span></button>
+    </div>
 
     <?php if ($preview): ?>
       <p class="note"><?= icon('eye') ?> 預覽模式：不能提交。<span class="en">Preview only — this form cannot be sent.</span></p>
@@ -147,9 +143,6 @@ require BASE_PATH . '/app/Views/layouts/header.php';
   var form    = document.getElementById('rsvpForm');
   var countEl = document.getElementById('attendeeCount');
   var box     = document.getElementById('attendees');
-  var chips   = document.getElementById('peopleChips');
-  var bar     = document.getElementById('peopleBar');
-  var linked  = [];        // linked[i] = true: person i uses person 1's number
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -209,15 +202,6 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     };
   }
 
-  // Keep whatever was already typed when the number changes.
-  function collect() {
-    box.querySelectorAll('.attendee').forEach(function (row, i) {
-      OLD.names[i]    = row.querySelector('[name="attendee_name[]"]').value;
-      OLD.ics[i]      = row.querySelector('[name="attendee_ic[]"]').value;
-      OLD.contacts[i] = row.querySelector('[name="attendee_contact[]"]').value;
-    });
-  }
-
   // 1 → 一, 12 → 十二: Chinese numerals suit the brush heading font; the
   // digit itself goes in the round badge, in the plain font.
   function zhNum(n) {
@@ -226,129 +210,196 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     if (n >= 100) return String(n);
     return (n >= 20 ? d[Math.floor(n / 10)] : '') + '十' + d[n % 10];
   }
+  function maskIc(v) { v = String(v || '').trim(); return v.length > 4 ? '••••' + v.slice(-4) : v; }
 
-  function render() {
-    collect();
-    var M = max();
-    var n = Math.min(M, Math.max(1, parseInt(countEl.value, 10) || 1));
-    countEl.value = n;
-    countEl.max = M;
-    document.getElementById('limitText').textContent = LIMIT.zh.replace('{max}', M) + ' ' + LIMIT.en.replace('{max}', M);
-    var org = type() === 'organisation';
-    var html = '';
-    for (var i = 0; i < n; i++) {
-      var lead = i === 0;
-      html += '<div class="attendee" id="person' + (i + 1) + '">'
-        + '<div class="attendee-head"><h4><span class="num-pill">' + (i + 1) + '</span>第' + zhNum(i + 1) + '位'
-        + (lead ? (org ? '（團體聯絡人）' : '（聯絡人）') : '')
-        + '<span class="en">Person ' + (i + 1) + (lead ? (org ? ' (group contact)' : ' (main contact)') : '') + '</span></h4>'
-        + '<span class="done-tag" aria-hidden="true">' + '<?= icon('check') ?>' + ' 已填好 Done</span></div>'
-        + '<label>姓名<span class="en">Full name</span></label>'
-        + '<input name="attendee_name[]" required maxlength="100" autocomplete="' + (lead ? 'name' : 'off') + '" value="' + esc(OLD.names[i]) + '">'
-        + '<div class="row">'
-        + '<div><label>身份證 / 護照號碼<span class="en">IC / Passport No.</span></label>'
-        + '<input name="attendee_ic[]" required maxlength="30" data-validate="ic" autocomplete="off" placeholder="例 e.g. 651020-10-2020" value="' + esc(OLD.ics[i]) + '">'
-        + (AGE ? '<p class="age-tag"></p>' : '') + '</div>'
-        + '<div><label>聯絡號碼<span class="en">Contact No.</span></label>';
-      if (!lead) {
-        html += '<div class="same-toggle" role="radiogroup" aria-label="聯絡號碼 Contact number">'
-          + '<button type="button" data-same="0" class="' + (linked[i] ? '' : 'is-on') + '">自己填寫 <span>Own number</span></button>'
-          + '<button type="button" data-same="1" class="' + (linked[i] ? 'is-on' : '') + '"><?= icon('phone') ?> 同第一位 <span>Same as person 1</span></button>'
-          + '</div>';
-      }
-      html += '<input name="attendee_contact[]" required maxlength="30" inputmode="tel" autocomplete="' + (lead ? 'tel' : 'off') + '" data-validate="phone"'
-        + ' placeholder="例 e.g. 012 345 6789" value="' + esc(OLD.contacts[i]) + '"' + (linked[i] ? ' readonly class="is-linked"' : '') + '>'
-        + '</div></div></div>';
-    }
-    box.innerHTML = html;
-    syncLinked();
-    box.querySelectorAll('[name="attendee_ic[]"]').forEach(function (inp) { if (inp.value) ageTag(inp); });
-    document.querySelector('[data-step="-1"]').disabled = n <= 1;
-    document.querySelector('[data-step="1"]').disabled  = n >= M;
-    bar.hidden = n < 2;
-    document.getElementById('allSame').hidden = n < 3;
-    refreshChips();
+  // ---- One card per person. Only one is open at a time; the others fold
+  // into a one-line summary (name · IC · phone) with Edit / Remove. ----
+  var CHECK_ICON = '<?= icon('check') ?>', EDIT_ICON = '<?= icon('pencil') ?>', DEL_ICON = '<?= icon('trash') ?>';
+  function cardHtml(d) {
+    return '<div class="attendee">'
+      + '<div class="attendee-head" role="button" tabindex="0">'
+      +   '<span class="num-pill"></span>'
+      +   '<span class="att-title"><strong class="att-name"></strong><span class="att-sub"></span></span>'
+      +   '<span class="done-tag" title="已填好 Done">' + CHECK_ICON + '<span class="dt-text"> 已填好 Done</span></span>'
+      +   '<span class="todo-tag">未完成 To finish</span>'
+      +   '<button type="button" class="att-edit" aria-label="修改 Edit">' + EDIT_ICON + '<span> 修改</span></button>'
+      +   '<button type="button" class="att-remove" aria-label="移除 Remove">' + DEL_ICON + '</button>'
+      + '</div>'
+      + '<div class="attendee-body">'
+      +   '<label>姓名<span class="en">Full name</span></label>'
+      +   '<input name="attendee_name[]" required maxlength="100" autocomplete="off" value="' + esc(d.name) + '">'
+      +   '<div class="row">'
+      +     '<div><label>身份證 / 護照號碼<span class="en">IC / Passport No.</span></label>'
+      +     '<input name="attendee_ic[]" required maxlength="30" data-validate="ic" autocomplete="off" placeholder="例 e.g. 651020-10-2020" value="' + esc(d.ic) + '">'
+      +     (AGE ? '<p class="age-tag"></p>' : '') + '</div>'
+      +     '<div><label>聯絡號碼<span class="en">Contact No.</span></label>'
+      +     '<label class="use-first"><input type="checkbox" class="same-first"' + (d.linked ? ' checked' : '') + '>'
+      +       '<span class="uf-box">' + CHECK_ICON + '</span>'
+      +       '<span>用第一位的電話 <span class="en">Use person 1\'s number</span> <b class="first-num"></b></span></label>'
+      +     '<input name="attendee_contact[]" required maxlength="30" inputmode="tel" autocomplete="off" data-validate="phone"'
+      +     ' placeholder="例 e.g. 012 345 6789" value="' + esc(d.contact) + '">'
+      +     '</div>'
+      +   '</div>'
+      +   '<div class="att-actions"><button type="button" class="att-done">' + CHECK_ICON + ' 完成 <span class="en">Done</span></button></div>'
+      + '</div></div>';
   }
-
-  // ---- "Same as person 1": the number follows person 1's as it is typed ----
-  function syncLinked() {
-    var first = box.querySelector('[name="attendee_contact[]"]');
-    box.querySelectorAll('.attendee').forEach(function (row, i) {
-      if (i && linked[i]) row.querySelector('[name="attendee_contact[]"]').value = first ? first.value : '';
-    });
-  }
-  function setLinked(i, on) {
-    linked[i] = on;
-    var row = box.querySelectorAll('.attendee')[i];
-    if (!row) return;
-    var inp = row.querySelector('[name="attendee_contact[]"]');
-    row.querySelectorAll('[data-same]').forEach(function (b) { b.classList.toggle('is-on', (b.dataset.same === '1') === on); });
-    inp.readOnly = on;
-    inp.classList.toggle('is-linked', on);
-    if (on) syncLinked(); else { inp.value = ''; inp.focus(); }
-    if (window.TYTValidate && inp.value) { inp.dataset.touched = '1'; window.TYTValidate.check(inp, true); }
-    refreshChips();
-  }
-  box.addEventListener('click', function (e) {
-    var b = e.target.closest('[data-same]');
-    if (!b) return;
-    var rows = [].slice.call(box.querySelectorAll('.attendee'));
-    setLinked(rows.indexOf(b.closest('.attendee')), b.dataset.same === '1');
-  });
-  document.getElementById('allSame').addEventListener('click', function () {
-    var rows = box.querySelectorAll('.attendee');
-    var all = true;
-    for (var i = 1; i < rows.length; i++) if (!linked[i]) all = false;
-    for (var j = 1; j < rows.length; j++) setLinked(j, !all);
-  });
-
-  // ---- Progress chips: which people are filled in ----
+  /** Is this person filled in correctly (without showing messages)? */
   function complete(row) {
-    var ok = true;
-    row.querySelectorAll('input[required]').forEach(function (inp) {
+    return [].every.call(row.querySelectorAll('input[required]'), function (inp) {
       var v = inp.value.trim();
-      if (!v) ok = false;
-      else if (inp.dataset.validate && window.TYTValidate) {
+      if (!v) return false;
+      if (inp.dataset.validate && window.TYTValidate) {
         var good = window.TYTValidate[inp.dataset.validate](v);
-        if (!good) ok = false;
-        else if (inp.dataset.validate === 'ic' && ageProblem(good)) ok = false;
+        if (!good) return false;
+        if (inp.dataset.validate === 'ic' && ageProblem(good)) return false;
       }
+      return true;
     });
+  }
+  function rows() { return [].slice.call(box.querySelectorAll('.attendee')); }
+  function field(row, n) { return row.querySelector('[name="attendee_' + n + '[]"]'); }
+
+  function renumber() {
+    var list = rows(), M = max(), org = type() === 'organisation';
+    var firstTel = list[0] ? field(list[0], 'contact').value.trim() : '';
+    list.forEach(function (row, i) {
+      var lead = i === 0;
+      row.querySelector('.num-pill').textContent = i + 1;
+      var name = field(row, 'name').value.trim();
+      row.querySelector('.att-name').textContent = name || ('第' + zhNum(i + 1) + '位' + (lead ? (org ? '（團體聯絡人）' : '（聯絡人）') : ''));
+      var sub = [];
+      if (!name) sub.push('Person ' + (i + 1) + (lead ? (org ? ' (group contact)' : ' (main contact)') : ''));
+      if (field(row, 'ic').value.trim()) sub.push(maskIc(field(row, 'ic').value));
+      if (field(row, 'contact').value.trim()) sub.push(field(row, 'contact').value.trim());
+      row.querySelector('.att-sub').textContent = sub.join(' · ');
+      row.querySelector('.use-first').hidden = lead;
+      row.querySelector('.first-num').textContent = firstTel ? '(' + firstTel + ')' : '';
+      row.querySelector('.att-remove').hidden = list.length < 2;
+      if (lead) row.querySelector('.same-first').checked = false;
+    });
+    countEl.value = list.length;
+    document.getElementById('peopleCount').textContent = '共 ' + list.length + ' 位 · ' + list.length + (list.length > 1 ? ' people' : ' person');
+    var over = list.length > M;
+    var lt = document.getElementById('limitText');
+    lt.textContent = over ? ('人數超過上限 ' + M + ' 位，請移除 ' + (list.length - M) + ' 位。 Too many people — the limit is ' + M + '.')
+                          : (LIMIT.zh.replace('{max}', M) + ' ' + LIMIT.en.replace('{max}', M));
+    lt.classList.toggle('is-over', over);
+    var add = document.getElementById('addPerson');
+    add.disabled = list.length >= M;
+    add.hidden = M < 2;
+    document.getElementById('allSame').hidden = list.length < 3;
+    list.forEach(function (row) { row.classList.toggle('is-done', complete(row)); });
+  }
+
+  function syncLinked() {
+    var list = rows(); if (!list.length) return;
+    var first = field(list[0], 'contact').value;
+    list.forEach(function (row, i) {
+      var linked = i > 0 && row.querySelector('.same-first').checked;
+      var inp = field(row, 'contact');
+      inp.readOnly = linked;
+      inp.classList.toggle('is-linked', linked);
+      if (linked) inp.value = first;
+    });
+  }
+
+  function openCard(row, focus) {
+    rows().forEach(function (r) { r.classList.toggle('is-open', r === row); });
+    if (row && focus) {
+      var empty = [].filter.call(row.querySelectorAll('input[required]'), function (i) { return !i.value.trim() && !i.readOnly; })[0];
+      setTimeout(function () { (empty || field(row, 'name')).focus(); row.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, 30);
+    }
+  }
+  function addCard(d, focus) {
+    box.insertAdjacentHTML('beforeend', cardHtml(d || {}));
+    var row = rows().pop();
+    syncLinked(); renumber();
+    if (focus !== false) openCard(row, true);
+    return row;
+  }
+  /** Check one person's boxes; shows the messages. True when all good. */
+  function checkRow(row) {
+    var ok = true, firstBad = null;
+    row.querySelectorAll('input[required]').forEach(function (inp) {
+      var good = inp.value.trim() !== '';
+      if (good && inp.dataset.validate && window.TYTValidate) { inp.dataset.touched = '1'; good = window.TYTValidate.check(inp, true); }
+      inp.toggleAttribute('aria-invalid', !good);
+      if (!good) { ok = false; firstBad = firstBad || inp; }
+    });
+    if (firstBad) { openCard(row, false); firstBad.focus(); }
     return ok;
   }
-  function refreshChips() {
-    var rows = box.querySelectorAll('.attendee'), html = '';
-    rows.forEach(function (row, i) {
-      var ok = complete(row);
-      row.classList.toggle('is-done', ok);
-      html += '<a href="#person' + (i + 1) + '" class="' + (ok ? 'ok' : '') + '" aria-label="第' + (i + 1) + '位 Person ' + (i + 1) + (ok ? ' ✓' : '') + '">' + (i + 1) + '</a>';
-    });
-    chips.innerHTML = html;
-  }
-  box.addEventListener('input', function (e) {
-    if (e.target.name === 'attendee_contact[]' && e.target === box.querySelector('[name="attendee_contact[]"]')) syncLinked();
-    refreshChips();
+
+  box.addEventListener('click', function (e) {
+    var row = e.target.closest('.attendee'); if (!row) return;
+    if (e.target.closest('.att-remove')) {
+      e.stopPropagation();
+      var hasData = [].some.call(row.querySelectorAll('input[required]'), function (i) { return i.value.trim() && !i.readOnly; });
+      var go = function () { var wasOpen = row.classList.contains('is-open'); row.remove(); syncLinked(); renumber(); if (wasOpen) openCard(rows()[0], false); };
+      if (hasData && window.TYTDialog) window.TYTDialog.confirm('移除這位參加者？\nRemove this person?', { danger: true }).then(function (y) { if (y) go(); });
+      else go();
+      return;
+    }
+    if (e.target.closest('.att-done')) {
+      if (checkRow(row)) {
+        row.classList.remove('is-open');
+        var next = rows().filter(function (r) { return !complete(r); })[0];
+        if (next) openCard(next, true); else document.getElementById('addPerson').focus();
+        renumber();
+      }
+      return;
+    }
+    if (e.target.closest('.attendee-head') && !row.classList.contains('is-open')) openCard(row, true);
   });
-  box.addEventListener('focusout', function () { setTimeout(refreshChips, 0); });
+  box.addEventListener('keydown', function (e) {
+    var head = e.target.closest('.attendee-head');
+    if (head && (e.key === 'Enter' || e.key === ' ') && e.target === head) { e.preventDefault(); openCard(head.closest('.attendee'), true); }
+  });
+  box.addEventListener('change', function (e) {
+    if (e.target.classList.contains('same-first')) {
+      var inp = field(e.target.closest('.attendee'), 'contact');
+      if (!e.target.checked) { inp.value = ''; }
+      syncLinked();
+      if (e.target.checked && window.TYTValidate && inp.value) { inp.dataset.touched = '1'; window.TYTValidate.check(inp, true); }
+      if (!e.target.checked) inp.focus();
+      renumber();
+    }
+  });
+  box.addEventListener('input', function (e) {
+    if (e.target.name === 'attendee_contact[]' && e.target === field(rows()[0], 'contact')) syncLinked();
+    renumber();
+  });
+  box.addEventListener('focusout', function () { setTimeout(renumber, 0); });
+  document.getElementById('addPerson').addEventListener('click', function () {
+    var open = rows().filter(function (r) { return r.classList.contains('is-open'); })[0];
+    if (open && !checkRow(open)) return;              // finish the one being filled first
+    if (open) open.classList.remove('is-open');
+    addCard({ linked: rows().length >= 1 && field(rows()[0], 'contact').value.trim() !== '' });
+  });
+  document.getElementById('allSame').addEventListener('click', function () {
+    var list = rows(), all = list.slice(1).every(function (r) { return r.querySelector('.same-first').checked; });
+    list.slice(1).forEach(function (r) { r.querySelector('.same-first').checked = !all; if (all) field(r, 'contact').value = ''; });
+    syncLinked(); renumber();
+  });
 
   // ---- Individual / organisation ----
   form.querySelectorAll('[name="reg_type"]').forEach(function (r) {
     r.addEventListener('change', function () {
       var org = type() === 'organisation';
-      var f = form.querySelector('.org-field');
-      f.hidden = !org;
+      form.querySelector('.org-field').hidden = !org;
       document.getElementById('orgName').required = org;
-      render();
+      renumber();
     });
   });
 
-  document.querySelectorAll('[data-step]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      countEl.value = (parseInt(countEl.value, 10) || 1) + Number(btn.dataset.step);
-      render();
-    });
-  });
-  countEl.addEventListener('change', render);
+  // ---- Start: the people sent back after an error, or one empty card ----
+  var startN = Math.max(1, parseInt(countEl.value, 10) || 1);
+  for (var k = 0; k < startN; k++) {
+    addCard({ name: OLD.names[k], ic: OLD.ics[k], contact: OLD.contacts[k],
+              linked: k > 0 && OLD.contacts[k] && OLD.contacts[k] === OLD.contacts[0] }, false);
+  }
+  rows().forEach(function (row) { field(row, 'ic').value && ageTag(field(row, 'ic')); });
+  openCard(rows().filter(function (r) { return !complete(r); })[0] || null, false);
 
   // Built-in checks first (empty boxes), then ours; "at least one aged …" is a group rule.
   form.addEventListener('submit', function (e) {
@@ -356,8 +407,14 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     if (org.required && org.value.trim().length < 2) {
       e.preventDefault(); org.focus(); org.reportValidity && org.reportValidity(); return;
     }
-    var empty = [].slice.call(form.querySelectorAll('#attendees input[required]')).filter(function (i) { return !i.value.trim(); })[0];
-    if (empty) { e.preventDefault(); empty.focus(); empty.scrollIntoView({ block: 'center', behavior: 'smooth' }); return; }
+    if (rows().length > max()) {
+      e.preventDefault();
+      document.getElementById('limitText').scrollIntoView({ block: 'center', behavior: 'smooth' });
+      return;
+    }
+    // Every person must be complete; open the first one that is not.
+    var bad = rows().filter(function (r) { return !complete(r); })[0];
+    if (bad) { e.preventDefault(); checkRow(bad); bad.scrollIntoView({ block: 'center', behavior: 'smooth' }); return; }
     if (AGE && AGE.who === 'any') {
       var ics = [].slice.call(form.querySelectorAll('[name="attendee_ic[]"]'));
       var checked = ics.filter(function (i) { return born(i.value); });
@@ -370,7 +427,6 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     }
   });
 
-  render();
 })();
 </script>
 <?php endif; ?>

@@ -159,7 +159,6 @@ $router->get('/system/qr',             'SystemController@qrGenerator');
 $router->get('/system/forms',          'FormsController@index');
 $router->post('/system/forms',         'FormsController@save');
 $router->post('/system/forms/draft',   'FormsController@draft');
-$router->post('/system/users/single-device', 'SystemController@singleDevice');
 
 // Own password — the one page BOTH roles share, so it sits under
 // neither area's prefix.

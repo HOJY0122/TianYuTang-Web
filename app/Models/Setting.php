@@ -67,8 +67,6 @@ class Setting extends Model
         'pdf_line2'         => null,         // default: footer address
         'pdf_line3'         => null,         // default: footer contact
         'pdf_show_logo'     => '1',
-        // One device per account (Site settings): a new sign-in signs the older device out
-        'single_device'     => '0',
         // System → 表單與字體 Forms & fonts (see App\Core\FormRules)
         'rsvp_types'        => 'individual', // individual | both | organisation
         'rsvp_org_max'      => '0',          // most people in an organisation group; 0 = the event's limit

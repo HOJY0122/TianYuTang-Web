@@ -14,7 +14,7 @@ class LiveController extends Controller
     {
         // Checks never extend a session, and an idle or stolen one gets public answers only.
         $signedIn = \App\Core\Session::isStaff();
-        // Signed in again on another device (one device per account)? Tell
+        // A system admin signed in again on another device? Tell
         // the page, which reloads and lands on the sign-in page with the reason.
         $out = $signedIn && \App\Core\Session::singleDevice() && \App\Core\Session::replacedElsewhere();
         $signedIn = $signedIn && !$out;

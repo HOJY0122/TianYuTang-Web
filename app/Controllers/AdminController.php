@@ -559,18 +559,23 @@ class AdminController extends Controller
         // settings owned by the system admin (/system), not event fields,
         // so this form cannot change them however the POST is crafted.
 
-        // Waze QR image: stored only once every text field is valid, and
-        // the old file removed only after the new value is saved.
+        // Waze and Google Maps QR images: stored only once every text field
+        // is valid, and the old file removed only after the new value is saved.
         $qrUploader = new ImageUploader('waze');
-        $oldQr      = $isNew ? null : ($eventModel->find($id)['waze_qr_path'] ?? null);
-        if (!$errors && ImageUploader::wasProvided($_FILES['waze_qr'] ?? null)) {
-            try {
-                $fields['waze_qr_path'] = $qrUploader->store($_FILES['waze_qr'], 600);
-            } catch (RuntimeException $e) {
-                $errors[] = 'Waze QR：' . $e->getMessage();
+        $current    = $isNew ? [] : ($eventModel->find($id) ?? []);
+        $oldQrs     = [];
+        foreach (['waze' => 'Waze QR', 'maps' => 'Google Maps QR'] as $qk => $qLabel) {
+            $col = $qk . '_qr_path';
+            $oldQrs[$col] = $current[$col] ?? null;
+            if (!$errors && ImageUploader::wasProvided($_FILES[$qk . '_qr'] ?? null)) {
+                try {
+                    $fields[$col] = $qrUploader->store($_FILES[$qk . '_qr'], 600);
+                } catch (RuntimeException $e) {
+                    $errors[] = $qLabel . '：' . $e->getMessage();
+                }
+            } elseif (!$errors && !empty($_POST['remove_' . $qk . '_qr'])) {
+                $fields[$col] = null;
             }
-        } elseif (!$errors && !empty($_POST['remove_waze_qr'])) {
-            $fields['waze_qr_path'] = null;
         }
 
         if ($errors) {
@@ -588,11 +593,13 @@ class AdminController extends Controller
             );
         } else {
             $eventModel->update($id, $fields);
-            // A test copy shares the original's QR file — only delete it
+            // A test copy shares the original's QR files — only delete one
             // when no other event still points at it.
-            if ($oldQr && array_key_exists('waze_qr_path', $fields) && $fields['waze_qr_path'] !== $oldQr
-                && $eventModel->countOtherEventsUsingImage($oldQr, $id) === 0) {
-                $qrUploader->delete($oldQr);
+            foreach ($oldQrs as $col => $oldQr) {
+                if ($oldQr && array_key_exists($col, $fields) && $fields[$col] !== $oldQr
+                    && $eventModel->countOtherEventsUsingImage($oldQr, $id) === 0) {
+                    $qrUploader->delete($oldQr);
+                }
             }
             $this->flash('success', '已儲存 Saved', "活動資料已更新，網站已同步顯示。\nThe event is updated on the website.");
             $this->redirect("/admin/event/edit?id={$id}");

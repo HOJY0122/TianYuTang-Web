@@ -170,8 +170,8 @@ class Event extends Model
         }
         return (int) $this->scalar(
             'SELECT COUNT(*) FROM events
-             WHERE id <> ? AND (hero_banner_path = ? OR favicon_path = ? OR waze_qr_path = ?)',
-            [$excludeEventId, $path, $path, $path]
+             WHERE id <> ? AND (hero_banner_path = ? OR favicon_path = ? OR waze_qr_path = ? OR maps_qr_path = ?)',
+            [$excludeEventId, $path, $path, $path, $path]
         );
     }
 
@@ -220,7 +220,7 @@ class Event extends Model
         'donation_opens_at', 'donation_closes_at',
         // Home-page content (migration 008)
         'welcome_zh', 'welcome_en', 'contact_info',
-        'maps_url', 'waze_url', 'waze_qr_path',
+        'maps_url', 'waze_url', 'waze_qr_path', 'maps_qr_path',
         'rsvp_note', 'donation_note',
         // Online donation limits (migration 009)
         'seats_min', 'seats_max', 'free_min', 'free_max',

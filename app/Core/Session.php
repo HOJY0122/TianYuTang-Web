@@ -18,9 +18,9 @@ namespace App\Core;
  *                     signed in (a stolen cookie) → signed out
  *                   - password or role changed, or account removed, since
  *                     signing in → signed out (session_version)
- *                   - "one device per account" switched on (Site
- *                     settings) and the account signed in again on
- *                     another device since → signed out ('device')
+ *                   - a SYSTEM ADMIN account signed in again on
+ *                     another device since → signed out ('device');
+ *                     ordinary admins may use several devices
  *                   - a fresh session id every 15 minutes, so an id seen
  *                     once soon stops working
  *                   - pages are never stored by the browser or a proxy, so
@@ -80,10 +80,15 @@ final class Session
         (new \App\Models\AdminUser())->setDeviceToken((int) $user['id'], hash('sha256', $token));
     }
 
-    /** Site settings → "one device per account": a new sign-in signs the older device out. */
-    public static function singleDevice(): bool
+    /**
+     * One device at a time — for SYSTEM ADMIN accounts only, always: a
+     * sign-in on another device signs the older one out. Ordinary admins
+     * may stay signed in on several devices (counter, phone, laptop on
+     * the event day).
+     */
+    public static function singleDevice(?string $role = null): bool
     {
-        return (new \App\Models\Setting())->get('single_device', '0') === '1';
+        return ($role ?? ($_SESSION['admin_role'] ?? '')) === 'system_admin';
     }
 
     /** Has this account signed in on another device since this session began? */
@@ -118,7 +123,7 @@ final class Session
             $state = (new \App\Models\AdminUser())->sessionState((int) $_SESSION['admin_id']);
             if ($state === null || (int) $state['session_version'] !== (int) ($_SESSION['session_version'] ?? -1)) {
                 $reason = 'revoked';
-            } elseif (self::singleDevice() && self::replacedElsewhere($state)) {
+            } elseif (self::singleDevice($state['role']) && self::replacedElsewhere($state)) {
                 $reason = 'device';
             } else {
                 $_SESSION['admin_role'] = $state['role'];     // a role change applies at once

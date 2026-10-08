@@ -93,16 +93,23 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     <div><label for="maps_url">Google 地圖連結 <span class="en">Google Maps link</span></label>
       <input id="maps_url" name="maps_url" type="url" maxlength="500" value="<?= h($v('maps_url')) ?>" placeholder="https://maps.app.goo.gl/..."></div>
   </div>
-  <label for="waze_qr">Waze QR Code 圖片 <span class="en">Waze QR image (optional)</span></label>
-  <?php $qr = $event['waze_qr_path'] ?? null; ?>
-  <?php if ($qr): ?>
-    <div class="image-preview favicon">
-      <img src="<?= h(BASE_URL . '/' . $qr) ?>" alt="Waze QR" style="max-height:120px">
-      <label class="remove-check"><input type="checkbox" name="remove_waze_qr" value="1"> 移除 Remove</label>
-    </div>
-  <?php endif; ?>
-  <input id="waze_qr" name="waze_qr" type="file" data-aspects="1:1,original" data-max-width="800" accept="image/jpeg,image/png,image/gif,image/webp">
-  <p class="help">不上傳也可以：有 Waze 連結時，網站會自動產生 QR Code。Optional — without an image, a QR code is made from the Waze link automatically.</p>
+  <div class="form-grid qr-uploads">
+    <?php foreach (['waze' => ['waze', 'Waze QR Code 圖片', 'Waze QR image (optional)'], 'maps' => ['gmaps', 'Google 地圖 QR Code 圖片', 'Google Maps QR image (optional)']] as $qk => [$qIcon, $qZh, $qEn]): ?>
+      <div class="qr-upload">
+        <label for="<?= $qk ?>_qr"><span class="brand-mini"><?= icon($qIcon) ?></span> <?= $qZh ?> <span class="en"><?= $qEn ?></span></label>
+        <?php $qr = $event[$qk . '_qr_path'] ?? null; ?>
+        <?php if ($qr): ?>
+          <div class="image-preview favicon">
+            <img src="<?= h(BASE_URL . '/' . $qr) ?>" alt="<?= h($qEn) ?>" style="max-height:120px">
+            <label class="remove-check"><input type="checkbox" name="remove_<?= $qk ?>_qr" value="1"> 移除 Remove</label>
+          </div>
+        <?php endif; ?>
+        <input id="<?= $qk ?>_qr" name="<?= $qk ?>_qr" type="file" data-aspects="1:1,original" data-max-width="800" accept="image/jpeg,image/png,image/gif,image/webp">
+      </div>
+    <?php endforeach; ?>
+  </div>
+  <p class="help">兩個都可以不上傳：有連結時，網站會自動產生 QR Code。上傳的圖片優先。
+    <span class="en">Both optional — without an image, a QR code is made from that link automatically. An uploaded image is used first.</span></p>
   </section>
   <section class="panel form-sec">
   <h3>⑤ 報名與布施設定 <span class="en">Registration &amp; donation settings</span></h3>

@@ -9,7 +9,16 @@ require BASE_PATH . '/app/Views/layouts/header.php';
 $hasQrImage = !empty($event['waze_qr_path']);
 $wazeUrl    = trim((string) ($event['waze_url'] ?? ''));
 $mapsUrl    = trim((string) ($event['maps_url'] ?? ''));
-$showMap    = $hasQrImage || $wazeUrl !== '' || $mapsUrl !== '';
+$showMap    = $hasQrImage || $wazeUrl !== '' || $mapsUrl !== '' || !empty($event['maps_qr_path']);
+// One QR per service: the uploaded image, or one drawn from the link (qr-auto).
+$qrCodes = [];
+foreach (['waze' => ['waze', 'Waze', $wazeUrl], 'maps' => ['gmaps', 'Google 地圖 Maps', $mapsUrl]] as $qk => [$qIcon, $qName, $qUrl]) {
+    $qImg = $event[$qk . '_qr_path'] ?? null;
+    if ($qImg || $qUrl !== '') {
+        $qrCodes[] = ['key' => $qk, 'icon' => $qIcon, 'name' => $qName, 'img' => $qImg, 'url' => $qUrl];
+    }
+}
+$autoQr = (bool) array_filter($qrCodes, static fn($q) => !$q['img']);
 ?>
 
 <main id="main">
@@ -126,14 +135,19 @@ if (!$bannerSlides && $siteHeroBanner) {
           <?php endif; ?>
         </div>
       </div>
-      <?php if ($hasQrImage || $wazeUrl !== ''): ?>
-        <div class="qr-frame">
-          <?php if ($hasQrImage): ?>
-            <img src="<?= h(BASE_URL . '/' . $event['waze_qr_path']) ?>" alt="Waze QR Code">
-          <?php else: ?>
-            <canvas id="wazeQr" data-url="<?= h($wazeUrl) ?>" aria-label="Waze QR Code"></canvas>
-          <?php endif; ?>
-          <small><?= h(t('home.scan') . ' ' . t('home.scan', 'en')) ?></small>
+      <?php if ($qrCodes): ?>
+        <div class="qr-pair<?= count($qrCodes) > 1 ? ' is-two' : '' ?>">
+          <?php foreach ($qrCodes as $q): ?>
+            <div class="qr-frame qr-<?= $q['key'] ?>">
+              <?php if ($q['img']): ?>
+                <img src="<?= h(BASE_URL . '/' . $q['img']) ?>" alt="<?= h($q['name']) ?> QR Code">
+              <?php else: ?>
+                <canvas class="qr-auto" data-url="<?= h($q['url']) ?>" aria-label="<?= h($q['name']) ?> QR Code"></canvas>
+              <?php endif; ?>
+              <span class="qr-name"><span class="brand-mini"><?= icon($q['icon']) ?></span> <?= h($q['name']) ?></span>
+              <small><?= $q['key'] === 'waze' ? h(t('home.scan') . ' ' . t('home.scan', 'en')) : '掃描開啟地圖 Scan to open the map' ?></small>
+            </div>
+          <?php endforeach; ?>
         </div>
       <?php endif; ?>
     </div>
@@ -254,19 +268,19 @@ if (!$bannerSlides && $siteHeroBanner) {
 })();
 </script>
 
-<?php if (!$hasQrImage && $wazeUrl !== ''): ?>
+<?php if ($autoQr): ?>
 <script src="<?= asset('js/qrcode.min.js') ?>"></script>
 <script>
-// No uploaded QR image, so draw one from the Waze link. Same result for
-// the visitor, and nothing for the admin to regenerate if the link changes.
+// No uploaded QR image for a service, so draw one from its link. Same
+// result for the visitor, and nothing to regenerate if the link changes.
 (function () {
   function draw() {
-    var canvas = document.getElementById('wazeQr');
-    if (!canvas || !window.TYTQRCode || canvas.dataset.drawn) return;
-    canvas.dataset.drawn = '1';
-    window.TYTQRCode.toCanvas(canvas, canvas.dataset.url || <?= json_encode($wazeUrl, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?>, {
-      width: 220, margin: 1, errorCorrectionLevel: 'M'
-    }).catch(function () { canvas.parentNode.style.display = 'none'; });
+    if (!window.TYTQRCode) return;
+    document.querySelectorAll('canvas.qr-auto:not([data-drawn])').forEach(function (canvas) {
+      canvas.dataset.drawn = '1';
+      window.TYTQRCode.toCanvas(canvas, canvas.dataset.url, { width: 220, margin: 1, errorCorrectionLevel: 'M' })
+        .catch(function () { canvas.closest('.qr-frame').style.display = 'none'; });
+    });
   }
   draw();
   document.addEventListener('live:swap', draw);   // the info part was refreshed

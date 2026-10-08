@@ -664,3 +664,24 @@ html.protect-hide.p-qr .qr-frame canvas{filter:blur(28px) brightness(.7)}
      sideways instead of adding a tall empty strip underneath. */
   .site-footer > :last-child{padding-left:3.4rem;padding-right:3.4rem}
 }
+
+/* Directions: one QR per service (Waze / Google Maps), side by side */
+.qr-pair{display:flex;gap:.8rem;flex-wrap:wrap;justify-content:center}
+.qr-pair .qr-frame{width:12rem}
+.qr-pair.is-two .qr-frame img,.qr-pair.is-two .qr-frame canvas{width:9.5rem;height:9.5rem}
+.qr-name{display:flex;align-items:center;justify-content:center;gap:.35rem;margin-top:.45rem;font-weight:800;font-size:.85rem;color:var(--dark)}
+.brand-mini{display:inline-grid;place-items:center;width:1.5rem;height:1.5rem;border-radius:22%;background:#fff;border:1px solid rgba(0,0,0,.1);flex:none}
+.qr-waze .brand-mini{background:#33ccff;border-color:#1aa9d8}
+.brand-mini .ic{width:1.1rem;height:1.1rem;stroke-width:1.5}
+@media (min-width:601px) and (max-width:900px){ .qr-pair.is-two{flex-direction:column} }
+@media (max-width:600px){ .qr-pair .qr-frame{width:calc(50% - .4rem);min-width:9.5rem;padding:.6rem} .qr-pair.is-two .qr-frame img,.qr-pair.is-two .qr-frame canvas{width:100%;height:auto;aspect-ratio:1} }
+/* The QR library writes a fixed size onto the canvas; let it fit its frame. */
+.qr-pair .qr-frame canvas{max-width:100%!important;height:auto!important;aspect-ratio:1}
+@media (max-width:600px){
+  .location-card .qr-pair{justify-self:stretch}
+  .qr-pair{flex-wrap:nowrap}
+  .qr-pair .qr-frame{flex:1 1 0;min-width:0;width:auto}
+  .qr-pair .qr-frame img,.qr-pair .qr-frame canvas{width:100%!important}
+  .qr-name{font-size:.78rem;flex-wrap:wrap;text-align:center}
+  .qr-pair small{font-size:.7rem}
+}

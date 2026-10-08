@@ -8,7 +8,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
 <main id="main">
 <section class="confirm-wrap">
   <div class="card confirm-card">
-    <div class="confirm-icon"><?= icon($isRsvp ? 'check-circle' : 'lotus', 'xl') ?></div>
+    <div class="confirm-icon"><?= icon($isRsvp ? 'check-circle' : 'pray', 'xl') ?></div>
     <h1><?= tb($isRsvp ? 'success.rsvp_title' : 'success.don_title') ?></h1>
     <p class="confirm-sub">
       <?= tb($isRsvp ? 'success.rsvp_text' : 'success.don_text') ?>

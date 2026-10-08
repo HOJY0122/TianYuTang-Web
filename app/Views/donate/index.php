@@ -76,7 +76,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     <div class="choice">
       <input type="checkbox" id="wantFree" name="want_free" value="1"<?= $wantFree ? ' checked' : '' ?>>
       <div class="choice-body">
-        <label class="choice-title" for="wantFree"><strong><?= icon('lotus') ?> <?= h(t('donate.free') . ' ' . t('donate.free', 'en')) ?></strong>
+        <label class="choice-title" for="wantFree"><strong><?= icon('donate') ?> <?= h(t('donate.free') . ' ' . t('donate.free', 'en')) ?></strong>
           <span class="help"><?= h(t('donate.free_hint') . ' ' . t('donate.free_hint', 'en')) ?></span></label>
         <div class="detail" data-for="wantFree">
           <label for="freeAmount" class="sr-only">金額 Amount (RM)</label>
@@ -100,7 +100,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     <?php if (App\Models\Setting::isDraftPreview()): ?>
       <p class="note"><?= icon('eye') ?> 預覽模式：不能提交。<span class="en">Preview only — this form cannot be sent.</span></p>
     <?php endif; ?>
-    <button class="primary" type="submit"<?= App\Models\Setting::isDraftPreview() ? ' disabled' : '' ?>><?= icon('lotus') ?> <?= tb('donate.submit') ?></button>
+    <button class="primary" type="submit"<?= App\Models\Setting::isDraftPreview() ? ' disabled' : '' ?>><?= icon('pray') ?> <?= tb('donate.submit') ?></button>
     <p class="help" style="text-align:center"><?= h(t('donate.after') . ' ' . t('donate.after', 'en')) ?></p>
   </form>
   <?php endif; ?>

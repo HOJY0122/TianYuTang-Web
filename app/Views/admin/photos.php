@@ -71,7 +71,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
         <?php foreach ($photos as $i => $photo): ?>
           <div class="admin-photo" data-id="<?= (int) $photo['id'] ?>">
             <div class="drag-area" data-drag-handle title="拖曳排序 Drag to reorder">
-              <img src="<?= h(BASE_URL . '/' . $photo['thumb_path']) ?>" alt="相片 Photo <?= $i + 1 ?>" draggable="false">
+              <img src="<?= h(media_url($photo['thumb_path'])) ?>" alt="相片 Photo <?= $i + 1 ?>" draggable="false">
               <span class="drag-badge" aria-hidden="true">⠿ <b data-position><?= $i + 1 ?></b></span>
             </div>
 

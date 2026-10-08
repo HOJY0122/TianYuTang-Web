@@ -93,6 +93,9 @@ class FormsController extends Controller
             'heading_font'      => $pick('heading_font', array_keys(Setting::HEADING_FONTS)),
             'home_albums'       => $pick('home_albums', ['previous', 'latest', 'recent']),
             'home_album_photos' => $num('home_album_photos', [4, 40]),
+            'protect_photos'    => $pick('protect_photos', ['0', '1']),
+            'photo_watermark'   => is_string($in['photo_watermark'] ?? null)
+                ? mb_substr(trim(preg_replace('/[\x00-\x1F\x7F]/u', '', $in['photo_watermark'])), 0, 40) : (string) $site['photo_watermark'],
         ];
         // Amounts are stored tidied ("1, 5, 10"); an unusable list keeps the old one.
         foreach (['donate_amounts', 'counter_amounts'] as $key) {

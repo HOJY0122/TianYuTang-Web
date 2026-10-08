@@ -31,7 +31,7 @@ $navItems = [
 $helpKey = in_array($activeNav, ['home', 'register', 'donate', 'gallery'], true) ? 'help.' . $activeNav : 'help.other';
 ?>
 <!DOCTYPE html>
-<html lang="zh-Hant" data-base="<?= h(BASE_URL) ?>" data-live-quiet>
+<html lang="zh-Hant" data-base="<?= h(BASE_URL) ?>" data-live-quiet<?= ($site['protect_photos'] ?? '1') === '1' ? ' data-protect' : '' ?><?= trim((string) $site['photo_watermark']) !== '' ? ' data-wm="' . h($site['photo_watermark']) . '"' : '' ?>>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">

@@ -19,7 +19,7 @@
   <label for="image">圖片 <span class="en">Picture (optional)</span></label>
   <?php if (!empty($post['image_path'])): ?>
     <div class="image-preview">
-      <img src="<?= h(BASE_URL . '/' . $post['image_path']) ?>" alt="">
+      <img src="<?= h(media_url($post['image_path'])) ?>" alt="">
       <label class="remove-check"><input type="checkbox" name="remove_image" value="1"> 移除圖片 Remove picture</label>
     </div>
   <?php endif; ?>

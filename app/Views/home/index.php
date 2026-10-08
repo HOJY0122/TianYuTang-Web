@@ -70,12 +70,12 @@ if (!$bannerSlides && $siteHeroBanner) {
 
   <div class="cta-grid">
     <a class="cta" href="<?= url('/register') ?>">
-      <span class="icon"><?= icon('form') ?></span>
+      <span class="icon"><?= icon('register') ?></span>
       <strong><?= h(t('home.cta_register')) ?></strong>
       <span><?= h($rsvpWindow['open'] ? t('home.cta_register', 'en') : ($rsvpWindow['reason'] === 'not_yet' ? t('home.opening_soon') . ' ' . t('home.opening_soon', 'en') : t('home.closed') . ' ' . t('home.closed', 'en'))) ?></span>
     </a>
     <a class="cta" href="<?= url('/donate') ?>">
-      <span class="icon"><?= icon('lotus') ?></span>
+      <span class="icon"><?= icon('donate') ?></span>
       <strong><?= h(t('home.cta_donate')) ?></strong>
       <span><?= h($donationWindow['open'] ? t('home.cta_donate', 'en') : ($donationWindow['reason'] === 'not_yet' ? t('home.opening_soon') . ' ' . t('home.opening_soon', 'en') : t('home.closed') . ' ' . t('home.closed', 'en'))) ?></span>
     </a>
@@ -119,10 +119,10 @@ if (!$bannerSlides && $siteHeroBanner) {
         <p style="margin:.5rem 0 0"><?= tb('home.directions_text') ?></p>
         <div class="map-buttons">
           <?php if ($wazeUrl !== ''): ?>
-            <a class="btn waze" href="<?= h($wazeUrl) ?>" target="_blank" rel="noopener"><?= icon('compass') ?> <?= h(t('home.waze')) ?></a>
+            <a class="btn waze" href="<?= h($wazeUrl) ?>" target="_blank" rel="noopener"><span class="brand-ic"><?= icon('waze') ?></span> <?= h(t('home.waze')) ?></a>
           <?php endif; ?>
           <?php if ($mapsUrl !== ''): ?>
-            <a class="btn ghost" href="<?= h($mapsUrl) ?>" target="_blank" rel="noopener"><?= icon('map') ?> <?= h(t('home.maps') . ' ' . t('home.maps', 'en')) ?></a>
+            <a class="btn ghost" href="<?= h($mapsUrl) ?>" target="_blank" rel="noopener"><span class="brand-ic"><?= icon('gmaps') ?></span> <?= h(t('home.maps') . ' ' . t('home.maps', 'en')) ?></a>
           <?php endif; ?>
         </div>
       </div>
@@ -154,8 +154,8 @@ if (!$bannerSlides && $siteHeroBanner) {
         <article class="card post news-card">
           <?php if (!empty($post['image_path'])): ?>
             <div class="post-media">
-              <img class="post-image" src="<?= h(BASE_URL . '/' . $post['image_path']) ?>"
-                   data-lightbox="<?= h(BASE_URL . '/' . $post['image_path']) ?>"
+              <img class="post-image" src="<?= h(media_url($post['image_path'])) ?>"
+                   data-lightbox="<?= h(media_url($post['image_path'])) ?>"
                    alt="<?= h($post['title_zh']) ?>" loading="lazy">
               <span class="zoom-hint" aria-hidden="true"><?= icon('search') ?></span>
             </div>

@@ -141,6 +141,29 @@ foreach (FormRules::BODY_FONTS as [, $fam]) {
       </div>
     </section>
 
+    <!-- ⑤ Photo protection -->
+    <section class="panel form-panel forms-sec" data-preview-page="gallery">
+      <h2><?= icon('lock') ?> 相片保護 <span class="en">Photo protection</span></h2>
+      <div class="label-row">
+        <label>防止下載與複製 <span class="en">Stop saving and copying</span></label>
+        <div class="seg-toggle" role="radiogroup" aria-label="相片保護 Photo protection">
+          <label class="seg-on"><input type="radio" name="protect_photos" value="1"<?= $site['protect_photos'] === '1' ? ' checked' : '' ?>><span>✓ 開啟 On</span></label>
+          <label class="seg-off"><input type="radio" name="protect_photos" value="0"<?= $site['protect_photos'] === '1' ? '' : ' checked' ?>><span>✕ 關閉 Off</span></label>
+        </div>
+      </div>
+      <ul class="help protect-list">
+        <li>不能右鍵 / 長按「儲存圖片」、不能拖出相片。<span class="en">No right-click or long-press “Save image”; photos cannot be dragged out.</span></li>
+        <li>F12、Ctrl+S、Ctrl+U 等開發者 / 儲存快捷鍵停用；列印時不印出相片。<span class="en">Developer-tool and save shortcuts are off; photos are left out of printouts.</span></li>
+        <li>按 Print Screen 時相片會暫時模糊；看大圖時切換到截圖工具，相片也會模糊。<span class="en">Print Screen, or switching to a snipping tool while viewing, blurs the photo.</span></li>
+        <li><strong>一直生效：</strong>相片只能在網站頁面內顯示，複製或分享相片網址會打不開，幾小時後自動失效。<span class="en"><strong>Always on:</strong> photos only show inside the site's pages — a copied photo link does not open, and stops working after a few hours.</span></li>
+      </ul>
+      <label for="photo_watermark">浮水印文字 <span class="en">Watermark text (full-size viewer)</span></label>
+      <input id="photo_watermark" name="photo_watermark" maxlength="40" value="<?= h($site['photo_watermark']) ?>" placeholder="例 e.g. 天玉堂 Tian Yu Tang">
+      <p class="help">留空 = 不加浮水印。<span class="en">Leave empty for none.</span>
+        <?= icon('info') ?> 任何網站都無法完全阻止用另一部手機拍螢幕；以上措施能擋住一般的下載與轉發。
+        <span class="en">No website can stop someone photographing the screen with another phone; these steps stop ordinary saving and sharing.</span></p>
+    </section>
+
     <div class="form-actions sticky-actions">
       <button class="primary" type="submit"><?= icon('save') ?> 儲存 <span class="en">Save</span></button>
       <span class="help" id="draftNote" hidden>● 未儲存：右邊預覽已顯示你的修改 <span class="en">Unsaved — the preview shows your changes</span></span>

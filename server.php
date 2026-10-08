@@ -21,7 +21,7 @@ $file = __DIR__ . '/public' . $path;
 // A real file that is not a PHP script → let the server return it as-is.
 // Except old receipt photos: Apache refuses those via .htaccess, which
 // this server ignores, so the front controller's 404 handles them here.
-$isPrivate = str_starts_with($path, '/uploads/receipts/');
+$isPrivate = (bool) preg_match('#^/uploads/(receipts|photos|posts|banners)/#', $path);
 if ($path !== '/' && !$isPrivate && is_file($file) && !str_ends_with($file, '.php')) {
     return false;
 }

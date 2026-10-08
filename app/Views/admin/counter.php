@@ -165,7 +165,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
         <!-- Freewill -->
         <div class="cd-card" id="freeCard">
           <div class="cd-card-head">
-            <span class="cd-icon" aria-hidden="true"><?= icon('lotus') ?></span>
+            <span class="cd-icon" aria-hidden="true"><?= icon('donate') ?></span>
             <div><label for="free_amount" class="cd-title">隨喜 <span class="en">Freewill</span></label>
               <span class="help">任意金額 <span class="en">any amount</span></span></div>
           </div>

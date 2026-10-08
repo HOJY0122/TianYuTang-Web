@@ -148,8 +148,8 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   </div>
 
   <div class="form-actions sticky-actions wide-actions">
-    <button class="primary" type="submit">💾 <?= $isNew ? '建立活動 Create event' : '儲存 Save changes' ?></button>
-    <?php if (!$isNew): ?><a class="mini-btn ghost" href="<?= url('/') ?>" target="_blank">👀 查看網站 View site</a><?php endif; ?>
+    <button class="primary" type="submit"><?= icon('save') ?> <?= $isNew ? '建立活動 Create event' : '儲存 Save changes' ?></button>
+    <?php if (!$isNew): ?><a class="mini-btn ghost" href="<?= url('/') ?>" target="_blank"><?= icon('eye') ?> 查看網站 View site</a><?php endif; ?>
   </div>
 </form>
 <?php require BASE_PATH . '/app/Views/layouts/admin_footer.php'; ?>

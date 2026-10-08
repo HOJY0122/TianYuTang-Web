@@ -41,7 +41,7 @@
         toast('✓ 已儲存排序 Order saved');
         list.querySelectorAll(':scope > [data-id] [data-position]').forEach(function (el, i) { el.textContent = i + 1; });
       })
-      .catch(function () { toast('⚠️ 排序未儲存，請重新整理頁面。Order not saved — please reload.', true); });
+      .catch(function () { toast('排序未儲存，請重新整理頁面。Order not saved — please reload.', true); });
   }
 
   function init(list) {

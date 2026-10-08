@@ -16,7 +16,7 @@ $msgText = trim((string) ($site['uat_messages'] ?? '')) !== '' ? $site['uat_mess
     <div class="uat-status-head">
       <div class="uat-light" aria-hidden="true"></div>
       <div>
-        <h2 style="margin:0"><?= $on ? '🧪 UAT 測試模式：開啟中' : 'UAT 測試模式：關閉' ?>
+        <h2 style="margin:0"><?= $on ? 'UAT 測試模式：開啟中' : 'UAT 測試模式：關閉' ?>
           <span class="en"><?= $on ? 'UAT test mode is ON' : 'UAT test mode is off' ?></span></h2>
         <p class="help" style="margin:4px 0 0">
           目前上線的活動 <span class="en">Live event</span>：<strong><?= h($live['year'] . ' · ' . $live['name']) ?></strong>
@@ -34,7 +34,7 @@ $msgText = trim((string) ($site['uat_messages'] ?? '')) !== '' ? $site['uat_mess
       </ul>
       <form method="POST" action="<?= url('/system/uat/toggle') ?>" data-confirm="開啟 UAT 測試模式？網站會改用測試活動。&#10;Turn UAT test mode on? The site will run on a test event.">
         <?= csrf_field() ?><input type="hidden" name="to" value="on">
-        <button class="primary uat-big" type="submit">🧪 開啟 UAT 測試模式 <span class="en">Turn UAT on</span></button>
+        <button class="primary uat-big" type="submit"><?= icon('flask') ?> 開啟 UAT 測試模式 <span class="en">Turn UAT on</span></button>
       </form>
     <?php else: ?>
       <?php if ($test): ?>
@@ -50,7 +50,7 @@ $msgText = trim((string) ($site['uat_messages'] ?? '')) !== '' ? $site['uat_mess
           <?= csrf_field() ?><input type="hidden" name="to" value="off">
           <label class="check-inline"><input type="checkbox" name="delete_test_data" value="1">
             同時刪除測試資料 <span class="en">Also delete the test data</span></label>
-          <button class="primary uat-big" type="submit">⏹ 關閉 UAT，恢復正式 <span class="en">Turn UAT off</span></button>
+          <button class="primary uat-big" type="submit"><?= icon('stop') ?> 關閉 UAT，恢復正式 <span class="en">Turn UAT off</span></button>
         </form>
         <form method="POST" action="<?= url('/system/uat/reset') ?>"
               data-confirm="刪除所有測試資料，重新開始？（正式資料不受影響）&#10;Delete all test data and start over? (Real records are not affected.)" data-danger>
@@ -66,19 +66,19 @@ $msgText = trim((string) ($site['uat_messages'] ?? '')) !== '' ? $site['uat_mess
   <!-- ② Announcements -->
   <form method="POST" action="<?= url('/system/uat/save') ?>" class="panel form-panel uat-msgs" id="uatForm" data-live="settings" data-live-mode="form">
     <?= csrf_field() ?>
-    <h2 style="margin-top:0">📢 測試公告 <span class="en">Announcements</span></h2>
+    <h2 style="margin-top:0"><?= icon('megaphone') ?> 測試公告 <span class="en">Announcements</span></h2>
     <p class="help" style="margin-top:0">每行一則，<code>中文 | English</code>（用 | 分開）。最多 12 則，輪流滑動顯示。
       <span class="en">One per line, <code>Chinese | English</code>. Up to 12; they take turns.</span></p>
     <textarea name="uat_messages" id="uatMessages" rows="6" maxlength="2600"><?= h($msgText) ?></textarea>
 
-    <label for="uatInterval">⏱ 每則顯示 <span class="en">Time per announcement</span></label>
+    <label for="uatInterval"><?= icon('clock') ?> 每則顯示 <span class="en">Time per announcement</span></label>
     <div class="seg-toggle uat-speed" role="radiogroup">
       <?php foreach (Uat::INTERVALS as $sec): ?>
         <label class="seg-on"><input type="radio" name="uat_interval" value="<?= $sec ?>"<?= Uat::interval($site) === $sec ? ' checked' : '' ?>><span><?= $sec ?> 秒 s</span></label>
       <?php endforeach; ?>
     </div>
 
-    <label for="uatSize">🔠 大小 <span class="en">Size</span></label>
+    <label for="uatSize"><?= icon('type') ?> 大小 <span class="en">Size</span></label>
     <div class="fl-range uat-size">
       <span class="help">小 A</span>
       <input type="range" id="uatSize" name="uat_size" min="<?= Uat::SIZE_MIN ?>" max="<?= Uat::SIZE_MAX ?>" step="5" value="<?= Uat::size($site) ?>">
@@ -86,11 +86,11 @@ $msgText = trim((string) ($site['uat_messages'] ?? '')) !== '' ? $site['uat_mess
       <output for="uatSize"><?= Uat::size($site) ?>%</output>
     </div>
 
-    <label>👀 預覽 <span class="en">Preview</span></label>
+    <label><?= icon('eye') ?> 預覽 <span class="en">Preview</span></label>
     <div class="uat-preview" id="uatPreview"></div>
 
     <div class="form-actions">
-      <button class="primary" type="submit">💾 儲存 <span class="en">Save</span></button>
+      <button class="primary" type="submit"><?= icon('save') ?> 儲存 <span class="en">Save</span></button>
       <button class="mini-btn ghost btn-lg" type="button" id="uatDefault">↺ 預設公告 <span class="en">Default announcements</span></button>
     </div>
   </form>
@@ -113,7 +113,7 @@ $msgText = trim((string) ($site['uat_messages'] ?? '')) !== '' ? $site['uat_mess
     var dots = lines.length > 1 ? '<span class="uat-dots">' + lines.map(function (_, i) { return '<i' + (i ? '' : ' class="on"') + '></i>'; }).join('') + '</span>' : '';
     var size = document.getElementById('uatSize').value;
     document.querySelector('.uat-size output').textContent = size + '%';
-    prev.innerHTML = '<div class="uat-bar" data-interval="' + secs + '" style="--uat-scale:' + (size / 100) + '"><span class="uat-badge">🧪 UAT<small>測試中 Testing</small></span>'
+    prev.innerHTML = '<div class="uat-bar" data-interval="' + secs + '" style="--uat-scale:' + (size / 100) + '"><span class="uat-badge">UAT<small>測試中 Testing</small></span>'
       + '<div class="uat-track"><ul>' + items + '</ul></div>' + dots + '</div>';
     document.dispatchEvent(new CustomEvent('live:swap', { detail: prev }));   // uat.js starts it
   }

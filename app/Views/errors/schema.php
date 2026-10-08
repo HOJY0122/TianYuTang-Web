@@ -23,7 +23,7 @@ overflow:auto;font-size:12.5px;line-height:1.6;margin:14px 0}
 </head>
 <body>
   <div class="box">
-    <h1>⚙️ 資料庫需要更新</h1>
+    <h1><?= icon('settings') ?> 資料庫需要更新</h1>
     <div class="sub">Database schema is out of date</div>
 
     <p>

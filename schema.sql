@@ -336,5 +336,5 @@ ON DUPLICATE KEY UPDATE username = username;
 -- Site-level defaults.
 INSERT INTO settings (setting_key, setting_value) VALUES
     ('site_name',    '天玉堂'),
-    ('site_tagline', '🙏 感恩您的參與與支持　｜　Thank you for your kind support')
+    ('site_tagline', '感恩您的參與與支持　｜　Thank you for your kind support')
 ON DUPLICATE KEY UPDATE setting_key = setting_key;

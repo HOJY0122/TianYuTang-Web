@@ -79,10 +79,10 @@
       info.textContent = file.name + ' · ' + img.naturalWidth + '×' + img.naturalHeight + 'px · ' + size(file.size);
     };
     var actions = el('div', 'ie-actions');
-    var edit = el('button', 'mini-btn ghost', '✏️ 裁切 / 縮放 / 旋轉 Edit');
+    var edit = el('button', 'mini-btn ghost', '裁切 / 縮放 / 旋轉 Edit');
     edit.type = 'button';
     edit.addEventListener('click', function () { openEditor(input, original || file); });
-    var clear = el('button', 'mini-btn ghost', '✖ 不上傳 Remove');
+    var clear = el('button', 'mini-btn ghost', '不上傳 Remove');
     clear.type = 'button';
     clear.addEventListener('click', function () {
       input.value = '';
@@ -92,7 +92,7 @@
     actions.appendChild(clear);
     var frame = el('div', 'ie-frame');
     frame.appendChild(img);
-    box.appendChild(el('div', 'ie-note', '✅ 將上傳這張圖片（儲存後生效）Will be uploaded when you save:'));
+    box.appendChild(el('div', 'ie-note', '將上傳這張圖片（儲存後生效）Will be uploaded when you save:'));
     box.appendChild(frame);
     box.appendChild(info);
     box.appendChild(actions);
@@ -113,19 +113,19 @@
     modal.hidden = true;
     modal.innerHTML =
       '<div class="ie-box">' +
-      '  <div class="ie-head"><strong>✏️ 編輯圖片 <span class="en">Edit picture</span></strong>' +
+      '  <div class="ie-head"><strong>編輯圖片 <span class="en">Edit picture</span></strong>' +
       '    <button type="button" class="ie-x" data-act="cancel" aria-label="關閉 Close">×</button></div>' +
       '  <div class="ie-stage"><canvas></canvas></div>' +
       '  <p class="ie-tip">拖動圖片調整位置，白框內為保留範圍。Drag to move — what is inside the frame is kept.</p>' +
       '  <div class="ie-shapes" role="group" aria-label="裁切比例 Crop shape"></div>' +
       '  <div class="ie-controls">' +
-      '    <label class="ie-zoom">🔍 縮放 Zoom <input type="range" min="1" max="4" step="0.01" value="1"></label>' +
+      '    <label class="ie-zoom">縮放 Zoom <input type="range" min="1" max="4" step="0.01" value="1"></label>' +
       '    <button type="button" class="mini-btn ghost" data-act="rotate">↻ 旋轉 Rotate</button>' +
       '    <button type="button" class="mini-btn ghost" data-act="reset">↺ 重設 Reset</button>' +
       '  </div>' +
       '  <div class="ie-foot">' +
       '    <button type="button" class="mini-btn ghost btn-lg" data-act="cancel">取消 Cancel</button>' +
-      '    <button type="button" class="mini-btn btn-lg" data-act="apply">✅ 使用這張 Use this picture</button>' +
+      '    <button type="button" class="mini-btn btn-lg" data-act="apply">使用這張 Use this picture</button>' +
       '  </div>' +
       '</div>';
     document.body.appendChild(modal);

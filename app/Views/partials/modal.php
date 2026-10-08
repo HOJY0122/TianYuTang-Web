@@ -11,7 +11,7 @@ $isInfo  = ($flash['type'] ?? '') === 'info';   // a gentle note (e.g. over a do
 ?>
 <div class="modal" id="resultModal">
   <div class="modal-box<?= $isError ? ' is-error' : ($isInfo ? ' is-info' : '') ?>" role="alertdialog" aria-labelledby="resultTitle">
-    <div class="icon"><?= $isError ? '⚠️' : '🙏' ?></div>
+    <div class="icon"><?= icon($isError ? 'alert' : ($isInfo ? 'info' : 'check-circle'), 'xl') ?></div>
     <h2 class="kai" id="resultTitle"><?= h($flash['title']) ?></h2>
     <p><?= h($flash['message']) ?></p>
     <button class="primary" onclick="document.getElementById('resultModal').remove()">好的 OK</button>

@@ -32,7 +32,7 @@ final class Uat
     }
 
     /** Shown when no messages have been written yet: "中文 | English" per line. */
-    public const DEFAULT_MESSAGES = "🧪 系統測試中（UAT）— 現在看到的是測試資料 | System testing (UAT) — you are seeing test data\n"
+    public const DEFAULT_MESSAGES = "系統測試中（UAT）— 現在看到的是測試資料 | System testing (UAT) — you are seeing test data\n"
         . "報名與布施只作測試，不會列入正式紀錄 | Registrations and donations here are tests, not real records\n"
         . "發現問題或有建議？請告訴管理員 | Found a problem or have an idea? Please tell the administrator";
 

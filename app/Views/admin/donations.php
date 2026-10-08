@@ -34,13 +34,13 @@ $here       = $pagerBase . '?' . http_build_query($pagerQuery + ['page' => $page
         <option value="counter"<?= $filters['source'] === 'counter' ? ' selected' : '' ?>>現場 Counter</option>
       </select>
     </label>
-    <button class="mini-btn btn-lg" type="submit">🔍 搜尋 Search</button>
+    <button class="mini-btn btn-lg" type="submit"><?= icon('search') ?> 搜尋 Search</button>
     <?php if ($filters['q'] !== '' || $filters['status'] !== '' || $filters['source'] !== ''): ?>
       <a class="mini-btn ghost btn-lg" href="<?= url('/admin/donations') ?>?event=<?= $eid ?>">清除 Clear</a>
     <?php endif; ?>
     <span class="spacer"></span>
-    <a class="mini-btn ghost btn-lg" href="<?= url('/admin/export/donations-excel') ?>?event=<?= $eid ?>">📊 Excel</a>
-    <a class="mini-btn ghost btn-lg" href="<?= url('/admin/export/donations') ?>?event=<?= $eid ?>">⬇️ CSV</a>
+    <a class="mini-btn ghost btn-lg" href="<?= url('/admin/export/donations-excel') ?>?event=<?= $eid ?>"><?= icon('chart') ?> Excel</a>
+    <a class="mini-btn ghost btn-lg" href="<?= url('/admin/export/donations') ?>?event=<?= $eid ?>"><?= icon('download') ?> CSV</a>
     <a class="mini-btn ghost btn-lg" href="<?= url('/admin/counter') ?>?event=<?= $eid ?>">＋ 現場布施 Counter</a>
   </form>
   <div id="liveList" data-live="donations events">
@@ -65,16 +65,16 @@ $here       = $pagerBase . '?' . http_build_query($pagerQuery + ['page' => $page
         <td data-label="付款 Payment"><?= $d['status'] === 'paid' ? '<span class="badge ok">✓ 已付 Paid</span>' : '<span class="badge pending">待付 Pending</span>' ?></td>
         <td data-label="操作 Actions">
           <div class="actions-cell">
-            <a class="mini-btn" href="<?= url('/admin/donations/edit') ?>?id=<?= (int) $d['id'] ?>">✏️ 編輯 Edit</a>
+            <a class="mini-btn" href="<?= url('/admin/donations/edit') ?>?id=<?= (int) $d['id'] ?>"><?= icon('pencil') ?> 編輯 Edit</a>
             <?php if (!empty($d['receipt_path'])): ?>
-              <a class="mini-btn ghost" href="<?= url('/admin/receipt') ?>?id=<?= (int) $d['id'] ?>" target="_blank" title="收據相片 Receipt photo">🧾 收據 Receipt</a>
+              <a class="mini-btn ghost" href="<?= url('/admin/receipt') ?>?id=<?= (int) $d['id'] ?>" target="_blank" title="收據相片 Receipt photo"><?= icon('receipt') ?> 收據 Receipt</a>
             <?php endif; ?>
             <?php if ($d['status'] !== 'paid'): ?>
               <form method="POST" action="<?= url('/admin/donations/paid') ?>" style="margin:0"
                     data-confirm="確認已收到 <?= h(rm((float) $d['amount'])) ?>？&#10;Confirm payment received?">
                 <?= csrf_field() ?><input type="hidden" name="donation_id" value="<?= (int) $d['id'] ?>">
                 <input type="hidden" name="return" value="<?= h($here) ?>">
-                <button class="mini-btn ghost" type="submit">💵 已收款 Mark paid</button>
+                <button class="mini-btn ghost" type="submit"><?= icon('cash') ?> 已收款 Mark paid</button>
               </form>
             <?php endif; ?>
           </div>

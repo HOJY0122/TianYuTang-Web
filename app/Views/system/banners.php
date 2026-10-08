@@ -29,8 +29,8 @@ $hM = (int) $site['banner_height_mobile'];
     <div class="bn-head">
       <h2 style="margin:0">① 預覽 <span class="en">Preview</span></h2>
       <div class="seg-toggle bn-device" role="radiogroup" aria-label="預覽裝置 Preview on">
-        <label class="seg-on"><input type="radio" name="_device" value="desktop" checked><span>💻 電腦 Computer</span></label>
-        <label class="seg-on"><input type="radio" name="_device" value="mobile"><span>📱 手機 Phone</span></label>
+        <label class="seg-on"><input type="radio" name="_device" value="desktop" checked><span><?= icon('monitor') ?> 電腦 Computer</span></label>
+        <label class="seg-on"><input type="radio" name="_device" value="mobile"><span><?= icon('smartphone') ?> 手機 Phone</span></label>
       </div>
     </div>
     <?php if ($slides): ?>
@@ -49,7 +49,7 @@ $hM = (int) $site['banner_height_mobile'];
   <section class="panel">
     <h2 style="margin-top:0">② 顯示方式 <span class="en">How it is shown</span></h2>
     <div class="bn-settings">
-      <?php foreach (['desktop' => ['💻 電腦 Computer', $hD], 'mobile' => ['📱 手機 Phone', $hM]] as $dev => [$label, $h]): ?>
+      <?php foreach (['desktop' => ['電腦 Computer', $hD], 'mobile' => ['手機 Phone', $hM]] as $dev => [$label, $h]): ?>
         <fieldset class="bn-set" data-height="<?= $dev ?>">
           <legend><?= $label ?> — 高度 <span class="en">Height</span></legend>
           <label class="check-inline"><input type="checkbox" name="whole_<?= $dev ?>" value="1"<?= $h === 0 ? ' checked' : '' ?>>
@@ -62,14 +62,14 @@ $hM = (int) $site['banner_height_mobile'];
       <?php endforeach; ?>
 
       <fieldset class="bn-set">
-        <legend>⏱ 換圖速度 <span class="en">Time per picture</span></legend>
+        <legend><?= icon('clock') ?> 換圖速度 <span class="en">Time per picture</span></legend>
         <input type="range" name="interval" min="<?= BC::INTERVAL_MIN ?>" max="<?= BC::INTERVAL_MAX ?>" step="1" value="<?= (int) $site['banner_interval'] ?>">
         <output>每 <?= (int) $site['banner_interval'] ?> 秒 · every <?= (int) $site['banner_interval'] ?> s</output>
         <p class="help">只有一張時不會換。滑鼠停在橫幅上會暫停。Nothing changes with one picture; it pauses while the mouse is over it.</p>
       </fieldset>
 
       <fieldset class="bn-set">
-        <legend>✨ 換圖效果 <span class="en">Effect</span></legend>
+        <legend><?= icon('sparkles') ?> 換圖效果 <span class="en">Effect</span></legend>
         <div class="seg-toggle">
           <label class="seg-on"><input type="radio" name="effect" value="fade"<?= $site['banner_effect'] !== 'slide' ? ' checked' : '' ?>><span>淡入 Fade</span></label>
           <label class="seg-on"><input type="radio" name="effect" value="slide"<?= $site['banner_effect'] === 'slide' ? ' checked' : '' ?>><span>滑動 Slide</span></label>
@@ -87,8 +87,8 @@ $hM = (int) $site['banner_height_mobile'];
   <?php if ($slides): ?>
   <section class="panel">
     <h2 style="margin-top:0">③ 圖片 <span class="en">Pictures</span></h2>
-    <p class="help" style="margin-top:0">⠿ 拖動排序（立即儲存）。在圖片上<strong>拖動</strong>調整位置，用 🔍 放大。十字＋是畫面的中心點。
-      <span class="en">Drag ⠿ to reorder (saved at once). <strong>Drag the picture</strong> to move it, 🔍 to zoom. The ＋ marks the point kept in view.</span></p>
+    <p class="help" style="margin-top:0">⠿ 拖動排序（立即儲存）。在圖片上<strong>拖動</strong>調整位置，用 <?= icon('search') ?> 放大。十字＋是畫面的中心點。
+      <span class="en">Drag ⠿ to reorder (saved at once). <strong>Drag the picture</strong> to move it, <?= icon('search') ?> to zoom. The ＋ marks the point kept in view.</span></p>
     <div class="bn-list" data-sortable="<?= url('/system/banners/reorder') ?>">
       <?php foreach ($slides as $n => $s): $id = (int) $s['id']; ?>
         <div class="bn-card<?= $s['is_active'] ? '' : ' is-off' ?>" data-id="<?= $id ?>" id="slide-<?= $id ?>"
@@ -99,7 +99,7 @@ $hM = (int) $site['banner_height_mobile'];
             <label class="check-inline"><input type="checkbox" name="slide[<?= $id ?>][is_active]" value="1"<?= $s['is_active'] ? ' checked' : '' ?> data-active>
               顯示 <span class="en">Show</span></label>
             <span class="spacer"></span>
-            <button type="submit" form="del-<?= $id ?>" class="mini-btn danger">🗑 刪除 <span class="en">Delete</span></button>
+            <button type="submit" form="del-<?= $id ?>" class="mini-btn danger"><?= icon('trash') ?> 刪除 <span class="en">Delete</span></button>
           </div>
 
           <div class="bn-tuner" tabindex="0" aria-label="拖動或用方向鍵調整位置 Drag or use arrow keys to move the picture">
@@ -111,7 +111,7 @@ $hM = (int) $site['banner_height_mobile'];
           <input type="hidden" name="slide[<?= $id ?>][pos_y]" value="<?= (int) $s['pos_y'] ?>" data-pos="y">
 
           <div class="bn-zoom">
-            <label>🔍 放大 <span class="en">Zoom</span>
+            <label><?= icon('search') ?> 放大 <span class="en">Zoom</span>
               <input type="range" name="slide[<?= $id ?>][zoom]" min="100" max="<?= BC::ZOOM_MAX ?>" step="5" value="<?= max(100, (int) $s['zoom']) ?>" data-zoom></label>
             <output><?= max(100, (int) $s['zoom']) ?>%</output>
             <button type="button" class="mini-btn ghost" data-center>⊕ 置中 <span class="en">Centre</span></button>
@@ -133,8 +133,8 @@ $hM = (int) $site['banner_height_mobile'];
   <?php endif; ?>
 
   <div class="form-actions sticky-actions">
-    <button class="primary" type="submit">💾 儲存 <span class="en">Save</span></button>
-    <a class="mini-btn ghost btn-lg" href="<?= url('/') ?>" target="_blank">👀 查看首頁 <span class="en">View home page</span></a>
+    <button class="primary" type="submit"><?= icon('save') ?> 儲存 <span class="en">Save</span></button>
+    <a class="mini-btn ghost btn-lg" href="<?= url('/') ?>" target="_blank"><?= icon('eye') ?> 查看首頁 <span class="en">View home page</span></a>
   </div>
 </form>
 
@@ -145,7 +145,7 @@ $hM = (int) $site['banner_height_mobile'];
   <input id="bannerFile" name="banner" type="file" accept="image/jpeg,image/png,image/gif,image/webp"
          data-aspects="original,3:1,16:9,21:9" data-max-width="1920" required>
   <p class="help">JPG / PNG / WebP，5MB 以內，建議寬 1920px。選好後可先裁切。<span class="en">Up to 5 MB, 1920px wide is ideal. You can crop it after choosing.</span></p>
-  <div class="form-actions"><button class="primary" type="submit">➕ 加入 <span class="en">Add</span></button></div>
+  <div class="form-actions"><button class="primary" type="submit"><?= icon('plus') ?> 加入 <span class="en">Add</span></button></div>
 </form>
 
 <script src="<?= asset('js/banner.js') ?>"></script>

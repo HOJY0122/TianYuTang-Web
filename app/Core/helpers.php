@@ -23,6 +23,20 @@ function asset(string $path): string
     return BASE_URL . '/assets/' . ltrim($path, '/');
 }
 
+/**
+ * An icon from public/assets/icons.svg, e.g. icon('save').
+ * SVG line icons instead of emoji: they look the same on every phone and
+ * computer (older devices often show emoji as empty boxes), take the text
+ * colour, and scale with the text. Decorative: hidden from screen readers.
+ */
+function icon(string $name, string $class = ''): string
+{
+    static $v = null;
+    $v ??= substr((string) @md5_file(BASE_PATH . '/public/assets/icons.svg'), 0, 8);
+    return '<svg class="ic' . ($class !== '' ? ' ' . h($class) : '') . '" aria-hidden="true" focusable="false">'
+         . '<use href="' . h(asset('icons.svg')) . '?v=' . $v . '#' . h($name) . '"></use></svg>';
+}
+
 /** Current CSRF token, generated once per session. */
 function csrf_token(): string
 {

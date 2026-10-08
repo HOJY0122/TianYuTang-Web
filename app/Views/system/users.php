@@ -25,15 +25,15 @@
               <form method="POST" action="<?= url('/system/users/role') ?>" style="margin:0">
                 <?= csrf_field() ?><input type="hidden" name="user_id" value="<?= (int) $u['id'] ?>">
                 <input type="hidden" name="role" value="<?= $u['role'] === 'system_admin' ? 'admin' : 'system_admin' ?>">
-                <button class="mini-btn ghost" type="submit"><?= $u['role'] === 'system_admin' ? '⬇ 改為管理員 Make admin' : '⬆ 升為系統管理員 Make system admin' ?></button>
+                <button class="mini-btn ghost" type="submit"><?= $u['role'] === 'system_admin' ? '改為管理員 Make admin' : '升為系統管理員 Make system admin' ?></button>
               </form>
             <?php endif; ?>
-            <button class="mini-btn ghost" type="button" onclick="document.getElementById('pw<?= (int) $u['id'] ?>').classList.toggle('hidden')">🔑 重設密碼 Reset password</button>
+            <button class="mini-btn ghost" type="button" onclick="document.getElementById('pw<?= (int) $u['id'] ?>').classList.toggle('hidden')"><?= icon('key') ?> 重設密碼 Reset password</button>
             <?php if (!$isSelf && !$isLastSystem): ?>
               <form method="POST" action="<?= url('/system/users/delete') ?>" style="margin:0"
                     data-confirm="確定刪除帳號 <?= h($u['username']) ?>？此操作無法復原。&#10;Delete this account? This cannot be undone." data-danger>
                 <?= csrf_field() ?><input type="hidden" name="user_id" value="<?= (int) $u['id'] ?>">
-                <button class="mini-btn danger" type="submit">🗑 刪除 Delete</button>
+                <button class="mini-btn danger" type="submit"><?= icon('trash') ?> 刪除 Delete</button>
               </form>
             <?php endif; ?>
             <?php if ($isLastSystem): ?><span class="help" style="margin:0">最後一位系統管理員 Last system admin</span><?php endif; ?>
@@ -41,10 +41,10 @@
           <form method="POST" action="<?= url('/system/users/password') ?>" id="pw<?= (int) $u['id'] ?>" class="pw-form hidden form-panel" style="max-width:none;margin-top:8px">
             <?= csrf_field() ?><input type="hidden" name="user_id" value="<?= (int) $u['id'] ?>">
             <div class="pw-field"><input id="np<?= (int) $u['id'] ?>" type="password" name="password" placeholder="新密碼 New password (8+)" required minlength="8" autocomplete="new-password">
-              <button type="button" class="pw-eye" data-toggle-password="np<?= (int) $u['id'] ?>" title="顯示密碼 Show password">👁</button></div>
+              <button type="button" class="pw-eye" data-toggle-password="np<?= (int) $u['id'] ?>" title="顯示密碼 Show password"><?= icon('eye') ?></button></div>
             <div class="pw-field" style="margin-top:6px"><input id="nc<?= (int) $u['id'] ?>" type="password" name="password_confirm" placeholder="再次輸入 Confirm" required minlength="8" autocomplete="new-password">
-              <button type="button" class="pw-eye" data-toggle-password="nc<?= (int) $u['id'] ?>" title="顯示密碼 Show password">👁</button></div>
-            <button class="mini-btn" type="submit" style="margin-top:6px">💾 儲存 Save</button>
+              <button type="button" class="pw-eye" data-toggle-password="nc<?= (int) $u['id'] ?>" title="顯示密碼 Show password"><?= icon('eye') ?></button></div>
+            <button class="mini-btn" type="submit" style="margin-top:6px"><?= icon('save') ?> 儲存 Save</button>
           </form>
         </td>
       </tr>
@@ -66,28 +66,28 @@
         <input id="display_name" name="display_name" maxlength="80" placeholder="陳秀玲"></div>
       <div><label for="password">密碼 <span class="en">Password *</span></label>
         <div class="pw-field"><input id="password" name="password" type="password" required minlength="8" autocomplete="new-password">
-          <button type="button" class="pw-eye" data-toggle-password="password" title="顯示密碼 Show password">👁</button></div></div>
+          <button type="button" class="pw-eye" data-toggle-password="password" title="顯示密碼 Show password"><?= icon('eye') ?></button></div></div>
       <div><label for="password_confirm">再次輸入 <span class="en">Confirm *</span></label>
         <div class="pw-field"><input id="password_confirm" name="password_confirm" type="password" required minlength="8" autocomplete="new-password">
-          <button type="button" class="pw-eye" data-toggle-password="password_confirm" title="顯示密碼 Show password">👁</button></div></div>
+          <button type="button" class="pw-eye" data-toggle-password="password_confirm" title="顯示密碼 Show password"><?= icon('eye') ?></button></div></div>
     </div>
     <label for="role">權限 <span class="en">Role *</span></label>
     <select id="role" name="role">
       <option value="admin">管理員 Admin — 報名、布施、報到、消息、相簿、活動資料 records, forms, news, photos, event</option>
       <option value="system_admin">系統管理員 System admin — 以上全部，加上網站設定與帳號 everything above + site settings &amp; accounts</option>
     </select>
-    <div class="form-actions"><button class="primary" type="submit">＋ 建立帳號 Create account</button></div>
+    <div class="form-actions"><button class="primary" type="submit"><?= icon('plus') ?> 建立帳號 <span class="en">Create account</span></button></div>
   </form>
 </div>
 <div class="panel guide">
-  <h2 style="margin-top:0">👥 兩種權限 <span class="en">The two roles</span></h2>
+  <h2 style="margin-top:0"><?= icon('users') ?> 兩種權限 <span class="en">The two roles</span></h2>
   <ul>
     <li><strong>管理員 Admin</strong>：報名、布施、報到、現場登記、消息、相簿、收據、活動資料。
       <span class="en">Registrations, donations, check-in, counter, news, photos, receipts, event details.</span></li>
     <li><strong>系統管理員 System admin</strong>：以上全部，加上網站設定、網站文字、帳號與 QR 產生器。
       <span class="en">Everything above, plus site settings, wording, accounts and the QR generator.</span></li>
   </ul>
-  <h2 style="margin:18px 0 8px">🔐 好習慣 <span class="en">Good habits</span></h2>
+  <h2 style="margin:18px 0 8px"><?= icon('lock') ?> 好習慣 <span class="en">Good habits</span></h2>
   <ul>
     <li>每位委員一個帳號，不要共用。<span class="en">One login per person — never shared.</span></li>
     <li>密碼至少 8 個字元，含字母和數字。<span class="en">At least 8 characters, letters and numbers.</span></li>

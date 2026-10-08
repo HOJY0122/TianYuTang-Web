@@ -11,10 +11,10 @@
  */
 ?>
 <div id="lightbox" class="lightbox hidden" role="dialog" aria-modal="true" aria-label="相片檢視 Photo viewer">
-  <button class="lb-close" aria-label="關閉 Close">&times;</button>
-  <button class="lb-prev" aria-label="上一張 Previous">&#10094;</button>
+  <button class="lb-close" aria-label="關閉 Close"><?= icon('x') ?></button>
+  <button class="lb-prev" aria-label="上一張 Previous"><?= icon('chevron-left') ?></button>
   <img id="lbImage" src="" alt="">
-  <button class="lb-next" aria-label="下一張 Next">&#10095;</button>
+  <button class="lb-next" aria-label="下一張 Next"><?= icon('chevron-right') ?></button>
   <div id="lbCaption" class="lb-caption"></div>
 </div>
 <script>

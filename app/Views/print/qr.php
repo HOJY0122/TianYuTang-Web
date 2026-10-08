@@ -26,8 +26,8 @@ $qrLogo    = $qrSite['site_logo_path'] ?: $qrSite['site_favicon_path'];
 <body>
 
 <div class="toolbar no-print">
-  <button class="primary" onclick="window.print()">🖨️ 列印海報 Print poster</button>
-  <button onclick="downloadQr()">⬇️ 下載 PNG Download</button>
+  <button class="primary" onclick="window.print()"><?= icon('printer') ?> 列印海報 Print poster</button>
+  <button onclick="downloadQr()"><?= icon('download') ?> 下載 PNG Download</button>
   <?php if ($qrLogo): ?>
     <label style="display:inline-flex;align-items:center;gap:6px;font-weight:700">
       <input type="checkbox" id="withLogo" checked> 置中標誌 Logo in the middle

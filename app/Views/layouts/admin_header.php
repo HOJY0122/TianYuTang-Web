@@ -20,20 +20,20 @@ $versioned    = static fn(string $p): string => BASE_URL . '/' . $p . '?v=' . su
 // system admins — and the server checks the role again on every page.
 $menu = [
     '活動管理 Event' => [
-        ['dashboard',     '📊', '儀表板',   'Dashboard',     '/admin/dashboard'],
-        ['registrations', '📝', '報名紀錄', 'Registrations', '/admin/registrations'],
-        ['donations',     '💰', '布施紀錄', 'Donations',     '/admin/donations'],
-        ['event',         '📅', '活動資料', 'Event details', '/admin/event/edit'],
-        ['posts',         '📰', '最新消息', 'News',          '/admin/posts'],
-        ['photos',        '📸', '相簿',     'Photos',        '/admin/photos'],
+        ['dashboard',     'chart', '儀表板',   'Dashboard',     '/admin/dashboard'],
+        ['registrations', 'form', '報名紀錄', 'Registrations', '/admin/registrations'],
+        ['donations',     'coins', '布施紀錄', 'Donations',     '/admin/donations'],
+        ['event',         'calendar', '活動資料', 'Event details', '/admin/event/edit'],
+        ['posts',         'newspaper', '最新消息', 'News',          '/admin/posts'],
+        ['photos',        'camera', '相簿',     'Photos',        '/admin/photos'],
     ],
     '活動當天 On the day' => [
-        ['checkin', '✅', '現場報到', 'Check-in',          '/admin/checkin'],
-        ['walkin',  '🚶', '現場報名', 'Walk-in register',  '/admin/walkin'],
-        ['counter', '💵', '現場布施', 'Counter donation',  '/admin/counter'],
+        ['checkin', 'check-circle', '現場報到', 'Check-in',          '/admin/checkin'],
+        ['walkin',  'walk', '現場報名', 'Walk-in register',  '/admin/walkin'],
+        ['counter', 'cash', '現場布施', 'Counter donation',  '/admin/counter'],
     ],
     '財務 Finance' => [
-        ['receipts', '🧾', '收據紀錄', 'Receipts',       '/admin/receipts'],
+        ['receipts', 'receipt', '收據紀錄', 'Receipts',       '/admin/receipts'],
     ],
 ];
 // Receipts switched off in Site settings: gone for admins; system admins
@@ -47,12 +47,12 @@ if (($site['receipts_enabled'] ?? '1') !== '1') {
 }
 if ($isSystem) {
     $menu['系統管理 System'] = [
-        ['system', '⚙️', '網站設定', 'Site settings', '/system'],
-        ['banners','🖼️', '首頁橫幅', 'Home banner',   '/system/banners'],
-        ['wording','🔤', '網站文字', 'Wording',       '/system/wording'],
-        ['users',  '👥', '帳號管理', 'User accounts', '/system/users'],
-        ['qr',     '🔳', 'QR 產生器', 'QR generator', '/system/qr'],
-        ['uat',    '🧪', 'UAT 測試模式', 'UAT test mode', '/system/uat'],
+        ['system', 'settings', '網站設定', 'Site settings', '/system'],
+        ['banners','image', '首頁橫幅', 'Home banner',   '/system/banners'],
+        ['wording','type', '網站文字', 'Wording',       '/system/wording'],
+        ['users',  'users', '帳號管理', 'User accounts', '/system/users'],
+        ['qr',     'qr', 'QR 產生器', 'QR generator', '/system/qr'],
+        ['uat',    'flask', 'UAT 測試模式', 'UAT test mode', '/system/uat'],
     ];
 }
 ?>
@@ -89,19 +89,19 @@ if ($isSystem) {
       <div class="side-group"><?= h($_mGroup) ?></div>
       <?php foreach ($_mItems as [$_mKey, $_mIcon, $_mZh, $_mEn, $_mHref]): ?>
         <a class="side-link<?= $nav === $_mKey ? ' active' : '' ?>" href="<?= url($_mHref) ?>"<?= $nav === $_mKey ? ' aria-current="page"' : '' ?>>
-          <span class="ico"><?= $_mIcon ?></span><span><?= h($_mZh) ?><small><?= h($_mEn) ?></small></span>
+          <span class="ico"><?= icon($_mIcon) ?></span><span><?= h($_mZh) ?><small><?= h($_mEn) ?></small></span>
         </a>
       <?php endforeach; ?>
     <?php endforeach; unset($_mGroup, $_mItems, $_mKey, $_mIcon, $_mZh, $_mEn, $_mHref); ?>
   </nav>
   <div class="side-foot">
     <a class="side-link<?= $nav === 'password' ? ' active' : '' ?>" href="<?= url('/account/password') ?>">
-      <span class="ico">🔑</span><span>我的密碼<small>My password</small></span></a>
+      <span class="ico"><?= icon('key') ?></span><span>我的密碼<small>My password</small></span></a>
     <a class="side-link" href="<?= url('/') ?>" target="_blank" rel="noopener">
-      <span class="ico">🌐</span><span>查看網站<small>View site</small></span></a>
+      <span class="ico"><?= icon('globe') ?></span><span>查看網站<small>View site</small></span></a>
     <form method="POST" action="<?= url('/admin/logout') ?>">
       <?= csrf_field() ?>
-      <button type="submit" class="side-link logout-link"><span class="ico">🚪</span><span>登出<small>Log out</small></span></button>
+      <button type="submit" class="side-link logout-link"><span class="ico"><?= icon('log-out') ?></span><span>登出<small>Log out</small></span></button>
     </form>
   </div>
 </aside>
@@ -110,9 +110,9 @@ if ($isSystem) {
 <div class="main">
   <?php require BASE_PATH . '/app/Views/partials/uat_banner.php'; ?>
   <header class="topbar-admin">
-    <button type="button" class="menu-btn" id="menuBtn" aria-controls="sideMenu" aria-expanded="false">☰<span class="sr-only"> 選單 Menu</span></button>
+    <button type="button" class="menu-btn" id="menuBtn" aria-controls="sideMenu" aria-expanded="false"><?= icon('menu') ?><span class="sr-only"> 選單 Menu</span></button>
     <h1><?= h($pageTitle ?? '管理 Admin') ?></h1>
-    <span class="who">👤 <?= h($_SESSION['admin_display'] ?? ($_SESSION['admin_username'] ?? '')) ?></span>
+    <span class="who"><?= icon('user') ?> <?= h($_SESSION['admin_display'] ?? ($_SESSION['admin_username'] ?? '')) ?></span>
   </header>
   <div class="content">
   <?php if (!empty($flash)): ?>

@@ -117,7 +117,7 @@
     note = document.createElement('button');
     note.type = 'button';
     note.className = 'live-note' + (text ? ' warn' : '');
-    note.textContent = text || '🔄 有新資料，點此更新 New information — tap to refresh';
+    note.textContent = text || '有新資料，點此更新 New information — tap to refresh';
     note.addEventListener('click', function () { location.reload(); });
     document.body.appendChild(note);
   }
@@ -162,7 +162,7 @@
             if (freshSig && freshSig.dataset.liveSig === sig.dataset.liveSig) continue;
           } else if (!formChanged(forms[i], fresh)) continue;
           if (inUse(forms[i])) {
-            showNote('⚠️ 此資料剛被其他人更改，點此載入最新 Someone else just changed this — tap to load the latest');
+            showNote('此資料剛被其他人更改，點此載入最新 Someone else just changed this — tap to load the latest');
           } else {
             try { sessionStorage.setItem('tyt-live-scroll', String(window.scrollY)); } catch (e) {}
             location.reload();
@@ -184,7 +184,7 @@
           document.dispatchEvent(new CustomEvent('live:swap', { detail: node }));
           swapped++;
         });
-        if (swapped) toast('🔄 已更新 Updated');
+        if (swapped) toast('已更新 Updated');
       })
       .catch(function () {});
   }

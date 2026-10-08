@@ -29,17 +29,17 @@
 
 /* Arrows, dots, pause */
 .banner-nav{position:absolute;top:50%;z-index:3;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;
-  background:rgba(255,250,235,.8);color:#7a1a14;font-size:28px;line-height:1;cursor:pointer;opacity:0;transition:opacity .25s;
-  box-shadow:0 2px 8px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;padding:0 0 3px}
+  background:rgba(255,250,235,.8);color:#7a1a14;font-size:22px;line-height:1;cursor:pointer;opacity:0;transition:opacity .25s;
+  box-shadow:0 2px 8px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;padding:0}
 .banner-nav.prev{left:12px}.banner-nav.next{right:12px}
 .banner-show:hover .banner-nav,.banner-nav:focus-visible{opacity:1}
-@media (hover:none){ .banner-nav{opacity:.85;width:36px;height:36px;font-size:24px} }
+@media (hover:none){ .banner-nav{opacity:.85;width:36px;height:36px;font-size:19px} }
 .banner-dots{position:absolute;left:0;right:0;bottom:10px;z-index:3;display:flex;justify-content:center;gap:8px;pointer-events:none}
 .banner-dots button{pointer-events:auto;width:10px;height:10px;padding:0;border-radius:999px;border:2px solid #fff8e6;
   background:rgba(255,248,230,.35);cursor:pointer;transition:width .3s,background .3s;box-shadow:0 1px 3px rgba(0,0,0,.35)}
 .banner-dots button[aria-selected="true"]{width:26px;background:#fff8e6}
 .banner-pause{position:absolute;right:10px;bottom:6px;z-index:3;width:30px;height:30px;border-radius:50%;border:0;
-  background:rgba(40,20,5,.45);color:#fff8e6;font-size:13px;cursor:pointer;opacity:0;transition:opacity .25s}
+  background:rgba(40,20,5,.45);color:#fff8e6;font-size:13px;cursor:pointer;opacity:0;transition:opacity .25s;display:grid;place-items:center;padding:0}
 .banner-show:hover .banner-pause,.banner-pause:focus-visible,.banner-pause[aria-pressed="true"]{opacity:1}
 .banner-show[data-count="1"] .banner-nav,.banner-show[data-count="1"] .banner-dots,.banner-show[data-count="1"] .banner-pause,
 .banner-show[data-count="0"] .banner-nav,.banner-show[data-count="0"] .banner-dots,.banner-show[data-count="0"] .banner-pause{display:none}

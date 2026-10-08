@@ -18,7 +18,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
 
   <?php if (!$window['open']): ?>
     <div class="card closed-card">
-      <div class="closed-icon"><?= $window['reason'] === 'not_yet' ? '🕒' : '🔒' ?></div>
+      <div class="closed-icon"><?= icon($window['reason'] === 'not_yet' ? 'clock' : 'lock', 'xl') ?></div>
       <h3><?= tb($window['reason'] === 'not_yet' ? 'register.not_yet' : 'register.closed') ?></h3>
       <p><?= h(App\Models\Event::windowMessage($window, 'rsvp')) ?></p>
       <p class="help"><?= h(t('register.walkin') . ' ' . t('register.walkin', 'en')) ?></p>
@@ -31,7 +31,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     <?= csrf_field() ?>
 
     <?php if (!empty($window['closes_at'])): ?>
-      <div class="note">⏳ 線上報名將於 <strong><?= h(App\Models\Event::formatDateTime($window['closes_at'])) ?></strong> 截止。
+      <div class="note"><?= icon('hourglass') ?> 線上報名將於 <strong><?= h(App\Models\Event::formatDateTime($window['closes_at'])) ?></strong> 截止。
         <span class="en">Online registration closes on <?= h(date('j M Y, g:i A', strtotime($window['closes_at']))) ?>.</span></div>
     <?php endif; ?>
     <?php if (!empty($event['rsvp_note'])): ?>
@@ -50,7 +50,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     <div class="form-step"><b>2</b> <span><?= h(t('register.step2')) ?></span><span class="en"><?= h(t('register.step2', 'en')) ?></span></div>
     <div id="attendees"></div>
 
-    <button class="primary" type="submit"><?= tb('register.submit') ?></button>
+    <button class="primary" type="submit"><?= icon('form') ?> <?= tb('register.submit') ?></button>
   </form>
   <?php endif; ?>
 <?php live_sig_end(); ?></section>

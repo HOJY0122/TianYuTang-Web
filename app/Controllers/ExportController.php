@@ -120,15 +120,15 @@ class ExportController extends Controller
         $this->dashboard($x, 'Dashboard', $event, 'RSVP Dashboard 報名統計',
             ['Summary 摘要', 'Total 數量', 'Group Size 每組人數', 'Groups 組數'],
             [
-                ['👥 Total Attendees 參加人數',     $rsvp->totalAttendees($id), 'kpi'],
-                ['📋 Registration Groups 報名組數', $rsvp->totalGroups($id),    'kpi'],
-                ['⏳ Pending 待確認',              $st['pending'],             'kpi'],
-                ['✅ Confirmed 已確認',            $st['confirmed'],           'kpi'],
-                ['🙋 Checked In 已報到',           $rsvp->totalCheckedIn($id), 'kpi'],
-                ['❌ Cancelled 已取消',            $st['cancelled'],           'kpi'],
+                ['Total Attendees 參加人數',     $rsvp->totalAttendees($id), 'kpi'],
+                ['Registration Groups 報名組數', $rsvp->totalGroups($id),    'kpi'],
+                ['Pending 待確認',              $st['pending'],             'kpi'],
+                ['Confirmed 已確認',            $st['confirmed'],           'kpi'],
+                ['Checked In 已報到',           $rsvp->totalCheckedIn($id), 'kpi'],
+                ['Cancelled 已取消',            $st['cancelled'],           'kpi'],
             ],
             array_map(fn($n) => [$n . ' Pax 位', $sizes[$n] ?? 0, 'int'], range(1, $max)),
-            '💡 活動當日：在「RSVP Master」搜尋姓名並更新狀態。Event day: use "RSVP Master" to search names and update the status.'
+            '活動當日：在「RSVP Master」搜尋姓名並更新狀態。Event day: use "RSVP Master" to search names and update the status.'
         );
 
         $master = $x->addSheet('RSVP Master', [
@@ -179,19 +179,19 @@ class ExportController extends Controller
         $this->dashboard($x, 'Donation Dashboard', $event, 'Donation Dashboard 布施統計',
             ['Summary 摘要', 'Total 數量', 'Donation Method 布施方式', 'Amount 金額'],
             [
-                ['💰 Total Donation 布施總額',     $total,                     'kpimoney'],
-                ['👥 Total Donors 布施人數',       count($rows),               'kpi'],
-                ['🪷 Total Merit Seats 功德席數',  $model->totalTables($id),   'kpi'],
-                ['⏳ Pending 待付',               max(0, $total - $paid),     'kpimoney'],
-                ['✅ Paid / Received 已收',        $paid,                      'kpimoney'],
+                ['Total Donation 布施總額',     $total,                     'kpimoney'],
+                ['Total Donors 布施人數',       count($rows),               'kpi'],
+                ['Total Merit Seats 功德席數',  $model->totalTables($id),   'kpi'],
+                ['Pending 待付',               max(0, $total - $paid),     'kpimoney'],
+                ['Paid / Received 已收',        $paid,                      'kpimoney'],
             ],
             [
-                ['🙏 隨喜布施 Freewill',  $kind['freewill'], 'money'],
-                ['🪷 功德席 Merit Seats', $kind['seats'],    'money'],
-                ['🌐 線上 Online',       $src['online'],    'money'],
-                ['💵 現場 Counter',      $src['counter'],   'money'],
+                ['隨喜布施 Freewill',  $kind['freewill'], 'money'],
+                ['功德席 Merit Seats', $kind['seats'],    'money'],
+                ['線上 Online',       $src['online'],    'money'],
+                ['現場 Counter',      $src['counter'],   'money'],
             ],
-            '💡 活動當日：在「Donation Master」核對布施者並更新付款狀態。Event day: use "Donation Master" to check donors and update the payment status.'
+            '活動當日：在「Donation Master」核對布施者並更新付款狀態。Event day: use "Donation Master" to check donors and update the payment status.'
         );
 
         $master = $x->addSheet('Donation Master', [
@@ -252,7 +252,7 @@ class ExportController extends Controller
             . ($event['end_date'] !== $event['start_date'] ? ' – ' . date('d/m/Y', strtotime($event['end_date'])) : '');
         $by = $_SESSION['admin_display'] ?? ($_SESSION['admin_username'] ?? '');
         $x->row($s, [[$this->title($event, $what), 'title']], 34);
-        $x->row($s, [['📅 ' . $dates . '　📍 ' . preg_replace('/\s+/', ' ', (string) $event['location'])
+        $x->row($s, [[$dates . '　' . preg_replace('/\s+/', ' ', (string) $event['location'])
             . '　｜　匯出 Exported ' . date('d/m/Y H:i') . ($by !== '' ? ' · ' . $by : ''), 'subtitle']], 20);
         $x->row($s, []);
         $x->row($s, [[$heads[0], 'header'], [$heads[1], 'header'], ['', 'blank'], [$heads[2], 'header'], [$heads[3], 'header']], 26);
@@ -271,10 +271,10 @@ class ExportController extends Controller
         $x->row($s, [[$tip, 'note']], 30);
     }
 
-    /** "🙏 2026 中壇元帥千秋寶誕｜RSVP Dashboard" — like the committee's sample. */
+    /** "2026 中壇元帥千秋寶誕｜RSVP Dashboard" — like the committee's sample. */
     private function title(array $event, string $what): string
     {
-        return '🙏 ' . $event['year'] . ' ' . $event['name'] . '｜' . $what;
+        return $event['year'] . ' ' . $event['name'] . '｜' . $what;
     }
 
     // ------------------------------------------------------------------

@@ -8,7 +8,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
 <main id="main">
 <section class="confirm-wrap">
   <div class="card confirm-card">
-    <div class="confirm-icon"><?= $isRsvp ? '✅' : '🙏' ?></div>
+    <div class="confirm-icon"><?= icon($isRsvp ? 'check-circle' : 'lotus', 'xl') ?></div>
     <h1><?= tb($isRsvp ? 'success.rsvp_title' : 'success.don_title') ?></h1>
     <p class="confirm-sub">
       <?= tb($isRsvp ? 'success.rsvp_text' : 'success.don_text') ?>
@@ -34,8 +34,8 @@ require BASE_PATH . '/app/Views/layouts/header.php';
           <div class="person">
             <span class="num"><?= $i + 1 ?></span>
             <strong><?= h($person['name']) ?></strong>
-            <span>🪪 <?= h($person['ic']) ?></span>
-            <span>📞 <?= h($person['contact']) ?></span>
+            <span><?= icon('id-card') ?> <?= h($person['ic']) ?></span>
+            <span><?= icon('phone') ?> <?= h($person['contact']) ?></span>
           </div>
         <?php endforeach; ?>
       </div>
@@ -56,8 +56,8 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     <?php endif; ?>
 
     <div class="confirm-actions no-print">
-      <button class="btn" onclick="window.print()">🖨️ 列印 / 存成 PDF　Print</button>
-      <a class="btn ghost" href="<?= url('/') ?>">🏠 返回首頁 Home</a>
+      <button class="btn" onclick="window.print()"><?= icon('printer') ?> 列印 / 存成 PDF　Print</button>
+      <a class="btn ghost" href="<?= url('/') ?>"><?= icon('home') ?> 返回首頁 Home</a>
     </div>
 
     <p class="confirm-note no-print">

@@ -11,7 +11,7 @@ $_uSite = $site ?? (new App\Models\Setting())->site();
 <?php if (App\Core\Uat::isOn($_uSite)): $_uMsgs = App\Core\Uat::messages($_uSite); ?>
   <div class="uat-bar" role="region" aria-label="UAT 測試模式 Test mode" data-interval="<?= App\Core\Uat::interval($_uSite) ?>"
        style="--uat-scale:<?= App\Core\Uat::size($_uSite) / 100 ?>">
-    <span class="uat-badge"><span aria-hidden="true">🧪</span> UAT<small>測試中 Testing</small></span>
+    <span class="uat-badge"><span aria-hidden="true"><?= icon('flask') ?></span> UAT<small>測試中 Testing</small></span>
     <div class="uat-track">
       <ul>
         <?php foreach ($_uMsgs as $_uI => [$_uZh, $_uEn]): ?>

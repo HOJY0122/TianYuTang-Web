@@ -24,13 +24,13 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     <label for="current_password">目前密碼 <span class="en">Current password</span></label>
     <div class="pw-field">
       <input id="current_password" name="current_password" type="password" required autocomplete="current-password">
-      <button type="button" class="pw-eye" data-toggle-password="current_password" title="顯示密碼 Show password">👁</button>
+      <button type="button" class="pw-eye" data-toggle-password="current_password" title="顯示密碼 Show password"><?= icon('eye') ?></button>
     </div>
 
     <label for="password">新密碼 <span class="en">New password</span></label>
     <div class="pw-field">
       <input id="password" name="password" type="password" required minlength="8" autocomplete="new-password">
-      <button type="button" class="pw-eye" data-toggle-password="password" title="顯示密碼 Show password">👁</button>
+      <button type="button" class="pw-eye" data-toggle-password="password" title="顯示密碼 Show password"><?= icon('eye') ?></button>
     </div>
     <div class="strength" aria-live="polite">
       <div class="strength-bar"><i id="strengthBar"></i></div>
@@ -45,21 +45,21 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     <label for="password_confirm">再次輸入新密碼 <span class="en">Confirm new password</span></label>
     <div class="pw-field">
       <input id="password_confirm" name="password_confirm" type="password" required minlength="8" autocomplete="new-password">
-      <button type="button" class="pw-eye" data-toggle-password="password_confirm" title="顯示密碼 Show password">👁</button>
+      <button type="button" class="pw-eye" data-toggle-password="password_confirm" title="顯示密碼 Show password"><?= icon('eye') ?></button>
     </div>
     <p class="help" id="matchText">&nbsp;</p>
 
     <div class="form-actions">
-      <button class="primary" type="submit">💾 變更密碼 Change password</button>
+      <button class="primary" type="submit"><?= icon('save') ?> 變更密碼 Change password</button>
       <?php if (empty($forced)): ?>
-        <a class="mini-btn ghost" href="<?= url($homePath ?? '/admin/dashboard') ?>">取消 Cancel</a>
+        <a class="mini-btn ghost" href="<?= url($homePath ?? '/admin/dashboard') ?>"><?= icon('x') ?> 取消 <span class="en">Cancel</span></a>
       <?php endif; ?>
     </div>
   </form>
 </div>
 
 <div class="panel guide">
-  <h2 style="margin-top:0">🔐 設定好密碼 <span class="en">A good password</span></h2>
+  <h2 style="margin-top:0"><?= icon('lock') ?> 設定好密碼 <span class="en">A good password</span></h2>
   <ul>
     <li>用一句容易記的短句，例如「Tyt中壇2026平安」。<span class="en">A short phrase you can remember works well.</span></li>
     <li>不要用生日、電話或 123456。<span class="en">Avoid birthdays, phone numbers or 123456.</span></li>

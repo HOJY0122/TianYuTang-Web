@@ -3,7 +3,7 @@
  *
  * Manual typing is always the main path — the camera needs HTTPS, a
  * permission grant and decent light, none certain in a temple hall — so
- * this only adds a "📷 Scan" button on top of an ordinary GET form.
+ * this only adds a "Scan" button on top of an ordinary GET form.
  *
  * A scanned reference goes to the right desk automatically: a donation
  * QR (…DON-0012) scanned at check-in opens the counter, and a

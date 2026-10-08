@@ -40,7 +40,7 @@ $current = static function (string $key, string $lang) use ($saved): string {
     <?= csrf_field() ?>
     <input type="hidden" name="group" value="<?= h($group) ?>">
     <p class="help" style="margin-top:0">
-      ✍️ 框內是網站<strong>現在</strong>顯示的文字，改動會即時出現在右邊預覽（按儲存才生效）。<strong>留空＝不顯示</strong>；按 ↺ 放回預設文字。
+      <?= icon('pencil') ?> 框內是網站<strong>現在</strong>顯示的文字，改動會即時出現在右邊預覽（按儲存才生效）。<strong>留空＝不顯示</strong>；按 ↺ 放回預設文字。
       <code>{n}</code>、<code>{max}</code> 會自動換成數字，<code>{site}</code>、<code>{site_en}</code> 換成網站名稱。<br>
       <span class="en">Each box holds the text the site shows now. Changes appear in the preview at once and go live when you Save.
       <strong>Empty = show nothing</strong>; ↺ puts the default back. Keep <code>{n}</code> / <code>{max}</code> — they become numbers; <code>{site}</code> / <code>{site_en}</code> become the site name.</span>
@@ -53,7 +53,7 @@ $current = static function (string $key, string $lang) use ($saved): string {
           <?php $val = $current($key, $lang); $def = Text::fallback($key, $lang); $id = 'w_' . str_replace('.', '_', $key) . '_' . $lang; ?>
           <div class="word-field<?= $val !== $def ? ' is-edited' : '' ?>">
             <label for="<?= $id ?>"><?= $langLabel ?>
-              <?php if ($val !== $def): ?><span class="word-badge">✏️ 已修改 Edited</span><?php endif; ?></label>
+              <?php if ($val !== $def): ?><span class="word-badge"><?= icon('pencil') ?> 已修改 Edited</span><?php endif; ?></label>
             <div class="input-reset">
               <?php if ($long): ?>
                 <textarea id="<?= $id ?>" name="txt[<?= h($key) ?>][<?= $lang ?>]" rows="<?= max(2, substr_count($val, "\n") + 2) ?>" maxlength="1000"
@@ -72,14 +72,14 @@ $current = static function (string $key, string $lang) use ($saved): string {
     <?php endforeach; ?>
 
     <div class="form-actions sticky-actions">
-      <button class="primary" type="submit">💾 儲存 Save</button>
+      <button class="primary" type="submit"><?= icon('save') ?> 儲存 Save</button>
       <span class="help" id="dirtyNote" hidden>● 有未儲存的修改 Unsaved changes</span>
     </div>
   </form>
 
   <aside class="panel word-preview">
     <div class="word-preview-bar">
-      <strong>👀 即時預覽 <span class="en">Live preview</span></strong>
+      <strong><?= icon('eye') ?> 即時預覽 <span class="en">Live preview</span></strong>
       <?php if ($group === 'success'): ?>
         <span class="seg-mini">
           <button type="button" data-preview="<?= url('/system/wording/preview') ?>?kind=rsvp" class="is-on">報名 RSVP</button>
@@ -87,8 +87,8 @@ $current = static function (string $key, string $lang) use ($saved): string {
         </span>
       <?php endif; ?>
       <span class="seg-mini">
-        <button type="button" data-width="100%" class="is-on" title="電腦 Computer">🖥️</button>
-        <button type="button" data-width="390px" title="手機 Phone">📱</button>
+        <button type="button" data-width="100%" class="is-on" title="電腦 Computer"><?= icon('monitor') ?></button>
+        <button type="button" data-width="390px" title="手機 Phone"><?= icon('smartphone') ?></button>
       </span>
       <a class="mini-btn ghost" href="<?= h($previewUrl[$group]) ?>" target="_blank" id="openPage">↗</a>
     </div>

@@ -14,7 +14,7 @@ $dateLines = App\Models\Event::formatDateLines($event);
 <body>
 
 <div class="toolbar no-print">
-  <button class="primary" onclick="window.print()">🖨️ 列印 / 存成 PDF　Print / Save as PDF</button>
+  <button class="primary" onclick="window.print()"><?= icon('printer') ?> 列印 / 存成 PDF　Print / Save as PDF</button>
   <a href="<?= url('/admin/print/donations') ?>?event=<?= (int) $event['id'] ?>">布施名單 →</a>
   <a href="<?= url('/admin/dashboard') ?>?event=<?= (int) $event['id'] ?>">← 返回後台</a>
   <span class="hint">在列印視窗選擇「另存為 PDF」。Choose “Save as PDF” in the print window.</span>
@@ -78,7 +78,7 @@ require BASE_PATH . '/app/Views/print/_letterhead.php';
   sheet, which IS an accounting record, keeps its sign-off.
 -->
 
-<p class="confidential">🔒 <?= h(t('pdf.confidential') . ' ' . t('pdf.confidential', 'en')) ?></p>
+<p class="confidential"><?= icon('lock') ?> <?= h(t('pdf.confidential') . ' ' . t('pdf.confidential', 'en')) ?></p>
 
 </body>
 </html>

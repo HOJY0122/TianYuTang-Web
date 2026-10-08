@@ -7,7 +7,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
 
 
   <?php if ($event['is_test']): ?>
-    <div class="flash test">🧪 測試活動 — 此處的報到紀錄不列入正式統計。Test event — check-ins here are not counted.</div>
+    <div class="flash test"><?= icon('flask') ?> 測試活動 — 此處的報到紀錄不列入正式統計。Test event — check-ins here are not counted.</div>
   <?php endif; ?>
 
   <!-- ---------- Running count ---------- -->
@@ -22,14 +22,14 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   <div class="page-col">
   <!-- ---------- Lookup ---------- -->
   <div class="panel">
-    <h2 style="margin-top:0">🔎 查詢報名 <span class="en">Find a registration</span></h2>
+    <h2 style="margin-top:0"><?= icon('search') ?> 查詢報名 <span class="en">Find a registration</span></h2>
     <form method="GET" action="<?= url('/admin/checkin') ?>" class="lookup-form">
       <input type="hidden" name="event" value="<?= (int) $event['id'] ?>">
       <input type="text" name="ref" value="<?= h($ref) ?>" autofocus aria-label="報名編號 Reference"
              autocomplete="off" autocapitalize="characters" spellcheck="false"
              placeholder="報名編號 Reference，例 e.g. RSVP-0007">
       <button class="mini-btn btn-lg" type="submit">查詢 Find</button>
-      <button class="mini-btn ghost btn-lg" type="button" data-scan>📷 掃描 Scan QR</button>
+      <button class="mini-btn ghost btn-lg" type="button" data-scan><?= icon('camera') ?> 掃描 Scan QR</button>
     </form>
     <p class="help" style="margin-bottom:0">掃到布施 QR 會自動轉到「現場布施」。A donation QR opens the counter page automatically.</p>
 
@@ -79,7 +79,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
             <input type="hidden" name="group_id" value="<?= (int) $group['id'] ?>">
             <input type="hidden" name="event_id" value="<?= (int) $event['id'] ?>">
             <input type="hidden" name="ref" value="<?= h($ref) ?>">
-            <button class="big-btn" type="submit">✅ 全部報到 Check in all</button>
+            <button class="big-btn" type="submit"><?= icon('check-circle') ?> 全部報到 Check in all</button>
           </form>
         <?php else: ?>
           <span class="badge">全部已報到 All arrived</span>
@@ -119,10 +119,10 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   </div>
 
   <details class="panel guide">
-    <summary><span>🧭 報到步驟 <span class="en">How to check in</span></span><span class="guide-toggle" aria-hidden="true">顯示 Show ▾</span></summary>
+    <summary><span><?= icon('compass') ?> 報到步驟 <span class="en">How to check in</span></span><span class="guide-toggle" aria-hidden="true">顯示 Show ▾</span></summary>
 
     <ol>
-      <li>請善信出示報名 QR Code，按「📷 掃描」對準畫面。<span class="en">Ask for their registration QR and tap Scan.</span></li>
+      <li>請善信出示報名 QR Code，按「<?= icon('camera') ?> 掃描」對準畫面。<span class="en">Ask for their registration QR and tap Scan.</span></li>
       <li>沒有 QR？輸入報名編號（RSVP-0007）或到「報名紀錄」以姓名搜尋。<span class="en">No QR? Type the number, or search by name in Registrations.</span></li>
       <li>家人一起到：按「全部報到」；分開到：逐位按「報到」。<span class="en">Family together: Check in all. Arriving separately: one by one.</span></li>
       <li>沒有報名的善信，請到「現場報名」。<span class="en">Not registered? Use Walk-in register.</span></li>
@@ -132,7 +132,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   <div class="page-col">
   <?php $pct = $stats['expected'] > 0 ? min(100, round($stats['arrived'] / $stats['expected'] * 100)) : 0; ?>
   <div class="panel" id="liveProgress" data-live="rsvp_groups rsvp_attendees events">
-    <h2 style="margin-top:0">📈 報到進度 <span class="en">Arrival progress</span></h2>
+    <h2 style="margin-top:0"><?= icon('trending') ?> 報到進度 <span class="en">Arrival progress</span></h2>
     <div class="big-number"><?= $pct ?>%</div>
     <div class="progress" role="progressbar" aria-valuenow="<?= $pct ?>" aria-valuemin="0" aria-valuemax="100"><span style="width:<?= $pct ?>%"></span></div>
     <p class="help" style="margin:0"><?= (int) $stats['arrived'] ?> / <?= (int) $stats['expected'] ?> 位已到 people arrived</p>

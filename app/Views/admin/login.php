@@ -39,7 +39,7 @@ $titleEn = t('login.title', 'en', $names);
       <div class="pw-field">
         <input id="password" name="password" type="password" required autocomplete="current-password">
         <button type="button" class="pw-eye" data-toggle-password="password" aria-pressed="false"
-                title="顯示密碼 Show password">👁</button>
+                title="顯示密碼 Show password"><?= icon('eye') ?></button>
       </div>
 
       <?php if (!empty($error)): ?>
@@ -67,7 +67,8 @@ document.querySelectorAll('[data-toggle-password]').forEach(function (btn) {
     var show = input.type === 'password';
     input.type = show ? 'text' : 'password';
     btn.setAttribute('aria-pressed', show ? 'true' : 'false');
-    btn.textContent = show ? '🙈' : '👁';
+    var u = btn.querySelector('use');
+    if (u) u.setAttribute('href', u.getAttribute('href').replace(/#.*$/, show ? '#eye-off' : '#eye'));
     btn.title = show ? '隱藏密碼 Hide password' : '顯示密碼 Show password';
   });
 });

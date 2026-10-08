@@ -19,7 +19,7 @@ a:hover{background:#711711}
 </head>
 <body>
   <div>
-    <div style="font-size:42px;color:#b99445;opacity:.5;letter-spacing:16px">☁　☁　☁</div>
+    <div style="font-size:42px;color:#b99445;opacity:.5;letter-spacing:16px"><?= icon('cloud') ?>　<?= icon('cloud') ?>　<?= icon('cloud') ?></div>
     <h1>404</h1>
     <h2>找不到此頁面</h2>
     <p>您要找的頁面不存在，或已被移除。<br>The page you are looking for could not be found.</p>

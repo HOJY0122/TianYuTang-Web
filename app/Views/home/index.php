@@ -55,7 +55,7 @@ if (!$bannerSlides && $siteHeroBanner) {
   }
   ?>
   <?php if ($dateZh !== '' || $dateEn !== ''): ?>
-    <div class="dates">📅 <?= h($dateZh) ?>
+    <div class="dates"><?= icon('calendar') ?> <?= h($dateZh) ?>
       <?php if ($dateEn !== ''): ?><span class="en"><?= h($dateEn) ?></span><?php endif; ?></div>
   <?php endif; ?>
 
@@ -70,12 +70,12 @@ if (!$bannerSlides && $siteHeroBanner) {
 
   <div class="cta-grid">
     <a class="cta" href="<?= url('/register') ?>">
-      <span class="icon">📝</span>
+      <span class="icon"><?= icon('form') ?></span>
       <strong><?= h(t('home.cta_register')) ?></strong>
       <span><?= h($rsvpWindow['open'] ? t('home.cta_register', 'en') : ($rsvpWindow['reason'] === 'not_yet' ? t('home.opening_soon') . ' ' . t('home.opening_soon', 'en') : t('home.closed') . ' ' . t('home.closed', 'en'))) ?></span>
     </a>
     <a class="cta" href="<?= url('/donate') ?>">
-      <span class="icon">🙏</span>
+      <span class="icon"><?= icon('lotus') ?></span>
       <strong><?= h(t('home.cta_donate')) ?></strong>
       <span><?= h($donationWindow['open'] ? t('home.cta_donate', 'en') : ($donationWindow['reason'] === 'not_yet' ? t('home.opening_soon') . ' ' . t('home.opening_soon', 'en') : t('home.closed') . ' ' . t('home.closed', 'en'))) ?></span>
     </a>
@@ -90,7 +90,7 @@ if (!$bannerSlides && $siteHeroBanner) {
 
   <div class="info-grid">
     <div class="card info-card">
-      <h3><?= tb('home.date') ?></h3>
+      <h3><?= icon('calendar') ?> <?= tb('home.date') ?></h3>
       <?php if (trim((string) ($event['date_text_zh'] ?? '')) !== ''): ?>
         <p><?= h($event['date_text_zh']) ?></p>
       <?php else: ?>
@@ -99,14 +99,14 @@ if (!$bannerSlides && $siteHeroBanner) {
       <?php if ($dateEn !== ''): ?><p class="help"><?= h($dateEn) ?></p><?php endif; ?>
     </div>
     <div class="card info-card">
-      <h3><?= tb('home.venue') ?></h3>
+      <h3><?= icon('map-pin') ?> <?= tb('home.venue') ?></h3>
       <p><?= h($event['location']) ?></p>
     </div>
     <div class="card info-card">
-      <h3><?= tb('home.enquiry') ?></h3>
+      <h3><?= icon('phone') ?> <?= tb('home.enquiry') ?></h3>
       <p><?= h(!empty($event['counter_note']) ? $event['counter_note'] : t('home.enquiry_text')) ?></p>
       <?php if (!empty($event['contact_info'])): ?>
-        <p class="help">📞 <?= h($event['contact_info']) ?></p>
+        <p class="help"><?= icon('phone') ?> <?= h($event['contact_info']) ?></p>
       <?php endif; ?>
       <?php if (t('home.enquiry_text', 'en') !== ''): ?><p class="help"><?= h(t('home.enquiry_text', 'en')) ?></p><?php endif; ?>
     </div>
@@ -115,14 +115,14 @@ if (!$bannerSlides && $siteHeroBanner) {
   <?php if ($showMap): ?>
     <div class="card location-card">
       <div>
-        <h3 class="loc-title"><?= tb('home.directions') ?></h3>
+        <h3 class="loc-title"><?= icon('car') ?> <?= tb('home.directions') ?></h3>
         <p style="margin:.5rem 0 0"><?= tb('home.directions_text') ?></p>
         <div class="map-buttons">
           <?php if ($wazeUrl !== ''): ?>
-            <a class="btn waze" href="<?= h($wazeUrl) ?>" target="_blank" rel="noopener"><?= h(t('home.waze')) ?></a>
+            <a class="btn waze" href="<?= h($wazeUrl) ?>" target="_blank" rel="noopener"><?= icon('compass') ?> <?= h(t('home.waze')) ?></a>
           <?php endif; ?>
           <?php if ($mapsUrl !== ''): ?>
-            <a class="btn ghost" href="<?= h($mapsUrl) ?>" target="_blank" rel="noopener"><?= h(t('home.maps') . ' ' . t('home.maps', 'en')) ?></a>
+            <a class="btn ghost" href="<?= h($mapsUrl) ?>" target="_blank" rel="noopener"><?= icon('map') ?> <?= h(t('home.maps') . ' ' . t('home.maps', 'en')) ?></a>
           <?php endif; ?>
         </div>
       </div>
@@ -148,7 +148,7 @@ if (!$bannerSlides && $siteHeroBanner) {
     <h2><?= tb('home.news') ?></h2>
   </div>
   <div class="album-row news-row">
-    <button type="button" class="album-nav prev" aria-label="上一則 Previous" data-dir="-1">&#10094;</button>
+    <button type="button" class="album-nav prev" aria-label="上一則 Previous" data-dir="-1"><?= icon('chevron-left') ?></button>
     <div class="album-strip news-strip" tabindex="0" aria-label="<?= h(t('home.news') . ' ' . t('home.news', 'en')) ?>">
       <?php foreach ($posts as $post): ?>
         <article class="card post news-card">
@@ -157,7 +157,7 @@ if (!$bannerSlides && $siteHeroBanner) {
               <img class="post-image" src="<?= h(BASE_URL . '/' . $post['image_path']) ?>"
                    data-lightbox="<?= h(BASE_URL . '/' . $post['image_path']) ?>"
                    alt="<?= h($post['title_zh']) ?>" loading="lazy">
-              <span class="zoom-hint" aria-hidden="true">🔍</span>
+              <span class="zoom-hint" aria-hidden="true"><?= icon('search') ?></span>
             </div>
           <?php endif; ?>
           <div class="post-head">
@@ -168,7 +168,7 @@ if (!$bannerSlides && $siteHeroBanner) {
               <strong><?= h($siteName) ?></strong>
               <span><?= h(date('Y-m-d', strtotime($post['created_at']))) ?></span>
             </div>
-            <?php if ($post['is_pinned']): ?><span class="pin"><?= h(t('home.pinned') . ' ' . t('home.pinned', 'en')) ?></span><?php endif; ?>
+            <?php if ($post['is_pinned']): ?><span class="pin"><?= icon('pin') ?> <?= h(t('home.pinned') . ' ' . t('home.pinned', 'en')) ?></span><?php endif; ?>
           </div>
           <div class="post-body">
             <h3><?= h($post['title_zh']) ?><?php if (!empty($post['title_en'])): ?><span class="en"><?= h($post['title_en']) ?></span><?php endif; ?></h3>
@@ -181,7 +181,7 @@ if (!$bannerSlides && $siteHeroBanner) {
         </article>
       <?php endforeach; ?>
     </div>
-    <button type="button" class="album-nav next" aria-label="下一則 Next" data-dir="1">&#10095;</button>
+    <button type="button" class="album-nav next" aria-label="下一則 Next" data-dir="1"><?= icon('chevron-right') ?></button>
   </div>
 </section>
 <?php endif; ?>
@@ -206,7 +206,7 @@ if (!$bannerSlides && $siteHeroBanner) {
     <?php require BASE_PATH . '/app/Views/partials/album.php'; ?>
   <?php endforeach; ?>
   <div style="text-align:center">
-    <a class="btn ghost" href="<?= url('/gallery') ?>"><?= h(t('home.all_albums') . ' ' . t('home.all_albums', 'en')) ?></a>
+    <a class="btn ghost" href="<?= url('/gallery') ?>"><?= icon('image') ?> <?= h(t('home.all_albums') . ' ' . t('home.all_albums', 'en')) ?></a>
   </div>
 </section>
 <?php endif; ?>

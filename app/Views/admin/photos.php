@@ -7,7 +7,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
 
 
   <?php if ($event['is_test']): ?>
-    <div class="flash test">🧪 這是測試活動的相簿，不會出現在正式網站上。This is a test event's album — it is not shown on the live site.</div>
+    <div class="flash test"><?= icon('flask') ?> 這是測試活動的相簿，不會出現在正式網站上。This is a test event's album — it is not shown on the live site.</div>
   <?php endif; ?>
 
   <!-- ---------- Which event ---------- -->
@@ -51,7 +51,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
         <span class="en">Choose several at once (up to <?= (int) $maxFiles ?>, 5 MB each, <?= h($postMax) ?> in total — 3–5 phone photos per upload is safest). Thumbnails are made automatically.</span>
       </p>
 
-      <button class="mini-btn" type="submit" style="margin-top:14px;padding:12px 22px">⬆️ 上傳相片 Upload</button>
+      <button class="mini-btn" type="submit" style="margin-top:14px;padding:12px 22px"><?= icon('upload') ?> 上傳相片 Upload</button>
     </form>
   </div>
 
@@ -63,7 +63,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
       <p class="help">尚未上傳任何相片。No photos yet.</p>
     <?php else: ?>
       <p class="help" style="margin-bottom:16px">
-        🖐️ <strong>按住相片拖到新位置</strong>，放開即自動儲存。排列順序即為前台顯示順序。也可用 ↑ ↓ 按鈕。說明文字可留空。<br>
+        <?= icon('hand') ?> <strong>按住相片拖到新位置</strong>，放開即自動儲存。排列順序即為前台顯示順序。也可用 ↑ ↓ 按鈕。說明文字可留空。<br>
         <span class="en"><strong>Drag a photo to a new place</strong> — the order saves as soon as you let go, and is the order visitors see. The ↑ ↓ buttons still work.</span>
       </p>
 
@@ -102,7 +102,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
                     data-confirm="確定要刪除這張相片嗎？此操作無法復原。&#10;Delete this photo? This cannot be undone." data-danger>
                 <?= csrf_field() ?>
                 <input type="hidden" name="photo_id" value="<?= (int) $photo['id'] ?>">
-                <button class="mini-btn danger" type="submit" title="刪除 Delete">🗑</button>
+                <button class="mini-btn danger" type="submit" title="刪除 Delete"><?= icon('trash') ?></button>
               </form>
             </div>
           </div>

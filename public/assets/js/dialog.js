@@ -50,8 +50,8 @@
     error:   { c: '#a3281f', icon: '!', title: '請注意 Please check' },
     info:    { c: '#b8862b', icon: 'i', title: '提示 Note' },
     confirm: { c: '#9f211b', icon: '?', title: '請確認 Please confirm' },
-    danger:  { c: '#a3281f', icon: '⚠', title: '請確認 Please confirm' },
-    test:    { c: '#6b4b8a', icon: '🧪', title: '測試 Test' }
+    danger:  { c: '#a3281f', icon: '!', title: '請確認 Please confirm' },
+    test:    { c: '#6b4b8a', icon: 'T', title: '測試 Test' }
   };
 
   function open(message, opt, isConfirm) {

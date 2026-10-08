@@ -71,7 +71,7 @@ try {
 
 <?php if (!empty($event['is_test']) && !App\Core\Uat::isOn($site)): ?>
   <div class="testbar">
-    ⚠️ 測試模式 TEST MODE — 此頁面僅供內部測試，所有報名與布施資料<strong>不會列入正式紀錄</strong>。
+    <?= icon('alert') ?> 測試模式 TEST MODE — 此頁面僅供內部測試，所有報名與布施資料<strong>不會列入正式紀錄</strong>。
     Submissions here are <strong>not</strong> real records.
   </div>
 <?php endif; ?>
@@ -139,7 +139,7 @@ try {
     <p class="help-zh"><?= h(t($helpKey)) ?></p>
     <?php if (t($helpKey, 'en') !== ''): ?><p class="help-en"><?= h(t($helpKey, 'en')) ?></p><?php endif; ?>
     <?php if (!empty($event['contact_info'])): ?>
-      <p class="help-contact">📞 <?= h($event['contact_info']) ?></p>
+      <p class="help-contact"><?= h($event['contact_info']) ?></p>
     <?php endif; ?>
   </div>
   <button type="button" class="help-btn" id="helpBtn" aria-expanded="false" aria-controls="helpPanel" title="說明 Help">

@@ -24,7 +24,7 @@ class Setting extends Model
         // Identity
         'site_name'         => '天玉堂',
         'site_name_en'      => 'Tian Yu Tang',
-        'site_tagline'      => '🙏 感恩您的參與與支持　｜　Thank you for your kind support',
+        'site_tagline'      => '感恩您的參與與支持　｜　Thank you for your kind support',
         'site_tagline_on'   => '1',          // the switch beside it: '1' shown, '0' hidden
         'site_logo_path'    => null,
         // Home page banner slideshow (pictures: see Banner / site_banners).
@@ -45,7 +45,7 @@ class Setting extends Model
         'footer_note_en'    => 'For enquiries, kindly visit the on-site counter on the event day.',
         // null = never set: the footer / letterhead works it out for you.
         // Once saved, the text is used exactly as typed — empty hides the line.
-        'footer_title'      => null,         // default: "🙏 " + site name
+        'footer_title'      => null,         // default: the site name
         'footer_copyright'  => null,         // default: "© {year} " + organisation
         // 收據紀錄 Receipts feature: '0' hides it from admins (system admins keep access; data is kept)
         'receipts_enabled'    => '1',
@@ -150,7 +150,7 @@ class Setting extends Model
     public static function fallback(string $key, array $site): string
     {
         return match ($key) {
-            'footer_title'     => '🙏 ' . $site['site_name'],
+            'footer_title'     => $site['site_name'],
             'footer_copyright' => '© {year} ' . ($site['footer_org'] !== '' ? $site['footer_org'] : $site['site_name']),
             'pdf_name'         => $site['site_name'],
             'pdf_name_en'      => $site['site_name_en'],

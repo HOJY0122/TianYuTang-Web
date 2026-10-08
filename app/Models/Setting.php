@@ -47,6 +47,8 @@ class Setting extends Model
         // Once saved, the text is used exactly as typed — empty hides the line.
         'footer_title'      => null,         // default: "🙏 " + site name
         'footer_copyright'  => null,         // default: "© {year} " + organisation
+        // 收據紀錄 Receipts feature: '0' hides it from admins (system admins keep access; data is kept)
+        'receipts_enabled'    => '1',
         // UAT test mode (System → UAT): switched by a system admin only
         'uat_mode'            => '0',
         'uat_interval'        => '4',        // seconds per announcement

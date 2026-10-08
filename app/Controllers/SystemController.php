@@ -257,7 +257,7 @@ class SystemController extends Controller
         }
 
         // On/off switches: an unticked checkbox is simply absent from the POST.
-        foreach (['site_tagline_on', 'pdf_show_logo'] as $key) {
+        foreach (['site_tagline_on', 'pdf_show_logo', 'receipts_enabled'] as $key) {
             if (isset($_POST[$key])) {   // Show / Hide buttons send '1' or '0'
                 $setting->set($key, $_POST[$key] === '1' ? '1' : '0');
             }

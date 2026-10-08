@@ -74,6 +74,12 @@ set_exception_handler(static function (Throwable $e): void {
           . '<p>Something went wrong. Please try again later.</p></div>';
 });
 
+// Photos (signed addresses, App\Core\Media): answered before any session
+// starts — no cookie, no session lock while a page loads many pictures.
+if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === BASE_URL . '/media') {
+    App\Core\Media::serve();
+}
+
 App\Core\Session::start();   // cookie settings and time limits: see app/Core/Session.php
 
 // ---------- 5. Routes ----------

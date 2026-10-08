@@ -16,7 +16,7 @@
         <button type="button" class="drag-handle" data-drag-handle title="拖曳排序 Drag to reorder" aria-label="拖曳排序 Drag to reorder">⠿</button>
         <span class="post-pos" data-position><?= $i + 1 ?></span>
         <?php if ($p['image_path']): ?>
-          <img class="post-row-img" src="<?= h(BASE_URL . '/' . $p['image_path']) ?>" alt="" loading="lazy" draggable="false">
+          <img class="post-row-img" src="<?= h(media_url($p['image_path'])) ?>" alt="" loading="lazy" draggable="false">
         <?php else: ?><span class="post-row-img none" aria-hidden="true"><?= icon('newspaper') ?></span><?php endif; ?>
         <div class="post-row-main">
           <a class="rowlink" href="<?= url('/admin/posts/edit') ?>?id=<?= (int) $p['id'] ?>"><?= h($p['title_zh']) ?></a>

@@ -1,0 +1,16 @@
+# Photos here are shown only through signed addresses (/media, see
+# app/Core/Media.php), so their folder address is refused: a copied or
+# guessed link to the file itself does not open it.
+#
+# Wrapped in <FilesMatch> on purpose: the parent uploads/.htaccess GRANTS
+# image files inside a <FilesMatch>, and Apache applies <Files> sections
+# after directory rules — a bare "Require all denied" would be overridden.
+<FilesMatch ".*">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>

@@ -103,7 +103,7 @@ $hM = (int) $site['banner_height_mobile'];
           </div>
 
           <div class="bn-tuner" tabindex="0" aria-label="拖動或用方向鍵調整位置 Drag or use arrow keys to move the picture">
-            <img src="<?= h(BASE_URL . '/' . $s['image_path']) ?>" alt="" draggable="false"
+            <img src="<?= h(media_url($s['image_path'])) ?>" alt="" draggable="false"
                  style="object-position:<?= (int) $s['pos_x'] ?>% <?= (int) $s['pos_y'] ?>%;transform:scale(<?= max(100, (int) $s['zoom']) / 100 ?>);transform-origin:<?= (int) $s['pos_x'] ?>% <?= (int) $s['pos_y'] ?>%">
             <span class="bn-cross" style="left:<?= (int) $s['pos_x'] ?>%;top:<?= (int) $s['pos_y'] ?>%" aria-hidden="true"></span>
           </div>

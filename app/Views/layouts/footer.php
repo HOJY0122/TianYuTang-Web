@@ -40,5 +40,6 @@ $fStyle = sprintf('--f-pad:%dpx;--f-size:%d%%;--f-bg:%s;--f-fg:%s;--f-accent:%s'
 <script src="<?= asset('js/live.js') ?>"></script>
 <script src="<?= asset('js/uat.js') ?>"></script>
 <?php if (($activeNav ?? "") === "home"): ?><script src="<?= asset("js/banner.js") ?>"></script><?php endif; ?>
+<?php if (($site['protect_photos'] ?? '1') === '1'): ?><script src="<?= asset('js/protect.js') ?>"></script><?php endif; ?>
 </body>
 </html>

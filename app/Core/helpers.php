@@ -37,6 +37,12 @@ function icon(string $name, string $class = ''): string
          . '<use href="' . h(asset('icons.svg')) . '?v=' . $v . '#' . h($name) . '"></use></svg>';
 }
 
+/** Address of an uploaded photo: signed and expiring for albums, posts and banners (App\Core\Media). */
+function media_url(?string $path): string
+{
+    return App\Core\Media::url($path);
+}
+
 /** Current CSRF token, generated once per session. */
 function csrf_token(): string
 {

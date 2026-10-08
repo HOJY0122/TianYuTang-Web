@@ -83,6 +83,9 @@ class Setting extends Model
         'body_size'         => '100',        // %
         'home_albums'       => 'previous',   // previous | latest | recent
         'home_album_photos' => '12',
+        // Photo protection on the public site (see js/protect.js, App\Core\Media)
+        'protect_photos'    => '1',
+        'photo_watermark'   => '',           // text tiled over the full-size viewer; empty = none
     ];
 
     /**
@@ -94,6 +97,7 @@ class Setting extends Model
     public const DRAFT_KEYS = [
         'rsvp_types', 'rsvp_org_max', 'rsvp_age_on', 'rsvp_age_min', 'rsvp_age_basis', 'rsvp_age_who', 'rsvp_age_other',
         'donate_amounts', 'body_font', 'body_size', 'heading_font', 'home_albums', 'home_album_photos',
+        'protect_photos', 'photo_watermark',
     ];
 
     /** Is this request a system admin's live preview (see DRAFT_KEYS)? */

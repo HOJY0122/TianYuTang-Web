@@ -71,6 +71,12 @@ final class Crypto
         return hash_hmac('sha256', $value, self::key('index'));
     }
 
+    /** Keyed signature of a value for one purpose (e.g. signed photo addresses). */
+    public static function sign(string $value, string $purpose): string
+    {
+        return hash_hmac('sha256', $value, self::key('sign/' . $purpose));
+    }
+
     /** Separate keys for separate jobs, all derived from the one master key. */
     private static function key(string $purpose): string
     {

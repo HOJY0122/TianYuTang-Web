@@ -119,7 +119,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     <?php if ($preview): ?>
       <p class="note"><?= icon('eye') ?> 預覽模式：不能提交。<span class="en">Preview only — this form cannot be sent.</span></p>
     <?php endif; ?>
-    <button class="primary" type="submit"<?= $preview ? ' disabled' : '' ?>><?= icon('form') ?> <?= tb('register.submit') ?></button>
+    <button class="primary" type="submit"<?= $preview ? ' disabled' : '' ?>><?= icon('register') ?> <?= tb('register.submit') ?></button>
   </form>
   <?php endif; ?>
 <?php live_sig_end(); ?></section>

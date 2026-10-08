@@ -151,10 +151,27 @@ foreach (FormRules::BODY_FONTS as [, $fam]) {
           <label class="seg-off"><input type="radio" name="protect_photos" value="0"<?= $site['protect_photos'] === '1' ? '' : ' checked' ?>><span>✕ 關閉 Off</span></label>
         </div>
       </div>
+      <div class="protect-areas">
+        <label>保護哪些部分 <span class="en">What to protect</span></label>
+        <?php foreach ([
+            'albums' => ['image',  '相簿相片與大圖檢視', 'Album photos and the full-size viewer'],
+            'news'   => ['newspaper', '最新消息圖片', 'News post pictures'],
+            'banner' => ['camera', '首頁橫幅', 'Home page banner'],
+            'qr'     => ['qr',     'Waze 導航 QR Code', 'Waze QR code — usually left OFF so visitors can save or screenshot it to navigate'],
+            'keys'   => ['lock',   '開發者 / 儲存快捷鍵與其他地方的右鍵', 'Developer-tool and save shortcuts, and right-click elsewhere on the page'],
+        ] as $pa => [$paIcon, $paZh, $paEn]): ?>
+          <label class="protect-area">
+            <input type="hidden" name="protect_<?= $pa ?>" value="0">
+            <input type="checkbox" name="protect_<?= $pa ?>" value="1"<?= ($site['protect_' . $pa] ?? '0') === '1' ? ' checked' : '' ?>>
+            <span class="pa-icon"><?= icon($paIcon) ?></span>
+            <span class="pa-text"><strong><?= h($paZh) ?></strong><small><?= h($paEn) ?></small></span>
+            <span class="pa-state" aria-hidden="true"></span>
+          </label>
+        <?php endforeach; ?>
+      </div>
       <ul class="help protect-list">
-        <li>不能右鍵 / 長按「儲存圖片」、不能拖出相片。<span class="en">No right-click or long-press “Save image”; photos cannot be dragged out.</span></li>
-        <li>F12、Ctrl+S、Ctrl+U 等開發者 / 儲存快捷鍵停用；列印時不印出相片。<span class="en">Developer-tool and save shortcuts are off; photos are left out of printouts.</span></li>
-        <li>按 Print Screen 時相片會暫時模糊；看大圖時切換到截圖工具，相片也會模糊。<span class="en">Print Screen, or switching to a snipping tool while viewing, blurs the photo.</span></li>
+        <li>受保護的部分：不能右鍵 / 長按「儲存圖片」、不能拖出；按 Print Screen 時會暫時模糊；列印時不印出。<span class="en">Protected parts: no right-click or long-press “Save image”, no dragging; Print Screen blurs them for a moment; left out of printouts.</span></li>
+        <li>看大圖時切換到截圖工具，相片會模糊。<span class="en">Switching to a snipping tool while viewing a photo blurs it.</span></li>
         <li><strong>一直生效：</strong>相片只能在網站頁面內顯示，複製或分享相片網址會打不開，幾小時後自動失效。<span class="en"><strong>Always on:</strong> photos only show inside the site's pages — a copied photo link does not open, and stops working after a few hours.</span></li>
       </ul>
       <label for="photo_watermark">浮水印文字 <span class="en">Watermark text (full-size viewer)</span></label>
@@ -202,6 +219,8 @@ foreach (FormRules::BODY_FONTS as [, $fam]) {
     form.querySelector('.org-only').hidden = (form.querySelector('[name=rsvp_types]:checked') || {}).value === 'individual';
     var ageOn = (form.querySelector('[name=rsvp_age_on]:checked') || {}).value === '1';
     form.querySelector('.age-only').hidden = !ageOn;
+    var pa = form.querySelector('.protect-areas');
+    if (pa) pa.hidden = (form.querySelector('[name=protect_photos]:checked') || {}).value === '0';
     var min = +form.querySelector('[name=rsvp_age_min]').value || 66, y = new Date().getFullYear();
     var byYear = (form.querySelector('[name=rsvp_age_basis]:checked') || {}).value === 'year';
     document.getElementById('ageExample').textContent = byYear

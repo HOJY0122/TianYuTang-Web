@@ -558,18 +558,21 @@ input.is-linked{background:#f4f0e4;color:var(--muted);border-style:dashed}
 .age-tag.low{display:none}
 
 /* ---------- Photo protection (js/protect.js) ---------- */
-html[data-protect] .album img,html[data-protect] .lightbox img,html[data-protect] .banner-show img,html[data-protect] .post-image,
-html[data-protect] .news-strip img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-html[data-protect] .album,html[data-protect] .lightbox,html[data-protect] .banner-show{-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
+html.p-albums .album,html.p-albums .lightbox,html.p-news .lightbox,html.p-news .post-image,html.p-news .news-strip img,
+html.p-banner .banner-show,html.p-qr .qr-frame{-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
+html.p-albums .album img,html.p-albums .lightbox img,html.p-news .lightbox img,html.p-banner .banner-show img,html.p-qr .qr-frame img{-webkit-user-drag:none}
 .lb-shield{position:absolute;inset:0;z-index:1}
 html.has-wm .lb-shield{background-image:var(--wm);background-repeat:repeat}
-html.protect-blur #lbImage,html.protect-hide img{filter:blur(28px) brightness(.7)}
+html.protect-blur #lbImage,
+html.protect-hide.p-albums .album img,html.protect-hide.p-albums #lbImage,html.protect-hide.p-news #lbImage,html.protect-hide.p-news .post-image,
+html.protect-hide.p-news .news-strip img,html.protect-hide.p-banner .banner-show img,html.protect-hide.p-qr .qr-frame img,
+html.protect-hide.p-qr .qr-frame canvas{filter:blur(28px) brightness(.7)}
 .protect-toast{position:fixed;left:50%;bottom:1.4rem;z-index:300;transform:translate(-50%,1rem);opacity:0;pointer-events:none;
   background:rgba(36,27,22,.92);color:#fff8df;padding:.6rem 1.1rem;border-radius:999px;font-size:.85rem;font-weight:700;transition:opacity .2s,transform .2s}
 .protect-toast.on{opacity:1;transform:translate(-50%,0)}
 @media print{
-  html[data-protect] .album,html[data-protect] .banner-show,html[data-protect] .lightbox,html[data-protect] .post-image,
-  html[data-protect] .news-strip img,html[data-protect] #photos{display:none!important}
+  html.p-albums .album,html.p-albums #photos,html.p-albums .lightbox,html.p-news .lightbox,html.p-news .post-image,html.p-news .news-strip img,
+  html.p-banner .banner-show,html.p-qr .qr-frame{display:none!important}
 }
 
 /* ---------- Photo viewer ---------- */

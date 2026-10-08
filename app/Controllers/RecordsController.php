@@ -28,7 +28,7 @@ class RecordsController extends Controller
     {
         $this->requireAdmin();
         [$event, $allEvents] = $this->pickEvent();
-        $filters = $this->filters(['status', 'source']);
+        $filters = $this->filters(['status', 'source', 'type']);
         $page    = max(1, (int) ($_GET['page'] ?? 1));
         $rsvp    = new Rsvp();
         $total   = $rsvp->countGroups((int) $event['id'], $filters);
@@ -121,8 +121,17 @@ class RecordsController extends Controller
             $this->redirect('/admin/registrations/edit?id=' . $groupId);
         }
 
+        // Individual / organisation, and the organisation's name.
+        $regType = ($_POST['reg_type'] ?? '') === 'organisation' ? 'organisation' : 'individual';
+        $orgName = trim(is_string($_POST['org_name'] ?? null) ? $_POST['org_name'] : '');
+        if ($regType === 'organisation' && (mb_strlen($orgName) < 2 || mb_strlen($orgName) > 150)) {
+            $_SESSION['record_errors'] = ['請填寫團體 / 機構名稱。Please enter the organisation name.'];
+            $this->redirect('/admin/registrations/edit?id=' . $groupId);
+        }
+
         try {
             $rsvp->updateGroup($groupId, (string) ($_POST['status'] ?? 'pending'), $people);
+            $rsvp->setKind($groupId, $regType, $regType === 'organisation' ? $orgName : null);
         } catch (Exception $e) {
             $_SESSION['record_errors'] = ['儲存失敗，請再試一次。Save failed, please try again.'];
             $this->redirect('/admin/registrations/edit?id=' . $groupId);

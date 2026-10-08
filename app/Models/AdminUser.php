@@ -74,7 +74,13 @@ class AdminUser extends Model
     /** Role and session version, checked on every staff page (App\Core\Session). */
     public function sessionState(int $id): ?array
     {
-        return $this->fetchOne('SELECT role, session_version FROM admin_users WHERE id = ?', [$id]);
+        return $this->fetchOne('SELECT role, session_version, device_token FROM admin_users WHERE id = ?', [$id]);
+    }
+
+    /** The hash of the token held by the device that signed in last (see Session). */
+    public function setDeviceToken(int $id, string $hash): void
+    {
+        $this->execute('UPDATE admin_users SET device_token = ? WHERE id = ?', [$hash, $id]);
     }
 
     public function recordLogin(int $id): void

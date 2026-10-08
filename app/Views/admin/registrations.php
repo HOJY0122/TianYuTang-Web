@@ -30,8 +30,15 @@ $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confi
         <option value="walkin"<?= $filters['source'] === 'walkin' ? ' selected' : '' ?>>現場 Walk-in</option>
       </select>
     </label>
+    <label class="field">類別 Type
+      <select name="type">
+        <option value="">全部 All</option>
+        <option value="individual"<?= $filters['type'] === 'individual' ? ' selected' : '' ?>>個人 Individual</option>
+        <option value="organisation"<?= $filters['type'] === 'organisation' ? ' selected' : '' ?>>團體 Organisation</option>
+      </select>
+    </label>
     <button class="mini-btn btn-lg" type="submit"><?= icon('search') ?> 搜尋 Search</button>
-    <?php if ($filters['q'] !== '' || $filters['status'] !== '' || $filters['source'] !== ''): ?>
+    <?php if ($filters['q'] !== '' || $filters['status'] !== '' || $filters['source'] !== '' || $filters['type'] !== ''): ?>
       <a class="mini-btn ghost btn-lg" href="<?= url('/admin/registrations') ?>?event=<?= $eid ?>">清除 Clear</a>
     <?php endif; ?>
     <span class="spacer"></span>
@@ -57,7 +64,8 @@ $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confi
       <tr>
         <td data-label="編號 Ref"><a class="rowlink" href="<?= url('/admin/registrations/edit') ?>?id=<?= (int) $g['id'] ?>"><?= h($g['ref_code']) ?></a>
           <span class="sub-line"><?= h(date('Y-m-d H:i', strtotime($g['created_at']))) ?></span></td>
-        <td data-label="聯絡人 Contact"><?= h($g['lead_name']) ?><span class="sub-line"><?= h($g['lead_contact']) ?></span></td>
+        <td data-label="聯絡人 Contact"><?php if (($g['reg_type'] ?? '') === 'organisation'): ?><span class="org-line"><?= icon('users') ?> <?= h($g['org_name']) ?></span><?php endif; ?>
+          <?= h($g['lead_name']) ?><span class="sub-line"><?= h($g['lead_contact']) ?></span></td>
         <td data-label="人數 People"><?= (int) $g['attendee_count'] ?>
           <?= $g['source'] === 'walkin' ? '<span class="badge walkin">現場 Walk-in</span>' : '' ?></td>
         <td data-label="狀態 Status"><span class="badge <?= $g['status'] === 'confirmed' ? 'ok' : h($g['status']) ?>"><?= h($statusText[$g['status']]) ?></span></td>

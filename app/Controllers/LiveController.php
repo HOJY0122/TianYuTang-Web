@@ -14,6 +14,10 @@ class LiveController extends Controller
     {
         // Checks never extend a session, and an idle or stolen one gets public answers only.
         $signedIn = \App\Core\Session::isStaff();
+        // Signed in again on another device (one device per account)? Tell
+        // the page, which reloads and lands on the sign-in page with the reason.
+        $out = $signedIn && \App\Core\Session::singleDevice() && \App\Core\Session::replacedElsewhere();
+        $signedIn = $signedIn && !$out;
         // Release the session lock at once: a check must never make the
         // person's own clicks and saves wait.
         session_write_close();
@@ -27,7 +31,7 @@ class LiveController extends Controller
         header('Content-Type: application/json; charset=utf-8');
         header('Cache-Control: no-store');
         header('X-Robots-Tag: noindex');
-        echo json_encode(['v' => Live::versions($topics)]);
+        echo json_encode(['v' => Live::versions($topics)] + ($out ? ['out' => 1] : []));
         exit;
     }
 }

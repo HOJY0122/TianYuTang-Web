@@ -34,7 +34,7 @@ class ExportController extends Controller
         // much food to order next year.
         $data = [[
             '姓名 Name', '身份證號碼 IC No.', '聯絡號碼 Contact',
-            '報名編號 Ref', '來源 Source', '狀態 Status', '報到 Checked In',
+            '報名編號 Ref', '團體 Organisation', '來源 Source', '狀態 Status', '報到 Checked In',
         ]];
         foreach ($rows as $r) {
             $data[] = [
@@ -42,6 +42,7 @@ class ExportController extends Controller
                 $r['ic_no'],
                 $r['contact_no'],
                 $r['ref_code'],
+                (string) ($r['org_name'] ?? ''),
                 ($r['source'] ?? 'online') === 'walkin' ? '現場 Walk-in' : '線上 Online',
                 $r['status'] === 'confirmed' ? '已確認 Confirmed' : '待確認 Pending',
                 $r['checked_in_at'] ? date('Y-m-d H:i', strtotime($r['checked_in_at'])) : '',
@@ -144,7 +145,8 @@ class ExportController extends Controller
             $seq[$r['group_id']] = ($seq[$r['group_id']] ?? 0) + 1;
             $status = $r['status'] === 'cancelled' ? 'Cancelled'
                 : ($r['checked_in_at'] ? 'Checked In' : ucfirst($r['status']));
-            $notes = trim(($r['source'] === 'walkin' ? '現場報名 Walk-in' : '')
+            $notes = trim((($r['reg_type'] ?? '') === 'organisation' ? '團體 Org: ' . $r['org_name'] . ' · ' : '')
+                . ($r['source'] === 'walkin' ? '現場報名 Walk-in' : '')
                 . (!empty($r['recorded_by']) ? ' · ' . $r['recorded_by'] : '')
                 . ($r['checked_in_at'] ? ' · 報到 ' . date('d/m H:i', strtotime($r['checked_in_at'])) : ''), ' ·');
             $x->row($master, [

@@ -25,16 +25,18 @@ class Rsvp extends Model
      * @return string the generated reference code, e.g. RSVP-0001
      * @throws Exception if the save fails (the caller decides what to show)
      */
-    public function create(int $eventId, array $attendees, string $refPrefix = 'RSVP'): string
+    public function create(int $eventId, array $attendees, string $refPrefix = 'RSVP',
+                           string $regType = 'individual', ?string $orgName = null): string
     {
         $count = count($attendees);
+        $regType = $regType === 'organisation' ? 'organisation' : 'individual';
 
         try {
             $this->db->beginTransaction();
 
             $this->execute(
-                'INSERT INTO rsvp_groups (event_id, attendee_count, status) VALUES (?, ?, ?)',
-                [$eventId, $count, 'pending']
+                'INSERT INTO rsvp_groups (event_id, reg_type, org_name, attendee_count, status) VALUES (?, ?, ?, ?, ?)',
+                [$eventId, $regType, $regType === 'organisation' ? $orgName : null, $count, 'pending']
             );
             $groupId = (int) $this->db->lastInsertId();
             $refCode = $this->assignRefCode('rsvp_groups', $refPrefix, $groupId);
@@ -312,7 +314,7 @@ class Rsvp extends Model
     {
         return self::openIc($this->fetchAll(
             "SELECT a.name, a.ic_no, a.contact_no, a.checked_in_at,
-                    g.ref_code, g.status, g.source, g.attendee_count
+                    g.ref_code, g.status, g.source, g.attendee_count, g.org_name
              FROM rsvp_attendees a
              JOIN rsvp_groups g ON g.id = a.group_id
              WHERE g.event_id = ? AND g.status <> 'cancelled'
@@ -372,7 +374,7 @@ class Rsvp extends Model
     {
         [$where, $params] = $this->groupFilterSql($eventId, $filters);
         return $this->fetchAll(
-            'SELECT g.id, g.ref_code, g.attendee_count, g.status, g.source, g.recorded_by, g.created_at,
+            'SELECT g.id, g.ref_code, g.attendee_count, g.status, g.source, g.reg_type, g.org_name, g.recorded_by, g.created_at,
                     (SELECT name FROM rsvp_attendees WHERE group_id = g.id ORDER BY id LIMIT 1) AS lead_name,
                     (SELECT contact_no FROM rsvp_attendees WHERE group_id = g.id ORDER BY id LIMIT 1) AS lead_contact,
                     (SELECT COUNT(*) FROM rsvp_attendees WHERE group_id = g.id AND checked_in_at IS NOT NULL) AS arrived
@@ -402,13 +404,17 @@ class Rsvp extends Model
             // IC numbers are encrypted: found by their full number (keyed hash)
             // or by their last four digits, never by a LIKE on the column.
             $icNorm  = self::icNormal($q);
-            $where[] = '(g.ref_code LIKE ? OR EXISTS (SELECT 1 FROM rsvp_attendees a
+            $where[] = '(g.ref_code LIKE ? OR g.org_name LIKE ? OR EXISTS (SELECT 1 FROM rsvp_attendees a
                           WHERE a.group_id = g.id AND (a.name LIKE ? OR a.contact_no LIKE ? OR a.ic_hash = ? OR a.ic_last4 = ?)))';
-            array_push($params, $like, $like, $like, Crypto::blindIndex($icNorm), strlen($icNorm) === 4 ? $icNorm : '-');
+            array_push($params, $like, $like, $like, $like, Crypto::blindIndex($icNorm), strlen($icNorm) === 4 ? $icNorm : '-');
         }
         if (in_array($filters['status'] ?? '', ['pending', 'confirmed', 'cancelled'], true)) {
             $where[]  = 'g.status = ?';
             $params[] = $filters['status'];
+        }
+        if (in_array($filters['type'] ?? '', ['individual', 'organisation'], true)) {
+            $where[]  = 'g.reg_type = ?';
+            $params[] = $filters['type'];
         }
         if (in_array($filters['source'] ?? '', ['online', 'walkin'], true)) {
             $where[]  = 'g.source = ?';
@@ -426,6 +432,13 @@ class Rsvp extends Model
      * Anyone in the group whose id is NOT in the list is removed.
      * One transaction, so the group can never be left half-edited.
      */
+    /** Individual / organisation, and the organisation's name (null for individuals). */
+    public function setKind(int $groupId, string $regType, ?string $orgName): void
+    {
+        $this->execute('UPDATE rsvp_groups SET reg_type = ?, org_name = ? WHERE id = ?',
+            [$regType === 'organisation' ? 'organisation' : 'individual', $orgName, $groupId]);
+    }
+
     public function updateGroup(int $groupId, string $status, array $attendees): void
     {
         if (!in_array($status, ['pending', 'confirmed', 'cancelled'], true)) {
@@ -515,7 +528,7 @@ class Rsvp extends Model
     public function masterList(int $eventId): array
     {
         return self::openIc($this->fetchAll(
-            'SELECT g.id AS group_id, g.ref_code, g.created_at, g.attendee_count, g.status, g.source, g.recorded_by,
+            'SELECT g.id AS group_id, g.ref_code, g.created_at, g.attendee_count, g.status, g.source, g.reg_type, g.org_name, g.recorded_by,
                     a.id AS attendee_id, a.name, a.ic_no, a.contact_no, a.checked_in_at
              FROM rsvp_groups g JOIN rsvp_attendees a ON a.group_id = g.id
              WHERE g.event_id = ?

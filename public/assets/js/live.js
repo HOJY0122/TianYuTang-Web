@@ -30,7 +30,10 @@
 (function () {
   'use strict';
   var regions = [].slice.call(document.querySelectorAll('[data-live][id]'));
-  if (!regions.length || !window.fetch || !window.DOMParser) return;
+  // Staff pages always check (even with nothing live on them): a sign-in on
+  // another device must reach every open page ("one device per account").
+  var STAFF = document.documentElement.hasAttribute('data-staff');
+  if ((!regions.length && !STAFF) || !window.fetch || !window.DOMParser) return;
 
   var BASE = (document.documentElement.getAttribute('data-base') || '');
   var QUIET = document.documentElement.hasAttribute('data-live-quiet');
@@ -196,6 +199,7 @@
     fetch(url, { credentials: 'same-origin', cache: 'no-store' })
       .then(function (res) { return res.ok ? res.json() : Promise.reject(res.status); })
       .then(function (data) {
+        if (data.out) { location.reload(); return null; }
         var v = data.v || {}, changed = {}, any = false;
         if (known) {
           Object.keys(v).forEach(function (t) { if (v[t] !== known[t]) { changed[t] = true; any = true; } });

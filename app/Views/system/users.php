@@ -1,4 +1,24 @@
 <?php require BASE_PATH . '/app/Views/layouts/admin_header.php'; ?>
+<form class="panel device-panel" method="POST" action="<?= url('/system/users/single-device') ?>" id="liveDevice" data-live="settings">
+  <?= csrf_field() ?>
+  <div class="device-head">
+    <span class="device-icon<?= $singleDevice ? ' on' : '' ?>"><?= icon('smartphone', 'lg') ?></span>
+    <div>
+      <h2 style="margin:0">一個帳號只限一部裝置 <span class="en">One device per account</span></h2>
+      <p class="help" style="margin:4px 0 0">開啟後，同一帳號在裝置 B 登入，裝置 A 會在幾秒內自動登出；裝置 A 再登入，裝置 B 就會登出。
+        <span class="en">When on, signing in on device B signs device A out within seconds; signing in on A again signs B out.</span></p>
+    </div>
+  </div>
+  <div class="device-row">
+    <div class="seg-toggle" role="radiogroup" aria-label="一個帳號只限一部裝置 One device per account">
+      <label class="seg-on"><input type="radio" name="single_device" value="1"<?= $singleDevice ? ' checked' : '' ?>><span>✓ 開啟 On</span></label>
+      <label class="seg-off"><input type="radio" name="single_device" value="0"<?= $singleDevice ? '' : ' checked' ?>><span>✕ 關閉 Off</span></label>
+    </div>
+    <button class="primary" type="submit"><?= icon('save') ?> 儲存 <span class="en">Save</span></button>
+  </div>
+  <p class="help" style="margin:10px 0 0"><?= icon('info') ?> 活動當天如果幾部櫃台電腦共用同一個帳號，請保持關閉，或給每位委員自己的帳號。
+    <span class="en">If several counter devices share one account on the event day, keep this off — or give each helper their own account.</span></p>
+</form>
 <div class="panel" id="liveUsers" data-live="admin_users">
   <p class="help" style="margin-top:0">
     共 <?= count($users) ?> 個帳號：<?= (int) $adminCount ?> 位管理員、<?= (int) $systemCount ?> 位系統管理員。

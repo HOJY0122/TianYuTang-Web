@@ -67,7 +67,43 @@ class Setting extends Model
         'pdf_line2'         => null,         // default: footer address
         'pdf_line3'         => null,         // default: footer contact
         'pdf_show_logo'     => '1',
+        // One device per account (Site settings): a new sign-in signs the older device out
+        'single_device'     => '0',
+        // System → 表單與字體 Forms & fonts (see App\Core\FormRules)
+        'rsvp_types'        => 'individual', // individual | both | organisation
+        'rsvp_org_max'      => '0',          // most people in an organisation group; 0 = the event's limit
+        'rsvp_age_on'       => '0',
+        'rsvp_age_min'      => '66',
+        'rsvp_age_basis'    => 'year',       // year | event
+        'rsvp_age_who'      => 'all',        // all | any
+        'rsvp_age_other'    => 'allow',      // passports: allow | block
+        'donate_amounts'    => '50, 100, 200, 500',
+        'counter_amounts'   => '10, 20, 50, 100, 200, 500, 1000',
+        'body_font'         => 'noto_sans',  // see FormRules::BODY_FONTS
+        'body_size'         => '100',        // %
+        'home_albums'       => 'previous',   // previous | latest | recent
+        'home_album_photos' => '12',
     ];
+
+    /**
+     * Keys System → Forms & fonts may preview before saving. A system
+     * admin's unsaved values (kept in their own session) are laid over the
+     * real ones only on pages opened with ?draft=1 in that same signed-in
+     * browser — visitors never see them.
+     */
+    public const DRAFT_KEYS = [
+        'rsvp_types', 'rsvp_org_max', 'rsvp_age_on', 'rsvp_age_min', 'rsvp_age_basis', 'rsvp_age_who', 'rsvp_age_other',
+        'donate_amounts', 'body_font', 'body_size', 'heading_font', 'home_albums', 'home_album_photos',
+    ];
+
+    /** Is this request a system admin's live preview (see DRAFT_KEYS)? */
+    public static function isDraftPreview(): bool
+    {
+        return isset($_GET['draft'])
+            && ($_SESSION['admin_role'] ?? '') === 'system_admin'
+            && \App\Core\Session::isStaff()
+            && is_array($_SESSION['settings_draft'] ?? null);
+    }
 
     /**
      * Heading typefaces the system admin can choose from.
@@ -79,9 +115,11 @@ class Setting extends Model
      * character a font lacks falls back to LXGW WenKai TC.
      */
     public const HEADING_FONTS = [
-        'brush'       => ['毛筆（粗）Brush — bold, closest to the banner', 'Yuji Boku',      'Yuji+Boku'],
-        'brush_light' => ['毛筆（細）Brush — light',                       'Yuji Syuku',     'Yuji+Syuku'],
-        'kai'         => ['楷書 Kai — clean and easy to read',            'LXGW WenKai TC', 'LXGW+WenKai+TC:wght@400;700'],
+        'brush'       => ['毛筆（粗）Brush — bold, closest to the banner', 'Yuji Boku',      'Yuji+Boku', 400],
+        'brush_light' => ['毛筆（細）Brush — light',                       'Yuji Syuku',     'Yuji+Syuku', 400],
+        'kai'         => ['楷書 Kai — clean and easy to read',            'LXGW WenKai TC', 'LXGW+WenKai+TC:wght@400;700', 700],
+        'serif'       => ['宋體（粗）Song — bold and formal',             'Noto Serif TC',  'Noto+Serif+TC:wght@900', 900],
+        'sung'        => ['書卷宋體 Book Song — traditional',             'Chiron Sung HK', 'Chiron+Sung+HK:wght@800', 800],
     ];
 
     /** Footer colours: key => [label, background, text, accent (links, heading)]. */
@@ -96,12 +134,12 @@ class Setting extends Model
     /** Footer limits, shared by the settings page and the save check. */
     public const FOOTER_PAD = [8, 96], FOOTER_SIZE = [80, 140];
 
-    /** The chosen heading font: [CSS family, Google Fonts parameter]. */
+    /** The chosen heading font: [CSS family, Google Fonts parameter, weight]. */
     public function headingFont(): array
     {
         $key = $this->site()['heading_font'];
         $f   = self::HEADING_FONTS[$key] ?? self::HEADING_FONTS['brush'];
-        return [$f[1], $f[2]];
+        return [$f[1], $f[2], $f[3]];
     }
 
     /**
@@ -115,6 +153,11 @@ class Setting extends Model
         $out = [];
         foreach (self::DEFAULTS as $key => $default) {
             $out[$key] = array_key_exists($key, $all) ? $all[$key] : $default;
+        }
+        if (self::isDraftPreview()) {
+            foreach (array_intersect_key($_SESSION['settings_draft'], array_flip(self::DRAFT_KEYS)) as $key => $value) {
+                $out[$key] = is_string($value) ? $value : $out[$key];
+            }
         }
         return $out;
     }

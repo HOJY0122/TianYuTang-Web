@@ -175,7 +175,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
                    value="<?= h((string) $v('free_amount')) ?>" placeholder="0.00" aria-label="隨喜金額 Freewill amount (RM)">
           </div>
           <div class="cd-chips" aria-label="快速金額 Quick amounts">
-            <?php foreach ([10, 20, 50, 100, 200, 500, 1000] as $amt): ?><button type="button" data-amount="<?= $amt ?>"><?= number_format($amt) ?></button><?php endforeach; ?>
+            <?php foreach (App\Core\FormRules::amounts(null, 'counter_amounts') as $amt): ?><button type="button" data-amount="<?= $amt ?>"><?= number_format($amt) ?></button><?php endforeach; ?>
             <button type="button" data-amount="0" class="cd-clear">清除 Clear</button>
           </div>
           <div class="cd-sub" id="freeSub">—</div>

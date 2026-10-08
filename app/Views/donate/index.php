@@ -83,8 +83,8 @@ require BASE_PATH . '/app/Views/layouts/header.php';
           <input id="freeAmount" name="free_amount" type="number" inputmode="decimal" min="<?= h((string) $limits['free_min']) ?>" step="0.01"
                  placeholder="RM" value="<?= h($old['free_amount'] ?? '') ?>">
           <div class="quick-amounts">
-            <?php foreach ([50, 100, 200, 500] as $amount): if ($amount < $limits['free_min'] || $amount > $limits['free_max']) continue; ?>
-              <button type="button" data-amount="<?= $amount ?>">RM <?= $amount ?></button>
+            <?php foreach (App\Core\FormRules::amounts() as $amount): if ($amount < $limits['free_min'] || $amount > $limits['free_max']) continue; ?>
+              <button type="button" data-amount="<?= $amount ?>">RM <?= number_format($amount) ?></button>
             <?php endforeach; ?>
           </div>
           <div class="limit-note hidden" id="freeNote" role="status"></div>
@@ -97,7 +97,10 @@ require BASE_PATH . '/app/Views/layouts/header.php';
       <strong id="donationTotal">RM 0.00</strong>
     </div>
 
-    <button class="primary" type="submit"><?= icon('lotus') ?> <?= tb('donate.submit') ?></button>
+    <?php if (App\Models\Setting::isDraftPreview()): ?>
+      <p class="note"><?= icon('eye') ?> 預覽模式：不能提交。<span class="en">Preview only — this form cannot be sent.</span></p>
+    <?php endif; ?>
+    <button class="primary" type="submit"<?= App\Models\Setting::isDraftPreview() ? ' disabled' : '' ?>><?= icon('lotus') ?> <?= tb('donate.submit') ?></button>
     <p class="help" style="text-align:center"><?= h(t('donate.after') . ' ' . t('donate.after', 'en')) ?></p>
   </form>
   <?php endif; ?>

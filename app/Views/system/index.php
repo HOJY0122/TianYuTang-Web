@@ -57,17 +57,8 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
       <input id="site_name_en" name="site_name_en" maxlength="120" value="<?= h($settings['site_name_en']) ?>">
       <p class="help">顯示在中文名稱下方。Shown under the Chinese name.</p></div>
   </div>
-  <label>標題字體 <span class="en">Heading font</span></label>
-  <div class="font-choices">
-    <?php foreach (App\Models\Setting::HEADING_FONTS as $fKey => [$fLabel, $fFamily]): ?>
-      <label class="font-choice">
-        <input type="radio" name="heading_font" value="<?= h($fKey) ?>"<?= ($settings['heading_font'] ?? 'brush') === $fKey ? ' checked' : '' ?>>
-        <span class="font-sample" style="font-family:'<?= h($fFamily) ?>',serif"><?= h($settings['site_name']) ?> 千秋寶誕</span>
-        <small><?= h($fLabel) ?></small>
-      </label>
-    <?php endforeach; ?>
-  </div>
-  <p class="help">用於網站名稱與各段標題，內文維持清晰的黑體。Used for the site name and headings; body text stays in a clear sans-serif.</p>
+  <p class="note-box" style="margin-top:16px"><?= icon('type') ?> 標題與內文字體、文字大小已移到 <a href="<?= url('/system/forms') ?>"><strong>表單與字體 Forms &amp; fonts</strong></a>，可即時預覽。
+    <span class="en">Heading and body fonts and text size are now in Forms &amp; fonts, with a live preview.</span></p>
 
   <div class="label-row">
     <label for="site_tagline">頂部標語 <span class="en">Top bar text</span></label>
@@ -249,7 +240,7 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
     <div class="pw-field">
       <input id="google_api_key" name="google_api_key" type="password" autocomplete="off" spellcheck="false"
              placeholder="<?= App\Core\ReceiptReader::keySource('google')[0] === 'settings' ? '已儲存，留空保持不變 Saved — leave empty to keep it' : 'AIza…' ?>">
-      <button type="button" class="pw-eye" data-toggle-password="google_api_key" title="顯示 Show"></button>
+      <button type="button" class="pw-eye" data-toggle-password="google_api_key" title="顯示 Show"><?= icon('eye') ?></button>
     </div>
     <ol class="setup-steps">
       <li>在 <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud</a> 選好專案，到「API 和服務 → 程式庫」啟用 <strong>Cloud Vision API</strong>。

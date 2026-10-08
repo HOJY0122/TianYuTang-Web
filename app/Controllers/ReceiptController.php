@@ -26,7 +26,7 @@ class ReceiptController extends Controller
     /** GET /admin/receipts?q=&from=&to=&payment=&sort=&dir=&page= */
     public function index(): void
     {
-        $this->requireAdmin();
+        $this->requireReceipts();
         $f = $this->filters();
         $model = new Receipt();
         $sum   = $model->summary($f);
@@ -49,7 +49,7 @@ class ReceiptController extends Controller
     /** GET /admin/receipts/new — step 1: photo (or type it in) */
     public function create(): void
     {
-        $this->requireAdmin();
+        $this->requireReceipts();
         $this->view('admin/receipt_scan', [
             'pageTitle' => '新增收據 Add Receipt',
             'nav'       => 'receipts',
@@ -64,7 +64,7 @@ class ReceiptController extends Controller
      */
     public function scan(): void
     {
-        $this->requireAdmin();
+        $this->requireReceipts();
         if (empty($_POST) && empty($_FILES) && ($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
             $this->flash('error', '相片太大 Photo too large',
                 '相片超過伺服器限制（' . ini_get('post_max_size') . '）。The photo is over the server limit.');
@@ -109,7 +109,7 @@ class ReceiptController extends Controller
     /** GET /admin/receipts/review — step 2: check the draft against the photo */
     public function review(): void
     {
-        $this->requireAdmin();
+        $this->requireReceipts();
         $draft = $_SESSION['receipt_draft'] ?? null;
         if ($draft === null) {
             $this->redirect('/admin/receipts/new');
@@ -120,7 +120,7 @@ class ReceiptController extends Controller
     /** GET /admin/receipts/edit?id= */
     public function edit(): void
     {
-        $this->requireAdmin();
+        $this->requireReceipts();
         $row = (new Receipt())->find((int) ($_GET['id'] ?? 0));
         if ($row === null) {
             $this->flash('error', '找不到 Not found', '找不到這張收據。This receipt does not exist.');
@@ -148,7 +148,7 @@ class ReceiptController extends Controller
     /** POST /admin/receipts/save — create (from the draft) or update */
     public function save(): void
     {
-        $this->requireAdmin();
+        $this->requireReceipts();
         $this->requireCsrf();
         $model = new Receipt();
         $id    = (int) ($_POST['id'] ?? 0);
@@ -228,7 +228,7 @@ class ReceiptController extends Controller
     /** POST /admin/receipts/delete */
     public function delete(): void
     {
-        $this->requireAdmin();
+        $this->requireReceipts();
         $this->requireCsrf();
         $model = new Receipt();
         $row   = $model->find((int) ($_POST['id'] ?? 0));
@@ -245,7 +245,7 @@ class ReceiptController extends Controller
     /** POST /admin/receipts/cancel — leave the review without saving */
     public function cancel(): void
     {
-        $this->requireAdmin();
+        $this->requireReceipts();
         $this->requireCsrf();
         $this->discardDraftPhoto();
         unset($_SESSION['receipt_draft']);
@@ -260,7 +260,7 @@ class ReceiptController extends Controller
      */
     public function image(): void
     {
-        $this->requireAdmin();
+        $this->requireReceipts();
         $slip = !empty($_GET['slip']);
         $row  = empty($_GET['draft']) ? (new Receipt())->find((int) ($_GET['id'] ?? 0)) : null;
         $path = !empty($_GET['draft'])
@@ -287,7 +287,7 @@ class ReceiptController extends Controller
     /** GET /admin/receipts/excel — the filtered list as a spreadsheet */
     public function excel(): void
     {
-        $this->requireAdmin();
+        $this->requireReceipts();
         $f    = $this->filters();
         $rows = (new Receipt())->search($f, 100000);
         $cats = ReceiptReader::CATEGORIES;
@@ -413,5 +413,26 @@ class ReceiptController extends Controller
         if ($old) {
             (new ImageUploader('receipts', true))->delete($old);
         }
+    }
+
+    /**
+     * Signed in, and the Receipts feature switched on in Site settings —
+     * or a system admin, who keeps access while it is off. Checked on
+     * every receipt page and action, so a typed or bookmarked address
+     * does not get round a hidden menu item.
+     */
+    private function requireReceipts(): void
+    {
+        $this->requireAdmin();
+        if (($this->siteSetting('receipts_enabled') ?? '1') !== '1' && !$this->isSystemAdmin()) {
+            $this->flash('error', '收據功能已停用 Receipts are switched off',
+                "收據紀錄目前由系統管理員停用。\nThe Receipts feature is currently switched off by the system admin.");
+            $this->redirect('/admin/dashboard');
+        }
+    }
+
+    private function siteSetting(string $key): ?string
+    {
+        return (new \App\Models\Setting())->site()[$key] ?? null;
     }
 }

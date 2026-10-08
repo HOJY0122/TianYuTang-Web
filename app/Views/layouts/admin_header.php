@@ -36,6 +36,15 @@ $menu = [
         ['receipts', '🧾', '收據紀錄', 'Receipts',       '/admin/receipts'],
     ],
 ];
+// Receipts switched off in Site settings: gone for admins; system admins
+// keep it, marked off (ReceiptController enforces the same rule).
+if (($site['receipts_enabled'] ?? '1') !== '1') {
+    if ($isSystem) {
+        $menu['財務 Finance'][0][3] = 'Receipts · 停用 Off';
+    } else {
+        unset($menu['財務 Finance']);
+    }
+}
 if ($isSystem) {
     $menu['系統管理 System'] = [
         ['system', '⚙️', '網站設定', 'Site settings', '/system'],

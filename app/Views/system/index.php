@@ -174,7 +174,13 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
   <?php $line('pdf_line3', '第三行', 'Line 3', 255); ?>
   </section>
   <section class="panel form-sec" id="ai">
-  <h3>⑤ AI 讀取收據 <span class="en">AI receipt reading</span></h3>
+  <h3>⑤ 收據紀錄與 AI 讀取 <span class="en">Receipts &amp; AI reading</span></h3>
+  <div class="label-row" style="margin-top:.4rem">
+    <label>🧾 收據紀錄功能 <span class="en">Receipts feature</span></label>
+    <?php $toggle('receipts_enabled', ($settings['receipts_enabled'] ?? '1') === '1', '收據紀錄功能 Receipts feature'); ?>
+  </div>
+  <p class="help" style="margin-top:4px">隱藏時，管理員看不到也打不開「收據紀錄」；系統管理員仍可進入查看。<strong>資料不會刪除</strong>，再次顯示即恢復原狀。
+    <span class="en">When hidden, admins can neither see nor open Receipts; system admins still can. <strong>Nothing is deleted</strong> — show it again and everything is back.</span></p>
   <?php
     $aiProvider = App\Core\ReceiptReader::provider();
     $aiFromText = ['config' => 'config/config.php', 'env' => '伺服器環境變數 server environment', 'settings' => '本頁 this page'];

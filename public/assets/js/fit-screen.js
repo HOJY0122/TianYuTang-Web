@@ -121,7 +121,7 @@
       document.body.appendChild(btn);
     }
     btn.hidden = false;
-    btn.textContent = optedOut() ? '📱 手機版 Phone view' : '🖥 電腦版 Desktop view';
+    btn.textContent = optedOut() ? '手機版 Phone view' : '電腦版 Desktop view';
   }
 
   apply();

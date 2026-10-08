@@ -34,8 +34,8 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
         <?= !empty($activeEvent['is_test']) ? ' <span class="badge cancelled">測試 Test</span>' : '' ?></p>
     </div>
     <div class="eventbar-actions">
-      <a class="mini-btn btn-lg" href="<?= url('/admin/event/edit') ?>">📅 活動資料 Event details</a>
-      <a class="mini-btn ghost btn-lg" href="<?= url('/') ?>" target="_blank">👀 查看網站 View site</a>
+      <a class="mini-btn btn-lg" href="<?= url('/admin/event/edit') ?>"><?= icon('calendar') ?> 活動資料 Event details</a>
+      <a class="mini-btn ghost btn-lg" href="<?= url('/') ?>" target="_blank"><?= icon('eye') ?> 查看網站 View site</a>
     </div>
   </div>
 <?php endif; ?>
@@ -97,7 +97,7 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
            data-max-width="<?= ['logo' => 600, 'favicon' => 256][$input] ?>">
     <p class="help"><?= h($help) ?></p>
   <?php endforeach; ?>
-  <div class="flash info" style="margin:14px 0 0">🖼️ 首頁橫幅（可放多張輪播、調整位置和高度）在「<a href="<?= url('/system/banners') ?>">首頁橫幅</a>」頁。
+  <div class="flash info" style="margin:14px 0 0"><?= icon('image') ?> 首頁橫幅（可放多張輪播、調整位置和高度）在「<a href="<?= url('/system/banners') ?>">首頁橫幅</a>」頁。
     <span class="en">The home page banner — several pictures, position and height — has its own page: <a href="<?= url('/system/banners') ?>">Home banner</a>.</span></div>
   </section>
   <section class="panel form-sec">
@@ -122,14 +122,14 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
   <textarea id="footer_note_en" name="footer_note_en" rows="2" maxlength="500"><?= h($settings['footer_note_en']) ?></textarea>
 
   <?php use App\Models\Setting as FS; ?>
-  <h4 class="sub-head">🎨 頁尾外觀 <span class="en">Footer look</span></h4>
+  <h4 class="sub-head"><?= icon('palette') ?> 頁尾外觀 <span class="en">Footer look</span></h4>
   <div class="footer-look">
     <div class="fl-controls">
       <label for="footer_pad">↕ 高度（上下空間）<span class="en">Height (space above and below)</span></label>
       <div class="fl-range"><input type="range" id="footer_pad" name="footer_pad" min="<?= FS::FOOTER_PAD[0] ?>" max="<?= FS::FOOTER_PAD[1] ?>" step="2" value="<?= (int) $settings['footer_pad'] ?>">
         <output for="footer_pad"><?= (int) $settings['footer_pad'] ?> px</output></div>
 
-      <label for="footer_size">🔠 字體大小 <span class="en">Text size</span></label>
+      <label for="footer_size"><?= icon('type') ?> 字體大小 <span class="en">Text size</span></label>
       <div class="fl-range"><input type="range" id="footer_size" name="footer_size" min="<?= FS::FOOTER_SIZE[0] ?>" max="<?= FS::FOOTER_SIZE[1] ?>" step="5" value="<?= (int) $settings['footer_size'] ?>">
         <output for="footer_size"><?= (int) $settings['footer_size'] ?>%</output></div>
 
@@ -139,7 +139,7 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
         <label class="seg-on"><input type="radio" name="footer_align" value="left"<?= $settings['footer_align'] === 'left' ? ' checked' : '' ?>><span>靠左 Left</span></label>
       </div>
 
-      <label>🎨 顏色 <span class="en">Colours</span></label>
+      <label><?= icon('palette') ?> 顏色 <span class="en">Colours</span></label>
       <div class="fl-themes">
         <?php foreach (FS::FOOTER_THEMES as $tKey => [$tLabel, $tBg, $tFg, $tAccent]): ?>
           <label class="fl-theme" style="--bg:<?= $tBg ?>;--fg:<?= $tFg ?>">
@@ -151,7 +151,7 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
       <button type="button" class="mini-btn ghost" id="footerReset">↺ 預設外觀 <span class="en">Default look</span></button>
     </div>
     <div class="fl-preview">
-      <div class="fl-preview-bar">👀 即時預覽 <span class="en">Live preview — the bottom of the home page</span></div>
+      <div class="fl-preview-bar"><?= icon('eye') ?> 即時預覽 <span class="en">Live preview — the bottom of the home page</span></div>
       <iframe id="footerFrame" src="<?= url('/') ?>" title="頁尾預覽 Footer preview" loading="lazy" tabindex="-1"></iframe>
       <p class="help">外觀即時改變；文字按「儲存」後更新。<span class="en">The look changes as you go; text changes show after Save.</span></p>
     </div>
@@ -176,7 +176,7 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
   <section class="panel form-sec" id="ai">
   <h3>⑤ 收據紀錄與 AI 讀取 <span class="en">Receipts &amp; AI reading</span></h3>
   <div class="label-row" style="margin-top:.4rem">
-    <label>🧾 收據紀錄功能 <span class="en">Receipts feature</span></label>
+    <label><?= icon('receipt') ?> 收據紀錄功能 <span class="en">Receipts feature</span></label>
     <?php $toggle('receipts_enabled', ($settings['receipts_enabled'] ?? '1') === '1', '收據紀錄功能 Receipts feature'); ?>
   </div>
   <p class="help" style="margin-top:4px">隱藏時，管理員看不到也打不開「收據紀錄」；系統管理員仍可進入查看。<strong>資料不會刪除</strong>，再次顯示即恢復原狀。
@@ -206,7 +206,7 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
     <?php endforeach; ?>
   </div>
   <?php foreach (App\Core\ReceiptReader::setupHints() as $hint): ?>
-    <p class="flash error" style="white-space:pre-line;margin:10px 0 0">⚠️ <?= h($hint) ?></p>
+    <p class="flash error" style="white-space:pre-line;margin:10px 0 0"><?= icon('alert') ?> <?= h($hint) ?></p>
   <?php endforeach; ?>
 
   <div class="ai-panel" data-ai-panel="anthropic">
@@ -214,7 +214,7 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
     <div class="pw-field">
       <input id="anthropic_api_key" name="anthropic_api_key" type="password" autocomplete="off" spellcheck="false"
              placeholder="<?= App\Core\ReceiptReader::keySource('anthropic')[0] === 'settings' ? '已儲存，留空保持不變 Saved — leave empty to keep it' : 'sk-ant-api03-…' ?>">
-      <button type="button" class="pw-eye" data-toggle-password="anthropic_api_key" title="顯示 Show">👁</button>
+      <button type="button" class="pw-eye" data-toggle-password="anthropic_api_key" title="顯示 Show"><?= icon('eye') ?></button>
     </div>
     <p class="help">到 <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a> 建立金鑰（sk-ant- 開頭）並儲值。模型 Model：<code><?= h(App\Core\ReceiptReader::model('anthropic')) ?></code>
       <span class="en">Create a key at console.anthropic.com (starts with sk-ant-) and add credit.</span></p>
@@ -228,7 +228,7 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
     <div class="pw-field">
       <input id="nvidia_api_key" name="nvidia_api_key" type="password" autocomplete="off" spellcheck="false"
              placeholder="<?= App\Core\ReceiptReader::keySource('nvidia')[0] === 'settings' ? '已儲存，留空保持不變 Saved — leave empty to keep it' : 'nvapi-…' ?>">
-      <button type="button" class="pw-eye" data-toggle-password="nvidia_api_key" title="顯示 Show">👁</button>
+      <button type="button" class="pw-eye" data-toggle-password="nvidia_api_key" title="顯示 Show"><?= icon('eye') ?></button>
     </div>
     <p class="help">到 <a href="https://build.nvidia.com/" target="_blank" rel="noopener">build.nvidia.com</a> 登入，在任何模型頁按「Get API Key」取得金鑰（nvapi- 開頭）。
       <span class="en">Sign in at build.nvidia.com and press “Get API Key” on any model page (starts with nvapi-).</span></p>
@@ -249,7 +249,7 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
     <div class="pw-field">
       <input id="google_api_key" name="google_api_key" type="password" autocomplete="off" spellcheck="false"
              placeholder="<?= App\Core\ReceiptReader::keySource('google')[0] === 'settings' ? '已儲存，留空保持不變 Saved — leave empty to keep it' : 'AIza…' ?>">
-      <button type="button" class="pw-eye" data-toggle-password="google_api_key" title="顯示 Show">👁</button>
+      <button type="button" class="pw-eye" data-toggle-password="google_api_key" title="顯示 Show"></button>
     </div>
     <ol class="setup-steps">
       <li>在 <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud</a> 選好專案，到「API 和服務 → 程式庫」啟用 <strong>Cloud Vision API</strong>。
@@ -266,15 +266,15 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
   </div>
 
   <div class="ai-actions">
-    <button type="submit" class="mini-btn btn-lg" formaction="<?= url('/system/ai-test') ?>" formnovalidate>🔌 測試連線 <span class="en">Test connection</span></button>
+    <button type="submit" class="mini-btn btn-lg" formaction="<?= url('/system/ai-test') ?>" formnovalidate>測試連線 <span class="en">Test connection</span></button>
     <span class="help">測試所選的服務：只送出一個極小的要求，不讀取收據。Tests the service chosen above with one tiny request — no receipt is read.</span>
   </div>
   </section>
   </div>
 
   <div class="form-actions sticky-actions wide-actions">
-    <button class="primary" type="submit">💾 儲存設定 Save settings</button>
-    <a class="mini-btn ghost" href="<?= url('/') ?>" target="_blank">👀 查看網站 View site</a>
+    <button class="primary" type="submit"><?= icon('save') ?> 儲存設定 <span class="en">Save settings</span></button>
+    <a class="mini-btn ghost" href="<?= url('/') ?>" target="_blank"><?= icon('external') ?> 查看網站 <span class="en">View site</span></a>
   </div>
 </form>
 <script>

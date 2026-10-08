@@ -37,7 +37,7 @@
   });
 })();
 
-// Any password box with a 👁 button next to it can be shown / hidden.
+// Any password box with an eye button next to it can be shown / hidden.
 // One listener for the whole page, so rows added by a realtime update work too.
 document.addEventListener('click', function (e) {
   var btn = e.target.closest('[data-toggle-password]');
@@ -47,7 +47,8 @@ document.addEventListener('click', function (e) {
     var show = input.type === 'password';
     input.type = show ? 'text' : 'password';
     btn.setAttribute('aria-pressed', show ? 'true' : 'false');
-    btn.textContent = show ? '🙈' : '👁';
+    var u = btn.querySelector('use');
+    if (u) u.setAttribute('href', u.getAttribute('href').replace(/#.*$/, show ? '#eye-off' : '#eye'));
     btn.title = show ? '隱藏密碼 Hide password' : '顯示密碼 Show password';
   })();
 });

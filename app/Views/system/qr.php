@@ -9,7 +9,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
 
     <!-- ---------- Controls ---------- -->
     <div class="panel form-panel qr-controls">
-      <h2 style="margin-top:0">⚙️ 設定 <span class="en">Settings</span></h2>
+      <h2 style="margin-top:0"><?= icon('settings') ?> 設定 <span class="en">Settings</span></h2>
 
       <label for="qrText">內容｜Content *</label>
       <textarea id="qrText" rows="3" oninput="render()"><?= h($siteUrl) ?></textarea>
@@ -81,14 +81,14 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
       </div>
 
       <div class="form-actions">
-        <button class="primary" type="button" onclick="download()">⬇️ 下載 PNG</button>
-        <button class="mini-btn ghost" type="button" onclick="window.print()">🖨️ 列印</button>
+        <button class="primary" type="button" onclick="download()"><?= icon('download') ?> 下載 PNG</button>
+        <button class="mini-btn ghost" type="button" onclick="window.print()"><?= icon('printer') ?> 列印</button>
       </div>
     </div>
 
     <!-- ---------- Preview ---------- -->
     <div class="panel qr-preview">
-      <h2 style="margin-top:0">👀 預覽 <span class="en">Preview</span></h2>
+      <h2 style="margin-top:0"><?= icon('eye') ?> 預覽 <span class="en">Preview</span></h2>
       <div class="qr-stage">
         <canvas id="qrCanvas"></canvas>
       </div>
@@ -317,7 +317,7 @@ function render(targetSize) {
   const risky = (style === 'dots' || style === 'square_gradient') && (ecl === 'L' || ecl === 'M');
   warn.classList.toggle('hidden', !risky);
   if (risky) {
-    warn.textContent = '⚠️ 圓點樣式搭配較低容錯等級，在列印或光線不佳時可能較難掃描。建議改用 Q 或 H。';
+    warn.textContent = '圓點樣式搭配較低容錯等級，在列印或光線不佳時可能較難掃描。建議改用 Q 或 H。';
   }
 
   return canvas;

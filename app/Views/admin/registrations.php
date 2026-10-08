@@ -30,13 +30,13 @@ $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confi
         <option value="walkin"<?= $filters['source'] === 'walkin' ? ' selected' : '' ?>>現場 Walk-in</option>
       </select>
     </label>
-    <button class="mini-btn btn-lg" type="submit">🔍 搜尋 Search</button>
+    <button class="mini-btn btn-lg" type="submit"><?= icon('search') ?> 搜尋 Search</button>
     <?php if ($filters['q'] !== '' || $filters['status'] !== '' || $filters['source'] !== ''): ?>
       <a class="mini-btn ghost btn-lg" href="<?= url('/admin/registrations') ?>?event=<?= $eid ?>">清除 Clear</a>
     <?php endif; ?>
     <span class="spacer"></span>
-    <a class="mini-btn ghost btn-lg" href="<?= url('/admin/export/attendees-excel') ?>?event=<?= $eid ?>">📊 Excel</a>
-    <a class="mini-btn ghost btn-lg" href="<?= url('/admin/export/attendees') ?>?event=<?= $eid ?>">⬇️ CSV</a>
+    <a class="mini-btn ghost btn-lg" href="<?= url('/admin/export/attendees-excel') ?>?event=<?= $eid ?>"><?= icon('chart') ?> Excel</a>
+    <a class="mini-btn ghost btn-lg" href="<?= url('/admin/export/attendees') ?>?event=<?= $eid ?>"><?= icon('download') ?> CSV</a>
     <a class="mini-btn ghost btn-lg" href="<?= url('/admin/walkin') ?>?event=<?= $eid ?>">＋ 現場報名 Walk-in</a>
   </form>
   <div id="liveList" data-live="rsvp_groups rsvp_attendees events">
@@ -64,7 +64,7 @@ $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confi
         <td data-label="報到 Arrived"><?= (int) $g['arrived'] ?> / <?= (int) $g['attendee_count'] ?></td>
         <td data-label="操作 Actions">
           <div class="actions-cell">
-            <a class="mini-btn" href="<?= url('/admin/registrations/edit') ?>?id=<?= (int) $g['id'] ?>">✏️ 編輯 Edit</a>
+            <a class="mini-btn" href="<?= url('/admin/registrations/edit') ?>?id=<?= (int) $g['id'] ?>"><?= icon('pencil') ?> 編輯 Edit</a>
             <?php if ($g['status'] !== 'confirmed'): ?>
               <form method="POST" action="<?= url('/admin/registrations/status') ?>" style="margin:0">
                 <?= csrf_field() ?><input type="hidden" name="group_id" value="<?= (int) $g['id'] ?>">

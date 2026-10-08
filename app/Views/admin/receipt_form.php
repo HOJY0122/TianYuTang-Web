@@ -29,11 +29,11 @@ $imgUrl  = $isNew
 $aiNotes = $isNew ? ($draft['ai_notes'] ?? null) : ($row['ai_notes'] ?? null);
 ?>
 <?php if ($isNew && ($draft['source'] ?? '') === 'ai'): ?>
-  <div class="flash info">🤖 <strong>已自動讀取並填好草稿，請對照相片核對後再儲存。</strong> A draft has been filled in automatically — please check it against the photo, then save.
-    <?php if ($unsure): ?><br>🟨 黃色欄位最需要再看一眼。Yellow fields need a second look most.<?php endif; ?></div>
+  <div class="flash info"><?= icon('bot') ?> <strong>已自動讀取並填好草稿，請對照相片核對後再儲存。</strong> A draft has been filled in automatically — please check it against the photo, then save.
+    <?php if ($unsure): ?><br><?= icon('marker') ?> 黃色欄位最需要再看一眼。Yellow fields need a second look most.<?php endif; ?></div>
 <?php endif; ?>
 <?php if ($duplicate): ?>
-  <div class="flash error">⚠️ 已有另一張收據使用 No. <?= h($duplicate['receipt_no']) ?>（<?= h($duplicate['name'] ?? '—') ?>，<?= rm((float) $duplicate['total']) ?>）。
+  <div class="flash error"><?= icon('alert') ?> 已有另一張收據使用 No. <?= h($duplicate['receipt_no']) ?>（<?= h($duplicate['name'] ?? '—') ?>，<?= rm((float) $duplicate['total']) ?>）。
     <a href="<?= url('/admin/receipts/edit') ?>?id=<?= (int) $duplicate['id'] ?>" target="_blank">查看 View</a>
     <br>Another receipt already has this number — check it is not the same receipt twice.</div>
 <?php endif; ?>
@@ -49,10 +49,10 @@ $aiNotes = $isNew ? ($draft['ai_notes'] ?? null) : ($row['ai_notes'] ?? null);
         <a class="mini-btn ghost" href="<?= h($imgUrl) ?>" target="_blank">↗ 原圖 Full size</a>
       </div>
       <div class="photo-view" id="photoView"><img src="<?= h($imgUrl) ?>" alt="收據相片 Receipt photo" id="photoImg"></div>
-      <?php if ($aiNotes): ?><figcaption class="help">🤖 <?= h($aiNotes) ?></figcaption><?php endif; ?>
+      <?php if ($aiNotes): ?><figcaption class="help"><?= icon('bot') ?> <?= h($aiNotes) ?></figcaption><?php endif; ?>
       <?php if ($isNew && !empty($draft['ocr_text'])): ?>
         <details class="ocr-text" open>
-          <summary>🔤 掃描到的文字 <span class="en">Text found in the photo</span></summary>
+          <summary><?= icon('type') ?> 掃描到的文字 <span class="en">Text found in the photo</span></summary>
           <pre><?= h($draft['ocr_text']) ?></pre>
           <p class="help">可以從這裡複製貼上到右邊的欄位。You can copy from here into the fields.</p>
         </details>
@@ -94,7 +94,7 @@ $aiNotes = $isNew ? ($draft['ai_notes'] ?? null) : ($row['ai_notes'] ?? null);
     <div class="form-grid">
       <fieldset class="pay-choice<?= $flag('payment') ?>">
         <legend>付款方式 <span class="en">Paid by</span></legend>
-        <?php foreach (['cash' => '💵 現金 Cash', 'bank' => '🏦 轉帳 Bank-In', '' => '— 未註明 Not marked'] as $pv => $pl): ?>
+        <?php foreach (['cash' => '現金 Cash', 'bank' => '轉帳 Bank-In', '' => '— 未註明 Not marked'] as $pv => $pl): ?>
           <label><input type="radio" name="payment" value="<?= $pv ?>"<?= (string) ($v['payment'] ?? '') === $pv ? ' checked' : '' ?>> <?= $pl ?></label>
         <?php endforeach; ?>
       </fieldset>
@@ -111,7 +111,7 @@ $aiNotes = $isNew ? ($draft['ai_notes'] ?? null) : ($row['ai_notes'] ?? null);
       $isBank   = (string) ($v['payment'] ?? '') === 'bank';
     ?>
     <div class="bank-slip" id="bankSlip"<?= $isBank || $slipUrl ? '' : ' hidden' ?>>
-      <div class="bank-slip-head">📎 轉帳單據 <span class="en">Bank-in slip</span>
+      <div class="bank-slip-head"><?= icon('paperclip') ?> 轉帳單據 <span class="en">Bank-in slip</span>
         <span class="help">— 銀行的轉帳收據相片或截圖 <span class="en">a photo or screenshot of the bank's transaction receipt</span></span></div>
       <?php if ($slipUrl): ?>
         <div class="bank-slip-current">
@@ -135,7 +135,7 @@ $aiNotes = $isNew ? ($draft['ai_notes'] ?? null) : ($row['ai_notes'] ?? null);
 
     <?php if (!$isNew): ?>
       <p class="help" style="margin-top:14px">
-        <?= $row['source'] === 'ai' ? '🤖 由 AI 讀取 Read by AI' : '✍️ 手動輸入 Typed in' ?> ·
+        <?= $row['source'] === 'ai' ? '由 AI 讀取 Read by AI' : '手動輸入 Typed in' ?> ·
         加入 Added <?= h(date('d/m/Y H:i', strtotime($row['created_at']))) ?> <?= h($row['created_by'] ?? '') ?>
         <?php if ($row['updated_at']): ?> · 修改 Edited <?= h(date('d/m/Y H:i', strtotime($row['updated_at']))) ?> <?= h($row['updated_by'] ?? '') ?><?php endif; ?>
       </p>
@@ -144,13 +144,13 @@ $aiNotes = $isNew ? ($draft['ai_notes'] ?? null) : ($row['ai_notes'] ?? null);
     <?php endif; ?>
 
     <div class="form-actions">
-      <button class="primary" type="submit">💾 儲存 <span class="en">Save</span></button>
+      <button class="primary" type="submit"><?= icon('save') ?> 儲存 <span class="en">Save</span></button>
       <?php if ($isNew): ?>
-        <button class="mini-btn ghost btn-lg" type="submit" name="next" value="1">💾 儲存並掃描下一張 <span class="en">Save &amp; scan next</span></button>
-        <button class="mini-btn ghost btn-lg" type="submit" form="cancelForm">✖ 取消 Cancel</button>
+        <button class="mini-btn ghost btn-lg" type="submit" name="next" value="1"><?= icon('save') ?> 儲存並掃描下一張 <span class="en">Save &amp; scan next</span></button>
+        <button class="mini-btn ghost btn-lg" type="submit" form="cancelForm"><?= icon('x') ?> 取消 Cancel</button>
       <?php else: ?>
         <a class="mini-btn ghost btn-lg" href="<?= url('/admin/receipts') ?>">← 返回列表 Back to list</a>
-        <button class="mini-btn danger btn-lg" type="submit" form="deleteForm">🗑 刪除 Delete</button>
+        <button class="mini-btn danger btn-lg" type="submit" form="deleteForm"><?= icon('trash') ?> 刪除 Delete</button>
       <?php endif; ?>
     </div>
   </form>
@@ -177,7 +177,7 @@ $aiNotes = $isNew ? ($draft['ai_notes'] ?? null) : ($row['ai_notes'] ?? null);
     if (!sum) { hint.textContent = ''; hint.className = 'help'; return; }
     if (!t) { hint.textContent = '留空會自動用各項合計 ' + rm(sum) + '。Left blank, the total becomes ' + rm(sum) + '.'; hint.className = 'help'; return; }
     var ok = Math.abs(sum - t) < 0.01;
-    hint.textContent = ok ? '✓ 各項合計相符 Boxes add up' : '⚠️ 各項合計 ' + rm(sum) + ' ≠ 總數。Boxes add up to ' + rm(sum) + '.';
+    hint.textContent = ok ? '✓ 各項合計相符 Boxes add up' : '各項合計 ' + rm(sum) + ' ≠ 總數。Boxes add up to ' + rm(sum) + '.';
     hint.className = ok ? 'help ok-text' : 'help warn-text';
   }
   // Bank-In: show the slip upload box.

@@ -20,7 +20,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
 
   <?php if (!$window['open']): ?>
     <div class="card closed-card">
-      <div class="closed-icon"><?= $window['reason'] === 'not_yet' ? '🕒' : '🔒' ?></div>
+      <div class="closed-icon"><?= icon($window['reason'] === 'not_yet' ? 'clock' : 'lock', 'xl') ?></div>
       <h3><?= tb($window['reason'] === 'not_yet' ? 'donate.not_yet' : 'donate.closed') ?></h3>
       <p><?= h(App\Models\Event::windowMessage($window, 'donation')) ?></p>
       <p class="help"><?= h(t('donate.counter') . ' ' . t('donate.counter', 'en')) ?></p>
@@ -33,7 +33,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     <?= csrf_field() ?>
 
     <?php if (!empty($window['closes_at'])): ?>
-      <div class="note">⏳ 線上布施將於 <strong><?= h(App\Models\Event::formatDateTime($window['closes_at'])) ?></strong> 截止。
+      <div class="note"><?= icon('hourglass') ?> 線上布施將於 <strong><?= h(App\Models\Event::formatDateTime($window['closes_at'])) ?></strong> 截止。
         <span class="en">Online donation closes on <?= h(date('j M Y, g:i A', strtotime($window['closes_at']))) ?>.</span></div>
     <?php endif; ?>
     <?php if (!empty($event['donation_note'])): ?>
@@ -58,7 +58,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     <div class="choice">
       <input type="checkbox" id="wantSeats" name="want_seats" value="1"<?= $wantSeats ? ' checked' : '' ?>>
       <div class="choice-body">
-        <label class="choice-title" for="wantSeats"><strong><?= h(t('donate.seats') . ' ' . t('donate.seats', 'en')) ?></strong>
+        <label class="choice-title" for="wantSeats"><strong><?= icon('chair') ?> <?= h(t('donate.seats') . ' ' . t('donate.seats', 'en')) ?></strong>
           <span class="help">每席 RM <?= number_format($seatPrice, 2) ?>　RM <?= number_format($seatPrice, 2) ?> per seat</span></label>
         <div class="detail" data-for="wantSeats">
           <div class="stepper">
@@ -76,7 +76,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     <div class="choice">
       <input type="checkbox" id="wantFree" name="want_free" value="1"<?= $wantFree ? ' checked' : '' ?>>
       <div class="choice-body">
-        <label class="choice-title" for="wantFree"><strong><?= h(t('donate.free') . ' ' . t('donate.free', 'en')) ?></strong>
+        <label class="choice-title" for="wantFree"><strong><?= icon('lotus') ?> <?= h(t('donate.free') . ' ' . t('donate.free', 'en')) ?></strong>
           <span class="help"><?= h(t('donate.free_hint') . ' ' . t('donate.free_hint', 'en')) ?></span></label>
         <div class="detail" data-for="wantFree">
           <label for="freeAmount" class="sr-only">金額 Amount (RM)</label>
@@ -97,7 +97,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
       <strong id="donationTotal">RM 0.00</strong>
     </div>
 
-    <button class="primary" type="submit"><?= tb('donate.submit') ?></button>
+    <button class="primary" type="submit"><?= icon('lotus') ?> <?= tb('donate.submit') ?></button>
     <p class="help" style="text-align:center"><?= h(t('donate.after') . ' ' . t('donate.after', 'en')) ?></p>
   </form>
   <?php endif; ?>
@@ -148,7 +148,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     var problems = 0, s = '', f = '';
     if (seats && seats < LIM.seats_min) { s = '功德席最少 ' + LIM.seats_min + ' 席。\nThe minimum is ' + LIM.seats_min + ' seats.'; problems++; }
     else if (seats > LIM.seats_max) {
-      s = '🙏 感恩您的大力護持！線上每次最多 ' + LIM.seats_max + ' 席。請先提交 ' + LIM.seats_max + ' 席，再提交一次餘下的席數，或於活動當日親臨櫃台辦理。'
+      s = '感恩您的大力護持！線上每次最多 ' + LIM.seats_max + ' 席。請先提交 ' + LIM.seats_max + ' 席，再提交一次餘下的席數，或於活動當日親臨櫃台辦理。'
         + '\nThank you for your generous support! Online, each submission is up to ' + LIM.seats_max + ' seats — please submit again for the rest, or visit our counter on the event day.';
       problems++;
     } else if (seats && seats === LIM.seats_max && LIM.seats_max < 200) {
@@ -156,7 +156,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     }
     if (free && free < LIM.free_min) { f = '隨喜金額最少 ' + money(LIM.free_min) + '。\nThe minimum freewill amount is ' + money(LIM.free_min) + '.'; problems++; }
     else if (free > LIM.free_max) {
-      f = '🙏 感恩您的大力護持！線上每次隨喜最多 ' + money(LIM.free_max) + '。請先提交此金額，再提交一次餘額，或於活動當日親臨櫃台辦理。'
+      f = '感恩您的大力護持！線上每次隨喜最多 ' + money(LIM.free_max) + '。請先提交此金額，再提交一次餘額，或於活動當日親臨櫃台辦理。'
         + '\nThank you for your generous support! Online, each freewill gift is up to ' + money(LIM.free_max) + ' — please submit again for the rest, or visit our counter on the event day.';
       problems++;
     }

@@ -78,9 +78,6 @@ padding:32px;max-width:420px;width:100%;box-shadow:0 14px 35px rgba(67,39,18,.12
 .login-card label .en{font-size:12px}
 .login-card input{width:100%;min-height:50px;padding:12px 14px;border:2px solid #d8bf79;border-radius:10px;background:#fffdf6;outline:none;font-size:16px}
 .login-card input:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(159,33,27,.1)}
-.login-card button[type=submit]{width:100%;border:0;border-radius:10px;min-height:52px;padding:12px;background:var(--red);
-color:#fff8df;font-weight:800;cursor:pointer;margin-top:20px;font-size:16px}
-.login-card button[type=submit]:hover{background:var(--deep-red)}
 .error{background:#fbdede;border-left:4px solid #c0392b;color:#7a2020;padding:10px 13px;border-radius:8px;font-size:14px;margin-top:16px}
 .error .attempts{display:block;margin-top:4px;font-weight:700}
 .back{display:block;text-align:center;margin-top:18px;color:var(--muted);font-size:13px}
@@ -138,10 +135,6 @@ border-radius:10px;background:#fffdf6;outline:none;font:inherit}
 .form-panel .help{font-size:12.5px;color:var(--muted);margin:6px 0 0;line-height:1.6}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .form-actions{display:flex;align-items:center;gap:12px;margin-top:26px;padding-top:20px;border-top:1px solid #eadcb5}
-.form-actions .primary{width:auto;margin:0;padding:14px 28px;border:0;border-radius:10px;
-background:var(--red);color:#fff8df;font-weight:800;cursor:pointer}
-.form-actions .primary:hover{background:var(--deep-red)}
-.form-actions .mini-btn{padding:14px 20px}
 .note-box{background:#fff5d0;border-left:5px solid var(--gold);padding:14px 17px;
 border-radius:8px;line-height:1.8;margin-top:22px;font-size:14px}
 
@@ -163,10 +156,6 @@ th{background:#f0d98c;color:var(--deep-red)}
 .badge.cancelled{background:#f0e2e2;color:#8a3030}
 
 .actions-cell{display:flex;gap:6px}
-.mini-btn{display:inline-block;border:0;border-radius:8px;padding:7px 11px;background:var(--red);color:#fff8df;font-weight:700;font-size:12px;cursor:pointer;line-height:1.5}
-.mini-btn:hover{background:var(--deep-red)}
-.mini-btn.ghost{background:#e8dcc0;color:#6b5330}
-.mini-btn.ghost:hover{background:#dbcba7}
 
 @media(max-width:760px){
   .stats{grid-template-columns:1fr 1fr}
@@ -175,8 +164,6 @@ th{background:#f0d98c;color:var(--deep-red)}
 
 /* Test mode */
 .flash.test{background:#efe4f5;border-left:4px solid #6b4b8a;color:#4a3161}
-.mini-btn.danger{background:#8a3030}
-.mini-btn.danger:hover{background:#6e2626}
 
 /* Image upload previews */
 .image-preview{margin:10px 0 12px;padding:12px;border:1px solid #ead7a0;border-radius:12px;background:#fffdf5}
@@ -215,7 +202,7 @@ text-align:center;min-width:0}
 .lookup-form input[name=ref]{flex:1 1 100%;min-width:0;padding:15px 16px;border:1px solid #d8bf79;
 border-radius:11px;background:#fffdf6;font:inherit;font-size:17px;letter-spacing:.05em;text-transform:uppercase}
 .lookup-form input[name=ref]:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(159,33,27,.1);outline:none}
-.lookup-form .mini-btn{padding:15px 20px;font-size:14px}
+.lookup-form .mini-btn{min-height:52px;padding:12px 20px;font-size:14px}
 
 .scan-panel{margin-top:14px}
 .scan-panel video{width:100%;max-height:330px;background:#000;border-radius:12px;object-fit:cover}
@@ -367,7 +354,6 @@ background:#fffdf6;font:inherit;resize:vertical}
 .toolbar input,.toolbar select{min-height:44px;padding:8px 12px;border:1px solid #d8bf79;border-radius:10px;background:#fffdf6;min-width:0}
 .toolbar input[type=search]{width:260px;max-width:100%}
 .toolbar .spacer{flex:1}
-.btn-lg{min-height:44px;display:inline-flex;align-items:center;gap:6px;padding:8px 16px!important;font-size:14px!important}
 .records td,.records th{font-size:14px;vertical-align:middle}
 .records tr:hover td{background:#fff6dc}
 .records .sub-line{display:block;font-size:12px;color:var(--muted)}
@@ -470,7 +456,6 @@ body.ie-open{overflow:hidden}
 .wording-field{display:block;margin:0}
 .wording-lang{display:block;font-size:.72rem;font-weight:700;color:#7a6a58;margin-bottom:2px}
 .wording-field.is-edited input,.wording-field.is-edited textarea{border-color:#9f211b;background:#fff8f2}
-.sticky-actions{position:sticky;bottom:0;background:rgba(255,250,240,.96);padding:12px 0;border-top:1px solid #eadcb5;z-index:5}
 @media (max-width:760px){ .wording-row{grid-template-columns:1fr} }
 
 /* Switches (Site settings) */
@@ -644,8 +629,6 @@ body.is-sorting,body.is-sorting *{cursor:grabbing!important;user-select:none}
 .form-sec{margin:0}
 .form-sec.span-2{grid-column:1/-1}
 .form-panel .form-sec h3,.form-panel .form-sec h3:first-of-type{margin:0 0 6px;padding:0 0 10px;border-top:0;border-bottom:2px solid #eadcb5;font-size:18px}
-.wide-actions{margin-top:18px;padding:14px 18px;border:1px solid var(--line);border-radius:16px;background:rgba(255,250,240,.97);
-  box-shadow:0 -6px 20px rgba(67,39,18,.08)}
 @media (max-width:1180px){ .form-sections{grid-template-columns:1fr} }
 
 /* Two-column pages (check-in, walk-in, counter, users, password …) */
@@ -681,7 +664,6 @@ body.is-sorting,body.is-sorting *{cursor:grabbing!important;user-select:none}
 .ai-status.is-off{background:#fbeeee;border:1px solid #e0b3b3}
 .ai-status code{font-size:.85rem;background:#fff;padding:2px 8px;border-radius:6px}
 .ai-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px}
-.mini-btn .en,.primary .en{color:inherit;opacity:.9;font-weight:600}
 
 /* Step guides fold away until needed */
 details.guide{padding:0}
@@ -708,7 +690,6 @@ details.guide > :not(summary){margin:0 20px 18px}
   .form-sec > :nth-child(2){margin-top:0}
   .form-sec .form-grid{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
 }
-.wide-actions{position:sticky;bottom:12px;z-index:5}
 .empty-card{text-align:center;padding:34px 20px;border-style:dashed}
 .empty-card .empty-icon{font-size:40px;margin-bottom:8px}
 .empty-card .en{display:block;font-weight:600;color:var(--muted);font-size:.9em}
@@ -759,7 +740,6 @@ details.guide > :not(summary){margin:0 20px 18px}
 .bn-zoom label{display:flex;align-items:center;gap:8px;margin:0;flex:1 1 200px;font-weight:700}
 .bn-zoom input[type=range]{flex:1;accent-color:#9f211b}
 .bn-zoom output{font-weight:800;color:#9f211b;min-width:3.2em}
-.sticky-actions{position:sticky;bottom:0;z-index:5;background:linear-gradient(transparent,#f8f1dc 30%);padding:18px 0 10px;margin:0}
 .banner-admin.form-panel{max-width:none;margin:0}
 .banner-admin .check-inline{align-items:flex-start;line-height:1.4}
 .banner-admin .check-inline input{flex:none;margin-top:2px}
@@ -852,7 +832,6 @@ details.guide > :not(summary){margin:0 20px 18px}
 @keyframes uatPulse{50%{box-shadow:0 0 0 7px rgba(242,180,0,.12),0 0 22px rgba(242,180,0,.9)}}
 .uat-explain{margin:0 0 16px;padding-left:20px;line-height:1.7}
 .uat-explain .en{display:block}
-.uat-big{font-size:17px!important;padding:14px 22px!important}
 .uat-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:0 0 14px}
 .uat-stats div{background:#fff;border:1px solid #eadcb5;border-radius:12px;padding:10px 14px}
 .uat-stats small{display:block;color:var(--muted);font-weight:700}
@@ -864,8 +843,80 @@ details.guide > :not(summary){margin:0 20px 18px}
 .uat-speed{flex-wrap:wrap}
 .uat-preview{border-radius:12px;overflow:hidden;border:1px solid #eadcb5}
 @media (prefers-reduced-motion:reduce){ .uat-status.is-on .uat-light{animation:none} }
-.uat-big{border:0;border-radius:12px;background:#9f211b;color:#fff8df;font-weight:800;cursor:pointer;box-shadow:0 6px 16px rgba(159,33,27,.25)}
-.uat-big .en{color:#f3df9c}
-.uat-big:hover{background:#86180f}
-.uat-status.is-off .uat-big{background:linear-gradient(135deg,#e0a800,#c98a00);color:#2b1d00;box-shadow:0 6px 16px rgba(201,138,0,.3)}
+.uat-status.is-off .uat-big{background:linear-gradient(180deg,#f0b818,#d39600);border-color:#c48a00;color:#2b1d00;box-shadow:0 6px 16px rgba(201,138,0,.3)}
+.uat-status.is-off .uat-big:hover{background:linear-gradient(180deg,#e5ac08,#c48a00)}
 .uat-status.is-off .uat-big .en{color:#4a3500}
+
+/* ---------- Icons (helpers.php icon(), assets/icons.svg) ---------- */
+.ic{display:inline-block;width:1.15em;height:1.15em;flex:none;vertical-align:-.2em;fill:none;stroke:currentColor;
+  stroke-width:2;stroke-linecap:round;stroke-linejoin:round;overflow:visible}
+.ic.lg{width:1.6em;height:1.6em}
+.ic.xl{width:2.6em;height:2.6em;stroke-width:1.6}
+
+/* ==========================================================
+   Buttons — one family for every admin and system page.
+     .primary            the main action of a form (Save, Submit …)
+     .mini-btn           small action in a table row or toolbar
+     .mini-btn.ghost     secondary action (Cancel, View site, Reset …)
+     .mini-btn.danger    delete / irreversible
+     .btn-lg             a mini-btn at full form-button height
+   All share the same radius, icon spacing, hover lift, press,
+   keyboard focus ring and disabled look.
+   ========================================================== */
+.primary,.mini-btn,.login-card button[type=submit]{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  border:1px solid transparent;border-radius:10px;cursor:pointer;
+  font-family:inherit;font-weight:700;line-height:1.3;text-align:center;text-decoration:none;
+  -webkit-tap-highlight-color:transparent;user-select:none;
+  transition:background-color .15s,border-color .15s,box-shadow .15s,color .15s,transform .08s}
+.primary .ic,.mini-btn .ic{width:1.15em;height:1.15em;vertical-align:0}
+.primary .en,.mini-btn .en,.login-card button[type=submit] .en{display:inline;color:inherit;opacity:.82;font-size:.86em;font-weight:600}
+
+/* Main action: deep temple red with a soft lift */
+.primary,.login-card button[type=submit]{
+  min-height:46px;padding:10px 22px;font-size:15px;color:#fff8df;
+  background:linear-gradient(180deg,#b3291f,#9a1f18);border-color:#8a1b15;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 4px 12px rgba(159,33,27,.22)}
+.primary:hover,.login-card button[type=submit]:hover{background:linear-gradient(180deg,#a0231a,#841a13);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 6px 16px rgba(159,33,27,.28)}
+.primary:active,.login-card button[type=submit]:active{transform:translateY(1px);box-shadow:inset 0 2px 4px rgba(0,0,0,.18)}
+
+/* Small action */
+.mini-btn{min-height:32px;padding:5px 12px;font-size:12.5px;color:#fff8df;background:var(--red);border-color:var(--red)}
+.mini-btn:hover{background:var(--deep-red);border-color:var(--deep-red)}
+.mini-btn:active{transform:translateY(1px)}
+
+/* Secondary: cream with a gold edge, reads as "less important" */
+.mini-btn.ghost{background:#fffdf6;color:#6b4423;border-color:#dcc48a;box-shadow:0 1px 2px rgba(67,39,18,.06)}
+.mini-btn.ghost:hover{background:#f8edd3;border-color:#b58a35;color:#4f3018}
+
+/* Danger: quiet until pointed at, then solid red */
+.mini-btn.danger{background:#fdf0ee;color:#9a2a22;border-color:#e8bdb7}
+.mini-btn.danger:hover{background:#a3281f;border-color:#a3281f;color:#fff}
+
+/* Same height as .primary when they sit together */
+.btn-lg,.form-actions .mini-btn{min-height:46px;padding:10px 18px;font-size:14px}
+
+.primary:focus-visible,.mini-btn:focus-visible,.login-card button[type=submit]:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.primary:disabled,.mini-btn:disabled,.login-card button[type=submit]:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+@media (prefers-reduced-motion:reduce){ .primary,.mini-btn{transition:none} }
+
+.login-card button[type=submit]{width:100%;min-height:52px;margin-top:20px;font-size:16px}
+
+/* Row of form buttons: main action first, the rest beside it */
+.form-actions{flex-wrap:wrap}
+.form-actions .primary{min-width:150px}
+
+/* Save bar on long forms (Site settings, Wording, Banner …): stays at the
+   bottom of the screen as a floating card so Save is always in reach. */
+.sticky-actions{position:sticky;bottom:12px;z-index:5;margin-top:18px;padding:12px 14px;
+  border:1px solid var(--line);border-radius:16px;background:rgba(255,250,240,.94);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  box-shadow:0 8px 28px rgba(67,39,18,.16)}
+.sticky-actions.form-actions{border-top:1px solid var(--line)}
+@media (max-width:600px){
+  .sticky-actions{bottom:8px;padding:10px}
+  .sticky-actions .primary{flex:1 1 auto}
+}
+
+/* UAT switch: a bigger main button */
+.uat-big{min-height:54px;padding:12px 24px;font-size:17px;border-radius:12px}

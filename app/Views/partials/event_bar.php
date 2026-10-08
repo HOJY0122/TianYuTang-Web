@@ -12,10 +12,10 @@ use App\Models\Event;
   <div>
     <h2 style="margin:0 0 4px"><?= h($event['year']) ?> · <?= h($event['name']) ?></h2>
     <div class="help">
-      📅 <?= h($event['start_date']) ?> → <?= h($event['end_date']) ?>
+      <?= icon('calendar') ?> <?= h($event['start_date']) ?> → <?= h($event['end_date']) ?>
       · 功德席 Seat RM<?= number_format((float) $event['merit_table_price'], 0) ?>
       · <?= $event['is_active'] ? '<span class="badge ok">目前公開 Live</span>' : '<span class="badge pending">未公開 Not live</span>' ?>
-      <?= $event['is_test'] ? '<span class="badge cancelled">🧪 測試 Test</span>' : '' ?>
+      <?= $event['is_test'] ? '<span class="badge cancelled">測試 Test</span>' : '' ?>
     </div>
     <div class="help" style="margin-top:4px">
       <?php foreach ([Event::SECTION_RSVP => '報名 Registration', Event::SECTION_DONATION => '布施 Donation'] as $_ebSection => $_ebLabel):
@@ -42,5 +42,5 @@ use App\Models\Event;
   <?php endif; ?>
 </div>
 <?php if ($event['is_test']): ?>
-  <div class="flash test">🧪 這是測試活動，資料不會列入正式統計。This is a test event — its data is not counted in real figures.</div>
+  <div class="flash test"><?= icon('flask') ?> 這是測試活動，資料不會列入正式統計。This is a test event — its data is not counted in real figures.</div>
 <?php endif; ?>

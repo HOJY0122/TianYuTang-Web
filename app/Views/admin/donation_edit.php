@@ -16,7 +16,7 @@ $free  = $d['free_amount'] !== null ? (float) $d['free_amount'] : ($d['method'] 
   <p class="help" style="margin-top:4px">
     <?= h($event['year'] . ' ' . $event['name']) ?> · 登記於 Recorded <?= h($d['created_at']) ?>
     <?= !empty($d['recorded_by']) ? ' · 登記者 by ' . h($d['recorded_by']) : '' ?>
-    <?php if (!empty($d['receipt_path'])): ?> · <a href="<?= url('/admin/receipt') ?>?id=<?= (int) $d['id'] ?>" target="_blank">📄 查看收據 View receipt</a><?php endif; ?>
+    <?php if (!empty($d['receipt_path'])): ?> · <a href="<?= url('/admin/receipt') ?>?id=<?= (int) $d['id'] ?>" target="_blank"><?= icon('file') ?> 查看收據 View receipt</a><?php endif; ?>
   </p>
 
   <div class="form-grid">
@@ -41,7 +41,7 @@ $free  = $d['free_amount'] !== null ? (float) $d['free_amount'] : ($d['method'] 
     <span class="help" style="display:block">總額由系統按每席 <?= rm($price) ?> 重新計算。The total is recalculated at <?= rm($price) ?> per seat.</span></div>
 
   <div class="form-actions">
-    <button class="primary" type="submit">💾 儲存 Save changes</button>
+    <button class="primary" type="submit"><?= icon('save') ?> 儲存 Save changes</button>
   </div>
 </form>
 <script>

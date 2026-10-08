@@ -11,7 +11,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
 
 
   <?php if ($event['is_test']): ?>
-    <div class="flash test">🧪 測試活動 — 此處登記不列入正式統計。Test event — not counted in the real totals.</div>
+    <div class="flash test"><?= icon('flask') ?> 測試活動 — 此處登記不列入正式統計。Test event — not counted in the real totals.</div>
   <?php endif; ?>
 
   <!-- ---------- Money in, by source ---------- -->
@@ -34,7 +34,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
              autocomplete="off" autocapitalize="characters" spellcheck="false"
              placeholder="布施編號 Reference，例 e.g. DON-0012">
       <button class="mini-btn btn-lg" type="submit">查詢 Find</button>
-      <button class="mini-btn ghost btn-lg" type="button" data-scan>📷 掃描 Scan QR</button>
+      <button class="mini-btn ghost btn-lg" type="button" data-scan><?= icon('camera') ?> 掃描 Scan QR</button>
     </form>
     <div id="scanPanel" class="scan-panel" hidden>
       <video playsinline muted></video>
@@ -58,9 +58,9 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
         <div class="pledge-head">
           <div>
             <div class="pledge-ref"><?= h($found['ref_code']) ?></div>
-            <div class="pledge-name"><?= h($found['name']) ?> <span class="help">📞 <?= h($found['contact_no']) ?></span></div>
+            <div class="pledge-name"><?= h($found['name']) ?> <span class="help"><?= icon('phone') ?> <?= h($found['contact_no']) ?></span></div>
           </div>
-          <span class="pledge-status"><?= $paid ? '✅ 已付款 Paid' : '⏳ 待付款 Pending' ?></span>
+          <span class="pledge-status"><?= $paid ? '已付款 Paid' : '待付款 Pending' ?></span>
         </div>
         <dl class="pledge-lines">
           <div><dt>布施方式 Method</dt><dd><?= h(App\Models\Donation::describe($found)) ?></dd></div>
@@ -85,10 +85,10 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
             </div>
             <button class="big-btn" type="submit"
                     data-confirm="確認已收到 <?= h(rm((float) $found['amount'])) ?>？&#10;Confirm <?= h(rm((float) $found['amount'])) ?> received?">
-              💵 確認收款 <?= rm((float) $found['amount']) ?> <span class="en">Confirm payment</span></button>
+              <?= icon('cash') ?> 確認收款 <?= rm((float) $found['amount']) ?> <span class="en">Confirm payment</span></button>
           </form>
         <?php elseif (!empty($found['receipt_path'])): ?>
-          <a class="receipt-link" href="<?= url('/admin/receipt?id=' . (int) $found['id']) ?>" target="_blank">📄 查看收據 View receipt</a>
+          <a class="receipt-link" href="<?= url('/admin/receipt?id=' . (int) $found['id']) ?>" target="_blank"><?= icon('file') ?> 查看收據 View receipt</a>
         <?php endif; ?>
       </div>
     <?php endif; ?>
@@ -96,7 +96,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   </div>
 
   <details class="panel guide">
-    <summary><span>🧭 用哪一個？ <span class="en">Which one do I use?</span></span><span class="guide-toggle" aria-hidden="true">顯示 Show ▾</span></summary>
+    <summary><span><?= icon('compass') ?> 用哪一個？ <span class="en">Which one do I use?</span></span><span class="guide-toggle" aria-hidden="true">顯示 Show ▾</span></summary>
 
     <ul>
       <li><strong>① 線上布施付款</strong>：善信已在網上登記布施，現在來付款 → 掃描他的布施 QR。
@@ -146,7 +146,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
         <!-- Merit seats -->
         <div class="cd-card" id="seatCard">
           <div class="cd-card-head">
-            <span class="cd-icon" aria-hidden="true">🪑</span>
+            <span class="cd-icon" aria-hidden="true"><?= icon('chair') ?></span>
             <div><label for="table_count" class="cd-title">功德席 <span class="en">Merit seats</span></label>
               <span class="help">每席 RM <?= number_format($seatPrice, 0) ?> <span class="en">per seat</span></span></div>
           </div>
@@ -165,7 +165,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
         <!-- Freewill -->
         <div class="cd-card" id="freeCard">
           <div class="cd-card-head">
-            <span class="cd-icon" aria-hidden="true">🙏</span>
+            <span class="cd-icon" aria-hidden="true"><?= icon('lotus') ?></span>
             <div><label for="free_amount" class="cd-title">隨喜 <span class="en">Freewill</span></label>
               <span class="help">任意金額 <span class="en">any amount</span></span></div>
           </div>
@@ -198,7 +198,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
              value="<?= h($v('notes')) ?>" placeholder="例 e.g. 收據簿 Receipt book #042">
 
       <div class="form-actions">
-        <button class="primary" type="submit">💰 登記布施 Record donation</button>
+        <button class="primary" type="submit"><?= icon('coins') ?> 登記布施 Record donation</button>
       </div>
     </form>
   </div>
@@ -225,7 +225,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
                 <td><?= rm((float) $d['amount']) ?></td>
                 <td>
                   <?php if (!empty($d['receipt_path'])): ?>
-                    <a href="<?= url('/admin/receipt?id=' . (int) $d['id']) ?>" target="_blank" class="receipt-link">📄 查看 View</a>
+                    <a href="<?= url('/admin/receipt?id=' . (int) $d['id']) ?>" target="_blank" class="receipt-link"><?= icon('file') ?> 查看 View</a>
                   <?php else: ?>
                     <span class="help">—</span>
                   <?php endif; ?>

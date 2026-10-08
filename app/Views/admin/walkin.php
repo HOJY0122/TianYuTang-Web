@@ -19,7 +19,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
 
 
   <?php if ($event['is_test']): ?>
-    <div class="flash test">🧪 測試活動 — 此處登記不列入正式統計。</div>
+    <div class="flash test"><?= icon('flask') ?> 測試活動 — 此處登記不列入正式統計。</div>
   <?php endif; ?>
 
   <!-- ---------- Head count, by how they registered ---------- -->
@@ -78,7 +78,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
       <div id="walkinRows"></div>
 
       <div class="form-actions">
-        <button class="primary" type="submit">🚶 登記並報到 <span class="en">Register &amp; check in</span></button>
+        <button class="primary" type="submit"><?= icon('walk') ?> 登記並報到 <span class="en">Register &amp; check in</span></button>
       </div>
     </form>
   </div>
@@ -115,7 +115,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     </div>
   <?php else: ?>
     <div class="panel empty-card">
-      <div class="empty-icon" aria-hidden="true">🚶</div>
+      <div class="empty-icon" aria-hidden="true"><?= icon('walk') ?></div>
       <strong>今天還沒有現場報名 <span class="en">No walk-ins yet</span></strong>
       <p class="help">登記後會顯示在這裡，方便核對。Each walk-in appears here once saved.</p>
     </div>
@@ -123,7 +123,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   </div>
 
   <details class="panel guide">
-    <summary><span>🧭 現場報名 <span class="en">Walk-in tips</span></span><span class="guide-toggle" aria-hidden="true">顯示 Show ▾</span></summary>
+    <summary><span><?= icon('compass') ?> 現場報名 <span class="en">Walk-in tips</span></span><span class="guide-toggle" aria-hidden="true">顯示 Show ▾</span></summary>
 
     <ul>
       <li>適用於當天才到、沒有網上報名的善信。<span class="en">For people who did not register online.</span></li>

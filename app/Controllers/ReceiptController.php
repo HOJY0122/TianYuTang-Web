@@ -218,7 +218,7 @@ class ReceiptController extends Controller
         $slipMsg = $this->saveBankSlip($newId, $row['bank_slip_path'] ?? null);
 
         $warn = abs($sumBoxes - $v['total']) > 0.009 && $sumBoxes > 0
-            ? "\n⚠️ 各項合計 " . rm($sumBoxes) . ' ≠ 總數 ' . rm($v['total']) . '。Boxes add up to ' . rm($sumBoxes) . ', not the total.'
+            ? "\n各項合計 " . rm($sumBoxes) . ' ≠ 總數 ' . rm($v['total']) . '。Boxes add up to ' . rm($sumBoxes) . ', not the total.'
             : '';
         $this->flash('success', '已儲存 Saved',
             '收據 ' . ($v['receipt_no'] ? 'No. ' . $v['receipt_no'] : '#' . $newId) . ' · ' . ($v['name'] ?? '—') . ' · ' . rm($v['total']) . $warn . $slipMsg);
@@ -370,7 +370,7 @@ class ReceiptController extends Controller
                 $this->redirect('/admin/receipts/edit?id=' . $id);
             }
             $uploader->delete($old);
-            return "\n📎 已附上轉帳單據。Bank slip attached.";
+            return "\n已附上轉帳單據。Bank slip attached.";
         }
         if ($old && !empty($_POST['remove_bank_slip'])) {
             $model->setBankSlip($id, null);

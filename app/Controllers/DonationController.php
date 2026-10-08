@@ -130,7 +130,7 @@ class DonationController extends Controller
             return "功德席最少 {$lim['seats_min']} 席。\nThe minimum is {$lim['seats_min']} merit seats.";
         }
         if ($seats > $lim['seats_max']) {
-            return "🙏 感恩您的大力護持！線上每次最多可認捐 {$lim['seats_max']} 席功德席。\n"
+            return "感恩您的大力護持！線上每次最多可認捐 {$lim['seats_max']} 席功德席。\n"
                  . "請先提交 {$lim['seats_max']} 席，再提交一次餘下的席數；或於活動當日親臨櫃台辦理。\n"
                  . "Thank you so much for your generous support! Online, each submission can sponsor up to {$lim['seats_max']} seats. "
                  . 'Please submit ' . $lim['seats_max'] . ' now and again for the rest, or visit our counter on the event day.';
@@ -139,7 +139,7 @@ class DonationController extends Controller
             return '隨喜金額最少 ' . rm($lim['free_min']) . "。\nThe minimum freewill amount is " . rm($lim['free_min']) . '.';
         }
         if ($free > $lim['free_max']) {
-            return '🙏 感恩您的大力護持！線上每次隨喜最多 ' . rm($lim['free_max']) . "。\n"
+            return '感恩您的大力護持！線上每次隨喜最多 ' . rm($lim['free_max']) . "。\n"
                  . "請先提交此金額，再提交一次餘額；或於活動當日親臨櫃台辦理。\n"
                  . 'Thank you so much for your generous support! Online, each freewill gift can be up to ' . rm($lim['free_max'])
                  . '. Please submit that now and again for the rest, or visit our counter on the event day.';

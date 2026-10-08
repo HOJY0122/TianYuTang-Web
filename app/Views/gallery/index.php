@@ -16,7 +16,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
 
   <?php if (!$albums): ?>
     <div class="card closed-card">
-      <div class="closed-icon">📷</div>
+      <div class="closed-icon"><?= icon('camera') ?></div>
       <h3><?= tb('gallery.empty_title') ?></h3>
       <p><?= h(t('gallery.empty_text') . ' ' . t('gallery.empty_text', 'en')) ?></p>
     </div>

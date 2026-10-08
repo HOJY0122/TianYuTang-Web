@@ -55,13 +55,13 @@ $count = count($bannerSlides);
     <?php endforeach; ?>
   </div>
   <?php if ($count > 1 || $bannerPreview): ?>
-    <button type="button" class="banner-nav prev" aria-label="上一張 Previous">‹</button>
-    <button type="button" class="banner-nav next" aria-label="下一張 Next">›</button>
+    <button type="button" class="banner-nav prev" aria-label="上一張 Previous"><?= icon('chevron-left') ?></button>
+    <button type="button" class="banner-nav next" aria-label="下一張 Next"><?= icon('chevron-right') ?></button>
     <div class="banner-dots" role="tablist" aria-label="選擇圖片 Choose picture">
       <?php for ($i = 0; $i < $count; $i++): ?>
         <button type="button" role="tab" aria-label="第 <?= $i + 1 ?> 張 Picture <?= $i + 1 ?>"<?= $i === 0 ? ' aria-selected="true"' : '' ?>></button>
       <?php endfor; ?>
     </div>
-    <button type="button" class="banner-pause" aria-label="暫停 Pause" aria-pressed="false">⏸</button>
+    <button type="button" class="banner-pause" aria-label="暫停 Pause" aria-pressed="false"><?= icon('pause') ?></button>
   <?php endif; ?>
 </div>

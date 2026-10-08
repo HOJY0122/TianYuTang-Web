@@ -9,9 +9,9 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   <?= csrf_field() ?>
   <h2 style="margin-top:0">① 拍下收據 <span class="en">Photograph the receipt</span></h2>
   <ul class="scan-tips">
-    <li>📐 平放、整張入鏡、光線充足、不要反光。<span class="en">Lay it flat, fit the whole receipt in, good light, no glare.</span></li>
-    <li>✏️ 選好相片後可旋轉或裁切。<span class="en">After choosing, you can rotate or crop it.</span></li>
-    <li>🔒 相片只存放在伺服器內部，只有登入的工作人員看得到。<span class="en">Photos are stored privately — only signed-in staff can see them.</span></li>
+    <li><?= icon('ruler') ?> 平放、整張入鏡、光線充足、不要反光。<span class="en">Lay it flat, fit the whole receipt in, good light, no glare.</span></li>
+    <li><?= icon('pencil') ?> 選好相片後可旋轉或裁切。<span class="en">After choosing, you can rotate or crop it.</span></li>
+    <li><?= icon('lock') ?> 相片只存放在伺服器內部，只有登入的工作人員看得到。<span class="en">Photos are stored privately — only signed-in staff can see them.</span></li>
   </ul>
 
   <label for="photo">收據相片 <span class="en">Receipt photo</span></label>
@@ -20,16 +20,16 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
 
   <div class="form-actions scan-actions">
     <?php if ($aiReady): ?>
-      <button class="primary" type="submit" name="use_ai" value="1" id="aiBtn">🤖 AI 讀取 <span class="en">Read it with AI</span></button>
+      <button class="primary" type="submit" name="use_ai" value="1" id="aiBtn"><?= icon('bot') ?> AI 讀取 <span class="en">Read it with AI</span></button>
     <?php endif; ?>
-    <button class="<?= $aiReady ? 'mini-btn ghost btn-lg' : 'primary' ?>" type="submit" name="use_ai" value="0">✍️ 手動輸入 <span class="en">Type it in myself</span></button>
+    <button class="<?= $aiReady ? 'mini-btn ghost btn-lg' : 'primary' ?>" type="submit" name="use_ai" value="0"><?= icon('pencil') ?> 手動輸入 <span class="en">Type it in myself</span></button>
     <a class="mini-btn ghost btn-lg" href="<?= url('/admin/receipts') ?>">返回 Back</a>
   </div>
   <?php if (!$aiReady): ?>
-    <p class="flash info">🤖 AI 讀取尚未啟用，仍可附上相片並手動輸入。<span class="en">AI reading is off — you can still attach the photo and type it in.</span><br>
+    <p class="flash info"><?= icon('bot') ?> AI 讀取尚未啟用，仍可附上相片並手動輸入。<span class="en">AI reading is off — you can still attach the photo and type it in.</span><br>
       <?php if (!empty($isSystem)): ?>
         <?= nl2br(h(\App\Core\ReceiptReader::whyOff())) ?><br>
-        👉 <a href="<?= url('/system') ?>#ai">網站設定 → ⑤ AI <span class="en">Site settings → ⑤ AI</span></a>
+        <?= icon('arrow-right') ?> <a href="<?= url('/system') ?>#ai">網站設定 → ⑤ AI <span class="en">Site settings → ⑤ AI</span></a>
       <?php else: ?>
         請系統管理員在「網站設定 → ⑤ AI」設定金鑰。<span class="en">Ask a system admin to set the key in Site settings → ⑤ AI.</span>
       <?php endif; ?></p>
@@ -42,7 +42,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
 <div class="busy" id="busy" hidden role="status" aria-live="polite">
   <div class="busy-box">
     <div class="spinner" aria-hidden="true"></div>
-    <strong>🤖 AI 正在讀取收據… <span class="en">Reading the receipt…</span></strong>
+    <strong><?= icon('bot') ?> AI 正在讀取收據… <span class="en">Reading the receipt…</span></strong>
     <p class="help">通常需要 10–40 秒，請勿關閉此頁。Usually 10–40 seconds — please keep this page open.</p>
   </div>
 </div>

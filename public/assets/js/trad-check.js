@@ -64,7 +64,7 @@
       note.hidden = false;
       note.innerHTML = '';
       var msg = document.createElement('span');
-      msg.textContent = '⚠️ 簡體字 Simplified: ' + chars.map(function (c) { return c + '→' + MAP[c]; }).join('  ') +
+      msg.textContent = '簡體字 Simplified: ' + chars.map(function (c) { return c + '→' + MAP[c]; }).join('  ') +
         '。標題字體沒有簡體字，會變成另一種字體。 Heading fonts have no Simplified characters, so these show in a different font. ';
       var btn = document.createElement('button');
       btn.type = 'button';

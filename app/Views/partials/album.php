@@ -27,7 +27,7 @@ $albumLink = $albumLink ?? null;
   </div>
 
   <div class="album-row">
-    <button type="button" class="album-nav prev" aria-label="上一組 Previous" data-dir="-1">&#10094;</button>
+    <button type="button" class="album-nav prev" aria-label="上一組 Previous" data-dir="-1"><?= icon('chevron-left') ?></button>
     <div class="album-strip" tabindex="0" aria-label="<?= h($album['year']) ?> 相片 photos">
       <?php foreach ($album['photos'] as $photo): ?>
         <figure data-full="<?= h(BASE_URL . '/' . $photo['file_path']) ?>"
@@ -40,6 +40,6 @@ $albumLink = $albumLink ?? null;
         </figure>
       <?php endforeach; ?>
     </div>
-    <button type="button" class="album-nav next" aria-label="下一組 Next" data-dir="1">&#10095;</button>
+    <button type="button" class="album-nav next" aria-label="下一組 Next" data-dir="1"><?= icon('chevron-right') ?></button>
   </div>
 </div>

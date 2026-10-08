@@ -27,11 +27,11 @@
   <p class="help">JPG / PNG / GIF / WebP，5MB 以內。Up to 5 MB.</p>
 
   <label class="checkline"><input type="checkbox" name="is_published" value="1"<?= $post['is_published'] ? ' checked' : '' ?>> 發佈到首頁 Publish on the home page</label>
-  <label class="checkline"><input type="checkbox" name="is_pinned" value="1"<?= $post['is_pinned'] ? ' checked' : '' ?>> 📌 置頂 Pin to the top</label>
+  <label class="checkline"><input type="checkbox" name="is_pinned" value="1"<?= $post['is_pinned'] ? ' checked' : '' ?>> <?= icon('pin') ?> 置頂 Pin to the top</label>
 
   <div class="form-actions">
-    <button class="primary" type="submit">💾 儲存 Save</button>
-    <a class="mini-btn ghost" href="<?= url('/') ?>#news" target="_blank">👀 查看首頁 View home page</a>
+    <button class="primary" type="submit"><?= icon('save') ?> 儲存 Save</button>
+    <a class="mini-btn ghost" href="<?= url('/') ?>#news" target="_blank"><?= icon('eye') ?> 查看首頁 View home page</a>
   </div>
 </form>
 <?php require BASE_PATH . '/app/Views/layouts/admin_footer.php'; ?>

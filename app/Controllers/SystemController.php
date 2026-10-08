@@ -93,7 +93,7 @@ class SystemController extends Controller
             if ($model !== null) {
                 $setting->set('nvidia_model', $model);
             }
-            $note = "\n\n已儲存並啟用：{$label}。收據頁現在可以用「🤖 AI 讀取」。\n"
+            $note = "\n\n已儲存並啟用：{$label}。收據頁現在可以用「AI 讀取」。\n"
                   . "Saved and switched on: {$label}. Receipts → Scan receipt now shows “Read it with AI”.";
         }
         $this->flash($result['ok'] ? 'success' : 'error',

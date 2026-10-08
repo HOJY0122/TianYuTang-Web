@@ -5,7 +5,7 @@
  * once; nothing is stored until Save.
  *   - height, speed, effect, arrows: change the preview's settings
  *   - drag a picture (or arrow keys) to choose the point kept in view;
- *     🔍 zooms in around that point
+ *     zooms in around that point
  * The tuning frames take the same shape as the banner on the chosen
  * device, so what is inside the frame is what visitors will see.
  */

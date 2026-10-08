@@ -3,7 +3,7 @@
  *
  * Pictures change every data-interval seconds; they stop while the
  * pointer or keyboard focus is on the banner, while the tab is hidden,
- * after the ⏸ button, and (never start) for people who ask their device
+ * after the button, and (never start) for people who ask their device
  * to reduce motion. Arrows, dots, swipe and ← → keys move by hand.
  *
  * window.TYTBanner.go(el, n) and .refresh(el) are used by the admin
@@ -45,7 +45,8 @@
     if (pauseBtn) pauseBtn.addEventListener('click', function () {
       state.paused = !state.paused;
       pauseBtn.setAttribute('aria-pressed', state.paused ? 'true' : 'false');
-      pauseBtn.textContent = state.paused ? '▶' : '⏸';
+      var u = pauseBtn.querySelector('use');
+      if (u) u.setAttribute('href', u.getAttribute('href').replace(/#.*$/, state.paused ? '#play' : '#pause'));
       pauseBtn.setAttribute('aria-label', state.paused ? '播放 Play' : '暫停 Pause');
       schedule();
     });

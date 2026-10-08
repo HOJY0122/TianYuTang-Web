@@ -43,8 +43,8 @@ $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confi
   <p><button type="button" class="mini-btn ghost btn-lg" id="addPerson">＋ 新增一位 Add a person</button></p>
 
   <div class="form-actions">
-    <button class="primary" type="submit">💾 儲存 Save changes</button>
-    <a class="mini-btn ghost" href="<?= url('/admin/checkin') ?>?event=<?= (int) $group['event_id'] ?>&amp;ref=<?= urlencode($group['ref_code']) ?>">✅ 報到頁 Check-in</a>
+    <button class="primary" type="submit"><?= icon('save') ?> 儲存 Save changes</button>
+    <a class="mini-btn ghost" href="<?= url('/admin/checkin') ?>?event=<?= (int) $group['event_id'] ?>&amp;ref=<?= urlencode($group['ref_code']) ?>"><?= icon('check-circle') ?> 報到頁 Check-in</a>
   </div>
 </form>
 

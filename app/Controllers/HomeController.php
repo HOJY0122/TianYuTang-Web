@@ -23,6 +23,7 @@ class HomeController extends Controller
     public function index(): void
     {
         $event = (new Event())->active();
+        $site  = (new \App\Models\Setting())->site();
 
         $this->view('home/index', [
             'event'          => $event,
@@ -32,8 +33,12 @@ class HomeController extends Controller
             'rsvpWindow'     => Event::windowStatus($event, Event::SECTION_RSVP),
             'donationWindow' => Event::windowStatus($event, Event::SECTION_DONATION),
             'posts'          => (new Post())->feed(10),
-            // Latest three years, twelve photos each; the gallery has the rest.
-            'albums'         => (new Photo())->albums(3, 12),
+            // Which year(s) and how many photos: System → Forms & fonts. The gallery has the rest.
+            'albums'         => (new Photo())->homeAlbums(
+                (string) $site['home_albums'],
+                $event,
+                max(4, min(40, (int) $site['home_album_photos']))
+            ),
             'flash'          => $this->takeFlash(),
         ]);
     }

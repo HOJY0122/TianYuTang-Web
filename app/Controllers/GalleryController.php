@@ -17,10 +17,16 @@ class GalleryController extends Controller
     /** GET /gallery */
     public function index(): void
     {
+        // ?year=2025 shows that year only; no year = every album.
+        $all   = (new Photo())->albums();
+        $years = array_values(array_unique(array_map(static fn($a) => (string) $a['year'], $all)));
+        $year  = is_string($_GET['year'] ?? null) && in_array($_GET['year'], $years, true) ? $_GET['year'] : '';
         $this->view('gallery/index', [
             'event'     => (new Event())->active(),   // for header/footer branding
             'activeNav' => 'gallery',
-            'albums'    => (new Photo())->albums(),
+            'albums'    => $year === '' ? $all : array_values(array_filter($all, static fn($a) => (string) $a['year'] === $year)),
+            'years'     => $years,
+            'year'      => $year,
         ]);
     }
 }

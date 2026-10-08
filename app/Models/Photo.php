@@ -156,6 +156,32 @@ class Photo extends Model
     }
 
     /**
+     * The albums the home page shows (System → Forms & fonts → 相簿):
+     *   previous  the latest album from BEFORE the live event — in 2026 the
+     *             2025 photos, in 2027 the 2026 ones (the newest album if
+     *             there is no older one yet)
+     *   latest    the newest album, whichever year
+     *   recent    the newest three
+     */
+    public function homeAlbums(string $mode, array $liveEvent, int $perAlbum): array
+    {
+        $years = $this->eventsWithPhotos();
+        if ($mode === 'previous') {
+            $liveYear = (int) ($liveEvent['year'] ?? 0);
+            $older = array_values(array_filter($years, static fn($y) =>
+                (int) $y['id'] !== (int) ($liveEvent['id'] ?? 0) && (int) $y['year'] < $liveYear));
+            $years = array_slice($older ?: $years, 0, 1);
+        } else {
+            $years = array_slice($years, 0, $mode === 'recent' ? 3 : 1);
+        }
+        foreach ($years as &$year) {
+            $year['photos'] = $this->previewForEvent((int) $year['id'], $perAlbum);
+        }
+        unset($year);
+        return $years;
+    }
+
+    /**
      * Save a dragged order for one event's album: $ids from first to last.
      * Only photos of that event are touched, so a crafted list cannot
      * shuffle another year's album.

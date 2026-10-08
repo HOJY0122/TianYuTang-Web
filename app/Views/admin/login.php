@@ -2,7 +2,7 @@
 $logo    = $site['site_logo_path'] ?: $site['site_favicon_path'];
 $favicon = $site['site_favicon_path'];
 // Same heading typeface as the public site, so the name looks the same everywhere.
-[$loginFont, $loginFontParam] = (new App\Models\Setting())->headingFont();
+[$loginFont, $loginFontParam, $loginWeight] = (new App\Models\Setting())->headingFont();
 $names   = ['site' => $site['site_name'], 'site_en' => $site['site_name_en']];
 $titleZh = t('login.title', 'zh', $names);
 $titleEn = t('login.title', 'en', $names);
@@ -18,7 +18,7 @@ $titleEn = t('login.title', 'en', $names);
 <?php if ($favicon): ?><link rel="icon" href="<?= h(BASE_URL . '/' . $favicon) ?>"><?php endif; ?>
 <meta name="robots" content="noindex">
 <style>
-.login-card h1{font-family:"<?= h($loginFont) ?>","LXGW WenKai TC","KaiTi","STKaiti",serif;font-weight:<?= $loginFont === 'LXGW WenKai TC' ? 700 : 400 ?>}
+.login-card h1{font-family:"<?= h($loginFont) ?>","LXGW WenKai TC","KaiTi","STKaiti",serif;font-weight:<?= (int) $loginWeight ?>}
 </style>
 <script src="<?= asset('js/fit-screen.js') ?>"></script>
 </head>

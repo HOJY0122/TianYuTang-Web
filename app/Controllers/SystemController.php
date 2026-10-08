@@ -57,8 +57,22 @@ class SystemController extends Controller
             'users'       => $users->all(),
             'systemCount' => $users->countSystemAdmins(),
             'adminCount'  => $users->countAdmins(),
+            'singleDevice'=> (new Setting())->get('single_device', '0') === '1',
             'flash'       => $this->takeFlash(),
         ]);
+    }
+
+    /** POST /system/users/single-device — one device per account, on or off */
+    public function singleDevice(): void
+    {
+        $this->requireSystemAdmin();
+        $this->requireCsrf();
+        $on = ($_POST['single_device'] ?? '') === '1';
+        (new Setting())->set('single_device', $on ? '1' : '0');
+        $this->flash('success', '已儲存 Saved', $on
+            ? "已開啟：同一帳號在另一部裝置登入時，之前的裝置會自動登出。\nOn: signing in on another device signs the earlier one out."
+            : "已關閉：同一帳號可在多部裝置同時登入。\nOff: an account can be signed in on several devices at once.");
+        $this->redirect('/system/users');
     }
 
     /**

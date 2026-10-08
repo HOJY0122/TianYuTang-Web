@@ -2,6 +2,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\FormRules;
 use App\Core\Validate;
 use App\Models\Event;
 use App\Models\Rsvp;
@@ -26,9 +27,13 @@ class RsvpController extends Controller
 
         $old = $_SESSION['rsvp_old'] ?? [];
         unset($_SESSION['rsvp_old']);
+        $site = (new \App\Models\Setting())->site();
 
         $this->view('register/index', [
             'event'      => $event,
+            'types'      => FormRules::regTypes($site),
+            'ageRule'    => FormRules::ageRule($site),
+            'site'       => $site,
             'activeNav'  => 'register',
             'window'     => Event::windowStatus($event, Event::SECTION_RSVP),
             'old'        => $old,
@@ -53,7 +58,25 @@ class RsvpController extends Controller
         // the browser supplies, or a visitor could register against a
         // closed or test event by editing the form.
         $event = (new Event())->active();
-        $maxAttendees = (int) $event['max_attendees'];
+        $site  = (new \App\Models\Setting())->site();
+
+        // Individual / family, or an organisation group — only the kinds
+        // Forms & fonts allows. With one kind allowed, that is the kind.
+        $types = FormRules::regTypes($site);
+        $type  = is_string($_POST['reg_type'] ?? null) ? $_POST['reg_type'] : '';
+        if (count($types) === 1) {
+            $type = $types[0];
+        } elseif (!in_array($type, $types, true)) {
+            $this->fail("請選擇報名方式：個人或團體。\nPlease choose individual or organisation registration.");
+        }
+        $orgName = null;
+        if ($type === 'organisation') {
+            $orgName = trim(is_string($_POST['org_name'] ?? null) ? $_POST['org_name'] : '');
+            if (mb_strlen($orgName) < 2 || mb_strlen($orgName) > 150) {
+                $this->fail("請填寫團體 / 機構名稱。\nPlease enter the organisation's name.");
+            }
+        }
+        $maxAttendees = FormRules::maxPeople($event, $type, $site);
 
         // Is registration actually open? Checked HERE, not just by hiding
         // the form — a closed form is still submittable by anyone who
@@ -114,12 +137,23 @@ class RsvpController extends Controller
             $attendees[] = ['name' => $name, 'ic' => $icOk, 'contact' => $phoneOk];
         }
 
+        // Age rule (e.g. 66 and above only), worked out from each IC.
+        $rule = FormRules::ageRule($site);
+        if ($rule !== null) {
+            $problem = FormRules::groupAgeProblem(array_column($attendees, 'ic'), $rule, $event);
+            if ($problem !== null) {
+                $this->fail($problem);
+            }
+        }
+
         // --- Save ---
         try {
             $refCode = (new Rsvp())->create(
                 (int) $event['id'],
                 $attendees,
-                Event::refPrefix($event, 'RSVP')   // TEST-RSVP-0001 on a dry run
+                Event::refPrefix($event, 'RSVP'),  // TEST-RSVP-0001 on a dry run
+                $type,
+                $orgName
             );
         } catch (Exception $e) {
             if (DEBUG_MODE) {
@@ -135,6 +169,7 @@ class RsvpController extends Controller
         $_SESSION['rsvp_confirmation'] = [
             'ref_code'  => $refCode,
             'count'     => $count,
+            'org_name'  => $orgName,
             'attendees' => array_map(
                 static fn($a) => ['name' => $a['name'], 'ic' => mask_ic($a['ic']), 'contact' => $a['contact']],
                 $attendees
@@ -155,6 +190,8 @@ class RsvpController extends Controller
         ));
         $_SESSION['rsvp_old'] = [
             'count'    => max(1, (int) ($_POST['attendee_count'] ?? 1)),
+            'reg_type' => is_string($_POST['reg_type'] ?? null) ? $_POST['reg_type'] : '',
+            'org_name' => is_string($_POST['org_name'] ?? null) ? mb_substr($_POST['org_name'], 0, 150) : '',
             'names'    => $text($_POST['attendee_name'] ?? []),
             'ics'      => $text($_POST['attendee_ic'] ?? []),
             'contacts' => $text($_POST['attendee_contact'] ?? []),

@@ -50,6 +50,7 @@ if ($isSystem) {
         ['system', 'settings', '網站設定', 'Site settings', '/system'],
         ['banners','image', '首頁橫幅', 'Home banner',   '/system/banners'],
         ['wording','type', '網站文字', 'Wording',       '/system/wording'],
+        ['forms',  'palette', '表單與字體', 'Forms & fonts', '/system/forms'],
         ['users',  'users', '帳號管理', 'User accounts', '/system/users'],
         ['qr',     'qr', 'QR 產生器', 'QR generator', '/system/qr'],
         ['uat',    'flask', 'UAT 測試模式', 'UAT test mode', '/system/uat'],
@@ -57,7 +58,7 @@ if ($isSystem) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="zh-Hant" data-base="<?= h(BASE_URL) ?>">
+<html lang="zh-Hant" data-base="<?= h(BASE_URL) ?>" data-staff>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">

@@ -7,6 +7,10 @@
  *
  * Mark a field:   <input data-validate="ic">   or   data-validate="phone"
  * and put an empty <p class="field-error"></p> right after it.
+ *
+ * A page can add its own rule on top: TYTValidate.extra.ic = function
+ * (tidiedValue, input) { return '' or a message }  (the register page
+ * uses it for the minimum age worked out from the IC).
  */
 (function () {
   function ic(raw) {
@@ -42,6 +46,7 @@
     phone: '聯絡號碼格式不正確（例：012-345 6789）。海外號碼請以 + 國碼開頭。\nContact number should look like 012-345 6789. Overseas numbers start with + and the country code.'
   };
   var CHECK = { ic: ic, phone: phone };
+  var EXTRA = {};
 
   function errorBox(input) {
     var box = input.parentNode.querySelector('.field-error');
@@ -65,6 +70,14 @@
       return !input.required;
     }
     var ok = CHECK[kind](value);
+    var more = ok && EXTRA[kind] ? EXTRA[kind](ok, input) : '';
+    if (more) {
+      if (tidy) input.value = ok;
+      input.setCustomValidity(more.split('\n')[0]);
+      input.setAttribute('aria-invalid', 'true');
+      box.textContent = more;
+      return false;
+    }
     if (ok) {
       if (tidy) input.value = ok;
       input.setCustomValidity('');
@@ -103,5 +116,5 @@
     }
   }, true);
 
-  window.TYTValidate = { ic: ic, phone: phone, check: check };
+  window.TYTValidate = { ic: ic, phone: phone, check: check, extra: EXTRA };
 })();

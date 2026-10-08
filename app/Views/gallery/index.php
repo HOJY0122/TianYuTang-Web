@@ -21,12 +21,13 @@ require BASE_PATH . '/app/Views/layouts/header.php';
       <p><?= h(t('gallery.empty_text') . ' ' . t('gallery.empty_text', 'en')) ?></p>
     </div>
   <?php else: ?>
-    <?php if (count($albums) > 1): ?>
-      <p style="text-align:center">
-        <?php foreach ($albums as $album): ?>
-          <a class="btn ghost" style="margin:.2rem" href="#album-<?= (int) $album['id'] ?>"><?= h($album['year']) ?></a>
+    <?php if (count($years) > 1): ?>
+      <nav class="year-filter" aria-label="選擇年份 Choose a year">
+        <a href="<?= url('/gallery') ?>"<?= $year === '' ? ' class="is-on" aria-current="page"' : '' ?>><?= icon('list') ?> 全部 <span>All</span></a>
+        <?php foreach ($years as $y): ?>
+          <a href="<?= url('/gallery') ?>?year=<?= h(urlencode($y)) ?>"<?= $year === $y ? ' class="is-on" aria-current="page"' : '' ?>><?= h($y) ?></a>
         <?php endforeach; ?>
-      </p>
+      </nav>
     <?php endif; ?>
     <?php foreach ($albums as $album): ?>
       <?php $albumLink = null; require BASE_PATH . '/app/Views/partials/album.php'; ?>

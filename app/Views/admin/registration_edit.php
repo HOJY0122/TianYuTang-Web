@@ -17,6 +17,17 @@ $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confi
     <?= !empty($group['recorded_by']) ? ' · 登記者 Recorded by ' . h($group['recorded_by']) : '' ?>
   </p>
 
+  <?php $isOrg = ($group['reg_type'] ?? 'individual') === 'organisation'; ?>
+  <div class="form-row">
+    <div><label for="regType">類別 <span class="en">Type</span></label>
+      <select id="regType" name="reg_type" onchange="document.getElementById('orgBox').hidden = this.value !== 'organisation'">
+        <option value="individual"<?= $isOrg ? '' : ' selected' ?>>個人 / 家庭 Individual / family</option>
+        <option value="organisation"<?= $isOrg ? ' selected' : '' ?>>團體 / 機構 Organisation group</option>
+      </select></div>
+    <div id="orgBox"<?= $isOrg ? '' : ' hidden' ?>><label for="orgName">團體 / 機構名稱 <span class="en">Organisation name</span></label>
+      <input id="orgName" name="org_name" maxlength="150" value="<?= h($group['org_name'] ?? '') ?>"></div>
+  </div>
+
   <label for="status">狀態 <span class="en">Status</span></label>
   <select id="status" name="status">
     <?php foreach ($statusText as $k => $label): ?>

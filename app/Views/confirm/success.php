@@ -24,6 +24,9 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     <?php if ($isRsvp): ?>
       <dl class="confirm-details">
         <div><dt>報名編號 Reference</dt><dd><?= h($refCode) ?></dd></div>
+        <?php if (!empty($confirmation['org_name'])): ?>
+          <div><dt>團體 Organisation</dt><dd><?= h($confirmation['org_name']) ?></dd></div>
+        <?php endif; ?>
         <div><dt>參加人數 People</dt><dd><?= (int) $confirmation['count'] ?> 位</dd></div>
         <div><dt>活動 Event</dt><dd><?= h($event['year']) ?> <?= h($event['name']) ?></dd></div>
       </dl>

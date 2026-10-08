@@ -106,6 +106,7 @@ abstract class Controller
                 'expired' => '登入已超過 ' . Session::ABSOLUTE_HOURS . " 小時，請重新登入。\nYou have been signed in for " . Session::ABSOLUTE_HOURS . ' hours. Please sign in again.',
                 'browser' => "為了安全，請重新登入。\nFor your security, please sign in again.",
                 'revoked' => "您的密碼或權限已更改，請重新登入。\nYour password or role was changed. Please sign in again.",
+                'device'  => "此帳號已在另一部裝置登入，這部裝置已自動登出。\nThis account was signed in on another device, so this one was signed out.",
             ][$ended]];
             $this->redirect('/admin/login');
         }

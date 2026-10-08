@@ -18,6 +18,9 @@ namespace App\Core;
  *                     signed in (a stolen cookie) → signed out
  *                   - password or role changed, or account removed, since
  *                     signing in → signed out (session_version)
+ *                   - "one device per account" switched on (Site
+ *                     settings) and the account signed in again on
+ *                     another device since → signed out ('device')
  *                   - a fresh session id every 15 minutes, so an id seen
  *                     once soon stops working
  *                   - pages are never stored by the browser or a proxy, so
@@ -69,11 +72,34 @@ final class Session
         $_SESSION['rotated_at']      = $now;
         $_SESSION['browser']         = self::browser();
         $_SESSION['csrf_token']      = bin2hex(random_bytes(32));
+
+        // This device's token. Only its hash is kept in the database; a
+        // sign-in elsewhere replaces it (see guard() and singleDevice()).
+        $token = bin2hex(random_bytes(32));
+        $_SESSION['device_token'] = $token;
+        (new \App\Models\AdminUser())->setDeviceToken((int) $user['id'], hash('sha256', $token));
+    }
+
+    /** Site settings → "one device per account": a new sign-in signs the older device out. */
+    public static function singleDevice(): bool
+    {
+        return (new \App\Models\Setting())->get('single_device', '0') === '1';
+    }
+
+    /** Has this account signed in on another device since this session began? */
+    public static function replacedElsewhere(?array $state = null): bool
+    {
+        $state ??= (new \App\Models\AdminUser())->sessionState((int) ($_SESSION['admin_id'] ?? 0));
+        if ($state === null) {
+            return true;
+        }
+        $mine = hash('sha256', (string) ($_SESSION['device_token'] ?? ''));
+        return !hash_equals((string) ($state['device_token'] ?? ''), $mine);
     }
 
     /**
      * Check a staff session; returns null if all is well, or the reason it
-     * was ended ('idle', 'expired', 'browser', 'revoked').
+     * was ended ('idle', 'expired', 'browser', 'revoked', 'device').
      */
     public static function guard(): ?string
     {
@@ -92,6 +118,8 @@ final class Session
             $state = (new \App\Models\AdminUser())->sessionState((int) $_SESSION['admin_id']);
             if ($state === null || (int) $state['session_version'] !== (int) ($_SESSION['session_version'] ?? -1)) {
                 $reason = 'revoked';
+            } elseif (self::singleDevice() && self::replacedElsewhere($state)) {
+                $reason = 'device';
             } else {
                 $_SESSION['admin_role'] = $state['role'];     // a role change applies at once
             }

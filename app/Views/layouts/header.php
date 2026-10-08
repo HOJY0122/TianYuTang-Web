@@ -38,8 +38,14 @@ $helpKey = in_array($activeNav, ['home', 'register', 'donate', 'gallery'], true)
 <title><?= h(($pageTitle ?? '') !== '' ? $pageTitle . '｜' . $siteName : $siteName) ?></title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<?php [$_hFamily, $_hParam] = (new App\Models\Setting())->headingFont(); ?>
-<link href="https://fonts.googleapis.com/css2?family=<?= $_hParam ?><?= $_hParam !== 'LXGW+WenKai+TC:wght@400;700' ? '&family=LXGW+WenKai+TC:wght@400;700' : '' ?>&family=Noto+Sans+TC:wght@400;500;700;800&family=Noto+Sans+SC:wght@400;500;700;800&display=swap" rel="stylesheet">
+<?php
+[$_hFamily, $_hParam, $_hWeight] = (new App\Models\Setting())->headingFont();
+[$_bFamily, $_bParam] = App\Core\FormRules::bodyFont($site);
+// One request for every family the page needs (heading, body, the WenKai and
+// Noto fallbacks), each named once.
+$_fontParams = array_unique([$_hParam, 'LXGW+WenKai+TC:wght@400;700', $_bParam, 'Noto+Sans+TC:wght@400;500;700;800', 'Noto+Sans+SC:wght@400;500;700;800']);
+?>
+<link href="https://fonts.googleapis.com/css2?family=<?= implode('&family=', array_map('h', $_fontParams)) ?>&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= asset('css/style.css') ?>">
 <link rel="stylesheet" href="<?= asset('css/uat.css') ?>">
 <?php if (($activeNav ?? '') === 'home'): ?><link rel="stylesheet" href="<?= asset('css/banner.css') ?>"><?php endif; ?>
@@ -48,7 +54,10 @@ $helpKey = in_array($activeNav, ['home', 'register', 'donate', 'gallery'], true)
    characters it lacks fall back to LXGW WenKai TC, glyph by glyph;
    Simplified ones (帅 乐 …) to a Kai font that has them (KaiTi on
    Windows, STKaiti on Mac) rather than a plain sans-serif. */
-:root{--kai:"<?= h($_hFamily) ?>","LXGW WenKai TC","BiauKai","DFKai-SB","標楷體","KaiTi","STKaiti",serif;--kai-weight:<?= $_hFamily === 'LXGW WenKai TC' ? 700 : 400 ?>}
+:root{--kai:"<?= h($_hFamily) ?>","LXGW WenKai TC","BiauKai","DFKai-SB","標楷體","KaiTi","STKaiti",serif;--kai-weight:<?= (int) $_hWeight ?>;
+  --sans:"<?= h($_bFamily) ?>","Noto Sans TC","Noto Sans SC","Microsoft JhengHei","PingFang TC",sans-serif}
+/* Body font and size chosen in System → Forms & fonts. */
+:root{--fs:<?= App\Core\FormRules::bodySize($site) / 100 ?>}
 </style>
 <?php if ($siteFavicon): ?>
 <link rel="icon" href="<?= h($uploadUrl($siteFavicon)) ?>">

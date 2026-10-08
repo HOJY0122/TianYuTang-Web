@@ -920,3 +920,66 @@ details.guide > :not(summary){margin:0 20px 18px}
 
 /* UAT switch: a bigger main button */
 .uat-big{min-height:54px;padding:12px 24px;font-size:17px;border-radius:12px}
+
+/* Green "done" button (check-in, confirm payment): same family as .primary.
+   Its English line keeps the button's white text — the grey .en colour
+   used elsewhere disappears on green. */
+.big-btn{display:inline-flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px 8px;min-height:50px;
+  border:1px solid #24603c;background:linear-gradient(180deg,#3a8a58,#2e7346);color:#fff;font-weight:800;line-height:1.3;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 4px 12px rgba(46,125,79,.25);
+  transition:background-color .15s,box-shadow .15s,transform .08s}
+.big-btn:hover{background:linear-gradient(180deg,#317a4c,#25603a)}
+.big-btn:active{transform:translateY(1px);box-shadow:inset 0 2px 4px rgba(0,0,0,.2)}
+.big-btn:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.big-btn .en,.pledge-form .big-btn .en{color:#eaf7ee;opacity:1;font-weight:600;margin-left:0}
+
+/* User accounts → one device per account */
+.device-head{display:flex;gap:14px;align-items:flex-start}
+.device-icon{flex:none;display:grid;place-items:center;width:52px;height:52px;border-radius:14px;background:#f0e6cf;color:#7a5a2a}
+.device-icon.on{background:#e3f1e5;color:#2e7d4f}
+.device-row{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:14px}
+
+/* ========= System → Forms & fonts ========= */
+.forms-form{display:flex;flex-direction:column;gap:16px;min-width:0}
+.forms-sec{max-width:none;margin:0}
+.forms-sec h2{margin:0 0 6px;font-size:20px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.forms-sec h2 .en{font-size:.7em}
+.forms-sec [hidden]{display:none!important}
+.picks{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px}
+.pick{position:relative;display:flex;margin:0!important;cursor:pointer}
+.pick input{position:absolute;opacity:0;pointer-events:none}
+.pick > span{flex:1;display:flex;flex-direction:column;gap:2px;padding:10px 12px 10px 38px;border:2px solid #eadcb5;border-radius:12px;background:#fffdf6;
+  font-weight:400;line-height:1.4;transition:border-color .15s,background-color .15s}
+.pick > span::before{content:"";position:absolute;left:12px;top:13px;width:16px;height:16px;border-radius:50%;border:2px solid #c9b07a;background:#fff}
+.pick strong{font-size:14px}
+.pick small{color:var(--muted);font-size:12px}
+.pick:hover > span{border-color:#c9a65a}
+.pick input:checked + span{border-color:var(--red);background:#fff4ec}
+.pick input:checked + span::before{border-color:var(--red);background:radial-gradient(circle,var(--red) 0 4px,#fff 4.5px)}
+.pick input:focus-visible + span{outline:3px solid var(--gold);outline-offset:2px}
+.num-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.num-row input{width:110px!important;flex:none;text-align:center;font-weight:800;font-size:17px}
+.num-row .help{flex:1;min-width:200px;margin:0}
+.age-only{margin-top:4px;padding:4px 14px 12px;border-left:3px solid #e7c98a;background:#fffaf0;border-radius:0 12px 12px 0}
+.age-example{font-weight:700;color:#7a4b12!important}
+.amount-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.amount-chips span{padding:5px 12px;border-radius:999px;background:#fff;border:1.5px solid #e1c98c;font-weight:800;font-size:13px;color:#6b4423}
+.amount-chips em{color:#a3281f;font-size:13px}
+.font-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.font-card{position:relative;display:flex;flex-direction:column;gap:6px;margin:0!important;padding:14px;border:2px solid #eadcb5;border-radius:14px;
+  background:#fffdf6;cursor:pointer;font-weight:400!important;transition:border-color .15s,background-color .15s,box-shadow .15s}
+.font-card input{position:absolute;opacity:0;pointer-events:none}
+.font-card .font-sample{font-size:18px;line-height:1.5;color:var(--dark)}
+.font-card .font-sample.head{font-size:22px;color:var(--red)}
+.font-card small{color:var(--muted);font-size:12px;line-height:1.4}
+.font-card:hover{border-color:#c9a65a}
+.font-card:has(input:checked){border-color:var(--red);background:#fff4ec;box-shadow:0 0 0 3px rgba(159,33,27,.1)}
+.font-card:has(input:focus-visible){outline:3px solid var(--gold);outline-offset:2px}
+.font-card:has(input:checked)::after{content:"✓";position:absolute;top:8px;right:10px;width:22px;height:22px;border-radius:50%;background:var(--red);
+  color:#fff;display:grid;place-items:center;font-size:13px;font-weight:800}
+.forms-layout .word-preview .seg-mini button{display:inline-flex;align-items:center;gap:4px}
+.org-line{display:flex;align-items:center;gap:4px;font-weight:800;color:#6b4a22;font-size:12.5px;white-space:normal}
+.forms-layout{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr)}
+@media (max-width:1100px){ .forms-layout{grid-template-columns:minmax(0,1fr)} .forms-layout .word-frame-wrap iframe{max-width:100%} }
+.picks{grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr))}
+.font-grid{grid-template-columns:repeat(auto-fill,minmax(min(220px,100%),1fr))}

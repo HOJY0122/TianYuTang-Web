@@ -27,11 +27,21 @@ $navItems = [
     'donate'   => ['/donate',   t('nav.donate'),   t('nav.donate', 'en')],
     'gallery'  => ['/gallery',  t('nav.gallery'),  t('nav.gallery', 'en')],
 ];
+// Photo protection areas (System → Forms & fonts → 相片保護): classes on
+// <html> that js/protect.js and style.css read. None when the master switch is off.
+$protectAreas = [];
+if (($site['protect_photos'] ?? '1') === '1') {
+    foreach (['albums', 'news', 'banner', 'qr', 'keys'] as $_pa) {
+        if (($site['protect_' . $_pa] ?? '0') === '1') {
+            $protectAreas[] = 'p-' . $_pa;
+        }
+    }
+}
 // Which ⓘ help text this page shows (see the floating button below).
 $helpKey = in_array($activeNav, ['home', 'register', 'donate', 'gallery'], true) ? 'help.' . $activeNav : 'help.other';
 ?>
 <!DOCTYPE html>
-<html lang="zh-Hant" data-base="<?= h(BASE_URL) ?>" data-live-quiet<?= ($site['protect_photos'] ?? '1') === '1' ? ' data-protect' : '' ?><?= trim((string) $site['photo_watermark']) !== '' ? ' data-wm="' . h($site['photo_watermark']) . '"' : '' ?>>
+<html lang="zh-Hant" data-base="<?= h(BASE_URL) ?>" data-live-quiet<?= $protectAreas ? ' data-protect class="' . implode(' ', $protectAreas) . '"' : '' ?><?= trim((string) $site['photo_watermark']) !== '' ? ' data-wm="' . h($site['photo_watermark']) . '"' : '' ?>>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">

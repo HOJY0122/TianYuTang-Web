@@ -986,3 +986,21 @@ details.guide > :not(summary){margin:0 20px 18px}
 .protect-list{margin:6px 0 0;padding-left:18px;line-height:1.6}
 .protect-list li+li{margin-top:4px}
 .protect-list .en{display:block}
+/* Forms & fonts → photo protection areas */
+.protect-areas{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.protect-area{position:relative;display:flex;align-items:center;gap:12px;margin:0!important;padding:10px 14px;border:2px solid #eadcb5;border-radius:12px;
+  background:#fffdf6;cursor:pointer;font-weight:400!important}
+.protect-area input[type=checkbox]{position:absolute;opacity:0;pointer-events:none}
+.pa-icon{flex:none;display:grid;place-items:center;width:36px;height:36px;border-radius:10px;background:#f0e6cf;color:#7a5a2a}
+.pa-text{flex:1;display:flex;flex-direction:column;line-height:1.35}
+.pa-text small{color:var(--muted);font-size:12px}
+.pa-state{flex:none;width:44px;height:24px;border-radius:999px;background:#d9cdb1;position:relative;transition:background-color .15s}
+.pa-state::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px #0003;transition:left .15s}
+.protect-area:has(input:checked){border-color:#2e7d4f;background:#f3faf4}
+.protect-area:has(input:checked) .pa-icon{background:#e3f1e5;color:#2e7d4f}
+.protect-area:has(input:checked) .pa-state{background:#2e7d4f}
+.protect-area:has(input:checked) .pa-state::after{left:23px}
+.protect-area:has(input:focus-visible){outline:3px solid var(--gold);outline-offset:2px}
+.form-panel .protect-area{display:flex;flex-direction:row;align-items:center}
+.form-panel .protect-area .pa-text{display:flex}
+.form-panel .protect-areas > label:first-child{margin-bottom:2px}

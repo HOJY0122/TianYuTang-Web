@@ -94,6 +94,11 @@ class FormsController extends Controller
             'home_albums'       => $pick('home_albums', ['previous', 'latest', 'recent']),
             'home_album_photos' => $num('home_album_photos', [4, 40]),
             'protect_photos'    => $pick('protect_photos', ['0', '1']),
+            'protect_albums'    => $pick('protect_albums', ['0', '1']),
+            'protect_news'      => $pick('protect_news', ['0', '1']),
+            'protect_banner'    => $pick('protect_banner', ['0', '1']),
+            'protect_qr'        => $pick('protect_qr', ['0', '1']),
+            'protect_keys'      => $pick('protect_keys', ['0', '1']),
             'photo_watermark'   => is_string($in['photo_watermark'] ?? null)
                 ? mb_substr(trim(preg_replace('/[\x00-\x1F\x7F]/u', '', $in['photo_watermark'])), 0, 40) : (string) $site['photo_watermark'],
         ];

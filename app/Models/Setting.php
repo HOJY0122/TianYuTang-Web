@@ -61,6 +61,11 @@ class Setting extends Model
         'footer_size'       => '100',        // text size, %
         'footer_align'      => 'center',     // center | left
         'footer_theme'      => 'red',        // see FOOTER_THEMES
+        'footer_pad_m'      => '22',         // phones: px of space above / below
+        'footer_size_m'     => '90',         // phones: text size, %
+        'footer_gap'        => '6',          // px between lines
+        'footer_width'      => '760',        // widest the text runs on a computer, px
+        'footer_m_hide'     => '',           // lines left out on phones: org,address,contact,note,copyright
         'pdf_name'          => null,         // default: site name
         'pdf_name_en'       => null,         // default: English name
         'pdf_line1'         => null,         // default: footer organisation
@@ -140,6 +145,15 @@ class Setting extends Model
 
     /** Footer limits, shared by the settings page and the save check. */
     public const FOOTER_PAD = [8, 96], FOOTER_SIZE = [80, 140];
+    public const FOOTER_PAD_M = [4, 80], FOOTER_SIZE_M = [70, 130], FOOTER_GAP = [0, 24], FOOTER_WIDTH = [480, 1200];
+    /** Footer lines that can be left out on phones: key => label. */
+    public const FOOTER_LINES = [
+        'org'       => '機構名稱 Organisation',
+        'address'   => '地址 Address',
+        'contact'   => '聯絡方式 Contact',
+        'note'      => '頁尾說明 Note',
+        'copyright' => '版權行 Copyright',
+    ];
 
     /** The chosen heading font: [CSS family, Google Fonts parameter, weight]. */
     public function headingFont(): array

@@ -124,6 +124,32 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
       <div class="fl-range"><input type="range" id="footer_size" name="footer_size" min="<?= FS::FOOTER_SIZE[0] ?>" max="<?= FS::FOOTER_SIZE[1] ?>" step="5" value="<?= (int) $settings['footer_size'] ?>">
         <output for="footer_size"><?= (int) $settings['footer_size'] ?>%</output></div>
 
+      <label for="footer_gap">≡ 行距 <span class="en">Space between lines</span></label>
+      <div class="fl-range"><input type="range" id="footer_gap" name="footer_gap" min="<?= FS::FOOTER_GAP[0] ?>" max="<?= FS::FOOTER_GAP[1] ?>" step="1" value="<?= (int) $settings['footer_gap'] ?>">
+        <output for="footer_gap"><?= (int) $settings['footer_gap'] ?> px</output></div>
+
+      <label for="footer_width">⟷ 文字最寬（電腦）<span class="en">Widest text line (computer)</span></label>
+      <div class="fl-range"><input type="range" id="footer_width" name="footer_width" min="<?= FS::FOOTER_WIDTH[0] ?>" max="<?= FS::FOOTER_WIDTH[1] ?>" step="20" value="<?= (int) $settings['footer_width'] ?>">
+        <output for="footer_width"><?= (int) $settings['footer_width'] ?> px</output></div>
+
+      <fieldset class="fl-phone">
+        <legend><?= icon('smartphone') ?> 手機 <span class="en">On phones</span></legend>
+        <input type="hidden" name="footer_look" value="1">
+        <label for="footer_pad_m">↕ 高度 <span class="en">Height (space above and below)</span></label>
+        <div class="fl-range"><input type="range" id="footer_pad_m" name="footer_pad_m" min="<?= FS::FOOTER_PAD_M[0] ?>" max="<?= FS::FOOTER_PAD_M[1] ?>" step="2" value="<?= (int) $settings['footer_pad_m'] ?>">
+          <output for="footer_pad_m"><?= (int) $settings['footer_pad_m'] ?> px</output></div>
+        <label for="footer_size_m"><?= icon('type') ?> 字體大小 <span class="en">Text size</span></label>
+        <div class="fl-range"><input type="range" id="footer_size_m" name="footer_size_m" min="<?= FS::FOOTER_SIZE_M[0] ?>" max="<?= FS::FOOTER_SIZE_M[1] ?>" step="5" value="<?= (int) $settings['footer_size_m'] ?>">
+          <output for="footer_size_m"><?= (int) $settings['footer_size_m'] ?>%</output></div>
+        <label>手機上隱藏 <span class="en">Leave out on phones (shorter footer)</span></label>
+        <?php $fHide = array_flip(array_filter(explode(',', (string) $settings['footer_m_hide']))); ?>
+        <div class="fl-hide">
+          <?php foreach (FS::FOOTER_LINES as $lk => $ll): ?>
+            <label class="check-chip"><input type="checkbox" name="footer_m_hide[]" value="<?= $lk ?>"<?= isset($fHide[$lk]) ? ' checked' : '' ?>><span><?= h($ll) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+      </fieldset>
+
       <label>↔ 排列 <span class="en">Alignment</span></label>
       <div class="seg-toggle">
         <label class="seg-on"><input type="radio" name="footer_align" value="center"<?= $settings['footer_align'] !== 'left' ? ' checked' : '' ?>><span>置中 Centre</span></label>
@@ -142,7 +168,11 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
       <button type="button" class="mini-btn ghost" id="footerReset">↺ 預設外觀 <span class="en">Default look</span></button>
     </div>
     <div class="fl-preview">
-      <div class="fl-preview-bar"><?= icon('eye') ?> 即時預覽 <span class="en">Live preview — the bottom of the home page</span></div>
+      <div class="fl-preview-bar"><?= icon('eye') ?> 即時預覽 <span class="en">Live preview — the bottom of the home page</span>
+        <span class="seg-mini" id="footerDevice">
+          <button type="button" data-w="100%" class="is-on" title="電腦 Computer"><?= icon('monitor') ?></button>
+          <button type="button" data-w="390px" title="手機 Phone"><?= icon('smartphone') ?></button>
+        </span></div>
       <iframe id="footerFrame" src="<?= url('/') ?>" title="頁尾預覽 Footer preview" loading="lazy" tabindex="-1"></iframe>
       <p class="help">外觀即時改變；文字按「儲存」後更新。<span class="en">The look changes as you go; text changes show after Save.</span></p>
     </div>
@@ -274,6 +304,7 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
   var frame = document.getElementById('footerFrame');
   if (!frame) return;
   var pad = document.getElementById('footer_pad'), size = document.getElementById('footer_size');
+  var EXTRA = { footer_pad_m: ['--f-pad-m', 'px'], footer_size_m: ['--f-size-m', '%'], footer_gap: ['--f-gap', 'px'], footer_width: ['--f-width', 'px'] };
   function foot() {
     try { return frame.contentDocument.querySelector('.site-footer'); } catch (e) { return null; }
   }
@@ -283,6 +314,13 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
     var f = foot();
     if (!f) return;
     var t = document.querySelector('input[name=footer_theme]:checked');
+    Object.keys(EXTRA).forEach(function (id) {
+      var el = document.getElementById(id);
+      el.nextElementSibling.textContent = el.value + ' ' + EXTRA[id][1];
+      f.style.setProperty(EXTRA[id][0], el.value + EXTRA[id][1]);
+    });
+    var hide = [].map.call(document.querySelectorAll('input[name="footer_m_hide[]"]:checked'), function (c) { return c.value; });
+    f.querySelectorAll('[data-fline]').forEach(function (el) { el.classList.toggle('f-hide-m', hide.indexOf(el.dataset.fline) >= 0); });
     f.style.setProperty('--f-pad', pad.value + 'px');
     f.style.setProperty('--f-size', size.value + '%');
     if (t) { f.style.setProperty('--f-bg', t.dataset.bg); f.style.setProperty('--f-fg', t.dataset.fg); f.style.setProperty('--f-accent', t.dataset.accent); }
@@ -296,10 +334,21 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
     d.head.appendChild(st);
     apply();
   });
-  [pad, size].forEach(function (el) { el.addEventListener('input', apply); });
+  [pad, size].concat(Object.keys(EXTRA).map(function (id) { return document.getElementById(id); }))
+    .forEach(function (el) { el.addEventListener('input', apply); });
+  document.querySelectorAll('input[name="footer_m_hide[]"]').forEach(function (el) { el.addEventListener('change', apply); });
+  document.querySelectorAll('#footerDevice [data-w]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      frame.style.width = b.dataset.w;
+      document.querySelectorAll('#footerDevice [data-w]').forEach(function (x) { x.classList.toggle('is-on', x === b); });
+      setTimeout(apply, 60);
+    });
+  });
   document.querySelectorAll('input[name=footer_theme],input[name=footer_align]').forEach(function (el) { el.addEventListener('change', apply); });
   document.getElementById('footerReset').addEventListener('click', function () {
     pad.value = <?= (int) FS::DEFAULTS['footer_pad'] ?>; size.value = <?= (int) FS::DEFAULTS['footer_size'] ?>;
+    Object.keys(EXTRA).forEach(function (id) { document.getElementById(id).value = <?= json_encode(array_map('intval', array_intersect_key(FS::DEFAULTS, array_flip(['footer_pad_m', 'footer_size_m', 'footer_gap', 'footer_width'])))) ?>[id]; });
+    document.querySelectorAll('input[name="footer_m_hide[]"]').forEach(function (c) { c.checked = false; });
     document.querySelector('input[name=footer_align][value=center]').checked = true;
     document.querySelector('input[name=footer_theme][value=red]').checked = true;
     apply();

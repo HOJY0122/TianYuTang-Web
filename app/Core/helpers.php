@@ -43,6 +43,38 @@ function media_url(?string $path): string
     return App\Core\Media::url($path);
 }
 
+/**
+ * <img> for a public photo. When its part of the site is protected
+ * (albums / news), the tag carries the SHUFFLED copy for js/photos.js to
+ * put back together on a canvas; otherwise a normal signed image.
+ * $attrs: extra attributes (class, alt, data-…), escaped here.
+ */
+function photo_img(string $path, string $area, array $attrs = []): string
+{
+    $guard = App\Core\Media::guarded($area);
+    if ($guard) {
+        $attrs['class']    = trim(($attrs['class'] ?? '') . ' scr');
+        $attrs['data-src'] = App\Core\Media::url($path, true);
+        $attrs['data-scr'] = (string) App\Core\Media::seed($path);
+        $attrs['src']      = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    } else {
+        $attrs['src'] = App\Core\Media::url($path);
+    }
+    $out = '<img';
+    foreach ($attrs as $k => $v) {
+        $out .= ' ' . h($k) . '="' . h((string) $v) . '"';
+    }
+    return $out . ' draggable="false">';
+}
+
+/** Address + key the full-size viewer needs for a photo: data-full / data-seed attributes. */
+function photo_full_attrs(string $path, string $area): string
+{
+    return App\Core\Media::guarded($area)
+        ? 'data-full="' . h(App\Core\Media::url($path, true)) . '" data-seed="' . App\Core\Media::seed($path) . '"'
+        : 'data-full="' . h(App\Core\Media::url($path)) . '"';
+}
+
 /** Current CSRF token, generated once per session. */
 function csrf_token(): string
 {

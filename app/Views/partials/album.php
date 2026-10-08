@@ -30,10 +30,9 @@ $albumLink = $albumLink ?? null;
     <button type="button" class="album-nav prev" aria-label="上一組 Previous" data-dir="-1"><?= icon('chevron-left') ?></button>
     <div class="album-strip" tabindex="0" aria-label="<?= h($album['year']) ?> 相片 photos">
       <?php foreach ($album['photos'] as $photo): ?>
-        <figure data-full="<?= h(media_url($photo['file_path'])) ?>"
+        <figure <?= photo_full_attrs($photo['file_path'], 'albums') ?>
                 data-caption="<?= h($photo['caption'] ?? '') ?>">
-          <img src="<?= h(media_url($photo['thumb_path'])) ?>"
-               alt="<?= h($photo['caption'] ?: ($album['year'] . ' 活動留影')) ?>" loading="lazy">
+          <?= photo_img($photo['thumb_path'], 'albums', ['alt' => $photo['caption'] ?: ($album['year'] . ' 活動留影'), 'loading' => 'lazy']) ?>
           <?php if (!empty($photo['caption'])): ?>
             <figcaption><?= h($photo['caption']) ?></figcaption>
           <?php endif; ?>

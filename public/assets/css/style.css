@@ -347,7 +347,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--red);box-shadow:0 0 0
   .brand{flex:1 1 0}
   .brand img{width:2.6rem;height:2.6rem}
   .brand-text strong{font-size:1.3rem;letter-spacing:.06em;overflow:hidden;text-overflow:ellipsis}
-  .site-nav{order:3;width:100%;display:grid;grid-template-columns:repeat(4,1fr);gap:.3rem}
+  .site-nav{order:3;width:100%;display:grid;grid-template-columns:repeat(var(--nav-n,4),minmax(0,1fr));gap:.3rem}
   .site-nav a{min-width:0;padding:.3rem .2rem;background:var(--card);border:1px solid var(--line)}
   .cta-grid,.row{grid-template-columns:1fr}
   .location-card{grid-template-columns:1fr}
@@ -818,3 +818,35 @@ html.has-wm.p-albums .album-strip figure::after,html.has-wm.p-news .post-media::
 .sleepbar span{display:block;font-weight:500;opacity:.85;font-size:.92em}
 .sleepbar a{color:#f3df9c;margin-left:.4rem}
 
+
+/* ---------- 關於我們 About page ---------- */
+.about-page{max-width:820px;margin-inline:auto}
+.about-strip{display:block;overflow:visible;margin:1.4rem auto}
+.about-figure{margin:0 auto;max-width:640px;text-align:center;cursor:zoom-in}
+.about-figure .about-img,.about-figure canvas{display:block;width:100%;height:auto;margin:0 auto;border-radius:16px;
+  box-shadow:0 10px 30px rgba(80,20,10,.18);border:3px solid #e7cf8f;background:#fffaf0}
+.about-figure figcaption{margin-top:.8rem;font-family:var(--kai);font-weight:var(--kai-weight);font-size:1.45rem;color:var(--red);line-height:1.4}
+.about-figure figcaption .en{font-family:var(--sans);font-size:.6em;letter-spacing:.06em;color:var(--gold)}
+.about-text{max-width:720px;margin:1rem auto 1.6rem;padding:1.2rem 1.4rem;background:var(--card);border:1px solid var(--line);border-radius:18px;
+  font-size:calc(1.08rem * var(--fs, 1));line-height:1.95}
+.about-text h3{margin:0 0 .6rem;font-family:var(--kai);font-weight:var(--kai-weight);font-size:1.5rem;color:var(--red);text-align:center}
+.about-text h3 .en{display:block;font-family:var(--sans);font-size:.55em;letter-spacing:.08em;color:var(--gold)}
+.about-text p{margin:0 0 .9rem;text-indent:2em}
+.about-text p.en{display:block;text-indent:0;font-size:.92em;color:var(--muted)}
+.about-text p:last-child{margin-bottom:0}
+@media (max-width:640px){
+  .about-text{padding:1rem;border-radius:14px}
+  .about-figure figcaption{font-size:1.25rem}
+}
+/* Five menu items on a phone (關於我們 About added): one line each. */
+@media (max-width:760px){
+  .site-nav[style*="--nav-n:5"] a{white-space:nowrap;font-size:.86rem;padding-inline:.1rem;letter-spacing:0}
+  .site-nav[style*="--nav-n:5"] a small{font-size:.6rem}
+}
+/* About pictures are posters: always whole, at their real shape (the album
+   row rules crop tiles to 4:3 — not here). */
+.album-strip.about-strip{display:block}
+.album-strip.about-strip figure{overflow:visible;background:none;border:0;border-radius:0;box-shadow:none}
+.album-strip.about-strip img,.album-strip.about-strip canvas.scr{aspect-ratio:auto;height:auto;object-fit:contain}
+.album-strip.about-strip figcaption{padding:0;font-size:1.45rem;color:var(--red)}
+@media (max-width:640px){ .album-strip.about-strip figcaption{font-size:1.25rem} }

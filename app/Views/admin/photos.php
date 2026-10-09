@@ -135,7 +135,9 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     TYTBulk.queue(files, function (file) {
       var row = p.row(file.name);
       row.set('is-busy', '縮小中 Preparing…');
-      return TYTBulk.shrink(file, 2400).then(function (small) {
+      // Only to speed up the upload: the server keeps 2560px, so send a
+      // little more than that, lightly compressed.
+      return TYTBulk.shrink(file, 3200, 0.92).then(function (small) {
         row.set('is-busy', '上傳中 Uploading…');
         var fd = new FormData();
         fd.append('csrf_token', base.get('csrf_token'));

@@ -29,6 +29,7 @@ class Text
         'donate'   => '布施頁 Donation page',
         'success'  => '完成頁 Confirmation page',
         'gallery'  => '相簿 Gallery',
+        'about'    => '關於我們 About page',
         'help'     => 'ⓘ 說明視窗 Help panel',
         'pdf'      => '列印 / PDF Printouts',
         'login'    => '登入頁 Login page',
@@ -44,6 +45,7 @@ class Text
         'nav.register' => ['nav', '報名', 'Register'],
         'nav.donate'   => ['nav', '布施', 'Donate'],
         'nav.gallery'  => ['nav', '相簿', 'Gallery'],
+        'nav.about'    => ['nav', '關於我們', 'About'],
 
         // --- Home page ---
         'home.welcome'        => ['home', '誠邀十方善信共襄盛舉，同結善緣，共種福田。', 'All are warmly welcome to join us in this celebration.', true],
@@ -104,6 +106,8 @@ class Text
 
         // --- Gallery ---
         'gallery.title'       => ['gallery', '相簿回顧', 'Photo Albums'],
+        'about.title'         => ['about', '關於我們', 'About Us'],
+        'about.sub'           => ['about', '', ''],
         'gallery.hint'        => ['gallery', '歷年活動留影，左右滑動看更多，點一下放大。', 'Photos from every year. Swipe for more, tap to enlarge.'],
         'gallery.empty_title' => ['gallery', '相簿準備中', 'Photos coming soon'],
         'gallery.empty_text'  => ['gallery', '活動後將上傳精彩留影，敬請期待。', 'Photos will be added after the event.'],

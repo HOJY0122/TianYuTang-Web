@@ -27,6 +27,10 @@ $navItems = [
     'donate'   => ['/donate',   t('nav.donate'),   t('nav.donate', 'en')],
     'gallery'  => ['/gallery',  t('nav.gallery'),  t('nav.gallery', 'en')],
 ];
+// 關於我們 About: in the menu once the page has content and is switched on.
+if (App\Controllers\AboutController::enabled() && (new App\Models\AboutBlock())->count() > 0) {
+    $navItems['about'] = ['/about', t('nav.about'), t('nav.about', 'en')];
+}
 // Photo protection areas (System → Forms & fonts → 相片保護): classes on
 // <html> that js/protect.js and style.css read. None when the master switch is off.
 $protectAreas = [];
@@ -50,13 +54,15 @@ $helpKey = in_array($activeNav, ['home', 'register', 'donate', 'gallery'], true)
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <?php
 [$_hFamily, $_hParam, $_hWeight] = (new App\Models\Setting())->headingFont();
-[$_bFamily, $_bParam] = App\Core\FormRules::bodyFont($site);
+[$_bFamily, $_bParam, $_bPartner] = App\Core\FormRules::bodyFont($site);
 // One request for every family the page needs (heading, body, the WenKai and
 // Noto fallbacks), each named once.
 // "Noto Sans" (Latin letters only) comes first in the heading stack, so
 // English names and numbers in headings are drawn in a clean sans-serif
 // while Chinese characters still use the chosen brush / Kai font.
-$_fontParams = array_unique([$_hParam, 'LXGW+WenKai+TC:wght@400;700', $_bParam, 'Noto+Sans+TC:wght@400;500;700;800', 'Noto+Sans+SC:wght@400;500;700;800', 'Noto+Sans:wght@400;500;700;800']);
+$_fontParams = array_unique(array_filter([$_hParam, 'LXGW+WenKai+TC:wght@400;700', $_bParam,
+    $_bPartner ? App\Core\FormRules::PARTNER_PARAMS[$_bPartner] : null,
+    'Noto+Sans+TC:wght@400;500;700;800', 'Noto+Sans+SC:wght@400;500;700;800', 'Noto+Sans:wght@400;500;700;800']));
 ?>
 <link href="https://fonts.googleapis.com/css2?family=<?= implode('&family=', array_map('h', $_fontParams)) ?>&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= asset('css/style.css') ?>">
@@ -68,7 +74,11 @@ $_fontParams = array_unique([$_hParam, 'LXGW+WenKai+TC:wght@400;700', $_bParam, 
    Simplified ones (帅 乐 …) to a Kai font that has them (KaiTi on
    Windows, STKaiti on Mac) rather than a plain sans-serif. */
 :root{--kai:"Noto Sans","<?= h($_hFamily) ?>","LXGW WenKai TC","BiauKai","DFKai-SB","標楷體","KaiTi","STKaiti",serif;--kai-weight:<?= (int) $_hWeight ?>;
-  --sans:"<?= h($_bFamily) ?>","Noto Sans TC","Noto Sans SC","Microsoft JhengHei","PingFang TC",sans-serif}
+  --sans:"Noto Sans","<?= h($_bFamily) ?>",<?= $_bPartner ? '"' . h($_bPartner) . '",' : '' ?>"LXGW WenKai TC","Microsoft JhengHei","PingFang TC","Microsoft YaHei","PingFang SC",sans-serif;
+  /* A box or name with Simplified characters switches wholly to this
+     (js/simp-font.js), so one name is never drawn in two styles. */
+  --simp-font:"Noto Sans","<?= h($_bPartner ?? $_bFamily) ?>","LXGW WenKai TC",sans-serif}
+.has-simp{font-family:var(--simp-font)!important}
 /* Body font and size chosen in System → Forms & fonts. */
 :root{--fs:<?= App\Core\FormRules::bodySize($site) / 100 ?>}
 </style>
@@ -122,7 +132,7 @@ try {
       </span>
     </a>
 
-    <nav class="site-nav" id="liveNav" data-live="settings" aria-label="主選單 Main menu">
+    <nav class="site-nav" id="liveNav" data-live="settings about_blocks" aria-label="主選單 Main menu" style="--nav-n:<?= count($navItems) ?>">
       <?php // Prefixed loop variables: this file shares scope with the page.
       foreach ($navItems as $_nKey => [$_nHref, $_nZh, $_nEn]): ?>
         <a href="<?= url($_nHref) ?>"<?= $activeNav === $_nKey ? ' class="active" aria-current="page"' : '' ?>>

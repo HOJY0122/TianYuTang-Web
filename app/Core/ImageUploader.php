@@ -53,6 +53,9 @@ class ImageUploader
     public const MAX_BYTES       = 20 * 1024 * 1024;
     private const MAX_DIMENSION  = 6000;             // px, guards against bombs
     private const JPEG_QUALITY   = 85;
+    // Album photos are looked at full-screen and zoomed in: kept larger and
+    // with less compression than everyday pictures.
+    private const PHOTO_QUALITY  = 90;
 
     private string $uploadDir;
     private string $publicPrefix;
@@ -166,9 +169,14 @@ class ImageUploader
      * The source is decoded ONCE and both sizes are written from that
      * same decode, so the payload-stripping guarantee applies to each.
      *
+     * Sizes are for the LONG side, so a portrait photo is as sharp as a
+     * landscape one: 2560px for the full view (enough for a 3× phone screen
+     * or zooming in), 900px for the grid thumbnail (a ~300px tile on a
+     * 3× screen). Both at quality 90.
+     *
      * @return array{path:string, thumb:string}
      */
-    public function storeWithThumbnail(array $file, int $maxWidth = 1600, int $thumbWidth = 600): array
+    public function storeWithThumbnail(array $file, int $maxSide = 2560, int $thumbSide = 900): array
     {
         $this->assertUploadOk($file);
 
@@ -206,16 +214,19 @@ class ImageUploader
         $displayName = $base . '.' . $extension;
         $thumbName   = $base . '_thumb.' . $extension;
 
+        // Long side → the width copyScaled() works with.
+        $toWidth = static fn(int $side): int => $width >= $height ? $side : max(1, (int) round($side * $width / $height));
+
         // --- display copy ---
-        $display = $this->copyScaled($source, $width, $height, $maxWidth);
-        $okBig   = $this->encode($display, $this->uploadDir . '/' . $displayName, $type);
+        $display = $this->copyScaled($source, $width, $height, $toWidth($maxSide));
+        $okBig   = $this->encode($display, $this->uploadDir . '/' . $displayName, $type, self::PHOTO_QUALITY);
         if ($display !== $source) {
             imagedestroy($display);
         }
 
         // --- thumbnail ---
-        $thumb   = $this->copyScaled($source, $width, $height, $thumbWidth);
-        $okSmall = $this->encode($thumb, $this->uploadDir . '/' . $thumbName, $type);
+        $thumb   = $this->copyScaled($source, $width, $height, $toWidth($thumbSide));
+        $okSmall = $this->encode($thumb, $this->uploadDir . '/' . $thumbName, $type, self::PHOTO_QUALITY);
         if ($thumb !== $source) {
             imagedestroy($thumb);
         }
@@ -358,13 +369,13 @@ class ImageUploader
         return $image === false ? null : $image;
     }
 
-    private function encode($image, string $target, int $type): bool
+    private function encode($image, string $target, int $type, int $quality = self::JPEG_QUALITY): bool
     {
         return match ($type) {
-            IMAGETYPE_JPEG => imagejpeg($image, $target, self::JPEG_QUALITY),
+            IMAGETYPE_JPEG => imagejpeg($image, $target, $quality),
             IMAGETYPE_PNG  => imagepng($image, $target, 6),
             IMAGETYPE_GIF  => imagegif($image, $target),
-            IMAGETYPE_WEBP => imagewebp($image, $target, self::JPEG_QUALITY),
+            IMAGETYPE_WEBP => imagewebp($image, $target, $quality),
             default        => false,
         };
     }

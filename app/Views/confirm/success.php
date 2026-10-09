@@ -36,7 +36,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
         <?php foreach (($confirmation['attendees'] ?? []) as $i => $person): ?>
           <div class="person">
             <span class="num"><?= $i + 1 ?></span>
-            <strong><?= h($person['name']) ?></strong>
+            <strong data-simp-check><?= h($person['name']) ?></strong>
             <span><?= icon('id-card') ?> <?= h($person['ic']) ?></span>
             <span><?= icon('phone') ?> <?= h($person['contact']) ?></span>
           </div>
@@ -45,7 +45,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     <?php else: ?>
       <dl class="confirm-details">
         <div><dt>布施編號 Reference</dt><dd><?= h($refCode) ?></dd></div>
-        <div><dt>姓名 Name</dt><dd><?= h($confirmation['name']) ?></dd></div>
+        <div><dt>姓名 Name</dt><dd data-simp-check><?= h($confirmation['name']) ?></dd></div>
         <?php if (!empty($confirmation['seats'])): ?>
           <div><dt>功德席 Merit seats</dt>
             <dd><?= (int) $confirmation['seats'] ?> 席 × <?= rm((float) ($confirmation['seat_price'] ?? 0)) ?></dd></div>

@@ -31,7 +31,7 @@ namespace App\Core;
 final class Media
 {
     /** Folders whose files go through here. */
-    public const FOLDERS = ['uploads/photos/', 'uploads/posts/', 'uploads/banners/'];
+    public const FOLDERS = ['uploads/photos/', 'uploads/posts/', 'uploads/banners/', 'uploads/about/'];
     /** Addresses change every WINDOW seconds and work for up to two windows. */
     private const WINDOW = 21600;   // 6 hours
 
@@ -98,7 +98,9 @@ final class Media
     {
         $dir = BASE_PATH . '/storage/cache/media';
         $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION)) === 'png' ? 'png' : 'jpg';
-        $out = $dir . '/' . sha1($path . '|' . filemtime($file) . '|' . self::seed($path)) . '.' . $ext;
+        // "q95": part of the name, so copies made at the old quality are
+        // simply not used any more (they are rebuilt on first view).
+        $out = $dir . '/' . sha1($path . '|' . filemtime($file) . '|' . self::seed($path) . '|q95') . '.' . $ext;
         if (is_file($out)) {
             return $out;
         }
@@ -121,7 +123,10 @@ final class Media
             mkdir($dir, 0755, true);
         }
         $tmp = $out . '.' . bin2hex(random_bytes(4));
-        $ext === 'png' ? imagepng($dst, $tmp, 6) : imagejpeg($dst, $tmp, 92);
+        // 95: this is a second save of an already-compressed photo; a
+        // lower setting visibly softens it (tiles are 16px-aligned, so
+        // they do not add block edges of their own).
+        $ext === 'png' ? imagepng($dst, $tmp, 6) : imagejpeg($dst, $tmp, 95);
         rename($tmp, $out);
         return $out;
     }
@@ -135,7 +140,7 @@ final class Media
         $x    = ($_GET['x'] ?? '') === '1' ? '1' : '0';
 
         $ok = self::protects($path)
-            && preg_match('#^uploads/(photos|posts|banners)/[A-Za-z0-9_\-./]+\.(jpe?g|png|gif|webp)$#i', $path)
+            && preg_match('#^uploads/(photos|posts|banners|about)/[A-Za-z0-9_\-./]+\.(jpe?g|png|gif|webp)$#i', $path)
             && !str_contains($path, '..')
             && $exp >= time() && $exp <= time() + 3 * self::WINDOW
             && hash_equals(substr(Crypto::sign($path . '|' . $exp . '|' . $x, 'media'), 0, 32), $sig);

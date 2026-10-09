@@ -92,6 +92,7 @@ class FormsController extends Controller
             'body_size'         => $num('body_size', FormRules::BODY_SIZE),
             'heading_font'      => $pick('heading_font', array_keys(Setting::HEADING_FONTS)),
             'home_albums'       => $pick('home_albums', ['previous', 'latest', 'recent']),
+            'site_tone'         => $pick('site_tone', ['calm', 'festive']),
             'home_album_photos' => $num('home_album_photos', [4, 40]),
             'protect_photos'    => $pick('protect_photos', ['0', '1']),
             'protect_albums'    => $pick('protect_albums', ['0', '1']),

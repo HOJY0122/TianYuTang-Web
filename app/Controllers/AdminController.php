@@ -258,10 +258,16 @@ class AdminController extends Controller
             $event = $eventModel->active();
         }
 
+        // ?cat=  show one category only (0 = 其他 Others); none = all.
+        $cat = isset($_GET['cat']) && ctype_digit((string) $_GET['cat']) ? (int) $_GET['cat'] : null;
+        $photoModel = new Photo();
         $this->view('admin/photos', [
-            'event'     => $event,
-            'allEvents' => $eventModel->all(),
-            'photos'    => (new Photo())->forEvent((int) $event['id']),
+            'event'      => $event,
+            'allEvents'  => $eventModel->all(),
+            'categories' => (new \App\Models\PhotoCategory())->all(),
+            'catCounts'  => $photoModel->categoryCounts((int) $event['id']),
+            'cat'        => $cat,
+            'photos'     => $photoModel->forEvent((int) $event['id'], $cat),
             'flash'     => $this->takeFlash(),
             'maxFiles'  => (int) ini_get('max_file_uploads'),
             'postMax'   => ini_get('post_max_size'),
@@ -305,6 +311,12 @@ class AdminController extends Controller
             $this->redirect('/admin/photos');
         }
 
+        // Which album (category) the photos go into; unknown = 其他 Others.
+        $categoryId = (int) ($_POST['category_id'] ?? 0);
+        if ($categoryId && (new \App\Models\PhotoCategory())->find($categoryId) === null) {
+            $categoryId = 0;
+        }
+
         $files = ImageUploader::normaliseMultiple($_FILES['photos'] ?? null);
         if (!$files) {
             if ($this->wantsJson()) {
@@ -324,7 +336,7 @@ class AdminController extends Controller
         foreach ($files as $i => $file) {
             try {
                 $stored = $uploader->storeWithThumbnail($file);
-                $photo->create($eventId, $stored['path'], $stored['thumb']);
+                $photo->create($eventId, $stored['path'], $stored['thumb'], null, $categoryId);
                 $succeeded++;
             } catch (RuntimeException $e) {
                 $name = $file['name'] !== '' ? $file['name'] : ('第 ' . ($i + 1) . ' 張');
@@ -351,6 +363,74 @@ class AdminController extends Controller
         }
 
         $this->redirect("/admin/photos?event={$eventId}");
+    }
+
+    /** POST /admin/photos/category — move one photo to another album category. */
+    public function setPhotoCategory(): void
+    {
+        $this->requireAdmin();
+        $this->requireCsrf();
+        $photoModel = new Photo();
+        $photo = $photoModel->find((int) ($_POST['photo_id'] ?? 0));
+        $catId = (int) ($_POST['category_id'] ?? 0);
+        if ($photo && ($catId === 0 || (new \App\Models\PhotoCategory())->find($catId))) {
+            $photoModel->setCategory((int) $photo['id'], $catId ?: null);
+        }
+        if ($this->wantsJson()) {
+            $this->json(['ok' => (bool) $photo]);
+        }
+        $this->redirect('/admin/photos?event=' . (int) ($photo['event_id'] ?? 0) . $this->catQuery());
+    }
+
+    /** POST /admin/photos/categories — add a category, or rename / show / hide one (id given). */
+    public function saveCategory(): void
+    {
+        $this->requireAdmin();
+        $this->requireCsrf();
+        $model = new \App\Models\PhotoCategory();
+        $zh = mb_substr(trim(is_string($_POST['name_zh'] ?? null) ? $_POST['name_zh'] : ''), 0, 60);
+        $en = mb_substr(trim(is_string($_POST['name_en'] ?? null) ? $_POST['name_en'] : ''), 0, 80);
+        $id = (int) ($_POST['id'] ?? 0);
+        if ($zh === '') {
+            $this->flash('error', '未儲存 Not saved', '請輸入類別名稱。Please enter the category name.');
+        } elseif ($id && $model->find($id)) {
+            $model->update($id, $zh, $en !== '' ? $en : null, !empty($_POST['is_visible']));
+            $this->flash('success', '已儲存 Saved', "類別「{$zh}」已更新。Category updated.");
+        } elseif (!$id) {
+            $model->create($zh, $en !== '' ? $en : null);
+            $this->flash('success', '已加入 Added', "已新增類別「{$zh}」。Category added.");
+        }
+        $this->redirect('/admin/photos?event=' . (int) ($_POST['event_id'] ?? 0) . '#categories');
+    }
+
+    /** POST /admin/photos/categories/delete — the photos stay, as 其他 Others. */
+    public function deleteCategory(): void
+    {
+        $this->requireAdmin();
+        $this->requireCsrf();
+        $model = new \App\Models\PhotoCategory();
+        $row = $model->find((int) ($_POST['id'] ?? 0));
+        if ($row) {
+            $model->delete((int) $row['id']);
+            $this->flash('success', '已刪除 Deleted', "類別「{$row['name_zh']}」已刪除，相片保留在「其他」。\nCategory deleted; its photos are kept under Others.");
+        }
+        $this->redirect('/admin/photos?event=' . (int) ($_POST['event_id'] ?? 0) . '#categories');
+    }
+
+    /** POST /admin/photos/categories/move — ↑ ↓ */
+    public function moveCategory(): void
+    {
+        $this->requireAdmin();
+        $this->requireCsrf();
+        (new \App\Models\PhotoCategory())->move((int) ($_POST['id'] ?? 0), ($_POST['dir'] ?? '') === 'up' ? 'up' : 'down');
+        $this->redirect('/admin/photos?event=' . (int) ($_POST['event_id'] ?? 0) . '#categories');
+    }
+
+    /** "&cat=N" to stay on the category tab being worked on, from the form. */
+    private function catQuery(): string
+    {
+        $c = $_POST['cat'] ?? '';
+        return is_string($c) && ctype_digit($c) ? '&cat=' . $c : '';
     }
 
     /** POST /admin/photos/caption */

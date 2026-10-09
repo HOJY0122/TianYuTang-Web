@@ -45,7 +45,8 @@ if (($site['protect_photos'] ?? '1') === '1') {
 $helpKey = in_array($activeNav, ['home', 'register', 'donate', 'gallery'], true) ? 'help.' . $activeNav : 'help.other';
 ?>
 <!DOCTYPE html>
-<html lang="zh-Hant" data-base="<?= h(BASE_URL) ?>" data-live-quiet<?= $protectAreas ? ' data-protect class="' . implode(' ', $protectAreas) . '"' : '' ?><?= trim((string) $site['photo_watermark']) !== '' ? ' data-wm="' . h($site['photo_watermark']) . '"' : '' ?>>
+<?php $_htmlClass = array_merge($protectAreas, [($site['site_tone'] ?? 'calm') === 'festive' ? 'tone-festive' : 'tone-calm']); ?>
+<html lang="zh-Hant" data-base="<?= h(BASE_URL) ?>" data-live-quiet<?= $protectAreas ? ' data-protect' : '' ?> class="<?= h(implode(' ', $_htmlClass)) ?>"<?= trim((string) $site['photo_watermark']) !== '' ? ' data-wm="' . h($site['photo_watermark']) . '"' : '' ?>>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">

@@ -126,6 +126,16 @@ foreach (FormRules::BODY_FONTS as [, $fam]) {
         <span class="en">All from Google Fonts, each with full Traditional Chinese. Visitors can still enlarge text with the Access button.</span></p>
     </section>
 
+    <!-- Site tone -->
+    <section class="panel form-panel forms-sec" data-preview-page="home">
+      <h2><?= icon('palette') ?> 網站色調 <span class="en">Site tone</span></h2>
+      <div class="picks"><?php $radio('site_tone', [
+          'calm'    => ['莊重慈善（推薦）', 'Calm charity — soft paper colours, red used sparingly (recommended)'],
+          'festive' => ['喜慶節日', 'Festive — strong red and gold, e.g. for the celebration week'],
+      ], (string) $site['site_tone']); ?></div>
+      <p class="help">只影響公開網站；後台不變。<span class="en">Public site only; the admin pages stay the same.</span></p>
+    </section>
+
     <!-- ④ Albums -->
     <section class="panel form-panel forms-sec" data-preview-page="home#photos">
       <h2><?= icon('camera') ?> 首頁相簿 <span class="en">Home page albums</span></h2>

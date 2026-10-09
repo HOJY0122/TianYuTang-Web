@@ -217,7 +217,7 @@ if (!$bannerSlides && $siteHeroBanner) {
     <p><?= tb('home.photos_hint') ?></p>
   </div>
   <?php foreach ($albums as $album): ?>
-    <?php $albumLink = url('/gallery') . '#album-' . (int) $album['id']; ?>
+    <?php $albumLink = url('/gallery') . '?year=' . urlencode((string) $album['year']); ?>
     <?php require BASE_PATH . '/app/Views/partials/album.php'; ?>
   <?php endforeach; ?>
   <div style="text-align:center">

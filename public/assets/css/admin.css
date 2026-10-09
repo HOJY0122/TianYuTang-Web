@@ -1119,3 +1119,20 @@ tr.is-current > td{background:#fff8e4}
 .about-layout label{margin:0;font-size:.85rem;min-width:0}
 .about-layout select{width:100%;margin-top:4px}
 @media (max-width:640px){ .about-layout{grid-template-columns:minmax(0,1fr)} }
+
+/* ---------- Album categories (Admin → Photos) ---------- */
+.upload-cat{display:block;width:100%;max-width:420px;margin:4px 0 12px}
+.cat-admin{display:grid;gap:8px}
+.cat-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.cat-edit{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 520px;margin:0;min-width:0}
+.cat-edit input[name="name_zh"]{flex:1 1 140px;min-width:0}
+.cat-edit input[name="name_en"]{flex:1 1 160px;min-width:0}
+.cat-new{padding-top:10px;border-top:1px dashed var(--line,#e6d9bd);margin-top:4px}
+.cat-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.cat-tabs a{display:inline-flex;gap:6px;align-items:center;padding:6px 12px;border-radius:999px;border:1px solid var(--line,#e6d9bd);
+  background:#fffdf7;color:inherit;text-decoration:none;font-weight:600;font-size:.9rem}
+.cat-tabs a b{font-size:.8rem;color:#7a6a58}
+.cat-tabs a.is-on{background:#9f211b;border-color:#9f211b;color:#fff8df}
+.cat-tabs a.is-on b{color:#ffe9b8}
+.cat-form{margin:6px 0 0}
+.cat-form select{width:100%;font-size:.85rem;padding:6px 8px;min-height:0}

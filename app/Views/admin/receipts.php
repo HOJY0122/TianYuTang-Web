@@ -8,6 +8,12 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
 $pagerBase  = '/admin/receipts';
 $pagerQuery = array_filter($filters, static fn($v) => $v !== '' && $v !== null);
 $payLabel   = ['cash' => '現金 Cash', 'bank' => '轉帳 Bank-in', '' => '—'];
+$holderOf   = [];
+foreach ($books as $b) {
+    if ($b['book_no'] !== null && $b['holder']) {
+        $holderOf[$b['book_no']] = $b['holder'];
+    }
+}
 $filtered   = array_diff_key($pagerQuery, ['sort' => 1, 'dir' => 1]) !== [];
 $bookUrl    = static fn(?string $b): string => url('/admin/receipts') . '?' . http_build_query(
     ['book' => $b ?? '-', 'sort' => 'no', 'dir' => 'asc'] + array_intersect_key($pagerQuery, ['check' => 1]));
@@ -52,6 +58,16 @@ $bookUrl    = static fn(?string $b): string => url('/admin/receipts') . '?' . ht
         <?php endif; ?>
       </select>
     </label>
+    <?php if ($holders): ?>
+    <label class="field">負責人 In charge
+      <select name="holder">
+        <option value="">全部 All</option>
+        <?php foreach ($holders as $hn): ?>
+          <option value="<?= h($hn) ?>"<?= $filters['holder'] === $hn ? ' selected' : '' ?>><?= h($hn) ?></option>
+        <?php endforeach; ?>
+      </select>
+    </label>
+    <?php endif; ?>
     <label class="field">號碼由 No. from <input name="no_from" value="<?= h($filters['no_from']) ?>" inputmode="numeric" pattern="[0-9]*" maxlength="12" size="7" placeholder="26400"></label>
     <label class="field">至 to <input name="no_to" value="<?= h($filters['no_to']) ?>" inputmode="numeric" pattern="[0-9]*" maxlength="12" size="7" placeholder="26450"></label>
     <label class="field">狀態 Status
@@ -81,16 +97,18 @@ $bookUrl    = static fn(?string $b): string => url('/admin/receipts') . '?' . ht
   </form>
 </div>
 
-<?php if ($books): ?>
 <details class="panel guide book-summary"<?= $filters['book'] !== '' || count($books) > 1 ? ' open' : '' ?>>
   <summary><span><?= icon('list') ?> 按簿號分組 <span class="en">By receipt book</span> · <?= count($books) ?></span><span class="guide-toggle" aria-hidden="true">顯示 Show ▾</span></summary>
   <table class="records book-table">
-    <thead><tr><th>簿號 Book</th><th class="num">張數 Receipts</th><th>號碼範圍 Numbers</th><th>欠缺 / 重複 Missing / repeated</th><th class="num">待核對 To check</th><th class="num">總額 Total</th></tr></thead>
+    <thead><tr><th>簿號 Book</th><th>負責人 In charge</th><th class="num">張數 Receipts</th><th>號碼範圍 Numbers</th><th>欠缺 / 重複 Missing / repeated</th><th class="num">待核對 To check</th><th class="num">總額 Total</th></tr></thead>
     <tbody>
     <?php foreach ($books as $b): ?>
       <?php $current = $filters['book'] === ($b['book_no'] ?? '-'); ?>
       <tr class="book-row<?= $current ? ' is-current' : '' ?>">
         <td data-label="簿號 Book"><a class="rowlink" href="<?= h($bookUrl($b['book_no'])) ?>"><?= $b['book_no'] !== null ? '<span class="book-chip">' . h($b['book_no']) . '</span>' : '— 未填簿號 No book' ?></a></td>
+        <td data-label="負責人 In charge"><?php if ($b['book_no'] === null): ?><span class="help">—</span>
+          <?php elseif ($b['holder']): ?><strong><?= h($b['holder']) ?></strong><?= $b['holder_phone'] ? '<span class="sub-line"><a href="tel:' . h(preg_replace('/[^0-9+]/', '', $b['holder_phone'])) . '">' . h($b['holder_phone']) . '</a></span>' : '' ?>
+          <?php else: ?><a class="warn-text" href="<?= h($bookUrl($b['book_no'])) ?>#bookHolder">未填 Not set</a><?php endif; ?></td>
         <td data-label="張數 Receipts" class="num"><?= number_format((int) $b['n']) ?></td>
         <td data-label="號碼範圍 Numbers"><?= $b['lo'] !== null ? h($b['lo']) . ' – ' . h($b['hi']) : '<span class="help">未有號碼 No numbers yet</span>' ?></td>
         <td data-label="欠缺 / 重複 Missing / repeated">
@@ -107,13 +125,29 @@ $bookUrl    = static fn(?string $b): string => url('/admin/receipts') . '?' . ht
     <?php endforeach; ?>
     </tbody>
   </table>
+  <form method="POST" action="<?= url('/admin/receipts/book') ?>" class="toolbar book-register">
+    <?= csrf_field() ?>
+    <strong class="book-register-title"><?= icon('plus') ?> 登記收據簿 <span class="en">Hand out a book</span></strong>
+    <label class="field">簿號 Book <input name="book_no" maxlength="30" required size="6" placeholder="12" autocomplete="off"></label>
+    <label class="field">負責人 In charge <input name="holder" maxlength="100" required placeholder="陳大文" autocomplete="off"></label>
+    <label class="field">電話 Phone <input name="holder_phone" maxlength="30" inputmode="tel" size="12" placeholder="012-345 6789" autocomplete="off"></label>
+    <button class="mini-btn btn-lg" type="submit"><?= icon('save') ?> 儲存 Save</button>
+  </form>
 </details>
-<?php endif; ?>
 
 <?php if ($gaps !== null): ?>
   <?php $bookName = $filters['book'] === '-' ? '未填簿號 No book' : '簿 Book ' . $filters['book']; ?>
   <div class="panel book-gaps">
     <h2 style="margin:0 0 6px"><?= icon('clipboard') ?> <?= h($bookName) ?></h2>
+    <?php if ($bookInfo !== null): ?>
+      <form method="POST" action="<?= url('/admin/receipts/book') ?>" class="toolbar book-holder" id="bookHolder">
+        <?= csrf_field() ?>
+        <input type="hidden" name="book_no" value="<?= h($bookInfo['book_no']) ?>">
+        <label class="field">負責人 Member in charge <input name="holder" value="<?= h($bookInfo['holder'] ?? '') ?>" maxlength="100" placeholder="未填 Not set" autocomplete="off"></label>
+        <label class="field">電話 Phone <input name="holder_phone" value="<?= h($bookInfo['holder_phone'] ?? '') ?>" maxlength="30" inputmode="tel" size="12" autocomplete="off"></label>
+        <button class="mini-btn btn-lg" type="submit"><?= icon('save') ?> 儲存 Save</button>
+      </form>
+    <?php endif; ?>
     <?php if ($gaps['wide']): ?>
       <p class="warn-text">號碼範圍太闊，可能有號碼讀錯，請按號碼排序檢查最大及最小的號碼。<span class="en">The number range is very wide — a number was probably misread. Sort by No. and check the highest and lowest.</span></p>
     <?php elseif ($gaps['missing']): ?>
@@ -180,7 +214,8 @@ $bookUrl    = static fn(?string $b): string => url('/admin/receipts') . '?' . ht
             <a href="<?= $edit ?>"><img class="receipt-thumb" src="<?= url('/admin/receipts/image') ?>?id=<?= (int) $r['id'] ?>" alt="收據相片 Receipt photo" loading="lazy"></a>
           <?php else: ?><span class="help">—</span><?php endif; ?>
         </td>
-        <td data-label="簿號 Book"><?= $r['book_no'] !== null ? '<a href="' . h($bookUrl($r['book_no'])) . '" class="book-chip">' . h($r['book_no']) . '</a>' : '<span class="help">—</span>' ?></td>
+        <td data-label="簿號 Book"><?= $r['book_no'] !== null ? '<a href="' . h($bookUrl($r['book_no'])) . '" class="book-chip">' . h($r['book_no']) . '</a>'
+            . (isset($holderOf[$r['book_no']]) ? '<span class="sub-line">' . h($holderOf[$r['book_no']]) . '</span>' : '') : '<span class="help">—</span>' ?></td>
         <td data-label="號碼 No."><a class="rowlink" href="<?= $edit ?>"><?= $r['receipt_no'] !== null && $r['receipt_no'] !== '' ? 'No. ' . h($r['receipt_no']) : '#' . (int) $r['id'] ?></a>
           <?= $r['source'] === 'ai' ? '<span class="badge ai">AI</span>' : '' ?>
           <?= (int) $r['needs_check'] ? '<span class="sub-line"><span class="badge check">待核對 To check</span></span>' : '' ?></td>

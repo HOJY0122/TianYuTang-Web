@@ -92,11 +92,77 @@ class Receipt extends Model
               ORDER BY book_no IS NULL, CAST(book_no AS UNSIGNED), book_no",
             $params
         );
+        $register = $this->bookRegister();
         foreach ($rows as &$r) {
             $r['missing'] = $r['lo'] !== null ? (int) $r['hi'] - (int) $r['lo'] + 1 - (int) $r['numbers'] : 0;
             $r['repeats'] = (int) $r['numbered'] - (int) $r['numbers'];
+            $r['holder']       = $register[$r['book_no']]['holder'] ?? null;
+            $r['holder_phone'] = $register[$r['book_no']]['holder_phone'] ?? null;
+        }
+        unset($r);
+
+        // Books handed out but with no receipt entered yet — shown too, so
+        // the list says who is holding every book. Not when searching for
+        // receipts (a word, dates, numbers…), where an empty book means nothing.
+        $searching = array_filter(array_intersect_key($f, array_flip(['q', 'from', 'to', 'payment', 'no_from', 'no_to', 'check'])),
+            static fn($v) => $v !== '' && $v !== null);
+        if (!$searching) {
+            $have = array_flip(array_filter(array_column($rows, 'book_no'), 'is_string'));
+            foreach ($register as $no => $b) {
+                if (isset($have[$no]) || (($f['holder'] ?? '') !== '' && $b['holder'] !== $f['holder'])) {
+                    continue;
+                }
+                $rows[] = ['book_no' => (string) $no, 'n' => 0, 'to_check' => 0, 'total' => 0, 'lo' => null, 'hi' => null,
+                           'numbers' => 0, 'numbered' => 0, 'missing' => 0, 'repeats' => 0,
+                           'holder' => $b['holder'], 'holder_phone' => $b['holder_phone']];
+            }
+            usort($rows, static function ($a, $b) {
+                if (($a['book_no'] === null) !== ($b['book_no'] === null)) {
+                    return $a['book_no'] === null ? 1 : -1;
+                }
+                return strnatcasecmp((string) $a['book_no'], (string) $b['book_no']);
+            });
         }
         return $rows;
+    }
+
+    /** Every registered book: book_no => [holder, holder_phone]. */
+    public function bookRegister(): array
+    {
+        $out = [];
+        foreach ($this->fetchAll('SELECT book_no, holder, holder_phone FROM receipt_books') as $r) {
+            $out[$r['book_no']] = $r;
+        }
+        return $out;
+    }
+
+    /** One book's register line, or null. */
+    public function book(string $book): ?array
+    {
+        return $this->fetchOne('SELECT * FROM receipt_books WHERE book_no = ?', [$book]);
+    }
+
+    /**
+     * Register a book or change who holds it. An empty holder/phone leaves
+     * the saved one alone unless $replace (the book form, where clearing a
+     * box means clearing it).
+     */
+    public function saveBook(string $book, ?string $holder, ?string $phone, string $by, bool $replace = false): void
+    {
+        $keep = $replace ? 'VALUES(%1$s)' : 'COALESCE(VALUES(%1$s), %1$s)';
+        $this->execute(
+            'INSERT INTO receipt_books (book_no, holder, holder_phone, updated_by) VALUES (?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE holder = ' . sprintf($keep, 'holder') . ', holder_phone = ' . sprintf($keep, 'holder_phone')
+             . ', updated_by = VALUES(updated_by)',
+            [$book, $holder, $phone, $by]
+        );
+    }
+
+    /** Everyone holding a book, for the "person in charge" filter. */
+    public function holders(): array
+    {
+        return array_column($this->fetchAll(
+            'SELECT DISTINCT holder FROM receipt_books WHERE holder IS NOT NULL AND holder <> \'\' ORDER BY holder'), 'holder');
     }
 
     /**
@@ -128,8 +194,11 @@ class Receipt extends Model
     /** Every book number used so far, for the book box's suggestions. */
     public function bookNumbers(): array
     {
-        return array_column($this->fetchAll(
-            'SELECT DISTINCT book_no FROM receipts WHERE book_no IS NOT NULL ORDER BY CAST(book_no AS UNSIGNED), book_no'), 'book_no');
+        $all = array_unique(array_merge(
+            array_column($this->fetchAll('SELECT DISTINCT book_no FROM receipts WHERE book_no IS NOT NULL'), 'book_no'),
+            array_map('strval', array_keys($this->bookRegister()))));
+        natcasesort($all);
+        return array_values($all);
     }
 
     /** A bulk-uploaded photo: a receipt row waiting to be read and checked. */
@@ -181,6 +250,11 @@ class Receipt extends Model
             $w[] = '(receipt_no LIKE ? OR book_no LIKE ? OR name LIKE ? OR item LIKE ? OR issued_by LIKE ? OR notes LIKE ?)';
             $like = '%' . addcslashes($q, '%_\\') . '%';
             array_push($p, $like, $like, $like, $like, $like, $like);
+        }
+        // Every book a member is in charge of.
+        if (($f['holder'] ?? '') !== '') {
+            $w[] = 'book_no IN (SELECT book_no FROM receipt_books WHERE holder = ?)';
+            $p[] = $f['holder'];
         }
         // One book, or "no book written" (the list's ‘—’ row).
         $book = (string) ($f['book'] ?? '');

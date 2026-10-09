@@ -1072,3 +1072,6 @@ details.guide > :not(summary){margin:0 20px 18px}
 .book-row.is-current{background:#fff8e4}
 .book-field input{max-width:220px}
 .paper-head .paper-book input{width:7.5em}
+.book-register{margin-top:14px;padding-top:12px;border-top:1px dashed #e2d3b0;align-items:flex-end}
+.book-register-title{flex-basis:100%;color:#7a3b12}
+.book-holder{margin:4px 0 10px;align-items:flex-end}

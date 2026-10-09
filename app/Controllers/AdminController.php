@@ -41,39 +41,56 @@ class AdminController extends Controller
         $password = (string) ($_POST['password'] ?? '');
         $ip       = (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
         $attempts = new LoginAttempt();
-
-        // Checked BEFORE the password, so a locked-out address learns
-        // nothing — not even whether a guess would have been right.
-        if ($attempts->isLockedOut($ip)) {
-            $_SESSION['login_error'] = [
-                'message'  => '登入失敗次數過多，請 ' . LoginAttempt::WINDOW_MINUTES . ' 分鐘後再試。'
-                            . "\nToo many failed attempts. Please try again in " . LoginAttempt::WINDOW_MINUTES . ' minutes.',
-                'attempts' => 0,
-            ];
-            $this->redirect('/admin/login');
-        }
+        $locked   = static fn(int $min): string => "此帳號登入失敗次數過多，已暫停登入，請 {$min} 分鐘後再試，或請系統管理員重設密碼。"
+            . "\nToo many wrong passwords — this account is locked. Try again in {$min} minute" . ($min > 1 ? 's' : '')
+            . ', or ask a system admin to reset the password.';
 
         if ($username === '' || $password === '') {
-            $_SESSION['login_error'] = ['message' => "請輸入帳號與密碼。\nPlease enter your username and password."];
+            $_SESSION['login_error'] = ['message' => "請輸入帳號與密碼。\nPlease enter your username and password.", 'username' => $username];
             $this->redirect('/admin/login');
         }
 
-        $user = (new AdminUser())->verify($username, $password);
+        // A script trying names or passwords by the hundred from one
+        // connection is stopped here; a person never gets near this.
+        if (!\App\Core\RateLimit::allow('login', 40, LoginAttempt::WINDOW_MINUTES)) {
+            $_SESSION['login_error'] = ['message' => '嘗試太頻繁，請 ' . LoginAttempt::WINDOW_MINUTES . ' 分鐘後再試。'
+                . "\nToo many tries from this connection. Please wait " . LoginAttempt::WINDOW_MINUTES . ' minutes.'];
+            $this->redirect('/admin/login');
+        }
+
+        // No such account: say so. Nothing is counted — there is no
+        // account whose password could be guessed.
+        $account = (new AdminUser())->findByUsername(mb_substr($username, 0, 50));
+        if ($account === null || mb_strlen($username) > 50) {
+            $_SESSION['login_error'] = ['message' => "找不到此帳號，請檢查帳號名稱。\nNo account with this username — please check it.",
+                                        'field' => 'username', 'username' => $username];
+            $this->redirect('/admin/login');
+        }
+        $name = (string) $account['username'];
+
+        // Locked: refused BEFORE the password is checked, so even a
+        // correct guess teaches nothing until the lock lifts.
+        if ($attempts->isLockedOut($name)) {
+            $_SESSION['login_error'] = ['message' => $locked($attempts->minutesLeft($name)), 'attempts' => 0, 'username' => $username];
+            $this->redirect('/admin/login');
+        }
+
+        $user = (new AdminUser())->verify($name, $password);
 
         if ($user === null) {
-            $attempts->recordFailure($ip, $username);
-            $left = $attempts->remaining($ip);
+            // Wrong password for a real account: this is what counts.
+            $attempts->recordFailure($name, $ip);
+            $left = $attempts->remaining($name);
             $_SESSION['login_error'] = [
-                'message'  => $left > 0
-                    ? "帳號或密碼錯誤。\nWrong username or password."
-                    : '登入失敗次數過多，請 ' . LoginAttempt::WINDOW_MINUTES . ' 分鐘後再試。'
-                      . "\nToo many failed attempts. Please try again in " . LoginAttempt::WINDOW_MINUTES . ' minutes.',
+                'message'  => $left > 0 ? "密碼錯誤。\nWrong password." : $locked($attempts->minutesLeft($name)),
                 'attempts' => $left,
+                'field'    => 'password',
+                'username' => $username,
             ];
             $this->redirect('/admin/login');
         }
 
-        $attempts->clear($ip);
+        $attempts->clear($name);
 
         // Fresh session id and form token on sign-in — blocks session
         // fixation — plus the facts every later page checks (Session::guard).
@@ -711,7 +728,7 @@ class AdminController extends Controller
         $this->redirect($eventId ? "/admin/dashboard?event={$eventId}" : '/admin/dashboard');
     }
 
-    /** @return array{message:string, attempts?:int}|null */
+    /** @return array{message:string, attempts?:int, field?:string, username?:string}|null */
     private function takeLoginError(): ?array
     {
         $error = $_SESSION['login_error'] ?? null;

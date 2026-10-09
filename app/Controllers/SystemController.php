@@ -55,6 +55,7 @@ class SystemController extends Controller
             'pageTitle'   => '帳號管理 User Accounts',
             'nav'         => 'users',
             'users'       => $users->all(),
+            'locked'      => (new \App\Models\LoginAttempt())->lockedAccounts(),
             'systemCount' => $users->countSystemAdmins(),
             'adminCount'  => $users->countAdmins(),
             'flash'       => $this->takeFlash(),
@@ -501,8 +502,9 @@ class SystemController extends Controller
         }
 
         $users->updatePassword($id, $password);
+        (new \App\Models\LoginAttempt())->clear($user['username']);   // a new password also lifts a lock
 
-        $this->flash('success', '密碼已重設', "{$user['username']} 的密碼已更新。請親自交給對方。");
+        $this->flash('success', '密碼已重設', "{$user['username']} 的密碼已更新（如帳號被鎖，亦已解鎖）。請親自交給對方。");
         $this->redirect('/system/users');
     }
 

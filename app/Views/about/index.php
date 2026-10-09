@@ -24,27 +24,29 @@ $paras = static function (?string $text, string $class = ''): string {
     <?php if (t('about.sub') !== '' || t('about.sub', 'en') !== ''): ?><p><?= tb('about.sub') ?></p><?php endif; ?>
   </div>
 
-  <?php foreach ($blocks as $b): ?>
+  <?php foreach ($blocks as $b):
+      $cls = 'about-block w-' . $b['width'] . ' ts-' . $b['text_size'] . ' al-' . $b['align'];
+      $hasText = $b['body_zh'] || $b['body_en']; ?>
     <?php if ($b['kind'] === 'image' && $b['image_path']): ?>
-      <div class="album-strip about-strip">
-        <figure class="about-figure" <?= photo_full_attrs($b['image_path'], 'news') ?>
-                data-caption="<?= h(trim(($b['heading_zh'] ?? '') . ' ' . ($b['heading_en'] ?? ''))) ?>">
-          <?= photo_img($b['image_path'], 'news', ['alt' => $b['heading_zh'] ?: ($b['heading_en'] ?: t('about.title')), 'loading' => 'lazy', 'class' => 'about-img']) ?>
-          <?php if ($b['heading_zh'] || $b['heading_en']): ?>
-            <figcaption><?= h($b['heading_zh'] ?? '') ?><?php if ($b['heading_en']): ?><span class="en"><?= h($b['heading_en']) ?></span><?php endif; ?></figcaption>
-          <?php endif; ?>
-        </figure>
-      </div>
-      <?php if ($b['body_zh'] || $b['body_en']): ?>
-        <div class="about-text"><?= $paras($b['body_zh']) ?><?= $paras($b['body_en'], 'en') ?></div>
-      <?php endif; ?>
-    <?php else: ?>
-      <article class="about-text">
+      <?php // Picture, caption and its text: one card, one width. ?>
+      <article class="<?= $cls ?> about-card about-card-img">
+        <div class="album-strip about-strip">
+          <figure class="about-figure" <?= photo_full_attrs($b['image_path'], 'news') ?>
+                  data-caption="<?= h(trim(($b['heading_zh'] ?? '') . ' ' . ($b['heading_en'] ?? ''))) ?>">
+            <?= photo_img($b['image_path'], 'news', ['alt' => $b['heading_zh'] ?: ($b['heading_en'] ?: t('about.title')), 'loading' => 'lazy', 'class' => 'about-img']) ?>
+          </figure>
+        </div>
         <?php if ($b['heading_zh'] || $b['heading_en']): ?>
-          <h3><?= h($b['heading_zh'] ?? '') ?><?php if ($b['heading_en']): ?><span class="en"><?= h($b['heading_en']) ?></span><?php endif; ?></h3>
+          <h3 class="about-caption"><?= h($b['heading_zh'] ?? '') ?><?php if ($b['heading_en']): ?><span class="en"><?= h($b['heading_en']) ?></span><?php endif; ?></h3>
         <?php endif; ?>
-        <?= $paras($b['body_zh']) ?>
-        <?= $paras($b['body_en'], 'en') ?>
+        <?php if ($hasText): ?><div class="about-body"><?= $paras($b['body_zh']) ?><?= $paras($b['body_en'], 'en') ?></div><?php endif; ?>
+      </article>
+    <?php else: ?>
+      <article class="<?= $cls ?> about-card">
+        <?php if ($b['heading_zh'] || $b['heading_en']): ?>
+          <h3 class="about-caption"><?= h($b['heading_zh'] ?? '') ?><?php if ($b['heading_en']): ?><span class="en"><?= h($b['heading_en']) ?></span><?php endif; ?></h3>
+        <?php endif; ?>
+        <div class="about-body"><?= $paras($b['body_zh']) ?><?= $paras($b['body_en'], 'en') ?></div>
       </article>
     <?php endif; ?>
   <?php endforeach; ?>

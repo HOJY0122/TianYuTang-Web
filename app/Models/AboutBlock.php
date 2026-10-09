@@ -10,6 +10,11 @@ use App\Core\Model;
  */
 class AboutBlock extends Model
 {
+    /** Layout choices: value => [中文, English]. The first of each is the default. */
+    public const WIDTHS = ['m' => ['中', 'Medium'], 's' => ['窄', 'Narrow'], 'l' => ['寬', 'Wide'], 'full' => ['全寬', 'Full width']];
+    public const TEXT_SIZES = ['m' => ['中', 'Medium'], 's' => ['小', 'Small'], 'l' => ['大', 'Large']];
+    public const ALIGNS = ['justify' => ['左右對齊', 'Justified'], 'left' => ['靠左', 'Left'], 'center' => ['置中', 'Centred']];
+
     public function all(): array
     {
         return $this->fetchAll('SELECT * FROM about_blocks ORDER BY sort_order, id');
@@ -30,8 +35,10 @@ class AboutBlock extends Model
     {
         $next = (int) $this->scalar('SELECT COALESCE(MAX(sort_order), 0) + 1 FROM about_blocks');
         $this->execute(
-            'INSERT INTO about_blocks (kind, image_path, heading_zh, heading_en, body_zh, body_en, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [$v['kind'], $v['image_path'], $v['heading_zh'], $v['heading_en'], $v['body_zh'], $v['body_en'], $next]
+            'INSERT INTO about_blocks (kind, image_path, heading_zh, heading_en, body_zh, body_en, width, text_size, align, sort_order)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [$v['kind'], $v['image_path'], $v['heading_zh'], $v['heading_en'], $v['body_zh'], $v['body_en'],
+             $v['width'], $v['text_size'], $v['align'], $next]
         );
         return (int) $this->db->lastInsertId();
     }
@@ -39,8 +46,10 @@ class AboutBlock extends Model
     public function update(int $id, array $v): void
     {
         $this->execute(
-            'UPDATE about_blocks SET image_path = ?, heading_zh = ?, heading_en = ?, body_zh = ?, body_en = ? WHERE id = ?',
-            [$v['image_path'], $v['heading_zh'], $v['heading_en'], $v['body_zh'], $v['body_en'], $id]
+            'UPDATE about_blocks SET image_path = ?, heading_zh = ?, heading_en = ?, body_zh = ?, body_en = ?,
+                    width = ?, text_size = ?, align = ? WHERE id = ?',
+            [$v['image_path'], $v['heading_zh'], $v['heading_en'], $v['body_zh'], $v['body_en'],
+             $v['width'], $v['text_size'], $v['align'], $id]
         );
     }
 

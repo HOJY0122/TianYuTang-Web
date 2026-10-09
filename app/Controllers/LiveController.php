@@ -31,7 +31,9 @@ class LiveController extends Controller
         header('Content-Type: application/json; charset=utf-8');
         header('Cache-Control: no-store');
         header('X-Robots-Tag: noindex');
-        echo json_encode(['v' => Live::versions($topics)] + ($out ? ['out' => 1] : []));
+        // 't' = the server clock in ms, so countdowns (js/window-timer.js) follow
+        // the server's time, never a phone that runs a few minutes off.
+        echo json_encode(['v' => Live::versions($topics), 't' => (int) round(microtime(true) * 1000)] + ($out ? ['out' => 1] : []));
         exit;
     }
 }

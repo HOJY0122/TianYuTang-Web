@@ -750,3 +750,21 @@ html.protect-hide.p-qr .qr-frame canvas{filter:blur(28px) brightness(.7)}
 }
 .people-tools .link-btn{display:block;width:100%;text-align:center;line-height:1.5}
 .people-tools .link-btn .ic{vertical-align:-.2em;margin-right:.25rem}
+
+/* ---------- Ticket-style countdown (js/window-timer.js) ---------- */
+.window-timer{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:.35rem .6rem;margin:1rem 0;padding:.75rem 1rem;
+  border-radius:14px;background:#fff4d6;border:1.5px solid var(--line);color:var(--dark);font-weight:700}
+.window-timer[hidden]{display:none}
+.window-timer .wt-icon{color:var(--gold)}
+.window-timer .wt-time{font-size:1.45rem;font-variant-numeric:tabular-nums;letter-spacing:.04em;color:var(--red)}
+.window-timer.is-before{background:#eef6f0;border-color:#9fcca9}
+.window-timer.is-before .wt-time{color:var(--green)}
+.window-timer.is-urgent{background:#fdecea;border-color:#e3a39c;animation:wtPulse 1s ease-in-out infinite}
+.window-timer.is-closed{background:#f3ece4;border-color:#d6c3b0;color:var(--muted)}
+@keyframes wtPulse{50%{box-shadow:0 0 0 4px rgba(163,40,31,.12)}}
+@media (prefers-reduced-motion:reduce){ .window-timer.is-urgent{animation:none} }
+.closed-card .window-timer{margin-top:1.2rem}
+.note.closed-now{border-left-color:#a3281f;background:#fdecea}
+.note.closed-now .en{display:block}
+form.is-closed .attendee-body,form.is-closed .people-tools,form.is-closed .choice{opacity:.55;pointer-events:none}
+.primary.is-sending{opacity:.8;cursor:progress}

@@ -629,11 +629,13 @@ class AdminController extends Controller
             return null;
         }
         $value = str_replace('T', ' ', $value);
-        // "2026-10-15 23:59" → "2026-10-15 23:59:00"
+        // "2026-10-15 23:59" → "2026-10-15 23:59:00"; seconds kept when given.
         if (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $value)) {
             $value .= ':00';
         }
-        return $value;
+        $value = substr($value, 0, 19);                 // drop any fraction (07:39:00.000)
+        $d = \DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $value);
+        return $d && $d->format('Y-m-d H:i:s') === $value ? $value : null;
     }
 
     /** @return string[] */

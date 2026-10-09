@@ -54,6 +54,7 @@ if ($isSystem) {
         ['users',  'users', '帳號管理', 'User accounts', '/system/users'],
         ['qr',     'qr', 'QR 產生器', 'QR generator', '/system/qr'],
         ['uat',    'flask', 'UAT 測試模式', 'UAT test mode', '/system/uat'],
+        ['sleep',  'pause', '休眠模式', 'Sleep mode', '/system/sleep'],
     ];
 }
 ?>

@@ -1028,3 +1028,23 @@ details.guide > :not(summary){margin:0 20px 18px}
 .qr-upload:first-child label .brand-mini{background:#33ccff}
 .num-hint{margin:4px 0 0;font-size:12.5px;font-weight:700;color:#a3281f;opacity:0;transition:opacity .2s}
 .num-hint.on{opacity:1}
+/* Event bar: stop / resume online responses */
+.eb-window{display:inline-flex;align-items:center;flex-wrap:wrap;gap:6px;margin:2px 14px 2px 0}
+.eb-toggle{display:inline;margin:0}
+.eb-toggle .mini-btn{min-height:28px;padding:3px 10px;font-size:12px}
+.eb-toggle .eb-stop{color:#9a2a22;border-color:#e8bdb7;background:#fdf6f5}
+.eb-toggle .eb-stop:hover{background:#a3281f;color:#fff;border-color:#a3281f}
+.eb-toggle .eb-resume{background:linear-gradient(180deg,#3a8a58,#2e7346);border-color:#24603c}
+/* System → Sleep mode */
+.sleep-moon{flex:none;display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:#e3f1e5;color:#2e7d4f}
+.sleep-status.is-on .sleep-moon{background:#2b1e18;color:#f3df9c}
+.sleep-status form{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.sleep-status.is-off .uat-big{background:linear-gradient(180deg,#4a3528,#2b1e18);border-color:#2b1e18;color:#f5e7c4}
+.sleep-status.is-on .uat-big{background:linear-gradient(180deg,#3a8a58,#2e7346);border-color:#24603c}
+.sleep-layout{margin-top:16px}
+.sleep-layout .form-panel{max-width:none;margin:0}
+.sleep-page details.guide{margin-top:16px}
+.sleep-layout{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr)}
+.sleep-layout .word-frame-wrap iframe{max-width:100%}
+@media (max-width:1100px){ .sleep-layout{grid-template-columns:minmax(0,1fr)} }
+.sleep-status .uat-status-head > div{min-width:0}

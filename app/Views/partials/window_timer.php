@@ -10,7 +10,7 @@
  */
 $opensTs  = !empty($window['opens_at'])  ? strtotime($window['opens_at'])  : null;
 $closesTs = !empty($window['closes_at']) ? strtotime($window['closes_at']) : null;
-if (($window['reason'] ?? '') === 'closed' || (!$opensTs && !$closesTs)) {
+if (in_array($window['reason'] ?? '', ['closed', 'stopped'], true) || (!$opensTs && !$closesTs)) {
     return;
 }
 ?>

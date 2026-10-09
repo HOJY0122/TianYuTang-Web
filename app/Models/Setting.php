@@ -87,6 +87,13 @@ class Setting extends Model
         'home_albums'       => 'previous',   // previous | latest | recent
         'home_album_photos' => '12',
         // Photo protection on the public site (see js/protect.js, App\Core\Media)
+        // Sleep mode (System → 休眠模式): one "see you next year" page for visitors
+        'sleep_mode'        => '0',
+        'sleep_title_zh'    => null,         // null / empty = App\Core\Sleep::DEFAULTS
+        'sleep_title_en'    => null,
+        'sleep_msg_zh'      => null,
+        'sleep_msg_en'      => null,
+        'sleep_next'        => '',           // optional line, e.g. 2027年10月 再會 · See you in October 2027
         'protect_photos'    => '1',          // master switch for everything below
         'protect_albums'    => '1',          // album photos and their full-size viewer
         'protect_news'      => '1',          // news post pictures

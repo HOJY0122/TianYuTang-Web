@@ -77,6 +77,17 @@ set_exception_handler(static function (Throwable $e): void {
 // Photos (signed addresses, App\Core\Media): answered before any session
 // starts — no cookie, no session lock while a page loads many pictures.
 if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === BASE_URL . '/media') {
+    // Asleep: photos only for signed-in staff (a quick read-only look at the session).
+    if (App\Core\Sleep::isOn()) {
+        App\Core\Session::start();
+        $staff = App\Core\Session::isStaff();
+        session_write_close();
+        if (!$staff) {
+            http_response_code(503);
+            header('Retry-After: 86400');
+            exit;
+        }
+    }
     App\Core\Media::serve();
 }
 
@@ -159,6 +170,11 @@ $router->get('/system/qr',             'SystemController@qrGenerator');
 $router->get('/system/forms',          'FormsController@index');
 $router->post('/system/forms',         'FormsController@save');
 $router->post('/system/forms/draft',   'FormsController@draft');
+$router->post('/admin/event/responses', 'AdminController@toggleResponses');
+$router->get('/system/sleep',            'SleepController@index');
+$router->post('/system/sleep',           'SleepController@save');
+$router->post('/system/sleep/preview',   'SleepController@preview');
+$router->get('/system/sleep/download',   'SleepController@download');
 
 // Own password — the one page BOTH roles share, so it sits under
 // neither area's prefix.
@@ -212,6 +228,20 @@ $router->post('/admin/photos/reorder', 'AdminController@reorderPhotos');
 $router->post('/admin/photos/delete',  'AdminController@deletePhoto');
 
 // ---------- 6. Go ----------
+// Sleep mode (System → 休眠模式): visitors get the one "see you next year"
+// page; the committee's pages keep working (App\Core\Sleep).
+$sleepPath = (string) parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+if (BASE_URL !== '' && str_starts_with($sleepPath, BASE_URL)) {
+    $sleepPath = substr($sleepPath, strlen(BASE_URL)) ?: '/';
+}
+try {
+    if (App\Core\Sleep::blocks($sleepPath)) {
+        App\Core\Sleep::render();
+    }
+} catch (PDOException $e) {
+    // settings table not ready yet (mid-upgrade): carry on as normal
+}
+
 try {
     $router->dispatch();
 } catch (PDOException $e) {

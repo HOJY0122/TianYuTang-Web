@@ -90,6 +90,11 @@ try {
 <body>
 <a class="skip" href="#main">跳到內容 Skip to content</a>
 <?php require BASE_PATH . '/app/Views/partials/uat_banner.php'; ?>
+<?php if (App\Core\Sleep::isOn($site)): /* only signed-in staff get this far while asleep */ ?>
+  <div class="sleepbar"><?= icon('pause') ?> 網站休眠中：訪客只會看到休眠頁面，只有已登入的委員看到這個畫面。
+    <span>Sleep mode is on — visitors see only the sleep page; you see this because you are signed in.</span>
+    <a href="<?= url('/system/sleep') ?>">休眠設定 Settings →</a></div>
+<?php endif; ?>
 
 <?php if (!empty($event['is_test']) && !App\Core\Uat::isOn($site)): ?>
   <div class="testbar">

@@ -622,6 +622,38 @@ class AdminController extends Controller
      * Blank becomes NULL ("no limit"), and the browser's "T" separator
      * becomes the space MySQL expects. Seconds are added if missing.
      */
+    /**
+     * POST /admin/event/responses — stop or resume online registration /
+     * donation by hand, whatever the opening times say (e.g. enough
+     * people already registered on paper). Admins and system admins.
+     */
+    public function toggleResponses(): void
+    {
+        $this->requireAdmin();
+        $this->requireCsrf();
+        $id      = (int) ($_POST['event_id'] ?? 0);
+        $section = in_array($_POST['section'] ?? '', [Event::SECTION_RSVP, Event::SECTION_DONATION], true) ? $_POST['section'] : null;
+        $events  = new Event();
+        $event   = $events->find($id);
+        if ($event === null || $section === null) {
+            $this->redirect('/admin/dashboard');
+        }
+        $stop = ($_POST['to'] ?? '') === 'stop';
+        $events->setStopped($id, $section, $stop);
+        $what = $section === Event::SECTION_RSVP ? ['報名', 'registration'] : ['布施', 'donation'];
+        $this->flash('success', $stop ? '已停止接受 Stopped' : '已恢復 Resumed', $stop
+            ? "線上{$what[0]}已停止接受，網站即時更新。現場{$what[0]}仍可在後台登記。\nOnline {$what[1]} is stopped; the website shows it at once. On-site entries still work here."
+            : "線上{$what[0]}已恢復，按設定的開放時間接受。\nOnline {$what[1]} is back on, following the opening times.");
+        $back = (string) ($_SERVER['HTTP_REFERER'] ?? '');
+        $path = (string) parse_url($back, PHP_URL_PATH);
+        $query = (string) parse_url($back, PHP_URL_QUERY);
+        // Back to the admin page it came from (same site only).
+        if ($path !== '' && str_starts_with($path, BASE_URL . '/admin') && parse_url($back, PHP_URL_HOST) === parse_url('http://' . site_host(), PHP_URL_HOST)) {
+            $this->redirect(substr($path, strlen(BASE_URL)) . ($query !== '' ? '?' . $query : ''));
+        }
+        $this->redirect('/admin/dashboard?event=' . $id);
+    }
+
     private function datetimeOrNull(string $value): ?string
     {
         $value = trim($value);

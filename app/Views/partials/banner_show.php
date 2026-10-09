@@ -39,11 +39,22 @@ $count = count($bannerSlides);
       <figure class="banner-slide<?= $i === 0 ? ' is-active' : '' ?>" data-slide="<?= (int) $s['id'] ?>"
               role="group" aria-roledescription="slide" aria-label="<?= $i + 1 ?> / <?= $count ?>"<?= $i === 0 ? '' : ' aria-hidden="true"' ?>>
         <<?= $tag ?> class="banner-frame"<?= $link !== '' ? ' href="' . h(str_starts_with($link, '/') ? url($link) : $link) . '"' : '' ?>>
-          <img src="<?= h(media_url($s['image_path'])) ?>"
-               alt="<?= h($cap ? trim(($s['caption_zh'] ?? '') . ' ' . ($s['caption_en'] ?? '')) : $bannerAlt) ?>"
-               width="<?= (int) $s['img_w'] ?>" height="<?= (int) $s['img_h'] ?>"
-               <?= $i === 0 ? 'fetchpriority="high"' : 'loading="lazy"' ?> draggable="false"
-               style="object-position:<?= $x ?>% <?= $y ?>%;transform:scale(<?= $z ?>);transform-origin:<?= $x ?>% <?= $y ?>%">
+          <?php
+            $_bAttrs = [
+                'alt'    => $cap ? trim(($s['caption_zh'] ?? '') . ' ' . ($s['caption_en'] ?? '')) : $bannerAlt,
+                'width'  => (int) $s['img_w'], 'height' => (int) $s['img_h'],
+                'style'  => "object-position:{$x}% {$y}%;transform:scale({$z});transform-origin:{$x}% {$y}%",
+            ];
+            // Protected (Forms & fonts → 首頁橫幅): the page only ever gets the
+            // tile-shuffled copy, drawn back whole on a canvas by js/photos.js —
+            // DevTools → Sources shows the jumbled file. The admin preview keeps
+            // a plain picture so it can be tuned.
+            if (!$bannerPreview && App\Core\Media::guarded('banner')) {
+                echo photo_img($s['image_path'], 'banner', $_bAttrs + ['data-eager' => '1']);
+            } else {
+                echo photo_img($s['image_path'], 'none', $_bAttrs + ($i === 0 ? ['fetchpriority' => 'high'] : ['loading' => 'lazy']));
+            }
+          ?>
           <?php if ($cap || $bannerPreview): ?>
             <figcaption<?= $cap ? '' : ' hidden' ?>>
               <strong><?= h($s['caption_zh'] ?? '') ?></strong>

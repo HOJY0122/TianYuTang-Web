@@ -99,6 +99,7 @@ class Setting extends Model
         'protect_albums'    => '1',          // album photos and their full-size viewer
         'protect_news'      => '1',          // news post pictures
         'protect_banner'    => '1',          // home page banner
+        'protect_about'     => '1',          // 關於我們 About page pictures
         'protect_qr'        => '0',          // Waze QR — off: visitors may save / screenshot it to navigate
         'protect_keys'      => '1',          // F12 / Ctrl+S / Ctrl+U … and right-click on the rest of the page
         'photo_watermark'   => '',           // text tiled over the full-size viewer; empty = none
@@ -113,7 +114,7 @@ class Setting extends Model
     public const DRAFT_KEYS = [
         'rsvp_types', 'rsvp_org_max', 'rsvp_age_on', 'rsvp_age_min', 'rsvp_age_basis', 'rsvp_age_who', 'rsvp_age_other',
         'donate_amounts', 'body_font', 'body_size', 'heading_font', 'home_albums', 'home_album_photos',
-        'protect_photos', 'photo_watermark', 'protect_albums', 'protect_news', 'protect_banner', 'protect_qr', 'protect_keys',
+        'protect_photos', 'photo_watermark', 'protect_albums', 'protect_news', 'protect_banner', 'protect_about', 'protect_qr', 'protect_keys',
     ];
 
     /** Is this request a system admin's live preview (see DRAFT_KEYS)? */

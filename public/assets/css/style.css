@@ -559,20 +559,21 @@ input.is-linked{background:#f4f0e4;color:var(--muted);border-style:dashed}
 
 /* ---------- Photo protection (js/protect.js) ---------- */
 html.p-albums .album,html.p-albums .lightbox,html.p-news .lightbox,html.p-news .post-image,html.p-news .news-strip img,
-html.p-banner .banner-show,html.p-qr .qr-frame{-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
-html.p-albums .album img,html.p-albums .lightbox img,html.p-news .lightbox img,html.p-banner .banner-show img,html.p-qr .qr-frame img{-webkit-user-drag:none}
+html.p-banner .banner-show,html.p-qr .qr-frame,html.p-about .about-card-img,html.p-about .lightbox{-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
+html.p-albums .album img,html.p-albums .lightbox img,html.p-news .lightbox img,html.p-banner .banner-show img,html.p-qr .qr-frame img,html.p-about .about-strip img,html.p-about .lightbox img{-webkit-user-drag:none}
 .lb-shield{position:absolute;inset:0;z-index:1}
 html.has-wm .lb-shield{background-image:var(--wm);background-repeat:repeat}
 html.protect-blur #lbImage,html.protect-blur #lbCanvas,html.protect-hide.p-albums #lbCanvas,html.protect-hide.p-news #lbCanvas,html.protect-hide.p-albums .album canvas,html.protect-hide.p-news canvas.post-image,
 html.protect-hide.p-albums .album img,html.protect-hide.p-albums #lbImage,html.protect-hide.p-news #lbImage,html.protect-hide.p-news .post-image,
 html.protect-hide.p-news .news-strip img,html.protect-hide.p-banner .banner-show img,html.protect-hide.p-qr .qr-frame img,
-html.protect-hide.p-qr .qr-frame canvas{filter:blur(28px) brightness(.7)}
+html.protect-hide.p-qr .qr-frame canvas,html.protect-hide.p-about .about-strip canvas,html.protect-hide.p-about .about-strip img,
+html.protect-hide.p-about #lbCanvas,html.protect-hide.p-about #lbImage,html.protect-hide.p-banner .banner-show canvas{filter:blur(28px) brightness(.7)}
 .protect-toast{position:fixed;left:50%;bottom:1.4rem;z-index:300;transform:translate(-50%,1rem);opacity:0;pointer-events:none;
   background:rgba(36,27,22,.92);color:#fff8df;padding:.6rem 1.1rem;border-radius:999px;font-size:.85rem;font-weight:700;transition:opacity .2s,transform .2s}
 .protect-toast.on{opacity:1;transform:translate(-50%,0)}
 @media print{
   html.p-albums .album,html.p-albums #photos,html.p-albums .lightbox,html.p-news .lightbox,html.p-news .post-image,html.p-news .news-strip img,
-  html.p-banner .banner-show,html.p-qr .qr-frame{display:none!important}
+  html.p-banner .banner-show,html.p-qr .qr-frame,html.p-about .about-strip,html.p-about .lightbox{display:none!important}
 }
 
 /* ---------- Photo viewer ---------- */
@@ -808,8 +809,8 @@ form.is-closed .attendee-body,form.is-closed .people-tools,form.is-closed .choic
 .people-tools .all-same[hidden]{display:none}
 
 /* Watermark on every protected photo (not only the full-size viewer) */
-html.has-wm.p-albums .album-strip figure,html.has-wm.p-news .post-media,html.has-wm.p-banner .banner-frame{position:relative}
-html.has-wm.p-albums .album-strip figure::after,html.has-wm.p-news .post-media::after,html.has-wm.p-banner .banner-frame::after{
+html.has-wm.p-albums .album-strip figure,html.has-wm.p-news .post-media,html.has-wm.p-banner .banner-frame,html.has-wm.p-about .about-strip figure{position:relative}
+html.has-wm.p-albums .album-strip figure::after,html.has-wm.p-news .post-media::after,html.has-wm.p-banner .banner-frame::after,html.has-wm.p-about .about-strip figure::after{
   content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background-image:var(--wm);background-repeat:repeat;background-size:220px auto;opacity:.9}
 .num-hint{margin:.35rem 0 0;font-size:.85rem;font-weight:700;color:#a3281f;opacity:0;transition:opacity .2s;min-height:1.2em}
 .num-hint.on{opacity:1}
@@ -837,13 +838,16 @@ html.has-wm.p-albums .album-strip figure::after,html.has-wm.p-news .post-media::
 .about-block.w-full{max-width:none}
 .about-card{background:var(--card);border:1px solid var(--line);border-radius:22px;
   padding:clamp(1.1rem, 3.2vw, 2.2rem) clamp(1.1rem, 4vw, 2.6rem);box-shadow:0 8px 26px rgba(80,20,10,.07)}
-.about-card-img{padding-top:clamp(.9rem, 2.4vw, 1.4rem)}
+/* Picture blocks: the poster runs edge to edge, the card's rounded corners
+   frame it; only the caption and text below are padded. */
+.about-card-img{padding:0;overflow:hidden}
+.about-card-text{padding:clamp(.9rem, 2.6vw, 1.6rem) clamp(1.1rem, 4vw, 2.6rem) clamp(1.1rem, 3.2vw, 2.2rem)}
 /* The picture: whole, at its real shape, the full width of its card. */
-.album-strip.about-strip{display:block;margin:0}
+.album-strip.about-strip{display:block;margin:0;padding:0;overflow:visible}
 .album-strip.about-strip figure{margin:0;overflow:visible;background:none;border:0;border-radius:0;box-shadow:none;cursor:zoom-in}
 .album-strip.about-strip img,.album-strip.about-strip canvas.scr{display:block;width:100%;height:auto;aspect-ratio:auto;object-fit:contain;
-  border-radius:14px;background:#fffaf0}
-.about-caption{margin:1rem 0 .2rem;text-align:center;font-family:var(--kai);font-weight:var(--kai-weight);font-size:1.5rem;color:var(--red);line-height:1.35}
+  border-radius:0;background:#fffaf0}
+.about-caption{margin:0 0 .2rem;text-align:center;font-family:var(--kai);font-weight:var(--kai-weight);font-size:1.5rem;color:var(--red);line-height:1.35}
 .about-card:not(.about-card-img) .about-caption{margin-top:0}
 .about-caption .en{display:block;margin-top:.15rem;font-family:var(--sans);font-size:.55em;font-weight:600;letter-spacing:.08em;color:var(--gold)}
 .about-body{margin-top:1rem;font-size:calc(1.1rem * var(--fs, 1));line-height:2;color:var(--dark)}

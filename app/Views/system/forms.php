@@ -157,6 +157,7 @@ foreach (FormRules::BODY_FONTS as [, $fam]) {
             'albums' => ['image',  '相簿相片與大圖檢視', 'Album photos and the full-size viewer'],
             'news'   => ['newspaper', '最新消息圖片', 'News post pictures'],
             'banner' => ['camera', '首頁橫幅', 'Home page banner'],
+            'about'  => ['users',  '關於我們圖片', 'About page pictures (e.g. the main deity poster)'],
             'qr'     => ['qr',     'Waze 導航 QR Code', 'Waze QR code — usually left OFF so visitors can save or screenshot it to navigate'],
             'keys'   => ['lock',   '開發者 / 儲存快捷鍵與其他地方的右鍵', 'Developer-tool and save shortcuts, and right-click elsewhere on the page'],
         ] as $pa => [$paIcon, $paZh, $paEn]): ?>

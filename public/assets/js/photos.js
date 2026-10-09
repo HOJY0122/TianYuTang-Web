@@ -76,13 +76,16 @@
       var c = document.createElement('canvas');
       c.className = img.className;
       Array.prototype.forEach.call(img.attributes, function (a) {
-        if (/^(data-|aria-|title$)/.test(a.name)) c.setAttribute(a.name, a.value);
+        // style: e.g. the banner's crop / zoom (object-position, transform)
+        if (/^(data-|aria-|title$|style$)/.test(a.name)) c.setAttribute(a.name, a.value);
       });
       c.setAttribute('role', 'img');
       if (img.alt) c.setAttribute('aria-label', img.alt);
       if (img.getAttribute('width')) { c.width = +img.getAttribute('width'); c.height = +img.getAttribute('height'); }
       img.replaceWith(c);
-      if (io) io.observe(c); else draw(c, c.dataset.src, c.dataset.scr).catch(function () {});
+      // data-eager (banner slides): draw now — a slide waiting off to the
+      // side must already be whole when it slides in.
+      if (io && !c.hasAttribute('data-eager')) io.observe(c); else draw(c, c.dataset.src, c.dataset.scr).catch(function () {});
     });
   }
 

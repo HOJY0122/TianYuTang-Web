@@ -34,12 +34,13 @@
     albums: '.album',
     news:   '.post-image, .news-strip, .post-card',
     banner: '.banner-show',
+    about:  '.about-card-img',
     qr:     '.qr-frame'
   };
   var on = function (a) { return html.classList.contains('p-' + a); };
-  // The full-size viewer shows album photos AND news pictures: guarded if either is.
+  // The full-size viewer shows album photos, news and About pictures: guarded if any is.
   AREAS.viewer = '.lightbox';
-  var viewerOn = on('albums') || on('news');
+  var viewerOn = on('albums') || on('news') || on('about');
   var isOn = function (a) { return a === 'viewer' ? viewerOn : on(a); };
   var GUARD = Object.keys(AREAS).filter(isOn).map(function (a) { return AREAS[a]; }).join(', ');
   // Parts the system admin left open (e.g. the Waze QR): always free to save.

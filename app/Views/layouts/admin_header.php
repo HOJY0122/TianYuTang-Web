@@ -21,6 +21,7 @@ $versioned    = static fn(string $p): string => BASE_URL . '/' . $p . '?v=' . su
 $menu = [
     '活動管理 Event' => [
         ['dashboard',     'chart', '儀表板',   'Dashboard',     '/admin/dashboard'],
+        ['control',       'settings', '控制台', 'Control panel', '/admin/control'],
         ['registrations', 'form', '報名紀錄', 'Registrations', '/admin/registrations'],
         ['donations',     'coins', '布施紀錄', 'Donations',     '/admin/donations'],
         ['event',         'calendar', '活動資料', 'Event details', '/admin/event/edit'],

@@ -63,6 +63,7 @@ class ReceiptController extends Controller
             'aiReady'   => ReceiptReader::configured(),
             'book'      => (string) ($_SESSION['receipt_last_book'] ?? ''),
             'bookList'  => (new Receipt())->bookNumbers(),
+            'register'  => (new Receipt())->bookRegister(),
             'flash'     => $this->takeFlash(),
         ]);
     }
@@ -84,6 +85,11 @@ class ReceiptController extends Controller
 
         $book  = $this->bookFrom($_POST['book_no'] ?? '');
         $_SESSION['receipt_last_book'] = $book ?? '';
+        // Who holds this book — saved with the book (a blank box keeps the saved name).
+        if ($book !== null) {
+            (new Receipt())->saveBook($book, $this->holderFrom($_POST['holder'] ?? ''), $this->phoneFrom($_POST['holder_phone'] ?? ''),
+                (string) ($_SESSION['admin_username'] ?? 'admin'));
+        }
         $draft = ['source' => 'manual', 'ai_notes' => null, 'image_path' => null, 'values' => ['book_no' => $book ?? '']];
 
         if (ImageUploader::wasProvided($_FILES['photo'] ?? null)) {

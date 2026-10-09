@@ -1,7 +1,6 @@
 <?php
 require BASE_PATH . '/app/Views/layouts/admin_header.php';
 require BASE_PATH . '/app/Views/partials/charts.php';
-require BASE_PATH . '/app/Views/partials/event_bar.php';
 
 $eid        = (int) $event['id'];
 $q          = '?event=' . $eid;
@@ -10,33 +9,31 @@ $paidPct    = $totalAmount > 0 ? min(100, round($totalPaid / $totalAmount * 100)
 $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confirmed', 'cancelled' => '已取消 Cancelled'];
 ?>
 
-<!-- ---------- Event actions ---------- -->
-<div class="panel">
-  <div class="eventbar-actions">
-    <a class="mini-btn btn-lg" href="<?= url('/admin/event/edit') ?>?id=<?= $eid ?>"><?= icon('pencil') ?> 編輯活動 Edit event</a>
-    <a class="mini-btn ghost btn-lg" href="<?= url('/admin/event/new') ?>">＋ 新增活動 New event</a>
-    <?php if (!$event['is_active']): ?>
-      <form method="POST" action="<?= url('/admin/event/activate') ?>" style="margin:0"
-            data-confirm="確定將此活動設為公開？網站首頁會立即切換。&#10;Make this event live on the website now?">
-        <?= csrf_field() ?><input type="hidden" name="event_id" value="<?= $eid ?>">
-        <button class="mini-btn btn-lg" type="submit"><?= icon('globe') ?> 設為公開 Make live</button>
+<!-- ---------- Which event (controls live in the Control panel) ---------- -->
+<div class="dash-head">
+  <div>
+    <h2 style="margin:0"><?= h($event['year']) ?> · <?= h($event['name']) ?>
+      <?= $event['is_active'] ? '<span class="badge ok">目前公開 Live</span>' : '' ?><?= $event['is_test'] ? ' <span class="badge cancelled">測試 Test</span>' : '' ?></h2>
+  </div>
+  <div class="dash-head-actions">
+    <?php if (count($allEvents) > 1): ?>
+      <form method="GET" action="<?= url('/admin/dashboard') ?>" style="margin:0">
+        <label class="sr-only" for="dashEvent">查看活動 View event</label>
+        <select id="dashEvent" name="event" onchange="this.form.submit()">
+          <?php foreach ($allEvents as $_dE): ?>
+            <option value="<?= (int) $_dE['id'] ?>"<?= (int) $_dE['id'] === $eid ? ' selected' : '' ?>><?= h($_dE['year']) ?> — <?= h($_dE['name']) ?><?= $_dE['is_test'] ? '（測試 Test）' : '' ?></option>
+          <?php endforeach; unset($_dE); ?>
+        </select>
       </form>
     <?php endif; ?>
-    <?php if ($event['is_test']): ?>
-      <form method="POST" action="<?= url('/admin/event/test-delete') ?>" style="margin:0"
-            data-confirm="刪除此測試活動及其所有測試資料？此操作無法復原。&#10;Delete this test event and all its test data? This cannot be undone." data-danger>
-        <?= csrf_field() ?><input type="hidden" name="event_id" value="<?= $eid ?>">
-        <button class="mini-btn danger btn-lg" type="submit"><?= icon('trash') ?> 刪除測試資料 Delete test data</button>
-      </form>
-    <?php else: ?>
-      <form method="POST" action="<?= url('/admin/event/test-copy') ?>" style="margin:0"
-            data-confirm="建立測試副本？測試資料不會計入正式統計。&#10;Create a test copy? Test data is not counted.">
-        <?= csrf_field() ?><input type="hidden" name="event_id" value="<?= $eid ?>">
-        <button class="mini-btn ghost btn-lg" type="submit"><?= icon('flask') ?> 建立測試副本 Test copy</button>
-      </form>
+    <?php if (App\Core\Access::can('control')): ?>
+      <a class="mini-btn ghost btn-lg" href="<?= url('/admin/control') . $q ?>"><?= icon('settings') ?> 控制台 <span class="en">Control panel</span></a>
     <?php endif; ?>
   </div>
 </div>
+<?php if ($event['is_test']): ?>
+  <div class="flash test"><?= icon('flask') ?> 這是測試活動，資料不會列入正式統計。This is a test event — its data is not counted in real figures.</div>
+<?php endif; ?>
 
 <!-- ---------- Headline numbers ---------- -->
 <div class="kpis" id="dashKpis" data-live="rsvp_groups rsvp_attendees donations events">

@@ -1094,3 +1094,11 @@ details.guide > :not(summary){margin:0 20px 18px}
 .access-chip.none{background:#fbe2df;color:#9f211b}
 .access-form{margin-top:8px;padding:10px;border:1px dashed #e2d3b0;border-radius:12px;background:#fffdf7}
 .access-row > td{background:#fffdf7}
+
+/* ---------- Dashboard: which event (controls are in the Control panel) ---------- */
+.dash-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;margin:0 0 14px}
+.dash-head h2{font-size:1.25rem;color:#9f211b}
+.dash-head-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:0}
+.dash-head-actions select{max-width:100%}
+tr.is-current > td{background:#fff8e4}
+.dash-head select{padding:9px 12px;border:1.5px solid var(--line,#e6d9bd);border-radius:12px;background:#fffdf7;font:inherit;font-weight:600;color:inherit;min-height:44px}

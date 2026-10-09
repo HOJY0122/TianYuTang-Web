@@ -133,6 +133,27 @@ class AdminController extends Controller
         $this->view('admin/no_access', ['pageTitle' => '沒有可用功能 No functions', 'nav' => '', 'flash' => null]);
     }
 
+    /**
+     * GET /admin/control?event=<id> — 控制台 Control panel: which event is
+     * live, stop / resume online responses, edit or add events, test
+     * copies. Kept off the dashboard, which is for the numbers.
+     */
+    public function control(): void
+    {
+        $this->requireAdmin();
+        $eventModel = new Event();
+        $requested  = (int) ($_GET['event'] ?? 0);
+        $event      = ($requested > 0 ? $eventModel->find($requested) : null) ?? $eventModel->active();
+        $this->view('admin/control', [
+            'pageTitle'    => '控制台 Control panel',
+            'nav'          => 'control',
+            'event'        => $event,
+            'allEvents'    => $eventModel->all(),
+            'eventBarPath' => '/admin/control',
+            'flash'        => $this->takeFlash(),
+        ]);
+    }
+
     /** GET /admin/dashboard  (optionally ?event=<id>) */
     public function dashboard(): void
     {
@@ -218,7 +239,7 @@ class AdminController extends Controller
         if ($eventId > 0) {
             (new Event())->setActive($eventId);
         }
-        $this->backToEventDashboard($eventId);
+        $this->redirect($eventId ? "/admin/control?event={$eventId}" : '/admin/control');
     }
 
     // ------------------------------------------------------------------
@@ -420,7 +441,7 @@ class AdminController extends Controller
 
         $sourceId = (int) ($_POST['event_id'] ?? 0);
         if ($sourceId <= 0) {
-            $this->redirect('/admin/dashboard');
+            $this->redirect('/admin/control');
         }
 
         $testId = (new Event())->createTestCopy($sourceId);
@@ -430,7 +451,7 @@ class AdminController extends Controller
             '這是一份測試副本，資料不會計入正式統計。測試完成後可直接刪除。'
             . '請記得按「設為公開」切換到測試活動，才能在前台試用。'
         );
-        $this->redirect("/admin/dashboard?event={$testId}");
+        $this->redirect("/admin/control?event={$testId}");
     }
 
     /** POST /admin/event/test-delete — remove a test event and its data. */
@@ -445,7 +466,7 @@ class AdminController extends Controller
 
         if ($event === null || !$event['is_test']) {
             $this->flash('error', '無法刪除', '只有測試活動可以刪除，正式活動的紀錄必須保留。');
-            $this->redirect('/admin/dashboard');
+            $this->redirect('/admin/control');
         }
 
         // If the test event is the live one, hand the site back to a real
@@ -474,7 +495,7 @@ class AdminController extends Controller
 
         $eventModel->deleteTestEvent($id);
         $this->flash('success', '測試資料已清除', '測試活動與其所有報名、布施與相片紀錄已刪除。');
-        $this->redirect('/admin/dashboard');
+        $this->redirect('/admin/control');
     }
 
     // ------------------------------------------------------------------
@@ -493,7 +514,7 @@ class AdminController extends Controller
 
         if ($event === null) {
             $this->flash('error', '找不到活動 Not found', '找不到該活動，請從列表重新選擇。This event does not exist.');
-            $this->redirect('/admin/dashboard');
+            $this->redirect('/admin/control');
         }
 
         $this->view('admin/event_form', [
@@ -595,7 +616,7 @@ class AdminController extends Controller
         if (!$isNew) {
             if ($eventModel->find($id) === null) {
                 $this->flash('error', '找不到活動', '找不到該活動。');
-                $this->redirect('/admin/dashboard');
+                $this->redirect('/admin/control');
             }
         }
 
@@ -648,7 +669,7 @@ class AdminController extends Controller
             $this->flash('success', '已儲存 Saved', "活動資料已更新，網站已同步顯示。\nThe event is updated on the website.");
             $this->redirect("/admin/event/edit?id={$id}");
         }
-        $this->redirect("/admin/dashboard?event={$id}");
+        $this->redirect("/admin/control?event={$id}");
     }
 
     /** A blank box becomes NULL; anything else a whole number or 2-decimal amount. */
@@ -680,7 +701,7 @@ class AdminController extends Controller
         $events  = new Event();
         $event   = $events->find($id);
         if ($event === null || $section === null) {
-            $this->redirect('/admin/dashboard');
+            $this->redirect('/admin/control');
         }
         $stop = ($_POST['to'] ?? '') === 'stop';
         $events->setStopped($id, $section, $stop);
@@ -695,7 +716,7 @@ class AdminController extends Controller
         if ($path !== '' && str_starts_with($path, BASE_URL . '/admin') && parse_url($back, PHP_URL_HOST) === parse_url('http://' . site_host(), PHP_URL_HOST)) {
             $this->redirect(substr($path, strlen(BASE_URL)) . ($query !== '' ? '?' . $query : ''));
         }
-        $this->redirect('/admin/dashboard?event=' . $id);
+        $this->redirect('/admin/control?event=' . $id);
     }
 
     private function datetimeOrNull(string $value): ?string

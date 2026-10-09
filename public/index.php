@@ -114,6 +114,7 @@ $router->post('/admin/login',       'AdminController@login');
 $router->post('/admin/logout',      'AdminController@logout');
 $router->get('/admin/dashboard',    'AdminController@dashboard');
 $router->get('/admin/no-access',    'AdminController@noAccess');
+$router->get('/admin/control',      'AdminController@control');
 $router->post('/admin/rsvp/confirm','AdminController@confirmRsvp');
 $router->post('/admin/rsvp/cancel', 'AdminController@cancelRsvp');
 $router->post('/admin/donation/paid','AdminController@markDonationPaid');

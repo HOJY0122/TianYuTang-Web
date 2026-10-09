@@ -123,6 +123,16 @@ class AdminController extends Controller
         $this->redirect('/admin/login');
     }
 
+    /** GET /admin/no-access — signed in, but no function has been given to this account yet. */
+    public function noAccess(): void
+    {
+        $this->requireAdmin();
+        if (\App\Core\Access::home() !== '/admin/no-access') {
+            $this->redirect(\App\Core\Access::home());
+        }
+        $this->view('admin/no_access', ['pageTitle' => '沒有可用功能 No functions', 'nav' => '', 'flash' => null]);
+    }
+
     /** GET /admin/dashboard  (optionally ?event=<id>) */
     public function dashboard(): void
     {

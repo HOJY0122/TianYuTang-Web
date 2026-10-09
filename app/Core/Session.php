@@ -65,6 +65,7 @@ final class Session
         $_SESSION['admin_id']        = (int) $user['id'];
         $_SESSION['admin_username']  = $user['username'];
         $_SESSION['admin_role']      = $user['role'] ?? 'admin';
+        $_SESSION['admin_perms']     = Access::decode($user['permissions'] ?? null);
         $_SESSION['admin_display']   = ($user['display_name'] ?? '') ?: $user['username'];
         $_SESSION['session_version'] = (int) ($user['session_version'] ?? 0);
         $_SESSION['signed_in_at']    = $now;
@@ -126,7 +127,8 @@ final class Session
             } elseif (self::singleDevice($state['role']) && self::replacedElsewhere($state)) {
                 $reason = 'device';
             } else {
-                $_SESSION['admin_role'] = $state['role'];     // a role change applies at once
+                $_SESSION['admin_role']  = $state['role'];     // a role change applies at once
+                $_SESSION['admin_perms'] = Access::decode($state['permissions'] ?? null);   // so does a change of functions
             }
         }
         if ($reason !== null) {

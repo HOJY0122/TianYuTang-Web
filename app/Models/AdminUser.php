@@ -48,7 +48,7 @@ class AdminUser extends Model
     public function verify(string $username, string $password): ?array
     {
         $user = $this->fetchOne(
-            'SELECT id, username, password_hash, role, display_name, session_version FROM admin_users WHERE username = ?',
+            'SELECT id, username, password_hash, role, permissions, display_name, session_version FROM admin_users WHERE username = ?',
             [$username]
         );
 
@@ -74,7 +74,7 @@ class AdminUser extends Model
     /** Role and session version, checked on every staff page (App\Core\Session). */
     public function sessionState(int $id): ?array
     {
-        return $this->fetchOne('SELECT role, session_version, device_token FROM admin_users WHERE id = ?', [$id]);
+        return $this->fetchOne('SELECT role, permissions, session_version, device_token FROM admin_users WHERE id = ?', [$id]);
     }
 
     /** The hash of the token held by the device that signed in last (see Session). */
@@ -92,7 +92,7 @@ class AdminUser extends Model
     public function all(): array
     {
         return $this->fetchAll(
-            'SELECT id, username, role, display_name, last_login_at, created_at
+            'SELECT id, username, role, permissions, display_name, last_login_at, created_at
              FROM admin_users ORDER BY role DESC, username'
         );
     }
@@ -112,13 +112,20 @@ class AdminUser extends Model
     }
 
     /** Create an account. Returns the new id. */
-    public function create(string $username, string $password, string $role, ?string $displayName): int
+    public function create(string $username, string $password, string $role, ?string $displayName, ?array $permissions = null): int
     {
         $this->execute(
-            'INSERT INTO admin_users (username, password_hash, role, display_name) VALUES (?, ?, ?, ?)',
-            [$username, password_hash($password, PASSWORD_DEFAULT), $this->normaliseRole($role), $displayName]
+            'INSERT INTO admin_users (username, password_hash, role, permissions, display_name) VALUES (?, ?, ?, ?, ?)',
+            [$username, password_hash($password, PASSWORD_DEFAULT), $this->normaliseRole($role),
+             \App\Core\Access::encode($permissions), $displayName]
         );
         return (int) $this->db->lastInsertId();
+    }
+
+    /** Which admin functions this account may use (null = all). Applies on their next click. */
+    public function updatePermissions(int $id, ?array $permissions): void
+    {
+        $this->execute('UPDATE admin_users SET permissions = ? WHERE id = ?', [\App\Core\Access::encode($permissions), $id]);
     }
 
     public function updatePassword(int $id, string $newPassword): bool

@@ -141,6 +141,20 @@ abstract class Controller
     protected function requireAdmin(): void
     {
         $this->requireLogin();
+
+        // An admin limited to chosen functions (System → User accounts)
+        // may open only those pages and actions, whatever address is typed.
+        $path = '/' . trim(substr((string) (parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/'), strlen(BASE_URL)), '/');
+        if (!Access::allowsPath($path)) {
+            $msg = "您的帳號沒有使用這個功能的權限，請聯絡系統管理員。\nYour account is not allowed to use this function. Please ask a system admin.";
+            if ($this->wantsJson()) {
+                $this->json(['ok' => false, 'error' => $msg], 403);
+            }
+            if (empty($_SESSION['flash'])) {
+                $this->flash('error', '沒有權限 Not allowed', $msg);
+            }
+            $this->redirect(Access::home());
+        }
     }
 
     /** Restrict a page to the system administrators' area. */
@@ -172,6 +186,6 @@ abstract class Controller
      */
     protected function homePath(): string
     {
-        return $this->isSystemAdmin() ? '/system' : '/admin/dashboard';
+        return Access::home();
     }
 }

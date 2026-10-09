@@ -45,6 +45,15 @@ if (($site['receipts_enabled'] ?? '1') !== '1') {
         unset($menu['財務 Finance']);
     }
 }
+// An admin limited to chosen functions sees only those (the server
+// checks every page and action as well — App\Core\Access).
+foreach ($menu as $_mGroup => $_mItems) {
+    $menu[$_mGroup] = array_values(array_filter($_mItems, static fn($i) => App\Core\Access::can($i[0])));
+    if (!$menu[$_mGroup]) {
+        unset($menu[$_mGroup]);
+    }
+}
+unset($_mGroup, $_mItems);
 if ($isSystem) {
     $menu['系統管理 System'] = [
         ['system', 'settings', '網站設定', 'Site settings', '/system'],
@@ -78,7 +87,7 @@ if ($isSystem) {
 <body class="admin-app">
 
 <aside class="side" id="sideMenu" aria-label="管理選單 Admin menu">
-  <a class="side-brand" id="liveSideBrand" data-live="settings" href="<?= url($isSystem ? '/system' : '/admin/dashboard') ?>">
+  <a class="side-brand" id="liveSideBrand" data-live="settings" href="<?= url(App\Core\Access::home()) ?>">
     <?php if ($adminLogo): ?><img src="<?= h($versioned($adminLogo)) ?>" alt=""><?php endif; ?>
     <span><strong><?= h($site['site_name']) ?></strong><small><?= $isSystem ? '系統管理員 System admin' : '管理員 Admin' ?></small></span>
   </a>

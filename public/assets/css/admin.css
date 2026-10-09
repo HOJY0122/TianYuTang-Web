@@ -1085,3 +1085,22 @@ html.fit-phone .word-preview,
 html.fit-phone .qr-preview,
 html.fit-phone .form-sec > h3{position:relative;top:auto;bottom:auto;-webkit-backdrop-filter:none;backdrop-filter:none}
 html.fit-phone .topbar-admin{background:#fffaf0}
+
+/* ---------- Admin functions picker (System → User accounts) ---------- */
+.access-picker{margin-top:8px}
+.access-presets{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
+.access-presets .mini-btn{padding:6px 10px}
+.access-group{border:1px solid var(--line,#e6d9bd);border-radius:12px;padding:8px 12px 10px;margin:0 0 10px;min-width:0;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:4px 12px}
+.access-group legend{font-weight:700;color:#7a3b12;padding:0 6px;font-size:.9rem}
+.access-picker label.access-item{display:flex;align-items:center;gap:8px;margin:2px 0;padding:6px 8px;border-radius:10px;font-weight:600;cursor:pointer;min-width:0}
+.access-picker label.access-item:hover{background:#fbf3e2}
+.access-item .ic{flex:0 0 auto}
+.access-item input{width:20px;height:20px;flex:0 0 auto;accent-color:#9f211b}
+.access-item small{display:block;font-weight:500;color:#7a6a58;font-size:.78rem}
+.access-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.access-chip{display:inline-block;padding:1px 8px;border-radius:999px;background:#f3ead6;color:#6b4a12;font-size:.78rem;font-weight:600;white-space:nowrap}
+.access-chip.all{background:#e3f1e6;color:#25603a}
+.access-chip.none{background:#fbe2df;color:#9f211b}
+.access-form{margin-top:8px;padding:10px;border:1px dashed #e2d3b0;border-radius:12px;background:#fffdf7}
+.access-row > td{background:#fffdf7}

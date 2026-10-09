@@ -424,14 +424,40 @@ class SystemController extends Controller
             $this->redirect('/system/users');
         }
 
-        $users->create($username, $password, $role, $displayName !== '' ? $displayName : null);
+        $perms = $role === AdminUser::ROLE_SYSTEM ? null : \App\Core\Access::fromForm($_POST['perms'] ?? []);
+        $users->create($username, $password, $role, $displayName !== '' ? $displayName : null, $perms);
 
         $this->flash(
             'success',
             '帳號已建立',
-            "{$username} 已建立（" . ($role === AdminUser::ROLE_SYSTEM ? '系統管理員' : '管理員') . '）。'
+            "{$username} 已建立（" . ($role === AdminUser::ROLE_SYSTEM ? '系統管理員' : '管理員：' . \App\Core\Access::describe($perms)) . '）。'
             . '請將密碼親自交給對方，不要用訊息傳送。'
         );
+        $this->redirect('/system/users');
+    }
+
+    /**
+     * POST /system/users/access — which admin functions an ordinary admin
+     * may use. Takes effect on their next click (Session::guard reloads it).
+     */
+    public function updateAccess(): void
+    {
+        $this->requireSystemAdmin();
+        $this->requireCsrf();
+        $users = new AdminUser();
+        $user  = $users->find((int) ($_POST['user_id'] ?? 0));
+        if ($user === null) {
+            $this->flash('error', '找不到帳號', '找不到這個帳號。');
+            $this->redirect('/system/users');
+        }
+        if ($user['role'] === AdminUser::ROLE_SYSTEM) {
+            $this->flash('error', '不需設定 Not needed', "系統管理員一律可使用全部功能。\nSystem admins can always use everything.");
+            $this->redirect('/system/users');
+        }
+        $perms = \App\Core\Access::fromForm($_POST['perms'] ?? []);
+        $users->updatePermissions((int) $user['id'], $perms);
+        $this->flash('success', '已更新 Updated', "{$user['username']} 可使用：" . \App\Core\Access::describe($perms)
+            . "\n即時生效。Applies at once.");
         $this->redirect('/system/users');
     }
 

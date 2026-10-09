@@ -32,8 +32,16 @@
               <span class="help">（重設密碼即解鎖 Reset password to unlock）</span></span>
           <?php endif; ?></td>
         <td data-label="姓名 Name"><?= h($u['display_name'] ?? '—') ?></td>
+        <?php $uPerms = App\Core\Access::decode($u['permissions'] ?? null); ?>
         <td data-label="權限 Role"><?= $u['role'] === 'system_admin'
-            ? '<span class="badge walkin">系統管理員 System admin</span>' : '<span class="badge">管理員 Admin</span>' ?></td>
+            ? '<span class="badge walkin">系統管理員 System admin</span>' : '<span class="badge">管理員 Admin</span>' ?>
+          <?php if ($u['role'] !== 'system_admin'): ?>
+            <div class="access-chips">
+              <?php if ($uPerms === null): ?><span class="access-chip all">全部功能 Everything</span>
+              <?php elseif (!$uPerms): ?><span class="access-chip none">沒有功能 Nothing</span>
+              <?php else: foreach ($uPerms as $pk): ?><span class="access-chip"><?= h(App\Core\Access::MODULES[$pk][1]) ?></span><?php endforeach; endif; ?>
+            </div>
+          <?php endif; ?></td>
         <td data-label="最後登入 Last login" class="help"><?= $u['last_login_at'] ? h(date('Y-m-d H:i', strtotime($u['last_login_at']))) : '從未 Never' ?></td>
         <td data-label="操作 Actions">
           <div class="actions-cell" style="flex-wrap:wrap">
@@ -43,6 +51,9 @@
                 <input type="hidden" name="role" value="<?= $u['role'] === 'system_admin' ? 'admin' : 'system_admin' ?>">
                 <button class="mini-btn ghost" type="submit"><?= $u['role'] === 'system_admin' ? '改為管理員 Make admin' : '升為系統管理員 Make system admin' ?></button>
               </form>
+            <?php endif; ?>
+            <?php if ($u['role'] !== 'system_admin'): ?>
+              <button class="mini-btn ghost" type="button" onclick="document.getElementById('ac<?= (int) $u['id'] ?>').classList.toggle('hidden')"><?= icon('settings') ?> 可用功能 Functions</button>
             <?php endif; ?>
             <button class="mini-btn ghost" type="button" onclick="document.getElementById('pw<?= (int) $u['id'] ?>').classList.toggle('hidden')"><?= icon('key') ?> 重設密碼 Reset password</button>
             <?php if (!$isSelf && !$isLastSystem): ?>
@@ -64,6 +75,17 @@
           </form>
         </td>
       </tr>
+      <?php if ($u['role'] !== 'system_admin'): ?>
+      <tr class="access-row hidden" id="ac<?= (int) $u['id'] ?>"><td colspan="5">
+                      <form method="POST" action="<?= url('/system/users/access') ?>" class="access-form">
+              <?= csrf_field() ?><input type="hidden" name="user_id" value="<?= (int) $u['id'] ?>">
+              <strong><?= h($u['username']) ?> 可以使用 <span class="en">can use</span>：</strong>
+              <?php $pickSelected = $uPerms; require BASE_PATH . '/app/Views/system/_access_picker.php'; ?>
+              <button class="mini-btn" type="submit"><?= icon('save') ?> 儲存功能 Save functions</button>
+              <span class="help">即時生效，不必重新登入。<span class="en">Applies at once — no need to sign in again.</span></span>
+            </form>
+                </td></tr>
+      <?php endif; ?>
     <?php endforeach; ?>
     </tbody>
   </table>
@@ -89,17 +111,23 @@
     </div>
     <label for="role">權限 <span class="en">Role *</span></label>
     <select id="role" name="role">
-      <option value="admin">管理員 Admin — 報名、布施、報到、消息、相簿、活動資料 records, forms, news, photos, event</option>
-      <option value="system_admin">系統管理員 System admin — 以上全部，加上網站設定與帳號 everything above + site settings &amp; accounts</option>
+      <option value="admin">管理員 Admin — 下面選擇可用功能 functions chosen below</option>
+      <option value="system_admin">系統管理員 System admin — 全部功能及網站設定 everything + site settings</option>
     </select>
+    <div id="newAccess">
+      <label>可使用的功能 <span class="en">Functions this admin can use</span></label>
+      <p class="help" style="margin-top:0">只勾選他需要的。例如當天幫忙的委員只需「現場報到」；不勾「儀表板」就看不到總金額。
+        <span class="en">Tick only what they need — e.g. a helper on the day needs just Check-in; without Dashboard they cannot see the totals.</span></p>
+      <?php $pickSelected = null; require BASE_PATH . '/app/Views/system/_access_picker.php'; ?>
+    </div>
     <div class="form-actions"><button class="primary" type="submit"><?= icon('plus') ?> 建立帳號 <span class="en">Create account</span></button></div>
   </form>
 </div>
 <div class="panel guide">
   <h2 style="margin-top:0"><?= icon('users') ?> 兩種權限 <span class="en">The two roles</span></h2>
   <ul>
-    <li><strong>管理員 Admin</strong>：報名、布施、報到、現場登記、消息、相簿、收據、活動資料。
-      <span class="en">Registrations, donations, check-in, counter, news, photos, receipts, event details.</span></li>
+    <li><strong>管理員 Admin</strong>：可選擇開放哪些功能（報名、布施、報到、現場登記、消息、相簿、收據、活動資料、儀表板）。
+      <span class="en">You choose which functions each admin can use (registrations, donations, check-in, counter, news, photos, receipts, event details, dashboard).</span></li>
     <li><strong>系統管理員 System admin</strong>：以上全部，加上網站設定、網站文字、帳號與 QR 產生器。
       <span class="en">Everything above, plus site settings, wording, accounts and the QR generator.</span></li>
   </ul>
@@ -111,4 +139,31 @@
   </ul>
 </div>
 </div>
+<script>
+(function () {
+  // Presets tick the boxes; the count line says what was chosen.
+  function count(p) {
+    var boxes = p.querySelectorAll('input[name="perms[]"]'), on = 0;
+    boxes.forEach(function (b) { if (b.checked) on++; });
+    p.querySelector('.access-count').textContent = on === boxes.length ? '已選全部功能 · Everything ticked'
+      : on === 0 ? '未選任何功能——此帳號登入後沒有可用頁面 · Nothing ticked: this account will have no pages'
+      : '已選 ' + on + ' 項 · ' + on + ' ticked';
+  }
+  document.querySelectorAll('[data-access-picker]').forEach(function (p) {
+    p.addEventListener('change', function () { count(p); });
+    p.querySelectorAll('[data-preset]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var keys = b.dataset.preset === '*' ? null : b.dataset.preset.split(',');
+        p.querySelectorAll('input[name="perms[]"]').forEach(function (c) { c.checked = !keys || keys.indexOf(c.value) > -1; });
+        count(p);
+      });
+    });
+    count(p);
+  });
+  // A system admin always has everything: no picker for that role.
+  var role = document.getElementById('role'), box = document.getElementById('newAccess');
+  function sync() { box.hidden = role.value === 'system_admin'; }
+  role.addEventListener('change', sync); sync();
+})();
+</script>
 <?php require BASE_PATH . '/app/Views/layouts/admin_footer.php'; ?>

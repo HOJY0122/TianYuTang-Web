@@ -1076,16 +1076,6 @@ details.guide > :not(summary){margin:0 20px 18px}
 .book-register-title{flex-basis:100%;color:#7a3b12}
 .book-holder{margin:4px 0 10px;align-items:flex-end}
 
-/* Phones in "Desktop site" mode (js/fit-screen.js): sticky bars misplace
-   under zoom in several phone browsers, so they scroll with the page. */
-html.fit-phone .topbar-admin,
-html.fit-phone .sticky-actions,
-html.fit-phone .receipt-photo,
-html.fit-phone .word-preview,
-html.fit-phone .qr-preview,
-html.fit-phone .form-sec > h3{position:relative;top:auto;bottom:auto;-webkit-backdrop-filter:none;backdrop-filter:none}
-html.fit-phone .topbar-admin{background:#fffaf0}
-
 /* ---------- Admin functions picker (System → User accounts) ---------- */
 .access-picker{margin-top:8px}
 .access-presets{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}

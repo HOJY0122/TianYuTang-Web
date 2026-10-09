@@ -22,6 +22,17 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     <input id="bookNo" name="book_no" value="<?= h($book) ?>" maxlength="30" list="bookList" autocomplete="off" placeholder="例 e.g. 12">
     <datalist id="bookList"><?php foreach ($bookList as $b): ?><option value="<?= h($b) ?>"><?php endforeach; ?></datalist>
   </div>
+  <div class="form-grid">
+    <div>
+      <label for="holder">負責人 <span class="en">Member in charge</span> <span class="help">（選填 optional）</span></label>
+      <input id="holder" name="holder" maxlength="100" autocomplete="off" placeholder="例 e.g. 陳大文">
+    </div>
+    <div>
+      <label for="holderPhone">負責人電話 <span class="en">Their phone</span> <span class="help">（選填 optional）</span></label>
+      <input id="holderPhone" name="holder_phone" maxlength="30" inputmode="tel" autocomplete="off" placeholder="012-345 6789">
+    </div>
+  </div>
+  <p class="help" style="margin-top:4px">誰拿了這本收據簿。已登記的簿號會自動帶出。<span class="en">Who has this receipt book — filled in for books already registered.</span></p>
 
   <label for="photo">收據相片 <span class="en">Receipt photo</span></label>
   <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/gif,image/webp" capture="environment"
@@ -58,6 +69,16 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
 <script>
 (function () {
   var form = document.getElementById('scanForm'), busy = document.getElementById('busy');
+  // Chosen book → its member in charge filled in (books already registered).
+  var REGISTER = <?= json_encode((object) array_map(static fn($b) => ['h' => $b['holder'], 'p' => $b['holder_phone']], $register), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
+  var book = document.getElementById('bookNo'), holder = document.getElementById('holder'), phone = document.getElementById('holderPhone');
+  function fillHolder() {
+    var r = REGISTER[book.value.trim().toUpperCase()];
+    holder.value = r && r.h ? r.h : '';
+    phone.value = r && r.p ? r.p : '';
+  }
+  book.addEventListener('change', fillHolder);
+  fillHolder();
   form.addEventListener('submit', function (e) {
     var ai = e.submitter && e.submitter.id === 'aiBtn';
     if (ai && !document.getElementById('photo').files.length) {

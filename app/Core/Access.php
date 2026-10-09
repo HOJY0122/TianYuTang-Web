@@ -20,6 +20,7 @@ final class Access
     /** key => [icon, 中文, English, group, first page]. Same order as the menu. */
     public const MODULES = [
         'dashboard'     => ['chart',        '儀表板',   'Dashboard',        '活動管理 Event',      '/admin/dashboard'],
+        'control'       => ['settings',     '控制台',   'Control panel',    '活動管理 Event',      '/admin/control'],
         'registrations' => ['form',         '報名紀錄', 'Registrations',    '活動管理 Event',      '/admin/registrations'],
         'donations'     => ['coins',        '布施紀錄', 'Donations',        '活動管理 Event',      '/admin/donations'],
         'event'         => ['calendar',     '活動資料', 'Event details',    '活動管理 Event',      '/admin/event/edit'],
@@ -46,8 +47,13 @@ final class Access
         '/admin/print/donations'  => ['donations'],
         '/admin/export/donations' => ['donations'],
         '/admin/event/'           => ['event'],
+        '/admin/control'          => ['control'],
+        // Switching the live event and test copies live in the control panel.
+        '/admin/event/activate'   => ['control', 'event'],
+        '/admin/event/test-copy'  => ['control', 'event'],
+        '/admin/event/test-delete'=> ['control', 'event'],
         // Stop / resume online responses sits in the bar above the lists too.
-        '/admin/event/responses'  => ['event', 'registrations', 'donations'],
+        '/admin/event/responses'  => ['control', 'event', 'registrations', 'donations'],
         '/admin/qr'               => ['event'],
         '/admin/posts'            => ['posts'],
         '/admin/photos'           => ['photos'],
@@ -67,6 +73,7 @@ final class Access
         'records'  => ['報名與報到', 'Registrations',     ['registrations', 'checkin', 'walkin']],
         'finance'  => ['財務',     'Finance',              ['donations', 'counter', 'receipts']],
         'content'  => ['網站內容', 'News & photos',        ['posts', 'photos', 'event']],
+        'manager'  => ['活動負責', 'Event manager',        ['control', 'event', 'registrations', 'donations', 'checkin', 'walkin', 'counter']],
         'nomoney'  => ['不看金額', 'No money',             ['registrations', 'event', 'posts', 'photos', 'checkin', 'walkin']],
     ];
 

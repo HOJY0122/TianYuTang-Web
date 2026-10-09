@@ -29,11 +29,15 @@
   // The site's sticky header sits just below the pinned bar: keep --uat-h
   // equal to the bar's real height (it changes with the size setting, the
   // screen width, and when UAT is switched on or off on an open page).
+  // offsetHeight, not getBoundingClientRect(): on a phone in desktop mode
+  // the page is zoomed (fit-screen.js) and getBoundingClientRect() gives
+  // ZOOMED pixels — fed back into CSS they were zoomed a second time, and
+  // the header hung far below the bar once it stuck while scrolling.
   var html = document.documentElement;
   function measure() {
     var wrap = document.getElementById('liveUat');
     var bar = wrap && wrap.querySelector('.uat-bar');
-    html.style.setProperty('--uat-h', (bar ? Math.round(wrap.getBoundingClientRect().height) : 0) + 'px');
+    html.style.setProperty('--uat-h', (bar ? wrap.offsetHeight : 0) + 'px');
   }
   if (window.ResizeObserver) {
     var ro = new ResizeObserver(measure);

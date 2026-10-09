@@ -65,7 +65,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
         <div class="detail" data-for="wantSeats">
           <div class="stepper">
             <button type="button" data-seat="-1" aria-label="減少 Fewer">−</button>
-            <input id="tableCount" name="table_count" type="number" inputmode="numeric" min="<?= (int) $limits['seats_min'] ?>"
+            <input id="tableCount" name="table_count" type="number" inputmode="numeric" step="1" pattern="[0-9]*" data-int min="<?= (int) $limits['seats_min'] ?>"
                    max="<?= (int) $limits['seats_max'] ?>" value="<?= h(($old['table_count'] ?? '') !== '' ? $old['table_count'] : '1') ?>"
                    aria-label="席數 Number of seats">
             <button type="button" data-seat="1" aria-label="增加 More">+</button>
@@ -82,7 +82,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
           <span class="help"><?= h(t('donate.free_hint') . ' ' . t('donate.free_hint', 'en')) ?></span></label>
         <div class="detail" data-for="wantFree">
           <label for="freeAmount" class="sr-only">金額 Amount (RM)</label>
-          <input id="freeAmount" name="free_amount" type="number" inputmode="decimal" min="<?= h((string) $limits['free_min']) ?>" step="0.01"
+          <input id="freeAmount" name="free_amount" type="number" inputmode="decimal" data-money min="<?= h((string) $limits['free_min']) ?>" step="0.01"
                  placeholder="RM" value="<?= h($old['free_amount'] ?? '') ?>">
           <div class="quick-amounts">
             <?php foreach (App\Core\FormRules::amounts() as $amount): if ($amount < $limits['free_min'] || $amount > $limits['free_max']) continue; ?>

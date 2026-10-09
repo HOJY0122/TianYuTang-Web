@@ -25,9 +25,9 @@ $free  = $d['free_amount'] !== null ? (float) $d['free_amount'] : ($d['method'] 
     <div><label for="contact">聯絡號碼 <span class="en">Contact</span></label>
       <input id="contact" name="contact" maxlength="30" value="<?= h($d['contact_no']) ?>"></div>
     <div><label for="seats">功德席數量 <span class="en">Merit seats (× <?= rm($price) ?>)</span></label>
-      <input id="seats" name="seats" type="number" min="0" max="<?= App\Models\Donation::MAX_SEATS ?>" value="<?= (int) $d['table_count'] ?>"></div>
+      <input id="seats" name="seats" type="number" inputmode="numeric" step="1" pattern="[0-9]*" data-int min="0" max="<?= App\Models\Donation::MAX_SEATS ?>" value="<?= (int) $d['table_count'] ?>"></div>
     <div><label for="free_amount">隨喜金額 <span class="en">Freewill (RM)</span></label>
-      <input id="free_amount" name="free_amount" type="number" min="0" step="0.01" value="<?= h(number_format($free, 2, '.', '')) ?>"></div>
+      <input id="free_amount" name="free_amount" type="number" inputmode="decimal" data-money min="0" step="0.01" value="<?= h(number_format($free, 2, '.', '')) ?>"></div>
     <div><label for="status">付款狀態 <span class="en">Payment</span></label>
       <select id="status" name="status">
         <option value="pending"<?= $d['status'] === 'pending' ? ' selected' : '' ?>>待付 Pending</option>

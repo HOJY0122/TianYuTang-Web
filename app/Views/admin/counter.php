@@ -152,7 +152,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
           </div>
           <div class="cd-stepper">
             <button type="button" data-seat="-1" aria-label="減少 Fewer">−</button>
-            <input id="table_count" name="table_count" type="number" min="0" max="200" inputmode="numeric"
+            <input id="table_count" name="table_count" type="number" min="0" max="200" inputmode="numeric" step="1" pattern="[0-9]*" data-int
                    value="<?= h((string) $v('table_count', '0')) ?>" aria-label="席數 Number of seats">
             <button type="button" data-seat="1" aria-label="增加 More">+</button>
           </div>
@@ -171,7 +171,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
           </div>
           <div class="cd-money">
             <span aria-hidden="true">RM</span>
-            <input id="free_amount" name="free_amount" type="number" min="0" step="0.01" inputmode="decimal"
+            <input id="free_amount" name="free_amount" type="number" min="0" step="0.01" inputmode="decimal" data-money
                    value="<?= h((string) $v('free_amount')) ?>" placeholder="0.00" aria-label="隨喜金額 Freewill amount (RM)">
           </div>
           <div class="cd-chips" aria-label="快速金額 Quick amounts">

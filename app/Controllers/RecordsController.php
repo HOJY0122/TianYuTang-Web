@@ -221,13 +221,22 @@ class RecordsController extends Controller
         $fields = [
             'name'        => $str('name'),
             'contact'     => $str('contact'),
-            'seats'       => (int) $str('seats'),
-            'free_amount' => round((float) $str('free_amount'), 2),
+            'seats'       => Donation::parseSeats($str('seats')),
+            'free_amount' => Donation::parseAmount($str('free_amount')),
             'status'      => $str('status'),
             'notes'       => $str('notes') !== '' ? mb_substr($str('notes'), 0, 255) : null,
         ];
 
-        $errors = Donation::validateParts($fields['seats'], $fields['free_amount']);
+        $errors = [];
+        if ($fields['seats'] === null) {
+            $errors[] = '功德席數量只可以是整數。Merit seats must be a whole number.';
+            $fields['seats'] = 0;
+        }
+        if ($fields['free_amount'] === null) {
+            $errors[] = '隨喜金額最多兩位小數。The freewill amount takes at most two decimals.';
+            $fields['free_amount'] = 0.0;
+        }
+        $errors = array_merge($errors, Donation::validateParts($fields['seats'], $fields['free_amount']));
         if ($fields['name'] === '' || mb_strlen($fields['name']) > 100) {
             $errors[] = '請填寫姓名。Name is required.';
         }

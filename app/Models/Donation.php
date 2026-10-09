@@ -51,6 +51,39 @@ class Donation extends Model
      *
      * @return string[] bilingual problems; empty means acceptable
      */
+    /**
+     * Merit seats: whole numbers only. "2" → 2; "2.5", "2,0", "1e1",
+     * "-1" → null (refused, never quietly cut to 2). Empty → 0.
+     */
+    public static function parseSeats(mixed $raw): ?int
+    {
+        $raw = is_string($raw) || is_int($raw) ? trim((string) $raw) : '';
+        if ($raw === '') {
+            return 0;
+        }
+        return preg_match('/^\d{1,6}$/', $raw) ? (int) $raw : null;
+    }
+
+    /**
+     * Freewill amount in Ringgit: at most two decimal places — anything
+     * finer is rounded half up (12.095 → 12.10, 12.094 → 12.09).
+     * "abc", "1e3", "-5", "12,50" → null (refused). Empty → 0.
+     */
+    public static function parseAmount(mixed $raw): ?float
+    {
+        $raw = is_string($raw) || is_int($raw) || is_float($raw) ? trim((string) $raw) : '';
+        if ($raw === '') {
+            return 0.0;
+        }
+        if (!preg_match('/^(\d{1,7})(?:\.(\d+))?$/', $raw, $m)) {
+            return null;
+        }
+        // Whole sen, worked out on the digits (no floating-point surprises).
+        $frac = str_pad(substr($m[2] ?? '', 0, 3), 3, '0');
+        $sen  = (int) $m[1] * 100 + intdiv((int) $frac, 10) + ((int) $frac[2] >= 5 ? 1 : 0);
+        return $sen / 100;
+    }
+
     public static function validateParts(int $seats, float $freeAmount): array
     {
         $errors = [];

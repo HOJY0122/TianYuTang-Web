@@ -111,7 +111,11 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     <div id="attendees" class="people-list"></div>
     <div class="people-tools">
       <button type="button" class="add-person" id="addPerson"><span class="ap-plus"><?= icon('plus') ?></span><span class="ap-text">加一位參加者<span class="en">Add a person</span></span></button>
-      <button type="button" class="link-btn" id="allSame" hidden><?= icon('phone') ?> 全部用第一位的電話 <span class="en">Everyone uses person 1's number</span></button>
+      <label class="use-first all-same" id="allSameBox" hidden>
+        <input type="checkbox" id="allSame">
+        <span class="uf-box"><?= icon('check') ?></span>
+        <span>全部用第一位的電話 <span class="en">Everyone uses person 1's number</span></span>
+      </label>
     </div>
 
     <?php if ($preview): ?>
@@ -289,7 +293,8 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     var add = document.getElementById('addPerson');
     add.disabled = list.length >= M;
     add.hidden = M < 2;
-    document.getElementById('allSame').hidden = list.length < 3;
+    document.getElementById('allSameBox').hidden = list.length < 3;
+    document.getElementById('allSame').checked = list.length > 1 && list.slice(1).every(function (r) { return r.querySelector('.same-first').checked; });
     list.forEach(function (row) { row.classList.toggle('is-done', complete(row)); });
   }
 
@@ -378,9 +383,9 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     if (open) open.classList.remove('is-open');
     addCard({ linked: rows().length >= 1 && field(rows()[0], 'contact').value.trim() !== '' });
   });
-  document.getElementById('allSame').addEventListener('click', function () {
-    var list = rows(), all = list.slice(1).every(function (r) { return r.querySelector('.same-first').checked; });
-    list.slice(1).forEach(function (r) { r.querySelector('.same-first').checked = !all; if (all) field(r, 'contact').value = ''; });
+  document.getElementById('allSame').addEventListener('change', function () {
+    var on = this.checked;
+    rows().slice(1).forEach(function (r) { var c = r.querySelector('.same-first'); if (c.checked !== on) { c.checked = on; if (!on) field(r, 'contact').value = ''; } });
     syncLinked(); renumber();
   });
 

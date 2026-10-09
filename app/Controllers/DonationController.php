@@ -67,10 +67,17 @@ class DonationController extends Controller
 
         // Two independent ticks. An unticked part counts as zero even if
         // a number is still sitting in its box.
-        $seats = !empty($_POST['want_seats']) ? (int) ($_POST['table_count'] ?? 0) : 0;
-        // Rounded BEFORE the check: 0.001 would pass "> 0" and then be
-        // stored by the DECIMAL(10,2) column as a RM 0.00 donation.
-        $free  = !empty($_POST['want_free']) ? round((float) ($_POST['free_amount'] ?? 0), 2) : 0.0;
+        // Seats: whole numbers only (2.5 is refused, not cut to 2). Freewill:
+        // two decimal places at most, rounded half up — BEFORE the check, so
+        // 0.001 cannot pass "> 0" and be stored as a RM 0.00 donation.
+        $seats = !empty($_POST['want_seats']) ? Donation::parseSeats($_POST['table_count'] ?? '') : 0;
+        $free  = !empty($_POST['want_free']) ? Donation::parseAmount($_POST['free_amount'] ?? '') : 0.0;
+        if ($seats === null) {
+            $this->fail("功德席數量只可以是整數（例如 1、2、3）。\nMerit seats must be a whole number (e.g. 1, 2, 3).");
+        }
+        if ($free === null) {
+            $this->fail("隨喜金額格式不正確，最多兩位小數（例如 50 或 12.50）。\nPlease enter the amount as a number with at most two decimals (e.g. 50 or 12.50).");
+        }
 
         if ($name === '' || mb_strlen($name) > 100) {
             $this->fail("請填寫姓名。\nPlease enter your name.");

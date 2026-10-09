@@ -817,3 +817,10 @@ html.has-wm.p-albums .album-strip figure::after,html.has-wm.p-news .post-media::
 .sleepbar{background:#2b1e18;color:#f5e7c4;text-align:center;padding:.55rem 1rem;font-size:.85rem;font-weight:700;line-height:1.5}
 .sleepbar span{display:block;font-weight:500;opacity:.85;font-size:.92em}
 .sleepbar a{color:#f3df9c;margin-left:.4rem}
+
+/* Phones in "Desktop site" mode (js/fit-screen.js zooms the page): sticky
+   bars are drawn in the wrong place by several phone browsers under zoom
+   (Samsung Internet, older Chrome) — the header slides down over the page
+   as you scroll. There the header simply scrolls with the page. */
+html.fit-phone .site-header,
+html.fit-phone .people-bar{position:relative;top:auto;-webkit-backdrop-filter:none;backdrop-filter:none;background:#fffaf0}

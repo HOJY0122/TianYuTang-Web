@@ -108,9 +108,21 @@
     window.addEventListener('focus', function () { html.classList.remove('protect-blur'); });
   }
 
+  // Phones: a web page cannot block the screenshot buttons (only a native
+  // app can, on Android). What it can do: blur the protected photos the
+  // moment the page goes to the background, so the recent-apps preview
+  // shows nothing usable, and stamp the watermark on every photo.
+  if (GUARD) {
+    var hideNow = function () { html.classList.add('protect-hide'); };
+    var showNow = function () { if (!document.hidden) html.classList.remove('protect-hide'); };
+    document.addEventListener('visibilitychange', function () { document.hidden ? hideNow() : setTimeout(showNow, 150); });
+    window.addEventListener('pagehide', hideNow);
+    window.addEventListener('pageshow', function () { setTimeout(showNow, 150); });
+  }
+
   // Watermark: the text tiled across the full-size viewer.
   var wm = html.getAttribute('data-wm');
-  if (wm && viewerOn) {
+  if (wm && (viewerOn || on('banner'))) {
     var esc = wm.replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
     var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200"><text x="160" y="100" text-anchor="middle" '
       + 'transform="rotate(-24 160 100)" font-family="sans-serif" font-size="22" font-weight="700" fill="rgba(255,255,255,0.28)" '

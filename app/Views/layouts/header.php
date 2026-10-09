@@ -53,7 +53,10 @@ $helpKey = in_array($activeNav, ['home', 'register', 'donate', 'gallery'], true)
 [$_bFamily, $_bParam] = App\Core\FormRules::bodyFont($site);
 // One request for every family the page needs (heading, body, the WenKai and
 // Noto fallbacks), each named once.
-$_fontParams = array_unique([$_hParam, 'LXGW+WenKai+TC:wght@400;700', $_bParam, 'Noto+Sans+TC:wght@400;500;700;800', 'Noto+Sans+SC:wght@400;500;700;800']);
+// "Noto Sans" (Latin letters only) comes first in the heading stack, so
+// English names and numbers in headings are drawn in a clean sans-serif
+// while Chinese characters still use the chosen brush / Kai font.
+$_fontParams = array_unique([$_hParam, 'LXGW+WenKai+TC:wght@400;700', $_bParam, 'Noto+Sans+TC:wght@400;500;700;800', 'Noto+Sans+SC:wght@400;500;700;800', 'Noto+Sans:wght@400;500;700;800']);
 ?>
 <link href="https://fonts.googleapis.com/css2?family=<?= implode('&family=', array_map('h', $_fontParams)) ?>&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= asset('css/style.css') ?>">
@@ -64,7 +67,7 @@ $_fontParams = array_unique([$_hParam, 'LXGW+WenKai+TC:wght@400;700', $_bParam, 
    characters it lacks fall back to LXGW WenKai TC, glyph by glyph;
    Simplified ones (帅 乐 …) to a Kai font that has them (KaiTi on
    Windows, STKaiti on Mac) rather than a plain sans-serif. */
-:root{--kai:"<?= h($_hFamily) ?>","LXGW WenKai TC","BiauKai","DFKai-SB","標楷體","KaiTi","STKaiti",serif;--kai-weight:<?= (int) $_hWeight ?>;
+:root{--kai:"Noto Sans","<?= h($_hFamily) ?>","LXGW WenKai TC","BiauKai","DFKai-SB","標楷體","KaiTi","STKaiti",serif;--kai-weight:<?= (int) $_hWeight ?>;
   --sans:"<?= h($_bFamily) ?>","Noto Sans TC","Noto Sans SC","Microsoft JhengHei","PingFang TC",sans-serif}
 /* Body font and size chosen in System → Forms & fonts. */
 :root{--fs:<?= App\Core\FormRules::bodySize($site) / 100 ?>}

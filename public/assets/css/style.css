@@ -768,3 +768,48 @@ html.protect-hide.p-qr .qr-frame canvas{filter:blur(28px) brightness(.7)}
 .note.closed-now .en{display:block}
 form.is-closed .attendee-body,form.is-closed .people-tools,form.is-closed .choice{opacity:.55;pointer-events:none}
 .primary.is-sending{opacity:.8;cursor:progress}
+
+/* ==========================================================
+   Phones: a more compact layout (16px text instead of 17–18px,
+   tighter spacing, smaller buttons) — everything still easy to tap.
+   ========================================================== */
+@media (max-width:600px){
+  html{font-size:calc(16.5px * var(--fs,1))}
+  .section{padding:1.5rem .85rem}
+  .section-title{margin-bottom:1.1rem}
+  .section-title h2{font-size:1.6rem}
+  .card,.form-card{padding:1rem}
+  label{margin:.8rem 0 .3rem}
+  input,select,textarea{min-height:2.9rem}
+  .primary{min-height:3.3rem;font-size:1.1rem;margin-top:1.1rem}
+  .btn{min-height:2.8rem;padding:.5rem 1rem}
+  .form-step{margin:1.2rem 0 .5rem}
+  .form-step b{width:1.9rem;height:1.9rem}
+  .note{padding:.7rem .85rem;margin:.8rem 0;font-size:.92rem}
+  .cta{padding:1rem .8rem}
+  .cta strong{font-size:1.45rem}
+  .total strong{font-size:1.6rem}
+  /* Seat stepper: smaller buttons so the number always has room */
+  .stepper{gap:.4rem;max-width:none}
+  .stepper button{width:3rem;min-height:3rem;font-size:1.3rem}
+  .stepper input{flex:1 1 auto;min-width:3.5rem;min-height:3rem;font-size:1.3rem;padding:0 .3rem}
+  .choice{padding:.85rem;gap:.7rem}
+  .choice > input[type=checkbox]{width:1.5rem;height:1.5rem}
+  .choice-body strong{font-size:1.05rem}
+  .reg-type{padding:.8rem}
+  .reg-type-icon{width:2.6rem;height:2.6rem}
+  .window-timer .wt-time{font-size:1.25rem}
+}
+@media (max-width:420px){
+  html{font-size:calc(16px * var(--fs,1))}
+}
+.stepper input{min-width:3.5rem}
+.people-tools .all-same{flex:1 1 100%;margin:0!important}
+.people-tools .all-same[hidden]{display:none}
+
+/* Watermark on every protected photo (not only the full-size viewer) */
+html.has-wm.p-albums .album-strip figure,html.has-wm.p-news .post-media,html.has-wm.p-banner .banner-frame{position:relative}
+html.has-wm.p-albums .album-strip figure::after,html.has-wm.p-news .post-media::after,html.has-wm.p-banner .banner-frame::after{
+  content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background-image:var(--wm);background-repeat:repeat;background-size:220px auto;opacity:.9}
+.num-hint{margin:.35rem 0 0;font-size:.85rem;font-weight:700;color:#a3281f;opacity:0;transition:opacity .2s;min-height:1.2em}
+.num-hint.on{opacity:1}

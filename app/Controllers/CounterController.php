@@ -102,11 +102,16 @@ class CounterController extends Controller
         }
         // Seats, freewill, or both — two numbers, like the public form.
         $seatPrice  = (float) $event['merit_table_price'];
-        $tableCount = max(0, (int) ($_POST['table_count'] ?? 0));
-        // Rounded BEFORE the check: 0.001 would pass "> 0" and then be
-        // stored by the DECIMAL(10,2) column as a RM 0.00 donation.
-        $freeAmount = round((float) ($_POST['free_amount'] ?? 0), 2);
-        $errors = array_merge($errors, Donation::validateParts($tableCount, $freeAmount));
+        // Seats whole numbers only; freewill two decimals at most (rounded half up).
+        $tableCount = Donation::parseSeats($_POST['table_count'] ?? '');
+        $freeAmount = Donation::parseAmount($_POST['free_amount'] ?? '');
+        if ($tableCount === null) {
+            $errors[] = '功德席數量只可以是整數。Merit seats must be a whole number.';
+        }
+        if ($freeAmount === null) {
+            $errors[] = '隨喜金額最多兩位小數（例如 12.50）。The freewill amount takes at most two decimals (e.g. 12.50).';
+        }
+        $errors = array_merge($errors, Donation::validateParts($tableCount ?? 0, $freeAmount ?? 0.0));
 
         if ($errors) {
             $this->backWithErrors($eventId, $errors, compact('name', 'contact', 'notes'));

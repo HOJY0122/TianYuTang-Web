@@ -465,7 +465,22 @@ class Event extends Model
     public const SECTION_DONATION = 'donation';
 
     /**
+     * The moment this request ARRIVED, to the second — the clock every
+     * opening / closing check uses. Reading it when the request came in
+     * (not after the work is done) means a slow upload or a busy moment
+     * never pushes an on-time submission past the deadline.
+     */
+    public static function now(): int
+    {
+        return (int) floor((float) ($_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true)));
+    }
+
+    /**
      * Is a section accepting submissions right now?
+     *
+     * Timing is exact to the second, like ticket sales:
+     *   opens  07:00:00 → 06:59:59 refused, 07:00:00 accepted
+     *   closes 07:39:00 → 07:39:00 accepted (last call), 07:39:01 refused
      *
      * @return array{open:bool, reason:string, opens_at:?string, closes_at:?string}
      *         `reason` is one of: open, not_yet, closed
@@ -475,7 +490,7 @@ class Event extends Model
         $opensAt  = $event["{$section}_opens_at"]  ?? null;
         $closesAt = $event["{$section}_closes_at"] ?? null;
 
-        $now      = time();
+        $now      = self::now();
         $opensTs  = $opensAt  ? strtotime($opensAt)  : null;
         $closesTs = $closesAt ? strtotime($closesAt) : null;
 
@@ -532,7 +547,8 @@ class Event extends Model
         if ($ts === false) {
             return '';
         }
-        return date('Y', $ts) . '年' . (int) date('n', $ts) . '月' . (int) date('j', $ts) . '日 ' . date('H:i', $ts);
+        // Seconds only when they are set (07:39:30), so 23:59 stays tidy.
+        return date('Y', $ts) . '年' . (int) date('n', $ts) . '月' . (int) date('j', $ts) . '日 ' . date((int) date('s', $ts) ? 'H:i:s' : 'H:i', $ts);
     }
 
     /** Short English date range, e.g. "16, 17 & 18 October". */

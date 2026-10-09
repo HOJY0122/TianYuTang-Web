@@ -6,7 +6,8 @@
  */
 $isNew     = ($mode === 'new');
 $v         = static fn(string $key, $fallback = '') => $old[$key] ?? ($event[$key] ?? $fallback);
-$dt        = static fn(string $key): string => h(str_replace(' ', 'T', substr((string) $v($key), 0, 16)));
+// Seconds kept (2026-10-14T07:39:00): deadlines are exact to the second.
+$dt        = static fn(string $key): string => h(str_replace(' ', 'T', substr((string) $v($key), 0, 19)));
 $pageTitle = $isNew ? '新增活動 New Event' : '活動資料 Event Details';
 $nav       = 'event';
 require BASE_PATH . '/app/Views/layouts/admin_header.php';
@@ -143,13 +144,13 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   <p class="help">留空代表不限制。Leave blank for no limit. 時間以馬來西亞時間計算 Malaysia time.</p>
   <div class="form-grid">
     <div><label for="rsvp_opens_at">報名開始 <span class="en">Registration opens</span></label>
-      <input id="rsvp_opens_at" name="rsvp_opens_at" type="datetime-local" value="<?= $dt('rsvp_opens_at') ?>"></div>
+      <input id="rsvp_opens_at" name="rsvp_opens_at" type="datetime-local" step="1" value="<?= $dt('rsvp_opens_at') ?>"></div>
     <div><label for="rsvp_closes_at">報名截止 <span class="en">Registration closes</span></label>
-      <input id="rsvp_closes_at" name="rsvp_closes_at" type="datetime-local" value="<?= $dt('rsvp_closes_at') ?>"></div>
+      <input id="rsvp_closes_at" name="rsvp_closes_at" type="datetime-local" step="1" value="<?= $dt('rsvp_closes_at') ?>"></div>
     <div><label for="donation_opens_at">布施開始 <span class="en">Donation opens</span></label>
-      <input id="donation_opens_at" name="donation_opens_at" type="datetime-local" value="<?= $dt('donation_opens_at') ?>"></div>
+      <input id="donation_opens_at" name="donation_opens_at" type="datetime-local" step="1" value="<?= $dt('donation_opens_at') ?>"></div>
     <div><label for="donation_closes_at">布施截止 <span class="en">Donation closes</span></label>
-      <input id="donation_closes_at" name="donation_closes_at" type="datetime-local" value="<?= $dt('donation_closes_at') ?>"></div>
+      <input id="donation_closes_at" name="donation_closes_at" type="datetime-local" step="1" value="<?= $dt('donation_closes_at') ?>"></div>
   </div>
   </section>
   </div>

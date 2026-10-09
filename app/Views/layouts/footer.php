@@ -41,6 +41,7 @@ $fm = static fn(string $k): string => isset($fHideM[$k]) ? ' f-hide-m' : '';
   <?php endif; ?>
 </footer>
 <script src="<?= asset('js/photos.js') ?>"></script>
+<script src="<?= asset('js/window-timer.js') ?>"></script>
 <script src="<?= asset('js/dialog.js') ?>"></script>
 <script src="<?= asset('js/live.js') ?>"></script>
 <script src="<?= asset('js/uat.js') ?>"></script>

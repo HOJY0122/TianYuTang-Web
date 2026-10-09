@@ -24,6 +24,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
       <h3><?= tb($window['reason'] === 'not_yet' ? 'donate.not_yet' : 'donate.closed') ?></h3>
       <p><?= h(App\Models\Event::windowMessage($window, 'donation')) ?></p>
       <p class="help"><?= h(t('donate.counter') . ' ' . t('donate.counter', 'en')) ?></p>
+      <?php $timerForm = ''; require BASE_PATH . '/app/Views/partials/window_timer.php'; ?>
     </div>
   <?php else: ?>
 
@@ -32,6 +33,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     <div class="hp-field" aria-hidden="true"><label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
     <?= csrf_field() ?>
 
+    <?php $timerForm = 'donationForm'; require BASE_PATH . '/app/Views/partials/window_timer.php'; ?>
     <?php if (!empty($window['closes_at'])): ?>
       <div class="note"><?= icon('hourglass') ?> 線上布施將於 <strong><?= h(App\Models\Event::formatDateTime($window['closes_at'])) ?></strong> 截止。
         <span class="en">Online donation closes on <?= h(date('j M Y, g:i A', strtotime($window['closes_at']))) ?>.</span></div>

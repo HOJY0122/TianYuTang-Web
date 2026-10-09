@@ -273,6 +273,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
       row.querySelector('.num-pill').textContent = i + 1;
       var name = field(row, 'name').value.trim();
       row.querySelector('.att-name').textContent = name || ('第' + zhNum(i + 1) + '位' + (lead ? (org ? '（團體聯絡人）' : '（聯絡人）') : ''));
+      if (window.TYTSimp) row.querySelector('.att-name').classList.toggle('has-simp', TYTSimp.hasSimp(name || ''));
       var sub = [];
       if (!name) sub.push('Person ' + (i + 1) + (lead ? (org ? ' (group contact)' : ' (main contact)') : ''));
       if (field(row, 'ic').value.trim()) sub.push(maskIc(field(row, 'ic').value));

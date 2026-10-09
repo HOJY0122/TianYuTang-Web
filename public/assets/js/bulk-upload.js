@@ -21,8 +21,9 @@
 (function () {
   'use strict';
 
-  function shrink(file, maxSide) {
+  function shrink(file, maxSide, quality) {
     maxSide = maxSide || 2400;
+    quality = quality || 0.88;
     // GIF may be animated; anything not an image is left for the server to refuse.
     if (!/^image\/(jpeg|png|webp)$/.test(file.type) || !HTMLCanvasElement.prototype.toBlob) {
       return Promise.resolve(file);
@@ -42,7 +43,7 @@
           c.width = c.height = 0;
           if (!blob || blob.size >= file.size) { resolve(file); return; }
           resolve(new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' }));
-        }, 'image/jpeg', 0.88);
+        }, 'image/jpeg', quality);
       });
     }).catch(function () { return file; });         // cannot decode here (e.g. HEIC): send as is
   }

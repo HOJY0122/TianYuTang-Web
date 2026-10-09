@@ -86,7 +86,7 @@ class PostController extends Controller
         $newImage = null;
         if (!$errors && ImageUploader::wasProvided($_FILES['image'] ?? null)) {
             try {
-                $newImage = $uploader->store($_FILES['image'], 1600);
+                $newImage = $uploader->store($_FILES['image'], 2400);
                 $f['image_path'] = $newImage;
             } catch (RuntimeException $e) {
                 $errors[] = '圖片 Image：' . $e->getMessage();

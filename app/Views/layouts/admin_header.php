@@ -59,6 +59,7 @@ if ($isSystem) {
     $menu['系統管理 System'] = [
         ['system', 'settings', '網站設定', 'Site settings', '/system'],
         ['banners','image', '首頁橫幅', 'Home banner',   '/system/banners'],
+        ['about',  'users', '關於我們', 'About page',    '/system/about'],
         ['wording','type', '網站文字', 'Wording',       '/system/wording'],
         ['forms',  'palette', '表單與字體', 'Forms & fonts', '/system/forms'],
         ['users',  'users', '帳號管理', 'User accounts', '/system/users'],

@@ -128,6 +128,13 @@ tbody tr:nth-child(even) td { background: #fafafa; }
 .toolbar button.primary { background: #9f211b; border-color: #9f211b; color: #fff; font-weight: 700; }
 .toolbar .hint { color: #666; font-size: 12.5px; }
 
+/* Line icons (icon() helper, assets/icons.svg). Without these rules an
+   <svg> takes the full width of its button — the giant printer and arrow
+   that once filled the QR page. */
+.ic { display: inline-block; width: 1.15em; height: 1.15em; flex: none; vertical-align: -.2em; fill: none;
+      stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
+.toolbar button, .toolbar a { display: inline-flex; align-items: center; gap: 6px; }
+
 /* ==========================================================
    PRINT
    ========================================================== */

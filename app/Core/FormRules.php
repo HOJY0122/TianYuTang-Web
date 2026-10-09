@@ -51,15 +51,31 @@ final class FormRules
      * Traditional character set; key => [label, CSS family, Google Fonts
      * parameter, sample note].
      */
+    /**
+     * key => [name, CSS family, Google Fonts parameter, description, partner].
+     * "partner" draws the Simplified characters a Traditional font lacks
+     * (measured: Iansui and Huninn have only ~20% of common Simplified
+     * characters, Noto Sans / Serif TC ~35%), in a matching style, so a
+     * Simplified name never switches to a plain font halfway through.
+     * null = the font has them all. LXGW WenKai TC has every Traditional
+     * AND Simplified character tested (22,401 glyphs) — the handwriting
+     * font that covers both, hence the default.
+     */
     public const BODY_FONTS = [
-        'noto_sans'  => ['思源黑體 Noto Sans TC',        'Noto Sans TC',           'Noto+Sans+TC:wght@400;500;700;800',    '清楚易讀（預設） Clear and modern (default)'],
-        'chiron_hei' => ['昭源黑體 Chiron Hei HK',      'Chiron Hei HK',          'Chiron+Hei+HK:wght@400;500;700;800',   '較圓潤的黑體 Softer, rounder sans'],
-        'huninn'     => ['粉圓體 Huninn',               'Huninn',                 'Huninn',                               '圓體，親切 Rounded and friendly'],
-        'noto_serif' => ['思源宋體 Noto Serif TC',       'Noto Serif TC',          'Noto+Serif+TC:wght@400;500;700;900',   '明體，莊重 Classic serif, formal'],
-        'chiron_sung'=> ['昭源宋體 Chiron Sung HK',     'Chiron Sung HK',         'Chiron+Sung+HK:wght@400;500;700;900',  '宋體，傳統書卷 Traditional book style'],
-        'cactus'     => ['仙人掌明體 Cactus Classical',  'Cactus Classical Serif', 'Cactus+Classical+Serif',               '古典明體 Old-style serif'],
-        'wenkai'     => ['霞鶩文楷 LXGW WenKai TC',     'LXGW WenKai TC',         'LXGW+WenKai+TC:wght@400;700',          '楷書，溫和 Gentle Kai script'],
-        'iansui'     => ['芫荽 Iansui',                 'Iansui',                 'Iansui',                               '手寫感 Hand-written feel'],
+        'wenkai'     => ['霞鶩文楷 LXGW WenKai TC',     'LXGW WenKai TC',         'LXGW+WenKai+TC:wght@400;700',          '手寫楷書，繁體簡體都齊全（預設，推薦） Handwritten Kai, full Traditional + Simplified (default)', null],
+        'iansui'     => ['芫荽 Iansui',                 'Iansui',                 'Iansui',                               '手寫感；簡體字由霞鶩文楷補上 Hand-written; Simplified drawn by WenKai', 'LXGW WenKai TC'],
+        'noto_sans'  => ['思源黑體 Noto Sans TC',        'Noto Sans TC',           'Noto+Sans+TC:wght@400;500;700;800',    '清楚易讀 Clear and modern', 'Noto Sans SC'],
+        'chiron_hei' => ['昭源黑體 Chiron Hei HK',      'Chiron Hei HK',          'Chiron+Hei+HK:wght@400;500;700;800',   '較圓潤的黑體 Softer, rounder sans', null],
+        'huninn'     => ['粉圓體 Huninn',               'Huninn',                 'Huninn',                               '圓體，親切；簡體字由霞鶩文楷補上 Rounded; Simplified drawn by WenKai', 'LXGW WenKai TC'],
+        'noto_serif' => ['思源宋體 Noto Serif TC',       'Noto Serif TC',          'Noto+Serif+TC:wght@400;500;700;900',   '明體，莊重 Classic serif, formal', 'Noto Serif SC'],
+        'chiron_sung'=> ['昭源宋體 Chiron Sung HK',     'Chiron Sung HK',         'Chiron+Sung+HK:wght@400;500;700;900',  '宋體，傳統書卷 Traditional book style', null],
+        'cactus'     => ['仙人掌明體 Cactus Classical',  'Cactus Classical Serif', 'Cactus+Classical+Serif',               '古典明體 Old-style serif', null],
+    ];
+    /** Google Fonts parameters for the partner fonts above. */
+    public const PARTNER_PARAMS = [
+        'LXGW WenKai TC' => 'LXGW+WenKai+TC:wght@400;700',
+        'Noto Sans SC'   => 'Noto+Sans+SC:wght@400;500;700;800',
+        'Noto Serif SC'  => 'Noto+Serif+SC:wght@400;500;700;900',
     ];
     public const BODY_SIZE = [90, 125];
 
@@ -231,8 +247,8 @@ final class FormRules
     public static function bodyFont(?array $site = null): array
     {
         $site ??= (new \App\Models\Setting())->site();
-        $f = self::BODY_FONTS[$site['body_font'] ?? ''] ?? self::BODY_FONTS['noto_sans'];
-        return [$f[1], $f[2]];
+        $f = self::BODY_FONTS[$site['body_font'] ?? ''] ?? self::BODY_FONTS['wenkai'];
+        return [$f[1], $f[2], $f[4]];
     }
 
     public static function bodySize(?array $site = null): int

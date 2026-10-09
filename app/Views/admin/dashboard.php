@@ -142,7 +142,7 @@ $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confi
     <a class="mini-btn ghost btn-lg" href="<?= url('/admin/export/donations') . $q ?>"><?= icon('download') ?> CSV 布施</a>
     <a class="mini-btn ghost btn-lg" href="<?= url('/admin/print/attendees') . $q ?>" target="_blank"><?= icon('printer') ?> 報到名單 Check-in sheet</a>
     <a class="mini-btn ghost btn-lg" href="<?= url('/admin/print/donations') . $q ?>" target="_blank"><?= icon('printer') ?> 布施清單 Donation list</a>
-    <a class="mini-btn ghost btn-lg" href="<?= url('/admin/qr') . $q ?>" target="_blank"><?= icon('qr') ?> 活動 QR Event QR</a>
+    <a class="mini-btn ghost btn-lg" href="<?= url('/admin/qr') . $q ?>" target="_blank"><?= icon('qr') ?> 活動 / Event QR</a>
   </div>
   <p class="help" style="margin-bottom:0">Excel 檔含統計頁與完整名單（可篩選、狀態下拉選單）。CSV 為純資料，適合匯入其他系統。<br>
     <span class="en">Excel files have a summary sheet and a full list with filters and a status dropdown. CSV is plain data for importing elsewhere.</span></p>

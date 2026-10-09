@@ -82,13 +82,14 @@ class Setting extends Model
         'rsvp_age_other'    => 'allow',      // passports: allow | block
         'donate_amounts'    => '50, 100, 200, 500',
         'counter_amounts'   => '10, 20, 50, 100, 200, 500, 1000',
-        'body_font'         => 'noto_sans',  // see FormRules::BODY_FONTS
+        'body_font'         => 'wenkai',     // see FormRules::BODY_FONTS
         'body_size'         => '100',        // %
         'home_albums'       => 'previous',   // previous | latest | recent
         'home_album_photos' => '12',
         // Photo protection on the public site (see js/protect.js, App\Core\Media)
         // Sleep mode (System → 休眠模式): one "see you next year" page for visitors
         'sleep_mode'        => '0',
+        'about_enabled'     => '1',      // 關於我們 About page in the menu (System → About page)
         'sleep_title_zh'    => null,         // null / empty = App\Core\Sleep::DEFAULTS
         'sleep_title_en'    => null,
         'sleep_msg_zh'      => null,

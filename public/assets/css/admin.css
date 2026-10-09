@@ -1102,3 +1102,14 @@ details.guide > :not(summary){margin:0 20px 18px}
 .dash-head-actions select{max-width:100%}
 tr.is-current > td{background:#fff8e4}
 .dash-head select{padding:9px 12px;border:1.5px solid var(--line,#e6d9bd);border-radius:12px;background:#fffdf7;font:inherit;font-weight:600;color:inherit;min-height:44px}
+
+/* ---------- System → About page ---------- */
+.about-admin{display:grid;gap:12px}
+.about-block{margin:0;padding:12px 14px}
+.about-block-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:8px}
+.about-block-head .spacer{flex:1}
+.about-block .drag-badge{position:static;cursor:grab}
+.about-edit{max-width:none}
+.about-edit-grid{display:grid;grid-template-columns:minmax(0,180px) minmax(0,1fr);gap:14px;align-items:start}
+.about-admin-img{width:100%;border-radius:10px;border:1px solid var(--line,#e6d9bd);background:#fff}
+@media (max-width:640px){ .about-edit-grid{grid-template-columns:minmax(0,1fr)} .about-admin-img{max-width:220px} }

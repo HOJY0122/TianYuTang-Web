@@ -85,6 +85,7 @@ class Setting extends Model
         'body_font'         => 'wenkai',     // see FormRules::BODY_FONTS
         'body_size'         => '100',        // %
         'home_albums'       => 'previous',   // previous | latest | recent
+        'site_tone'         => 'calm',       // calm (莊重慈善) | festive (喜慶節日) — public site colours
         'home_album_photos' => '12',
         // Photo protection on the public site (see js/protect.js, App\Core\Media)
         // Sleep mode (System → 休眠模式): one "see you next year" page for visitors
@@ -113,7 +114,7 @@ class Setting extends Model
      */
     public const DRAFT_KEYS = [
         'rsvp_types', 'rsvp_org_max', 'rsvp_age_on', 'rsvp_age_min', 'rsvp_age_basis', 'rsvp_age_who', 'rsvp_age_other',
-        'donate_amounts', 'body_font', 'body_size', 'heading_font', 'home_albums', 'home_album_photos',
+        'donate_amounts', 'body_font', 'body_size', 'heading_font', 'site_tone', 'home_albums', 'home_album_photos',
         'protect_photos', 'photo_watermark', 'protect_albums', 'protect_news', 'protect_banner', 'protect_about', 'protect_qr', 'protect_keys',
     ];
 

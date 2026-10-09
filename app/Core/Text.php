@@ -108,7 +108,11 @@ class Text
         'gallery.title'       => ['gallery', '相簿回顧', 'Photo Albums'],
         'about.title'         => ['about', '關於我們', 'About Us'],
         'about.sub'           => ['about', '', ''],
-        'gallery.hint'        => ['gallery', '歷年活動留影，左右滑動看更多，點一下放大。', 'Photos from every year. Swipe for more, tap to enlarge.'],
+        'gallery.hint'        => ['gallery', '請選擇年份，再選擇相簿。', 'Choose a year, then an album.'],
+        'gallery.year_hint'   => ['gallery', '請選擇相簿。', 'Choose an album.'],
+        'gallery.album_hint'  => ['gallery', '點一下相片可放大。', 'Tap a photo to enlarge it.'],
+        'gallery.albums'      => ['gallery', '{n} 本相簿', '{n} albums'],
+        'gallery.others'      => ['gallery', '其他', 'Others'],
         'gallery.empty_title' => ['gallery', '相簿準備中', 'Photos coming soon'],
         'gallery.empty_text'  => ['gallery', '活動後將上傳精彩留影，敬請期待。', 'Photos will be added after the event.'],
         // Album headings (home page and gallery). {n} = number of photos; delete it to hide the number.

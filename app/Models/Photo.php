@@ -14,7 +14,7 @@ use App\Core\Model;
 class Photo extends Model
 {
     /** Add a photo to an event, placed at the end of the current order. */
-    public function create(int $eventId, string $path, string $thumb, ?string $caption = null): int
+    public function create(int $eventId, string $path, string $thumb, ?string $caption = null, ?int $categoryId = null): int
     {
         $nextOrder = (int) $this->scalar(
             'SELECT COALESCE(MAX(sort_order), 0) + 1 FROM event_photos WHERE event_id = ?',
@@ -22,20 +22,116 @@ class Photo extends Model
         );
 
         $this->execute(
-            'INSERT INTO event_photos (event_id, file_path, thumb_path, caption, sort_order)
-             VALUES (?, ?, ?, ?, ?)',
-            [$eventId, $path, $thumb, $caption, $nextOrder]
+            'INSERT INTO event_photos (event_id, category_id, file_path, thumb_path, caption, sort_order)
+             VALUES (?, ?, ?, ?, ?, ?)',
+            [$eventId, $categoryId ?: null, $path, $thumb, $caption, $nextOrder]
         );
 
         return (int) $this->db->lastInsertId();
     }
 
-    /** All photos for one event, in display order. */
-    public function forEvent(int $eventId): array
+    /**
+     * All photos for one event, in display order. $category: null = every
+     * photo, 0 = uncategorised ("其他 Others"), N = that category.
+     */
+    public function forEvent(int $eventId, ?int $category = null): array
+    {
+        [$cond, $p] = match (true) {
+            $category === null => ['', []],
+            $category === 0    => [' AND category_id IS NULL', []],
+            default            => [' AND category_id = ?', [$category]],
+        };
+        return $this->fetchAll(
+            'SELECT * FROM event_photos WHERE event_id = ?' . $cond . ' ORDER BY sort_order, id',
+            array_merge([$eventId], $p)
+        );
+    }
+
+    /** Photo counts per category for one event (admin filter tabs): category_id|0 => n. */
+    public function categoryCounts(int $eventId): array
+    {
+        $out = [];
+        foreach ($this->fetchAll('SELECT COALESCE(category_id, 0) AS c, COUNT(*) AS n FROM event_photos WHERE event_id = ? GROUP BY c', [$eventId]) as $r) {
+            $out[(int) $r['c']] = (int) $r['n'];
+        }
+        return $out;
+    }
+
+    /** Move one photo to another category (null = "其他 Others"). */
+    public function setCategory(int $id, ?int $categoryId): void
+    {
+        $this->execute('UPDATE event_photos SET category_id = ? WHERE id = ?', [$categoryId ?: null, $id]);
+    }
+
+    // ------------------------------------------------------------------
+    // Public gallery, layer by layer: 年份 → 類別 → 相片. Only real
+    // (non-test) events and visible categories; uncategorised photos form
+    // "其他 Others" (category 0).
+
+    private const VISIBLE = '(p.category_id IS NULL OR c.is_visible = 1)';
+
+    /** Layer 1 — every year with photos: year, label, photo count, album count, cover. */
+    public function galleryYears(): array
+    {
+        $rows = $this->fetchAll(
+            'SELECT e.year, MAX(e.year_label) AS year_label, COUNT(p.id) AS photo_count,
+                    COUNT(DISTINCT COALESCE(p.category_id, 0)) AS album_count
+               FROM event_photos p
+               JOIN events e ON e.id = p.event_id AND e.is_test = FALSE
+               LEFT JOIN photo_categories c ON c.id = p.category_id
+              WHERE ' . self::VISIBLE . '
+              GROUP BY e.year ORDER BY e.year DESC'
+        );
+        foreach ($rows as &$r) {
+            $r['cover'] = $this->cover((string) $r['year'], null);
+        }
+        return $rows;
+    }
+
+    /** Layer 2 — the categories of one year that have photos, in category order. */
+    public function galleryAlbums(string $year): array
+    {
+        $rows = $this->fetchAll(
+            'SELECT COALESCE(p.category_id, 0) AS cat_id, MAX(c.name_zh) AS name_zh, MAX(c.name_en) AS name_en,
+                    COALESCE(MAX(c.sort_order), 999999) AS ord, COUNT(p.id) AS photo_count
+               FROM event_photos p
+               JOIN events e ON e.id = p.event_id AND e.is_test = FALSE
+               LEFT JOIN photo_categories c ON c.id = p.category_id
+              WHERE e.year = ? AND ' . self::VISIBLE . '
+              GROUP BY cat_id ORDER BY ord, cat_id',
+            [$year]
+        );
+        foreach ($rows as &$r) {
+            $r['cat_id'] = (int) $r['cat_id'];
+            $r['cover']  = $this->cover($year, $r['cat_id']);
+        }
+        return $rows;
+    }
+
+    /** Layer 3 — the photos of one year's category (0 = Others). */
+    public function galleryPhotos(string $year, int $catId): array
     {
         return $this->fetchAll(
-            'SELECT * FROM event_photos WHERE event_id = ? ORDER BY sort_order, id',
-            [$eventId]
+            'SELECT p.* FROM event_photos p
+               JOIN events e ON e.id = p.event_id AND e.is_test = FALSE
+               LEFT JOIN photo_categories c ON c.id = p.category_id
+              WHERE e.year = ? AND ' . ($catId === 0 ? 'p.category_id IS NULL' : 'p.category_id = ? AND c.is_visible = 1') . '
+              ORDER BY e.id, p.sort_order, p.id',
+            $catId === 0 ? [$year] : [$year, $catId]
+        );
+    }
+
+    /** The first photo (by the committee's order) of a year, or of one of its categories. */
+    private function cover(string $year, ?int $catId): ?array
+    {
+        $cond = $catId === null ? self::VISIBLE : ($catId === 0 ? 'p.category_id IS NULL' : 'p.category_id = ' . (int) $catId);
+        return $this->fetchOne(
+            'SELECT p.thumb_path, p.file_path FROM event_photos p
+               JOIN events e ON e.id = p.event_id AND e.is_test = FALSE
+               LEFT JOIN photo_categories c ON c.id = p.category_id
+              WHERE e.year = ? AND ' . $cond . '
+              ORDER BY e.id DESC, p.sort_order, p.id LIMIT 1',
+            [$year]
         );
     }
 

@@ -819,34 +819,47 @@ html.has-wm.p-albums .album-strip figure::after,html.has-wm.p-news .post-media::
 .sleepbar a{color:#f3df9c;margin-left:.4rem}
 
 
-/* ---------- 關於我們 About page ---------- */
-.about-page{max-width:820px;margin-inline:auto}
-.about-strip{display:block;overflow:visible;margin:1.4rem auto}
-.about-figure{margin:0 auto;max-width:640px;text-align:center;cursor:zoom-in}
-.about-figure .about-img,.about-figure canvas{display:block;width:100%;height:auto;margin:0 auto;border-radius:16px;
-  box-shadow:0 10px 30px rgba(80,20,10,.18);border:3px solid #e7cf8f;background:#fffaf0}
-.about-figure figcaption{margin-top:.8rem;font-family:var(--kai);font-weight:var(--kai-weight);font-size:1.45rem;color:var(--red);line-height:1.4}
-.about-figure figcaption .en{font-family:var(--sans);font-size:.6em;letter-spacing:.06em;color:var(--gold)}
-.about-text{max-width:720px;margin:1rem auto 1.6rem;padding:1.2rem 1.4rem;background:var(--card);border:1px solid var(--line);border-radius:18px;
-  font-size:calc(1.08rem * var(--fs, 1));line-height:1.95}
-.about-text h3{margin:0 0 .6rem;font-family:var(--kai);font-weight:var(--kai-weight);font-size:1.5rem;color:var(--red);text-align:center}
-.about-text h3 .en{display:block;font-family:var(--sans);font-size:.55em;letter-spacing:.08em;color:var(--gold)}
-.about-text p{margin:0 0 .9rem;text-indent:2em}
-.about-text p.en{display:block;text-indent:0;font-size:.92em;color:var(--muted)}
-.about-text p:last-child{margin-bottom:0}
-@media (max-width:640px){
-  .about-text{padding:1rem;border-radius:14px}
-  .about-figure figcaption{font-size:1.25rem}
-}
 /* Five menu items on a phone (關於我們 About added): one line each. */
 @media (max-width:760px){
   .site-nav[style*="--nav-n:5"] a{white-space:nowrap;font-size:.86rem;padding-inline:.1rem;letter-spacing:0}
   .site-nav[style*="--nav-n:5"] a small{font-size:.6rem}
 }
-/* About pictures are posters: always whole, at their real shape (the album
-   row rules crop tiles to 4:3 — not here). */
-.album-strip.about-strip{display:block}
-.album-strip.about-strip figure{overflow:visible;background:none;border:0;border-radius:0;box-shadow:none}
-.album-strip.about-strip img,.album-strip.about-strip canvas.scr{aspect-ratio:auto;height:auto;object-fit:contain}
-.album-strip.about-strip figcaption{padding:0;font-size:1.45rem;color:var(--red)}
-@media (max-width:640px){ .album-strip.about-strip figcaption{font-size:1.25rem} }
+
+/* ---------- 關於我們 About page ----------
+   Each block is one card at the width the system admin chose (w-s/m/l/
+   full); a picture, its caption and its text share that card, so they
+   line up. Text size (ts-*) and alignment (al-*) per block too. */
+.about-page{max-width:1100px;margin-inline:auto}
+.about-block{width:100%;margin:0 auto 1.8rem}
+.about-block.w-s{max-width:520px}
+.about-block.w-m{max-width:720px}
+.about-block.w-l{max-width:960px}
+.about-block.w-full{max-width:none}
+.about-card{background:var(--card);border:1px solid var(--line);border-radius:22px;
+  padding:clamp(1.1rem, 3.2vw, 2.2rem) clamp(1.1rem, 4vw, 2.6rem);box-shadow:0 8px 26px rgba(80,20,10,.07)}
+.about-card-img{padding-top:clamp(.9rem, 2.4vw, 1.4rem)}
+/* The picture: whole, at its real shape, the full width of its card. */
+.album-strip.about-strip{display:block;margin:0}
+.album-strip.about-strip figure{margin:0;overflow:visible;background:none;border:0;border-radius:0;box-shadow:none;cursor:zoom-in}
+.album-strip.about-strip img,.album-strip.about-strip canvas.scr{display:block;width:100%;height:auto;aspect-ratio:auto;object-fit:contain;
+  border-radius:14px;background:#fffaf0}
+.about-caption{margin:1rem 0 .2rem;text-align:center;font-family:var(--kai);font-weight:var(--kai-weight);font-size:1.5rem;color:var(--red);line-height:1.35}
+.about-card:not(.about-card-img) .about-caption{margin-top:0}
+.about-caption .en{display:block;margin-top:.15rem;font-family:var(--sans);font-size:.55em;font-weight:600;letter-spacing:.08em;color:var(--gold)}
+.about-body{margin-top:1rem;font-size:calc(1.1rem * var(--fs, 1));line-height:2;color:var(--dark)}
+.about-caption + .about-body{padding-top:1rem;border-top:1px dashed var(--line)}
+.about-body p{margin:0 0 1em}
+.about-body p:last-child{margin-bottom:0}
+.about-body p:not(.en){text-indent:2em}
+.about-body p.en{display:block;font-size:.9em;line-height:1.75;color:var(--muted)}
+.about-body p.en:first-of-type{margin-top:1.4em}
+.ts-s .about-body{font-size:calc(.98rem * var(--fs, 1))}
+.ts-l .about-body{font-size:calc(1.28rem * var(--fs, 1))}
+.al-justify .about-body p{text-align:justify}
+.al-left .about-body p{text-align:left}
+.al-center .about-body p{text-align:center;text-indent:0}
+@media (max-width:640px){
+  .about-card{border-radius:16px}
+  .about-caption{font-size:1.3rem}
+  .about-body{line-height:1.9}
+}

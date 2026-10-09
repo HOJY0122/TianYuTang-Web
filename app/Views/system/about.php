@@ -6,6 +6,22 @@
  */
 require BASE_PATH . '/app/Views/layouts/admin_header.php';
 $aboutImg = static fn(array $b): string => media_url($b['image_path']);
+use App\Models\AboutBlock;
+// 版面 Layout: width, text size and alignment of one block.
+$layout = static function (?array $b): string {
+    $sel = static function (string $name, array $choices, ?string $cur): string {
+        $o = '';
+        foreach ($choices as $v => [$zh, $en]) {
+            $o .= '<option value="' . h($v) . '"' . ($cur === $v ? ' selected' : '') . '>' . h($zh . ' ' . $en) . '</option>';
+        }
+        return '<select name="' . $name . '">' . $o . '</select>';
+    };
+    return '<fieldset class="about-layout"><legend>' . icon('ruler') . ' 版面 <span class="en">Layout</span></legend>'
+        . '<label>寬度 <span class="en">Width</span>' . $sel('width', AboutBlock::WIDTHS, $b['width'] ?? null) . '</label>'
+        . '<label>文字大小 <span class="en">Text size</span>' . $sel('text_size', AboutBlock::TEXT_SIZES, $b['text_size'] ?? null) . '</label>'
+        . '<label>對齊 <span class="en">Alignment</span>' . $sel('align', AboutBlock::ALIGNS, $b['align'] ?? null) . '</label>'
+        . '</fieldset>';
+};
 ?>
 <div class="panel eventbar">
   <div>
@@ -35,6 +51,7 @@ $aboutImg = static fn(array $b): string => media_url($b['image_path']);
         <div class="about-block-head">
           <span class="drag-badge" data-drag-handle title="拖曳排序 Drag to reorder">⠿ <b data-position><?= $i + 1 ?></b></span>
           <strong><?= $b['kind'] === 'image' ? icon('image') . ' 圖片 Picture' : icon('type') . ' 文字 Text' ?></strong>
+          <span class="help"><?= h(AboutBlock::WIDTHS[$b['width']][0] ?? '') ?>寬 · <?= h(AboutBlock::TEXT_SIZES[$b['text_size']][0] ?? '') ?>字 · <?= h(AboutBlock::ALIGNS[$b['align']][0] ?? '') ?></span>
           <span class="spacer"></span>
           <form method="POST" action="<?= url('/system/about/move') ?>" style="margin:0"><?= csrf_field() ?>
             <input type="hidden" name="id" value="<?= $bid ?>"><input type="hidden" name="dir" value="up">
@@ -75,6 +92,7 @@ $aboutImg = static fn(array $b): string => media_url($b['image_path']);
           <label>內容（英文）<span class="en">Paragraphs (English)</span></label>
           <textarea name="body_en" rows="4" maxlength="30000"><?= h($b['body_en'] ?? '') ?></textarea>
           <p class="help">空一行 = 新段落。<span class="en">Leave a blank line to start a new paragraph.</span></p>
+          <?= $layout($b) ?>
           <button class="mini-btn" type="submit"><?= icon('save') ?> 儲存 Save</button>
         </form>
       </div>
@@ -99,6 +117,7 @@ $aboutImg = static fn(array $b): string => media_url($b['image_path']);
     <textarea name="body_zh" rows="4" maxlength="20000" data-trad-check></textarea>
     <label>圖片下的文字（英文，選填）<span class="en">Text below (English, optional)</span></label>
     <textarea name="body_en" rows="3" maxlength="30000"></textarea>
+    <?= $layout(null) ?>
     <div class="form-actions"><button class="primary" type="submit"><?= icon('plus') ?> 加入 <span class="en">Add</span></button></div>
   </form>
 
@@ -115,6 +134,7 @@ $aboutImg = static fn(array $b): string => media_url($b['image_path']);
     <label>內容（英文）<span class="en">Paragraphs (English)</span></label>
     <textarea name="body_en" rows="4" maxlength="30000"></textarea>
     <p class="help">空一行 = 新段落。<span class="en">Leave a blank line to start a new paragraph.</span></p>
+    <?= $layout(null) ?>
     <div class="form-actions"><button class="primary" type="submit"><?= icon('plus') ?> 加入 <span class="en">Add</span></button></div>
   </form>
 </div>

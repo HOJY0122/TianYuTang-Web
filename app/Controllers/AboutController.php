@@ -82,6 +82,10 @@ class AboutController extends Controller
             'heading_en' => $str('heading_en', 160),
             'body_zh'    => $str('body_zh', 20000),
             'body_en'    => $str('body_en', 30000),
+            // Layout: only the listed choices, otherwise the default.
+            'width'      => self::pick('width', AboutBlock::WIDTHS),
+            'text_size'  => self::pick('text_size', AboutBlock::TEXT_SIZES),
+            'align'      => self::pick('align', AboutBlock::ALIGNS),
         ];
 
         $uploader = new ImageUploader('about');
@@ -115,6 +119,13 @@ class AboutController extends Controller
         }
         $this->flash('success', '已儲存 Saved', "關於我們頁面已更新。\nThe About page is updated.");
         $this->redirect('/system/about#block' . $id);
+    }
+
+    /** A posted layout choice, or the list's first (default) value. */
+    private static function pick(string $key, array $choices): string
+    {
+        $v = $_POST[$key] ?? '';
+        return is_string($v) && isset($choices[$v]) ? $v : (string) array_key_first($choices);
     }
 
     /** POST /system/about/delete */

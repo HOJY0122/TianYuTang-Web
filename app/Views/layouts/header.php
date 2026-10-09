@@ -35,7 +35,7 @@ if (App\Controllers\AboutController::enabled() && (new App\Models\AboutBlock())-
 // <html> that js/protect.js and style.css read. None when the master switch is off.
 $protectAreas = [];
 if (($site['protect_photos'] ?? '1') === '1') {
-    foreach (['albums', 'news', 'banner', 'qr', 'keys'] as $_pa) {
+    foreach (['albums', 'news', 'banner', 'about', 'qr', 'keys'] as $_pa) {
         if (($site['protect_' . $_pa] ?? '0') === '1') {
             $protectAreas[] = 'p-' . $_pa;
         }

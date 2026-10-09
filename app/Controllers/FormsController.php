@@ -97,6 +97,7 @@ class FormsController extends Controller
             'protect_albums'    => $pick('protect_albums', ['0', '1']),
             'protect_news'      => $pick('protect_news', ['0', '1']),
             'protect_banner'    => $pick('protect_banner', ['0', '1']),
+            'protect_about'     => $pick('protect_about', ['0', '1']),
             'protect_qr'        => $pick('protect_qr', ['0', '1']),
             'protect_keys'      => $pick('protect_keys', ['0', '1']),
             'photo_watermark'   => is_string($in['photo_watermark'] ?? null)

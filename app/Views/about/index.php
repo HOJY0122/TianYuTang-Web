@@ -2,7 +2,7 @@
 /**
  * 關於我們 About us — the blocks written in System → About page, top to
  * bottom: big centred pictures (tap to zoom) and headings with
- * paragraphs. Pictures follow the "news" photo-protection setting.
+ * paragraphs. Pictures follow the About photo-protection switch (Forms & fonts).
  */
 $pageTitle = t('about.title') . ' ' . t('about.title', 'en');
 require BASE_PATH . '/app/Views/layouts/header.php';
@@ -31,15 +31,19 @@ $paras = static function (?string $text, string $class = ''): string {
       <?php // Picture, caption and its text: one card, one width. ?>
       <article class="<?= $cls ?> about-card about-card-img">
         <div class="album-strip about-strip">
-          <figure class="about-figure" <?= photo_full_attrs($b['image_path'], 'news') ?>
+          <figure class="about-figure" <?= photo_full_attrs($b['image_path'], 'about') ?>
                   data-caption="<?= h(trim(($b['heading_zh'] ?? '') . ' ' . ($b['heading_en'] ?? ''))) ?>">
-            <?= photo_img($b['image_path'], 'news', ['alt' => $b['heading_zh'] ?: ($b['heading_en'] ?: t('about.title')), 'loading' => 'lazy', 'class' => 'about-img']) ?>
+            <?= photo_img($b['image_path'], 'about', ['alt' => $b['heading_zh'] ?: ($b['heading_en'] ?: t('about.title')), 'loading' => 'lazy', 'class' => 'about-img']) ?>
           </figure>
         </div>
-        <?php if ($b['heading_zh'] || $b['heading_en']): ?>
-          <h3 class="about-caption"><?= h($b['heading_zh'] ?? '') ?><?php if ($b['heading_en']): ?><span class="en"><?= h($b['heading_en']) ?></span><?php endif; ?></h3>
+        <?php if ($b['heading_zh'] || $b['heading_en'] || $hasText): ?>
+          <div class="about-card-text">
+            <?php if ($b['heading_zh'] || $b['heading_en']): ?>
+              <h3 class="about-caption"><?= h($b['heading_zh'] ?? '') ?><?php if ($b['heading_en']): ?><span class="en"><?= h($b['heading_en']) ?></span><?php endif; ?></h3>
+            <?php endif; ?>
+            <?php if ($hasText): ?><div class="about-body"><?= $paras($b['body_zh']) ?><?= $paras($b['body_en'], 'en') ?></div><?php endif; ?>
+          </div>
         <?php endif; ?>
-        <?php if ($hasText): ?><div class="about-body"><?= $paras($b['body_zh']) ?><?= $paras($b['body_en'], 'en') ?></div><?php endif; ?>
       </article>
     <?php else: ?>
       <article class="<?= $cls ?> about-card">

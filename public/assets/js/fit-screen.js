@@ -130,9 +130,18 @@
   // Scrolling on a phone shows and hides the address bar, which fires
   // "resize" with only the height changed — nothing to redo then, or the
   // page would jump. Only a new width (turning the phone) counts.
-  var lastW = window.innerWidth;
-  window.addEventListener('orientationchange', function () { setTimeout(function () { lastW = window.innerWidth; current = 0; apply(); }, 250); });
+  // Pinch-zooming also fires "resize", and on some phones (iPhone in
+  // desktop mode) it changes innerWidth too — re-fitting then would make
+  // the page and its header jump under the fingers. A changed pinch scale
+  // means the person is zooming: leave the layout alone.
+  var vv = window.visualViewport;
+  var lastW = window.innerWidth, lastScale = vv ? vv.scale : 1;
+  window.addEventListener('orientationchange', function () {
+    setTimeout(function () { lastW = window.innerWidth; lastScale = vv ? vv.scale : 1; current = 0; apply(); }, 250);
+  });
   window.addEventListener('resize', function () {
+    var scale = vv ? vv.scale : 1;
+    if (Math.abs(scale - lastScale) > 0.01) { lastScale = scale; lastW = window.innerWidth; return; }
     if (window.innerWidth === lastW) return;
     lastW = window.innerWidth; current = 0; apply();
   });

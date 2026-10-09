@@ -26,7 +26,11 @@
         // reach these settings. The server refuses; the buttons hide.
         $isLastSystem = $u['role'] === 'system_admin' && (int) $systemCount <= 1; ?>
       <tr>
-        <td data-label="帳號 Username"><strong><?= h($u['username']) ?></strong><?= $isSelf ? ' <span class="help">（您 you）</span>' : '' ?></td>
+        <td data-label="帳號 Username"><strong><?= h($u['username']) ?></strong><?= $isSelf ? ' <span class="help">（您 you）</span>' : '' ?>
+          <?php if (isset($locked[$u['username']])): ?>
+            <span class="sub-line warn-text"><?= icon('lock') ?> 已鎖 <?= (int) $locked[$u['username']] ?> 分鐘 · Locked <?= (int) $locked[$u['username']] ?> min
+              <span class="help">（重設密碼即解鎖 Reset password to unlock）</span></span>
+          <?php endif; ?></td>
         <td data-label="姓名 Name"><?= h($u['display_name'] ?? '—') ?></td>
         <td data-label="權限 Role"><?= $u['role'] === 'system_admin'
             ? '<span class="badge walkin">系統管理員 System admin</span>' : '<span class="badge">管理員 Admin</span>' ?></td>

@@ -33,11 +33,13 @@ $titleEn = t('login.title', 'en', $names);
     <form method="POST" action="<?= url('/admin/login') ?>">
       <?= csrf_field() ?>
       <label for="username">帳號 <span class="en">Username</span></label>
-      <input id="username" name="username" required autofocus autocomplete="username" autocapitalize="none">
+      <?php $focusPw = ($error['field'] ?? '') === 'password' || (($error['username'] ?? '') !== '' && ($error['field'] ?? '') !== 'username'); ?>
+      <input id="username" name="username" required<?= $focusPw ? '' : ' autofocus' ?> autocomplete="username" autocapitalize="none" maxlength="50"
+             value="<?= h($error['username'] ?? '') ?>"<?= ($error['field'] ?? '') === 'username' ? ' aria-invalid="true"' : '' ?>>
 
       <label for="password">密碼 <span class="en">Password</span></label>
       <div class="pw-field">
-        <input id="password" name="password" type="password" required autocomplete="current-password">
+        <input id="password" name="password" type="password" required autocomplete="current-password"<?= $focusPw ? ' autofocus' : '' ?><?= ($error['field'] ?? '') === 'password' ? ' aria-invalid="true"' : '' ?>>
         <button type="button" class="pw-eye" data-toggle-password="password" aria-pressed="false"
                 title="顯示密碼 Show password"><?= icon('eye') ?></button>
       </div>
@@ -47,8 +49,8 @@ $titleEn = t('login.title', 'en', $names);
           <?= nl2br(h($error['message'])) ?>
           <?php if (isset($error['attempts']) && $error['attempts'] > 0): ?>
             <span class="attempts">
-              還剩 <?= (int) $error['attempts'] ?> 次機會，之後將暫停登入 <?= App\Models\LoginAttempt::WINDOW_MINUTES ?> 分鐘。<br>
-              <?= (int) $error['attempts'] ?> attempt<?= $error['attempts'] > 1 ? 's' : '' ?> left before a <?= App\Models\LoginAttempt::WINDOW_MINUTES ?>-minute lock.
+              此帳號還剩 <?= (int) $error['attempts'] ?> 次機會，之後此帳號將暫停登入 <?= App\Models\LoginAttempt::WINDOW_MINUTES ?> 分鐘。<br>
+              <?= (int) $error['attempts'] ?> more wrong password<?= $error['attempts'] > 1 ? 's' : '' ?> and this account locks for <?= App\Models\LoginAttempt::WINDOW_MINUTES ?> minutes.
             </span>
           <?php endif; ?>
         </div>

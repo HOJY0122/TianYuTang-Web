@@ -134,7 +134,7 @@ Registration, donation and receipt lists sort by clicking a column heading.
 ### What is protected, and how
 | Area | Protection |
 |---|---|
-| Sign-in | Passwords hashed with bcrypt (re-hashed automatically if the algorithm improves); same response time whether or not a username exists; lock-out after repeated failures; default passwords must be changed first |
+| Sign-in | Passwords hashed with bcrypt (re-hashed automatically if the algorithm improves); an unknown username is told so and costs nothing; 5 wrong passwords lock that account (on every device) for 15 minutes, lifted early by a password reset; a per-connection cap stops scripted guessing; default passwords must be changed first |
 | Sessions | Own cookie `TYTSESS`, HttpOnly, SameSite=Lax, Secure on HTTPS, never in URLs, made-up ids refused; new id at sign-in and every 15 min; signed out after **60 min idle** or **12 h**; a cookie used from a different browser ends the session; changing a password or role, or deleting an account, signs that person out everywhere (`session_version`) |
 | Forms | Every POST needs the session's CSRF token; public forms have a hidden bot trap and a limit of 10 submissions per address per 10 minutes |
 | Redirects | Only to paths on this site (`/admin/…`); full addresses (QR posters) come from `SITE_URL` or a checked Host header |

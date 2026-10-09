@@ -42,8 +42,8 @@ class AdminUser extends Model
     /**
      * Check a username/password pair.
      *
-     * Returns null for BOTH "no such user" and "wrong password" so the
-     * login page cannot be used to discover which usernames exist.
+     * Returns null for both "no such user" and "wrong password"; the login
+     * page looks the username up first (findByUsername) to tell them apart.
      */
     public function verify(string $username, string $password): ?array
     {
@@ -108,7 +108,7 @@ class AdminUser extends Model
 
     public function findByUsername(string $username): ?array
     {
-        return $this->fetchOne('SELECT id FROM admin_users WHERE username = ?', [$username]);
+        return $this->fetchOne('SELECT id, username FROM admin_users WHERE username = ?', [$username]);
     }
 
     /** Create an account. Returns the new id. */

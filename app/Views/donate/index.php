@@ -21,7 +21,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
   <?php if (!$window['open']): ?>
     <div class="card closed-card">
       <div class="closed-icon"><?= icon($window['reason'] === 'not_yet' ? 'clock' : 'lock', 'xl') ?></div>
-      <h3><?= tb($window['reason'] === 'not_yet' ? 'donate.not_yet' : 'donate.closed') ?></h3>
+      <h3><?= tb(['not_yet' => 'donate.not_yet', 'stopped' => 'donate.stopped'][$window['reason']] ?? 'donate.closed') ?></h3>
       <p><?= h(App\Models\Event::windowMessage($window, 'donation')) ?></p>
       <p class="help"><?= h(t('donate.counter') . ' ' . t('donate.counter', 'en')) ?></p>
       <?php $timerForm = ''; require BASE_PATH . '/app/Views/partials/window_timer.php'; ?>

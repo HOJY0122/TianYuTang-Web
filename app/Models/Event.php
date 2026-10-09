@@ -482,13 +482,20 @@ class Event extends Model
      *   opens  07:00:00 → 06:59:59 refused, 07:00:00 accepted
      *   closes 07:39:00 → 07:39:00 accepted (last call), 07:39:01 refused
      *
+     * The committee can also stop a section by hand (Stop accepting on
+     * the admin event bar): it is then closed whatever the times say.
+     *
      * @return array{open:bool, reason:string, opens_at:?string, closes_at:?string}
-     *         `reason` is one of: open, not_yet, closed
+     *         `reason` is one of: open, not_yet, closed, stopped
      */
     public static function windowStatus(array $event, string $section): array
     {
         $opensAt  = $event["{$section}_opens_at"]  ?? null;
         $closesAt = $event["{$section}_closes_at"] ?? null;
+
+        if (!empty($event["{$section}_stopped"])) {
+            return ['open' => false, 'reason' => 'stopped', 'opens_at' => $opensAt, 'closes_at' => $closesAt];
+        }
 
         $now      = self::now();
         $opensTs  = $opensAt  ? strtotime($opensAt)  : null;
@@ -529,12 +536,27 @@ class Event extends Model
             return "線上{$what}尚未開放，將於 {$when} 開始，敬請留意。";
         }
 
+        if ($status['reason'] === 'stopped') {
+            $en = $section === self::SECTION_RSVP ? 'registration' : 'donation';
+            return "線上{$what}已停止接受。如仍希望參與，歡迎於活動當日親臨現場辦理。\n"
+                 . "Online {$en} is no longer being accepted. You are welcome to visit the counter on the event day.";
+        }
+
         if ($status['reason'] === 'closed') {
             $when = self::formatDateTime($status['closes_at']);
             return "線上{$what}已於 {$when} 截止。如仍希望參與，歡迎於活動當日親臨現場辦理。";
         }
 
         return '';
+    }
+
+    /** Stop (true) or resume (false) a section's online responses by hand. */
+    public function setStopped(int $id, string $section, bool $stopped): void
+    {
+        if (!in_array($section, [self::SECTION_RSVP, self::SECTION_DONATION], true)) {
+            return;
+        }
+        $this->execute("UPDATE events SET {$section}_stopped = ? WHERE id = ?", [$stopped ? 1 : 0, $id]);
     }
 
     /** Format a stored DATETIME for display, e.g. "2026年10月15日 23:59". */

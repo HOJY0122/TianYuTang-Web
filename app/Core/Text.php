@@ -77,6 +77,7 @@ class Text
         'register.submit'     => ['register', '提交報名', 'Submit Registration'],
         'register.not_yet'    => ['register', '報名尚未開放', 'Registration is not open yet'],
         'register.closed'     => ['register', '線上報名已截止', 'Online registration has closed'],
+        'register.stopped'    => ['register', '線上報名已停止接受', 'Online registration is no longer accepted'],
         'register.walkin'     => ['register', '歡迎於活動當日親臨現場登記。', 'Walk-in registration is available at the counter on the day.'],
 
         // --- Donation ---
@@ -91,6 +92,7 @@ class Text
         'donate.after'        => ['donate', '提交後工作人員會與您聯繫確認付款。', 'Our staff will contact you to arrange payment.'],
         'donate.not_yet'      => ['donate', '布施尚未開放', 'Donations are not open yet'],
         'donate.closed'       => ['donate', '線上布施已截止', 'Online donations have closed'],
+        'donate.stopped'      => ['donate', '線上布施已停止接受', 'Online donations are no longer accepted'],
         'donate.counter'      => ['donate', '歡迎於活動當日親臨櫃台布施。', 'You are welcome to give at the counter on the day.'],
 
         // --- Confirmation ---

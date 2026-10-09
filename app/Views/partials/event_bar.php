@@ -20,10 +20,28 @@ use App\Models\Event;
     <div class="help" style="margin-top:4px">
       <?php foreach ([Event::SECTION_RSVP => '報名 Registration', Event::SECTION_DONATION => '布施 Donation'] as $_ebSection => $_ebLabel):
           $_ebW = Event::windowStatus($event, $_ebSection); ?>
-        <span style="margin-right:12px"><?= h($_ebLabel) ?>:
+        <span class="eb-window"><?= h($_ebLabel) ?>:
           <?php if ($_ebW['open']): ?><span class="badge ok">開放中 Open</span><?= $_ebW['closes_at'] ? ' → ' . h(Event::formatDateTime($_ebW['closes_at'])) : '' ?>
+          <?php elseif ($_ebW['reason'] === 'stopped'): ?><span class="badge cancelled">已停止 Stopped</span>
           <?php elseif ($_ebW['reason'] === 'not_yet'): ?><span class="badge pending">未開放 Not yet</span> <?= h(Event::formatDateTime($_ebW['opens_at'])) ?>
           <?php else: ?><span class="badge cancelled">已截止 Closed</span><?php endif; ?>
+          <?php // Stop / resume by hand — e.g. enough people already registered on paper. ?>
+          <form method="POST" action="<?= url('/admin/event/responses') ?>" class="eb-toggle"
+                data-confirm="<?= !empty($event[$_ebSection . '_stopped'])
+                    ? h('恢復接受線上' . mb_substr($_ebLabel, 0, 2) . '？（按設定的時間開放）&#10;Resume online ' . strtolower(substr($_ebLabel, 7)) . '? (follows the opening times again)')
+                    : h('立即停止接受線上' . mb_substr($_ebLabel, 0, 2) . '？網站會顯示「已停止接受」。&#10;Stop online ' . strtolower(substr($_ebLabel, 7)) . ' now? The website will say it is no longer accepted.') ?>"
+                <?= empty($event[$_ebSection . '_stopped']) ? 'data-danger' : '' ?>>
+            <?= csrf_field() ?>
+            <input type="hidden" name="event_id" value="<?= (int) $event['id'] ?>">
+            <input type="hidden" name="section" value="<?= $_ebSection ?>">
+            <?php if (!empty($event[$_ebSection . '_stopped'])): ?>
+              <input type="hidden" name="to" value="resume">
+              <button type="submit" class="mini-btn eb-resume"><?= icon('play') ?> 恢復接受 <span class="en">Resume</span></button>
+            <?php else: ?>
+              <input type="hidden" name="to" value="stop">
+              <button type="submit" class="mini-btn ghost eb-stop"><?= icon('stop') ?> 停止接受 <span class="en">Stop</span></button>
+            <?php endif; ?>
+          </form>
         </span>
       <?php endforeach; ?>
     </div>

@@ -55,7 +55,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
   <?php if (!$window['open'] && !$preview): ?>
     <div class="card closed-card">
       <div class="closed-icon"><?= icon($window['reason'] === 'not_yet' ? 'clock' : 'lock', 'xl') ?></div>
-      <h3><?= tb($window['reason'] === 'not_yet' ? 'register.not_yet' : 'register.closed') ?></h3>
+      <h3><?= tb(['not_yet' => 'register.not_yet', 'stopped' => 'register.stopped'][$window['reason']] ?? 'register.closed') ?></h3>
       <p><?= h(App\Models\Event::windowMessage($window, 'rsvp')) ?></p>
       <p class="help"><?= h(t('register.walkin') . ' ' . t('register.walkin', 'en')) ?></p>
       <?php $timerForm = ''; require BASE_PATH . '/app/Views/partials/window_timer.php'; ?>

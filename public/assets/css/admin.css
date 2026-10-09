@@ -1048,3 +1048,27 @@ details.guide > :not(summary){margin:0 20px 18px}
 .sleep-layout .word-frame-wrap iframe{max-width:100%}
 @media (max-width:1100px){ .sleep-layout{grid-template-columns:minmax(0,1fr)} }
 .sleep-status .uat-status-head > div{min-width:0}
+
+/* ---------- Bulk upload queue (bulk-upload.js) ---------- */
+.bulk-panel{margin-top:16px;border:1px solid var(--line,#e6d9bd);border-radius:12px;padding:12px 14px;background:#fffdf7}
+.bulk-head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline}
+.bulk-count{font-size:1.15rem}
+.bulk-fails{color:#9f211b;font-weight:600}
+.bulk-list{list-style:none;margin:8px 0 0;padding:0;max-height:320px;overflow:auto;font-size:.92rem}
+.bulk-list li{display:flex;gap:10px;justify-content:space-between;align-items:baseline;padding:5px 2px;border-top:1px dashed #eadfc6;min-width:0}
+.bulk-list li:first-child{border-top:0}
+.bulk-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1 1 auto}
+.bulk-state{flex:0 1 auto;text-align:right;color:#776a55;overflow-wrap:anywhere;max-width:62%}
+.bulk-list li.is-busy .bulk-state{color:#8a5a00;font-weight:600}
+.bulk-list li.is-ok .bulk-state{color:#2e7d4f}
+.bulk-list li.is-bad .bulk-state{color:#9f211b;font-weight:600}
+.bulk-list li.is-ai .bulk-state{color:#3a5ba0;font-weight:600}
+.bulk-state a{font-weight:600}
+
+/* ---------- Receipt books ---------- */
+.book-chip{display:inline-block;padding:1px 8px;border-radius:999px;background:#f3ead6;color:#6b4a12;font-size:.82rem;font-weight:600;white-space:nowrap}
+.badge.check{background:#fff1c2;color:#7a5200}
+.book-table td .gap-list{display:block;color:#9f211b;font-size:.85rem;overflow-wrap:anywhere}
+.book-row.is-current{background:#fff8e4}
+.book-field input{max-width:220px}
+.paper-head .paper-book input{width:7.5em}

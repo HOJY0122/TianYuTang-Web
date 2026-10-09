@@ -32,8 +32,12 @@ $aiNotes = $isNew ? ($draft['ai_notes'] ?? null) : ($row['ai_notes'] ?? null);
   <div class="flash info"><?= icon('bot') ?> <strong>已自動讀取並填好草稿，請對照相片核對後再儲存。</strong> A draft has been filled in automatically — please check it against the photo, then save.
     <?php if ($unsure): ?><br><?= icon('marker') ?> 黃色欄位最需要再看一眼。Yellow fields need a second look most.<?php endif; ?></div>
 <?php endif; ?>
+<?php if (!$isNew && (int) ($row['needs_check'] ?? 0) === 1): ?>
+  <div class="flash info"><?= icon('clipboard') ?> <strong>待核對：</strong>這張收據由整本上傳加入<?= $row['source'] === 'ai' ? '，AI 已填好草稿' : '' ?>。請對照相片核對，然後按「儲存並核對下一張」。
+    <br><span class="en"><strong>To check:</strong> added by book upload<?= $row['source'] === 'ai' ? ' and filled in by the AI' : '' ?>. Check it against the photo, then press “Save &amp; check next”.</span></div>
+<?php endif; ?>
 <?php if ($duplicate): ?>
-  <div class="flash error"><?= icon('alert') ?> 已有另一張收據使用 No. <?= h($duplicate['receipt_no']) ?>（<?= h($duplicate['name'] ?? '—') ?>，<?= rm((float) $duplicate['total']) ?>）。
+  <div class="flash error"><?= icon('alert') ?> 已有另一張收據使用 No. <?= h($duplicate['receipt_no']) ?>（<?= $duplicate['book_no'] ? '簿 Book ' . h($duplicate['book_no']) . '，' : '' ?><?= h($duplicate['name'] ?? '—') ?>，<?= rm((float) $duplicate['total']) ?>）。
     <a href="<?= url('/admin/receipts/edit') ?>?id=<?= (int) $duplicate['id'] ?>" target="_blank">查看 View</a>
     <br>Another receipt already has this number — check it is not the same receipt twice.</div>
 <?php endif; ?>
@@ -66,6 +70,9 @@ $aiNotes = $isNew ? ($draft['ai_notes'] ?? null) : ($row['ai_notes'] ?? null);
 
     <div class="paper-head">
       <div><strong class="paper-title">收據 <span class="en">Receipt</span></strong></div>
+      <label class="paper-no paper-book" title="收據簿的號碼 The receipt book's number">簿 <span class="en">Book</span>
+        <input name="book_no" value="<?= $val('book_no') ?>" maxlength="30" list="bookList" autocomplete="off" placeholder="例 12"></label>
+      <datalist id="bookList"><?php foreach ($bookList as $b): ?><option value="<?= h($b) ?>"><?php endforeach; ?></datalist>
       <label class="paper-no<?= $flag('receipt_no', 'number', 'no') ?>">No.
         <input name="receipt_no" value="<?= $val('receipt_no') ?>" inputmode="numeric" maxlength="30" placeholder="例 26432"></label>
     </div>
@@ -125,7 +132,7 @@ $aiNotes = $isNew ? ($draft['ai_notes'] ?? null) : ($row['ai_notes'] ?? null);
       <?php endif; ?>
       <label for="bankSlipFile"><?= $slipUrl ? '更換單據' : '上傳單據' ?> <span class="en"><?= $slipUrl ? 'Replace slip' : 'Upload slip' ?></span></label>
       <input id="bankSlipFile" name="bank_slip" type="file" accept="image/jpeg,image/png,image/gif,image/webp" data-aspects="original" data-max-width="2000">
-      <p class="help">JPG / PNG / WebP，5MB 以內。只有登入的工作人員看得到。<span class="en">Up to 5 MB. Only signed-in staff can see it.</span></p>
+      <p class="help">JPG / PNG / WebP，20MB 以內。只有登入的工作人員看得到。<span class="en">Up to 20 MB. Only signed-in staff can see it.</span></p>
     </div>
 
     <div class="<?= trim($flag('issued_by', 'issued')) ?>"><label for="rIssued">發據人 <span class="en">Issued by</span></label>
@@ -144,7 +151,12 @@ $aiNotes = $isNew ? ($draft['ai_notes'] ?? null) : ($row['ai_notes'] ?? null);
     <?php endif; ?>
 
     <div class="form-actions">
+      <?php if (!$isNew && (int) ($row['needs_check'] ?? 0) === 1): ?>
+        <button class="primary" type="submit" name="next" value="check"><?= icon('check') ?> 儲存並核對下一張 <span class="en">Save &amp; check next</span></button>
+        <button class="mini-btn ghost btn-lg" type="submit"><?= icon('save') ?> 只儲存 <span class="en">Save only</span></button>
+      <?php else: ?>
       <button class="primary" type="submit"><?= icon('save') ?> 儲存 <span class="en">Save</span></button>
+      <?php endif; ?>
       <?php if ($isNew): ?>
         <button class="mini-btn ghost btn-lg" type="submit" name="next" value="1"><?= icon('save') ?> 儲存並掃描下一張 <span class="en">Save &amp; scan next</span></button>
         <button class="mini-btn ghost btn-lg" type="submit" form="cancelForm"><?= icon('x') ?> 取消 Cancel</button>

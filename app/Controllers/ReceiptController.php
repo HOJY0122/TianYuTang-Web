@@ -23,7 +23,7 @@ class ReceiptController extends Controller
 {
     private const PER_PAGE = 30;
 
-    /** GET /admin/receipts?q=&from=&to=&payment=&sort=&dir=&page= */
+    /** GET /admin/receipts?q=&book=&no_from=&no_to=&check=&from=&to=&payment=&sort=&dir=&page= */
     public function index(): void
     {
         $this->requireReceipts();
@@ -33,10 +33,15 @@ class ReceiptController extends Controller
         $page  = max(1, (int) ($_GET['page'] ?? 1));
         $pages = max(1, (int) ceil($sum['n'] / self::PER_PAGE));
 
+        $book = $f['book'] === '' ? false : ($f['book'] === '-' ? null : $f['book']);
+
         $this->view('admin/receipts', [
             'pageTitle'  => '收據紀錄 Receipts',
             'nav'        => 'receipts',
             'filters'    => $f,
+            'books'      => $model->books($f),
+            'gaps'       => $book !== false ? $model->bookGaps($book) : null,
+            'unread'     => $book !== false ? count($model->unread($book)) : 0,
             'rows'       => $model->search($f, self::PER_PAGE, (min($page, $pages) - 1) * self::PER_PAGE),
             'sum'        => $sum,
             'page'       => $page,
@@ -54,6 +59,8 @@ class ReceiptController extends Controller
             'pageTitle' => '新增收據 Add Receipt',
             'nav'       => 'receipts',
             'aiReady'   => ReceiptReader::configured(),
+            'book'      => (string) ($_SESSION['receipt_last_book'] ?? ''),
+            'bookList'  => (new Receipt())->bookNumbers(),
             'flash'     => $this->takeFlash(),
         ]);
     }
@@ -73,7 +80,9 @@ class ReceiptController extends Controller
         $this->requireCsrf();
         $this->discardDraftPhoto();
 
-        $draft = ['source' => 'manual', 'ai_notes' => null, 'image_path' => null, 'values' => []];
+        $book  = $this->bookFrom($_POST['book_no'] ?? '');
+        $_SESSION['receipt_last_book'] = $book ?? '';
+        $draft = ['source' => 'manual', 'ai_notes' => null, 'image_path' => null, 'values' => ['book_no' => $book ?? '']];
 
         if (ImageUploader::wasProvided($_FILES['photo'] ?? null)) {
             $uploader = new ImageUploader('receipts', true);
@@ -89,10 +98,8 @@ class ReceiptController extends Controller
                 try {
                     $read = (new ReceiptReader())->read($uploader->absolutePath($draft['image_path']));
                     $draft['source'] = 'ai';
-                    $draft['values'] = $this->fromReading($read);
-                    $draft['ai_notes'] = trim(
-                        ($read['unsure'] ? '請再看一眼 Please double-check: ' . $this->fieldNames($read['unsure']) . '。' : '') . $read['notes']
-                    ) ?: null;
+                    $draft['values'] = $this->fromReading($read) + $draft['values'];
+                    $draft['ai_notes'] = $this->aiNotes($read);
                     $draft['unsure'] = $read['unsure'];
                     $draft['ocr_text'] = $read['text'] ?? null;   // Google Vision: everything it read
                 } catch (RuntimeException $e) {
@@ -141,6 +148,7 @@ class ReceiptController extends Controller
             'v'         => $values,
             'draft'     => $draft,
             'duplicate' => (new Receipt())->findByNumber((string) $values['receipt_no'], (int) ($row['id'] ?? 0)),
+            'bookList'  => (new Receipt())->bookNumbers(),
             'flash'     => $this->takeFlash(),
         ]);
     }
@@ -158,36 +166,14 @@ class ReceiptController extends Controller
         }
         $draft = $row ? null : ($_SESSION['receipt_draft'] ?? ['source' => 'manual', 'ai_notes' => null, 'image_path' => null]);
 
-        $str = static fn(string $k, int $max): string => mb_substr(is_string($_POST[$k] ?? null) ? trim($_POST[$k]) : '', 0, $max);
-        $num = static fn(string $k): float => round(max(0, min(9999999, (float) str_replace([',', 'RM', ' '], '', (string) ($_POST[$k] ?? '0')))), 2);
-
-        $v = [
-            'receipt_no'   => preg_replace('/\D+/', '', $str('receipt_no', 30)) ?: null,
-            'receipt_date' => preg_match('/^\d{4}-\d{2}-\d{2}$/', $str('receipt_date', 10)) ? $str('receipt_date', 10) : null,
-            'item'         => $str('item', 255) ?: null,
-            'name'         => $str('name', 150) ?: null,
-            'other_label'  => $str('other_label', 100) ?: null,
-            'total'        => $num('total'),
-            'payment'      => in_array($_POST['payment'] ?? '', ['cash', 'bank'], true) ? $_POST['payment'] : '',
-            'issued_by'    => $str('issued_by', 100) ?: null,
-            'notes'        => $str('notes', 2000) ?: null,
-        ];
-        $sumBoxes = 0.0;
-        foreach (Receipt::amountColumns() as $col) {
-            $v[$col] = $num($col);
-            $sumBoxes += $v[$col];
-        }
-        // An empty total means "add the boxes up for me".
-        if ($v['total'] == 0 && $sumBoxes > 0) {
-            $v['total'] = round($sumBoxes, 2);
-        }
+        [$v, $sumBoxes] = $this->clean($_POST);
 
         $errors = [];
         if ($v['name'] === null && $v['receipt_no'] === null && $v['total'] == 0) {
             $errors[] = '請至少填寫收據號碼、姓名或金額。Please fill in at least the number, a name or an amount.';
         }
         if ($errors) {
-            $_SESSION['receipt_old'] = $v + ['receipt_no' => '', 'receipt_date' => ''];
+            $_SESSION['receipt_old'] = $v + ['receipt_no' => '', 'book_no' => '', 'receipt_date' => ''];
             $this->flash('error', '未儲存 Not saved', implode("\n", $errors));
             $this->redirect($row ? '/admin/receipts/edit?id=' . $id : '/admin/receipts/review');
         }
@@ -198,7 +184,10 @@ class ReceiptController extends Controller
                    'ai_notes' => $draft['ai_notes'] ?? null];
         }
         $newId = $model->save($row ? $id : null, $v, $by);
-        unset($_SESSION['receipt_draft']);   // the photo now belongs to the saved receipt
+        if ($row === null) {
+            unset($_SESSION['receipt_draft']);   // the photo now belongs to the saved receipt
+        }
+        $_SESSION['receipt_last_book'] = $v['book_no'] ?? '';
 
         // Editing: an optional new photo replaces the old one.
         if ($row !== null && ImageUploader::wasProvided($_FILES['photo'] ?? null)) {
@@ -221,8 +210,97 @@ class ReceiptController extends Controller
             ? "\n各項合計 " . rm($sumBoxes) . ' ≠ 總數 ' . rm($v['total']) . '。Boxes add up to ' . rm($sumBoxes) . ', not the total.'
             : '';
         $this->flash('success', '已儲存 Saved',
-            '收據 ' . ($v['receipt_no'] ? 'No. ' . $v['receipt_no'] : '#' . $newId) . ' · ' . ($v['name'] ?? '—') . ' · ' . rm($v['total']) . $warn . $slipMsg);
+            '收據 ' . ($v['book_no'] ? '簿 Book ' . $v['book_no'] . ' · ' : '') . ($v['receipt_no'] ? 'No. ' . $v['receipt_no'] : '#' . $newId)
+            . ' · ' . ($v['name'] ?? '—') . ' · ' . rm($v['total']) . $warn . $slipMsg);
+
+        // Checking a bulk-uploaded book: straight on to the next one waiting.
+        if (($_POST['next'] ?? '') === 'check') {
+            $next = $model->nextToCheck($v['book_no'], $newId);
+            if ($next) {
+                $this->redirect('/admin/receipts/edit?id=' . (int) $next['id']);
+            }
+            $this->flash('success', '全部核對完成 All checked',
+                "已儲存，沒有其他待核對的收據。\nSaved — there are no more receipts waiting to be checked.");
+            $this->redirect('/admin/receipts' . ($v['book_no'] ? '?book=' . rawurlencode($v['book_no']) : ''));
+        }
         $this->redirect(!empty($_POST['next']) ? '/admin/receipts/new' : '/admin/receipts/edit?id=' . $newId);
+    }
+
+    /**
+     * GET /admin/receipts/bulk?book= — a whole receipt book at once: choose
+     * every photo, they go up one by one (bulk-upload.js), and the AI reads
+     * each in turn. Every receipt is then checked against its photo
+     * (“待核對 To check”) before it counts as checked.
+     */
+    public function bulk(): void
+    {
+        $this->requireReceipts();
+        $model = new Receipt();
+        $book  = $this->bookFrom($_GET['book'] ?? ($_SESSION['receipt_last_book'] ?? ''));
+        $this->view('admin/receipt_bulk', [
+            'pageTitle' => '整本上傳 Upload a Book',
+            'nav'       => 'receipts',
+            'aiReady'   => ReceiptReader::configured(),
+            'book'      => $book ?? '',
+            'bookList'  => $model->bookNumbers(),
+            'unread'    => $book !== null ? $model->unread($book) : [],
+            'resume'    => !empty($_GET['resume']),
+            'flash'     => $this->takeFlash(),
+        ]);
+    }
+
+    /** POST /admin/receipts/bulk-upload — one photo of the book → a receipt waiting to be checked (JSON). */
+    public function bulkUpload(): void
+    {
+        $this->requireReceipts();
+        if (empty($_POST) && empty($_FILES) && ($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
+            $this->json(['ok' => false, 'error' => '相片超過伺服器限制（' . ini_get('post_max_size') . '）。Over the server limit.'], 413);
+        }
+        $this->requireCsrf();
+        $by = (string) ($_SESSION['admin_username'] ?? 'admin');
+        session_write_close();   // the next photos need not wait for this one
+
+        $book = $this->bookFrom($_POST['book_no'] ?? '');
+        if ($book === null) {
+            $this->json(['ok' => false, 'error' => '請先填寫簿號。Please enter the book number.'], 422);
+        }
+        if (!ImageUploader::wasProvided($_FILES['photo'] ?? null)) {
+            $this->json(['ok' => false, 'error' => '未收到相片 No photo received'], 422);
+        }
+        $uploader = new ImageUploader('receipts', true);
+        try {
+            $path = $uploader->store($_FILES['photo'], 2000);
+        } catch (RuntimeException $e) {
+            $this->json(['ok' => false, 'error' => $e->getMessage()], 422);
+        }
+        $id = (new Receipt())->createDraft($book, $path, $by);
+        $this->json(['ok' => true, 'id' => $id, 'edit' => url('/admin/receipts/edit') . '?id=' . $id]);
+    }
+
+    /** POST /admin/receipts/ai-read — let the AI read one receipt still waiting to be checked (JSON). */
+    public function aiRead(): void
+    {
+        $this->requireReceipts();
+        $this->requireCsrf();
+        session_write_close();   // reading takes 10–40 s; other requests carry on meanwhile
+
+        $model = new Receipt();
+        $row   = $model->find((int) ($_POST['id'] ?? 0));
+        if ($row === null || (int) $row['needs_check'] !== 1 || !$row['image_path']) {
+            $this->json(['ok' => false, 'error' => '這張收據已核對或沒有相片。Already checked, or no photo.'], 409);
+        }
+        if (!ReceiptReader::configured()) {
+            $this->json(['ok' => false, 'error' => 'AI 讀取尚未啟用 AI reading is off'], 503);
+        }
+        try {
+            $read = (new ReceiptReader())->read((new ImageUploader('receipts', true))->absolutePath($row['image_path']));
+        } catch (RuntimeException $e) {
+            $this->json(['ok' => false, 'error' => $e->getMessage()], 502);
+        }
+        [$v] = $this->clean($this->fromReading($read));
+        $model->fillFromAi((int) $row['id'], $v, $this->aiNotes($read));
+        $this->json(['ok' => true, 'receipt_no' => $v['receipt_no'], 'name' => $v['name'],
+                     'total' => rm($v['total']), 'unsure' => (bool) $read['unsure']]);
     }
 
     /** POST /admin/receipts/delete */
@@ -295,17 +373,18 @@ class ReceiptController extends Controller
         $x = new XlsxWriter();
         $x->creator = (new \App\Models\Setting())->site()['site_name'];
         $s = $x->addSheet('Receipts 收據', [
-            'widths' => array_merge([12, 12, 22, 24], array_fill(0, count($cats), 12), [14, 12, 12, 16, 30]),
+            'widths' => array_merge([10, 12, 12, 22, 24], array_fill(0, count($cats), 12), [14, 12, 12, 16, 30, 12]),
             'freeze' => 1, 'filter' => true, 'zebra' => true,
         ]);
-        $head = ['No. 號碼', 'Date 日期', 'Name 姓名', 'Item 項目'];
+        $head = ['Book 簿號', 'No. 號碼', 'Date 日期', 'Name 姓名', 'Item 項目'];
         foreach ($cats as [$zh, $en]) {
             $head[] = $zh . ' ' . $en;
         }
-        array_push($head, 'Total 總數', 'Paid by 方式', 'Bank slip 轉帳單據', 'Issued by 發據人', 'Notes 備註');
+        array_push($head, 'Total 總數', 'Paid by 方式', 'Bank slip 轉帳單據', 'Issued by 發據人', 'Notes 備註', 'Checked 已核對');
         $x->row($s, array_map(static fn($h) => [$h, 'header'], $head), 34);
         foreach ($rows as $r) {
             $cells = [
+                [$r['book_no'] ?? '', 'textfmt'],
                 [$r['receipt_no'] ?? '', 'textfmt'],
                 $r['receipt_date'] ? [XlsxWriter::date($r['receipt_date']), 'datetime'] : '',
                 $r['name'] ?? '',
@@ -319,7 +398,8 @@ class ReceiptController extends Controller
                 ['cash' => 'Cash 現金', 'bank' => 'Bank-in 轉帳'][$r['payment']] ?? '',
                 !empty($r['bank_slip_path']) ? 'Yes 有' : ($r['payment'] === 'bank' ? 'No 沒有' : ''),
                 $r['issued_by'] ?? '',
-                trim(($r['other_label'] ? '其他 Other: ' . $r['other_label'] . ' · ' : '') . ($r['notes'] ?? ''), ' ·'));
+                trim(($r['other_label'] ? '其他 Other: ' . $r['other_label'] . ' · ' : '') . ($r['notes'] ?? ''), ' ·'),
+                (int) $r['needs_check'] ? 'No 待核對' : 'Yes 是');
             $x->row($s, $cells, 20);
         }
         $x->send('receipts-' . date('Ymd') . '.xlsx');
@@ -330,8 +410,13 @@ class ReceiptController extends Controller
     private function filters(): array
     {
         $g = static fn(string $k): string => is_string($_GET[$k] ?? null) ? trim($_GET[$k]) : '';
+        $digits = static fn(string $k): string => ctype_digit($g($k)) ? substr($g($k), 0, 12) : '';
         return [
             'q'       => mb_substr($g('q'), 0, 100),
+            'book'    => $g('book') === '-' ? '-' : ($this->bookFrom($g('book')) ?? ''),
+            'no_from' => $digits('no_from'),
+            'no_to'   => $digits('no_to'),
+            'check'   => in_array($g('check'), ['0', '1'], true) ? $g('check') : '',
             'from'    => $g('from'),
             'to'      => $g('to'),
             'payment' => $g('payment'),
@@ -342,7 +427,7 @@ class ReceiptController extends Controller
 
     private function blank(): array
     {
-        $v = ['receipt_no' => '', 'receipt_date' => '', 'item' => '', 'name' => '', 'other_label' => '',
+        $v = ['receipt_no' => '', 'book_no' => (string) ($_SESSION['receipt_last_book'] ?? ''), 'receipt_date' => '', 'item' => '', 'name' => '', 'other_label' => '',
               'total' => '', 'payment' => '', 'issued_by' => '', 'notes' => ''];
         foreach (Receipt::amountColumns() as $c) {
             $v[$c] = '';
@@ -378,6 +463,55 @@ class ReceiptController extends Controller
             return "\n轉帳單據已移除。Bank slip removed.";
         }
         return '';
+    }
+
+    /**
+     * Form values (or the AI's reading) → what is stored: trimmed, cut to
+     * each column's size, numbers as numbers.
+     * @return array{0: array, 1: float} values, and what the boxes add up to
+     */
+    private function clean(array $in): array
+    {
+        $str = static fn(string $k, int $max): string => mb_substr(is_scalar($in[$k] ?? null) ? trim((string) $in[$k]) : '', 0, $max);
+        $num = static fn(string $k): float => round(max(0, min(9999999, (float) str_replace([',', 'RM', ' '], '', is_scalar($in[$k] ?? null) ? (string) $in[$k] : '0'))), 2);
+
+        $v = [
+            'receipt_no'   => substr(preg_replace('/\D+/', '', $str('receipt_no', 60)), 0, 30) ?: null,
+            'book_no'      => $this->bookFrom($in['book_no'] ?? ''),
+            'receipt_date' => preg_match('/^\d{4}-\d{2}-\d{2}$/', $str('receipt_date', 10)) ? $str('receipt_date', 10) : null,
+            'item'         => $str('item', 255) ?: null,
+            'name'         => $str('name', 150) ?: null,
+            'other_label'  => $str('other_label', 100) ?: null,
+            'total'        => $num('total'),
+            'payment'      => in_array($in['payment'] ?? '', ['cash', 'bank'], true) ? $in['payment'] : '',
+            'issued_by'    => $str('issued_by', 100) ?: null,
+            'notes'        => $str('notes', 2000) ?: null,
+        ];
+        $sumBoxes = 0.0;
+        foreach (Receipt::amountColumns() as $col) {
+            $v[$col] = $num($col);
+            $sumBoxes += $v[$col];
+        }
+        // An empty total means "add the boxes up for me".
+        if ($v['total'] == 0 && $sumBoxes > 0) {
+            $v['total'] = round($sumBoxes, 2);
+        }
+        return [$v, $sumBoxes];
+    }
+
+    /** A book number as typed → "12", "A03", "2026-1" (letters, digits, - / .), or null. */
+    private function bookFrom($raw): ?string
+    {
+        $b = is_string($raw) ? strtoupper(preg_replace('/[^0-9A-Za-z\-\/.]+/', '', $raw)) : '';
+        return $b !== '' ? substr($b, 0, 30) : null;
+    }
+
+    /** What the AI was unsure about, as the note shown beside the photo. */
+    private function aiNotes(array $read): ?string
+    {
+        return trim(
+            ($read['unsure'] ? '請再看一眼 Please double-check: ' . $this->fieldNames($read['unsure']) . '。' : '') . $read['notes']
+        ) ?: null;
     }
 
     private function fieldNames(array $keys): string

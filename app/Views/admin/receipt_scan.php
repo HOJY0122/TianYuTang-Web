@@ -14,6 +14,15 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     <li><?= icon('lock') ?> 相片只存放在伺服器內部，只有登入的工作人員看得到。<span class="en">Photos are stored privately — only signed-in staff can see them.</span></li>
   </ul>
 
+  <p class="flash info" style="margin:0 0 14px"><?= icon('list') ?> 有一整本要輸入？<a href="<?= url('/admin/receipts/bulk') ?>"><strong>整本上傳</strong></a>：一次選 50 張或更多相片，AI 逐張讀取。
+    <span class="en">A whole book to enter? <a href="<?= url('/admin/receipts/bulk') ?>"><strong>Upload a book</strong></a>: choose 50 or more photos at once and the AI reads each one.</span></p>
+
+  <div class="book-field">
+    <label for="bookNo">簿號 <span class="en">Book number</span> <span class="help">（選填 optional）</span></label>
+    <input id="bookNo" name="book_no" value="<?= h($book) ?>" maxlength="30" list="bookList" autocomplete="off" placeholder="例 e.g. 12">
+    <datalist id="bookList"><?php foreach ($bookList as $b): ?><option value="<?= h($b) ?>"><?php endforeach; ?></datalist>
+  </div>
+
   <label for="photo">收據相片 <span class="en">Receipt photo</span></label>
   <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/gif,image/webp" capture="environment"
          data-aspects="original,3:2,4:3" data-max-width="2000">

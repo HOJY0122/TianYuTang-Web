@@ -35,23 +35,25 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   <!-- ---------- Upload ---------- -->
   <div class="panel">
     <h2>上傳相片 <span class="en">Upload photos</span></h2>
-    <form method="POST" action="<?= url('/admin/photos/upload') ?>" enctype="multipart/form-data">
+    <form method="POST" action="<?= url('/admin/photos/upload') ?>" enctype="multipart/form-data" id="photoUpload">
       <?= csrf_field() ?>
       <input type="hidden" name="event_id" value="<?= (int) $event['id'] ?>">
 
-      <input type="file" name="photos[]" multiple required
+      <input type="file" name="photos[]" multiple required data-no-editor
              accept="image/jpeg,image/png,image/gif,image/webp"
-             class="file-input">
+             class="file-input" id="photoFiles">
 
       <p class="help" style="margin-top:10px">
-        可一次選擇多張相片（按住 Ctrl 或 Shift 多選）。單張 5MB 以內，
-        一次最多 <?= (int) $maxFiles ?> 張，且整批總大小不可超過 <?= h($postMax) ?>。
-        手機拍的相片通常每張 2–4MB，建議<strong>每次上傳 3–5 張</strong>較保險。
-        系統會自動產生縮圖，前台不會載入原始大圖。<br>
-        <span class="en">Choose several at once (up to <?= (int) $maxFiles ?>, 5 MB each, <?= h($postMax) ?> in total — 3–5 phone photos per upload is safest). Thumbnails are made automatically.</span>
+        <?= icon('image') ?> <strong>一次可選 50、100 張或更多</strong>（按住 Ctrl / Shift 多選，手機可在相簿中多選）。
+        系統會逐張上傳並顯示進度；上傳中請不要關閉此頁。完成後可再選下一批。單張 20MB 以內，系統會自動縮小並產生縮圖。<br>
+        <span class="en"><strong>Pick 50, 100 or more at once</strong> (Ctrl / Shift, or multi-select on a phone). They go up one by one with a progress bar — keep this page open. Then choose the next batch. Up to 20 MB each; pictures are resized and thumbnails made automatically.</span>
       </p>
 
-      <button class="mini-btn" type="submit" style="margin-top:14px;padding:12px 22px"><?= icon('upload') ?> 上傳相片 Upload</button>
+      <div class="form-actions">
+        <button class="primary" type="submit" id="photoUploadBtn"><?= icon('upload') ?> 上傳相片 <span class="en">Upload</span></button>
+        <span class="help" id="photoPicked" aria-live="polite"></span>
+      </div>
+      <div class="bulk-panel" id="photoProgress" hidden aria-live="polite"></div>
     </form>
   </div>
 
@@ -113,4 +115,50 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
 
 </div>
 <script src="<?= asset('js/sortable.js') ?>"></script>
+<script src="<?= asset('js/bulk-upload.js') ?>"></script>
+<script>
+(function () {
+  var form = document.getElementById('photoUpload'), input = document.getElementById('photoFiles'),
+      btn = document.getElementById('photoUploadBtn'), picked = document.getElementById('photoPicked'),
+      box = document.getElementById('photoProgress');
+  if (!window.fetch || !window.TYTBulk) return;           // old browser: the plain form still works
+  input.addEventListener('change', function () {
+    var n = input.files.length;
+    picked.textContent = n ? '已選 ' + n + ' 張 · ' + n + ' selected' : '';
+  });
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var files = Array.prototype.slice.call(input.files);
+    if (!files.length) return;
+    btn.disabled = true; input.disabled = true;
+    var p = TYTBulk.panel(box, files.length), base = new FormData(form), failed = [];
+    TYTBulk.queue(files, function (file) {
+      var row = p.row(file.name);
+      row.set('is-busy', '縮小中 Preparing…');
+      return TYTBulk.shrink(file, 2400).then(function (small) {
+        row.set('is-busy', '上傳中 Uploading…');
+        var fd = new FormData();
+        fd.append('csrf_token', base.get('csrf_token'));
+        fd.append('event_id', base.get('event_id'));
+        fd.append('photos[]', small, small.name);
+        return TYTBulk.send(form.action, fd);
+      }).then(function (j) {
+        if (j.ok) { row.set('is-ok', '完成 Done'); p.step(true); }
+        else { throw new Error((j.failures || []).join('；') || '未成功 Failed'); }
+      }).catch(function (err) {
+        row.set('is-bad', TYTBulk.esc(err.message)); p.step(false); failed.push(file);
+      });
+    }, 3).then(function () {
+      var r = p.finish();
+      btn.disabled = false; input.disabled = false; input.value = ''; picked.textContent = '';
+      var msg = '成功上傳 ' + (r.done - r.bad) + ' 張' + (r.bad ? '，' + r.bad + ' 張未成功（見清單）' : '') + '。\n'
+              + (r.done - r.bad) + ' uploaded' + (r.bad ? ', ' + r.bad + ' failed (see the list)' : '') + '.';
+      if (!r.bad) { location.reload(); return; }
+      TYTDialog.alert(msg, { type: r.done > r.bad ? 'info' : 'error', title: '上傳結果 Upload result' }).then(function () {
+        if (r.done > r.bad) location.reload();
+      });
+    });
+  });
+})();
+</script>
 <?php require BASE_PATH . '/app/Views/layouts/admin_footer.php'; ?>

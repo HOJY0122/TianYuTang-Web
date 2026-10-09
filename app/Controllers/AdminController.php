@@ -230,6 +230,9 @@ class AdminController extends Controller
         // check would report "form expired" and send the committee
         // hunting for the wrong problem. Catch it before requireCsrf().
         if (empty($_POST) && empty($_FILES) && ($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
+            if ($this->wantsJson()) {
+                $this->json(['ok' => false, 'error' => '檔案超過伺服器限制（' . ini_get('post_max_size') . '）。Over the server limit.'], 413);
+            }
             $this->flash(
                 'error',
                 '檔案太大',
@@ -240,16 +243,25 @@ class AdminController extends Controller
         }
 
         $this->requireCsrf();
+        if ($this->wantsJson()) {
+            session_write_close();   // bulk upload: the next photos need not wait for this one
+        }
 
         $eventId = (int) ($_POST['event_id'] ?? 0);
         $event   = (new Event())->find($eventId);
         if ($event === null) {
+            if ($this->wantsJson()) {
+                $this->json(['ok' => false, 'error' => '找不到活動 Event not found'], 404);
+            }
             $this->flash('error', '找不到活動', '請先選擇一個活動再上傳相片。');
             $this->redirect('/admin/photos');
         }
 
         $files = ImageUploader::normaliseMultiple($_FILES['photos'] ?? null);
         if (!$files) {
+            if ($this->wantsJson()) {
+                $this->json(['ok' => false, 'error' => '未收到相片 No photo received'], 422);
+            }
             $this->flash('error', '未選擇相片', '請選擇至少一張相片再上傳。');
             $this->redirect("/admin/photos?event={$eventId}");
         }
@@ -270,6 +282,11 @@ class AdminController extends Controller
                 $name = $file['name'] !== '' ? $file['name'] : ('第 ' . ($i + 1) . ' 張');
                 $failures[] = $name . '：' . $e->getMessage();
             }
+        }
+
+        // The bulk uploader sends a few at a time and keeps its own tally.
+        if ($this->wantsJson()) {
+            $this->json(['ok' => !$failures, 'saved' => $succeeded, 'failures' => $failures]);
         }
 
         if ($succeeded > 0 && !$failures) {

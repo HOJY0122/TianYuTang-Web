@@ -24,7 +24,7 @@
     </div>
   <?php endif; ?>
   <input id="image" name="image" type="file" data-aspects="original,4:3,1:1,16:9,3:4" data-max-width="1600" accept="image/jpeg,image/png,image/gif,image/webp">
-  <p class="help">JPG / PNG / GIF / WebP，5MB 以內。Up to 5 MB.</p>
+  <p class="help">JPG / PNG / GIF / WebP，20MB 以內。Up to 20 MB.</p>
 
   <label class="checkline"><input type="checkbox" name="is_published" value="1"<?= $post['is_published'] ? ' checked' : '' ?>> 發佈到首頁 Publish on the home page</label>
   <label class="checkline"><input type="checkbox" name="is_pinned" value="1"<?= $post['is_pinned'] ? ' checked' : '' ?>> <?= icon('pin') ?> 置頂 Pin to the top</label>

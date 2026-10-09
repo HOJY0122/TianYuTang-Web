@@ -70,7 +70,7 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
   </section>
   <section class="panel form-sec">
   <h3>② 圖片 <span class="en">Images</span></h3>
-  <p class="help" style="margin-top:0">JPG、PNG、GIF、WebP，單檔 5MB 以內。上傳後系統會自動重新產生圖片。JPG / PNG / GIF / WebP up to 5 MB.</p>
+  <p class="help" style="margin-top:0">JPG、PNG、GIF、WebP，單檔 20MB 以內。上傳後系統會自動重新產生圖片。JPG / PNG / GIF / WebP up to 20 MB.</p>
 
   <?php foreach ([
       ['logo', 'site_logo_path', '網站標誌', 'Logo', '顯示在網站名稱左邊、後台與消息貼文。建議正方形透明背景 PNG。Shown left of the site name, in the admin area and on news posts. A square PNG with transparent background works best.', 'favicon'],

@@ -27,3 +27,21 @@ Options -Indexes
     # Images and scripts are only what they claim to be.
     Header always set X-Content-Type-Options "nosniff"
 </IfModule>
+
+# Upload limits (Apache + mod_php; PHP-FPM reads public/.user.ini instead).
+# One picture per request is the norm (bulk uploads queue them), so these
+# are per-request ceilings.
+<IfModule mod_php.c>
+    php_value upload_max_filesize 20M
+    php_value post_max_size 64M
+    php_value max_file_uploads 60
+    php_value memory_limit 512M
+    php_value max_execution_time 240
+</IfModule>
+<IfModule mod_php7.c>
+    php_value upload_max_filesize 20M
+    php_value post_max_size 64M
+    php_value max_file_uploads 60
+    php_value memory_limit 512M
+    php_value max_execution_time 240
+</IfModule>

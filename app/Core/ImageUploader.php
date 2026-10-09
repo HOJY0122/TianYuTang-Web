@@ -47,7 +47,10 @@ class ImageUploader
         IMAGETYPE_WEBP => 'webp',
     ];
 
-    private const MAX_BYTES      = 5 * 1024 * 1024;  // 5 MB per file
+    // 20 MB per file: a phone's full-size photo fits. Pictures are resized
+    // and re-encoded on the way in, so what is KEPT is far smaller.
+    // The browser usually shrinks them before sending (bulk-upload.js).
+    public const MAX_BYTES       = 20 * 1024 * 1024;
     private const MAX_DIMENSION  = 6000;             // px, guards against bombs
     private const JPEG_QUALITY   = 85;
 
@@ -105,7 +108,7 @@ class ImageUploader
         }
 
         if ($file['size'] > self::MAX_BYTES) {
-            throw new RuntimeException('圖片檔案過大，請上傳 5MB 以內的圖片。');
+            throw new RuntimeException('圖片檔案過大，請上傳 20MB 以內的圖片。Picture over 20 MB.');
         }
 
         // getimagesize() reads the header only — cheap, and it tells us
@@ -175,7 +178,7 @@ class ImageUploader
             throw new RuntimeException('檔案上傳失敗，請重試。');
         }
         if ($file['size'] > self::MAX_BYTES) {
-            throw new RuntimeException('圖片檔案過大，請上傳 5MB 以內的圖片。');
+            throw new RuntimeException('圖片檔案過大，請上傳 20MB 以內的圖片。Picture over 20 MB.');
         }
 
         $info = @getimagesize($tmpPath);

@@ -151,12 +151,14 @@ Registration, donation and receipt lists sort by clicking a column heading.
 3. Use a database user with rights on this database only, and a strong password.
 4. **Back up `storage/keys/app.key` with every database backup.** It decrypts the IC numbers and AI keys; without it they cannot be read. Never commit it (it is git-ignored) and never share it.
 5. Keep `DEBUG_MODE` false.
+   Upload limits (20 MB a picture, 64 MB a request) are set in `public/.user.ini` (PHP-FPM) and `public/.htaccess` (Apache). Bulk uploads send pictures one at a time, so 50, 100 or more go up in one go whatever the host's limits.
 6. Never put API keys in `config.php` in git — paste them into Site settings → ⑤ AI. If a key was ever committed, replace it at the provider.
 
 ### Nginx (it ignores .htaccess)
 ```nginx
 root /path/to/project/public;
 index index.php;
+client_max_body_size 64M;   # photo & receipt uploads (nginx default is only 1 MB)
 location / { try_files $uri /index.php?$query_string; }
 location ~ ^/uploads/.*\.(php|phtml|phar)$ { deny all; }
 location /uploads/receipts/ { deny all; }

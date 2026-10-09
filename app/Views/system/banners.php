@@ -144,7 +144,7 @@ $hM = (int) $site['banner_height_mobile'];
   <h2 style="margin-top:0">④ 加入圖片 <span class="en">Add a picture</span></h2>
   <input id="bannerFile" name="banner" type="file" accept="image/jpeg,image/png,image/gif,image/webp"
          data-aspects="original,3:1,16:9,21:9" data-max-width="1920" required>
-  <p class="help">JPG / PNG / WebP，5MB 以內，建議寬 1920px。選好後可先裁切。<span class="en">Up to 5 MB, 1920px wide is ideal. You can crop it after choosing.</span></p>
+  <p class="help">JPG / PNG / WebP，20MB 以內，建議寬 1920px。選好後可先裁切。<span class="en">Up to 20 MB, 1920px wide is ideal. You can crop it after choosing.</span></p>
   <div class="form-actions"><button class="primary" type="submit"><?= icon('plus') ?> 加入 <span class="en">Add</span></button></div>
 </form>
 

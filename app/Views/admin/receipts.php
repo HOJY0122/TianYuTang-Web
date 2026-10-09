@@ -8,10 +8,17 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
 $pagerBase  = '/admin/receipts';
 $pagerQuery = array_filter($filters, static fn($v) => $v !== '' && $v !== null);
 $payLabel   = ['cash' => '現金 Cash', 'bank' => '轉帳 Bank-in', '' => '—'];
+$filtered   = array_diff_key($pagerQuery, ['sort' => 1, 'dir' => 1]) !== [];
+$bookUrl    = static fn(?string $b): string => url('/admin/receipts') . '?' . http_build_query(
+    ['book' => $b ?? '-', 'sort' => 'no', 'dir' => 'asc'] + array_intersect_key($pagerQuery, ['check' => 1]));
 ?>
 <div class="kpis" id="liveKpis" data-live="receipts">
   <div class="kpi"><div class="k-label">收據張數<span class="en">Receipts</span></div><div class="k-value"><?= number_format((int) $sum['n']) ?></div></div>
   <div class="kpi"><div class="k-label">總額<span class="en">Total</span></div><div class="k-value"><?= rm_compact((float) $sum['total']) ?></div></div>
+  <?php if ((int) $sum['to_check'] > 0): ?>
+    <a class="kpi" href="<?= url('/admin/receipts') . '?' . h(http_build_query(['check' => '1', 'sort' => 'book', 'dir' => 'asc'] + array_intersect_key($pagerQuery, ['book' => 1]))) ?>">
+      <div class="k-label">待核對<span class="en">To check</span></div><div class="k-value warn-text"><?= number_format((int) $sum['to_check']) ?></div></a>
+  <?php endif; ?>
   <?php
   // The three biggest boxes for the current filter, so the committee
   // sees at a glance what the money was for.
@@ -33,6 +40,27 @@ $payLabel   = ['cash' => '現金 Cash', 'bank' => '轉帳 Bank-in', '' => '—']
     <label class="field">搜尋 Search
       <input type="search" name="q" value="<?= h($filters['q']) ?>" placeholder="號碼、姓名、項目 No., name, item">
     </label>
+    <label class="field">簿號 Book
+      <select name="book">
+        <option value="">全部 All</option>
+        <?php foreach ($books as $b): ?>
+          <?php $bv = $b['book_no'] ?? '-'; ?>
+          <option value="<?= h($bv) ?>"<?= $filters['book'] === $bv ? ' selected' : '' ?>><?= $b['book_no'] !== null ? h($b['book_no']) : '— 未填 None' ?> (<?= (int) $b['n'] ?>)</option>
+        <?php endforeach; ?>
+        <?php if ($filters['book'] !== '' && !in_array($filters['book'], array_map(static fn($b) => $b['book_no'] ?? '-', $books), true)): ?>
+          <option value="<?= h($filters['book']) ?>" selected><?= h($filters['book']) ?> (0)</option>
+        <?php endif; ?>
+      </select>
+    </label>
+    <label class="field">號碼由 No. from <input name="no_from" value="<?= h($filters['no_from']) ?>" inputmode="numeric" pattern="[0-9]*" maxlength="12" size="7" placeholder="26400"></label>
+    <label class="field">至 to <input name="no_to" value="<?= h($filters['no_to']) ?>" inputmode="numeric" pattern="[0-9]*" maxlength="12" size="7" placeholder="26450"></label>
+    <label class="field">狀態 Status
+      <select name="check">
+        <option value="">全部 All</option>
+        <option value="1"<?= $filters['check'] === '1' ? ' selected' : '' ?>>待核對 To check</option>
+        <option value="0"<?= $filters['check'] === '0' ? ' selected' : '' ?>>已核對 Checked</option>
+      </select>
+    </label>
     <label class="field">由 From <input type="date" name="from" value="<?= h($filters['from']) ?>"></label>
     <label class="field">至 To <input type="date" name="to" value="<?= h($filters['to']) ?>"></label>
     <label class="field">付款 Paid by
@@ -43,13 +71,67 @@ $payLabel   = ['cash' => '現金 Cash', 'bank' => '轉帳 Bank-in', '' => '—']
       </select>
     </label>
     <button class="mini-btn btn-lg" type="submit"><?= icon('search') ?> 搜尋 Search</button>
-    <?php if ($filters['q'] !== '' || $filters['from'] !== '' || $filters['to'] !== '' || $filters['payment'] !== ''): ?>
+    <?php if ($filtered): ?>
       <a class="mini-btn ghost btn-lg" href="<?= url('/admin/receipts') ?>">清除 Clear</a>
     <?php endif; ?>
     <span class="spacer"></span>
     <a class="mini-btn ghost btn-lg" href="<?= url('/admin/receipts/excel') . '?' . h(http_build_query($pagerQuery)) ?>"><?= icon('chart') ?> Excel</a>
+    <a class="mini-btn ghost btn-lg" href="<?= url('/admin/receipts/bulk') . ($filters['book'] !== '' && $filters['book'] !== '-' ? '?book=' . h(rawurlencode($filters['book'])) : '') ?>"><?= icon('list') ?> 整本上傳 Upload a book</a>
     <a class="mini-btn btn-lg" href="<?= url('/admin/receipts/new') ?>"><?= $aiReady ? 'AI 掃描收據 AI scan receipt' : '新增收據 Add receipt' ?></a>
   </form>
+</div>
+
+<?php if ($books): ?>
+<details class="panel guide book-summary"<?= $filters['book'] !== '' || count($books) > 1 ? ' open' : '' ?>>
+  <summary><span><?= icon('list') ?> 按簿號分組 <span class="en">By receipt book</span> · <?= count($books) ?></span><span class="guide-toggle" aria-hidden="true">顯示 Show ▾</span></summary>
+  <table class="records book-table">
+    <thead><tr><th>簿號 Book</th><th class="num">張數 Receipts</th><th>號碼範圍 Numbers</th><th>欠缺 / 重複 Missing / repeated</th><th class="num">待核對 To check</th><th class="num">總額 Total</th></tr></thead>
+    <tbody>
+    <?php foreach ($books as $b): ?>
+      <?php $current = $filters['book'] === ($b['book_no'] ?? '-'); ?>
+      <tr class="book-row<?= $current ? ' is-current' : '' ?>">
+        <td data-label="簿號 Book"><a class="rowlink" href="<?= h($bookUrl($b['book_no'])) ?>"><?= $b['book_no'] !== null ? '<span class="book-chip">' . h($b['book_no']) . '</span>' : '— 未填簿號 No book' ?></a></td>
+        <td data-label="張數 Receipts" class="num"><?= number_format((int) $b['n']) ?></td>
+        <td data-label="號碼範圍 Numbers"><?= $b['lo'] !== null ? h($b['lo']) . ' – ' . h($b['hi']) : '<span class="help">未有號碼 No numbers yet</span>' ?></td>
+        <td data-label="欠缺 / 重複 Missing / repeated">
+          <?php if ($b['lo'] === null): ?><span class="help">—</span>
+          <?php elseif (!$b['missing'] && !$b['repeats']): ?><span class="ok-text"><?= icon('check') ?> 齊全 Complete</span>
+          <?php else: ?>
+            <?= $b['missing'] ? '<span class="warn-text">欠 ' . number_format($b['missing']) . ' 張 missing</span>' : '' ?>
+            <?= $b['repeats'] ? '<span class="warn-text">重複 ' . (int) $b['repeats'] . ' repeated</span>' : '' ?>
+          <?php endif; ?>
+        </td>
+        <td data-label="待核對 To check" class="num"><?= (int) $b['to_check'] ? '<span class="warn-text">' . (int) $b['to_check'] . '</span>' : '0' ?></td>
+        <td data-label="總額 Total" class="num"><?= rm((float) $b['total']) ?></td>
+      </tr>
+    <?php endforeach; ?>
+    </tbody>
+  </table>
+</details>
+<?php endif; ?>
+
+<?php if ($gaps !== null): ?>
+  <?php $bookName = $filters['book'] === '-' ? '未填簿號 No book' : '簿 Book ' . $filters['book']; ?>
+  <div class="panel book-gaps">
+    <h2 style="margin:0 0 6px"><?= icon('clipboard') ?> <?= h($bookName) ?></h2>
+    <?php if ($gaps['wide']): ?>
+      <p class="warn-text">號碼範圍太闊，可能有號碼讀錯，請按號碼排序檢查最大及最小的號碼。<span class="en">The number range is very wide — a number was probably misread. Sort by No. and check the highest and lowest.</span></p>
+    <?php elseif ($gaps['missing']): ?>
+      <p style="margin:0">欠缺號碼 <span class="en">Missing numbers</span> (<?= count($gaps['missing']) ?>)：
+        <span class="gap-list warn-text"><?= h(implode(', ', array_slice($gaps['missing'], 0, 120))) ?><?= count($gaps['missing']) > 120 ? ' …' : '' ?></span></p>
+    <?php else: ?>
+      <p class="ok-text" style="margin:0"><?= icon('check') ?> 號碼連續，沒有欠缺。<span class="en">No gaps in the numbers.</span></p>
+    <?php endif; ?>
+    <?php if ($gaps['repeats']): ?>
+      <p style="margin:6px 0 0">重複號碼 <span class="en">Numbers used twice</span>：<span class="warn-text"><?= h(implode(', ', $gaps['repeats'])) ?></span></p>
+    <?php endif; ?>
+    <?php if ($unread && $aiReady && $filters['book'] !== '-'): ?>
+      <p style="margin:10px 0 0"><a class="mini-btn btn-lg" href="<?= url('/admin/receipts/bulk') . '?book=' . h(rawurlencode($filters['book'])) . '&amp;resume=1' ?>"><?= icon('bot') ?> AI 讀取未讀的 <?= (int) $unread ?> 張 <span class="en">AI-read the <?= (int) $unread ?> unread</span></a></p>
+    <?php endif; ?>
+  </div>
+<?php endif; ?>
+
+<div class="panel">
   <div id="liveList" data-live="receipts">
 
   <?php if (!$aiReady): ?>
@@ -68,9 +150,11 @@ $payLabel   = ['cash' => '現金 Cash', 'bank' => '轉帳 Bank-in', '' => '—']
   <?php if (!$rows): ?>
     <p class="empty">還沒有收據。按「掃描收據」加入第一張。No receipts yet — tap “Scan receipt” to add one.</p>
   <?php else: ?>
+  <div class="table-scroll">
   <table class="records">
     <thead><tr>
       <th class="thumb-col">相片 Photo</th>
+      <?= sort_th('簿號 Book', 'book', $pagerQuery + $filters, $pagerBase, 'asc') ?>
       <?= sort_th('號碼 No.', 'no', $pagerQuery + $filters, $pagerBase) ?>
       <?= sort_th('日期 Date', 'date', $pagerQuery + $filters, $pagerBase) ?>
       <?= sort_th('姓名 Name', 'name', $pagerQuery + $filters, $pagerBase, 'asc') ?>
@@ -96,8 +180,10 @@ $payLabel   = ['cash' => '現金 Cash', 'bank' => '轉帳 Bank-in', '' => '—']
             <a href="<?= $edit ?>"><img class="receipt-thumb" src="<?= url('/admin/receipts/image') ?>?id=<?= (int) $r['id'] ?>" alt="收據相片 Receipt photo" loading="lazy"></a>
           <?php else: ?><span class="help">—</span><?php endif; ?>
         </td>
+        <td data-label="簿號 Book"><?= $r['book_no'] !== null ? '<a href="' . h($bookUrl($r['book_no'])) . '" class="book-chip">' . h($r['book_no']) . '</a>' : '<span class="help">—</span>' ?></td>
         <td data-label="號碼 No."><a class="rowlink" href="<?= $edit ?>"><?= $r['receipt_no'] !== null && $r['receipt_no'] !== '' ? 'No. ' . h($r['receipt_no']) : '#' . (int) $r['id'] ?></a>
-          <?= $r['source'] === 'ai' ? '<span class="badge ai">AI</span>' : '' ?></td>
+          <?= $r['source'] === 'ai' ? '<span class="badge ai">AI</span>' : '' ?>
+          <?= (int) $r['needs_check'] ? '<span class="sub-line"><span class="badge check">待核對 To check</span></span>' : '' ?></td>
         <td data-label="日期 Date"><?= $r['receipt_date'] ? h(date('d/m/Y', strtotime($r['receipt_date']))) : '—' ?></td>
         <td data-label="姓名 Name"><?= h($r['name'] ?? '—') ?></td>
         <td data-label="項目 Details"><?= h($r['item'] ?? '') ?>
@@ -115,6 +201,7 @@ $payLabel   = ['cash' => '現金 Cash', 'bank' => '轉帳 Bank-in', '' => '—']
     <?php endforeach; ?>
     </tbody>
   </table>
+  </div>
   <?php require BASE_PATH . '/app/Views/partials/pager.php'; ?>
   <?php endif; ?>
   </div>

@@ -37,6 +37,25 @@ abstract class Controller
         exit;
     }
 
+    /**
+     * The bulk uploaders (bulk-upload.js) send each picture with fetch and
+     * ask for JSON back instead of a redirect and a flash message.
+     */
+    protected function wantsJson(): bool
+    {
+        return str_contains((string) ($_SERVER['HTTP_ACCEPT'] ?? ''), 'application/json');
+    }
+
+    /** Send a JSON reply, then stop. */
+    protected function json(array $data, int $status = 200): void
+    {
+        http_response_code($status);
+        header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-store');
+        echo json_encode($data, JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
     /** Store a one-shot message shown on the next page load. */
     protected function flash(string $type, string $title, string $message): void
     {

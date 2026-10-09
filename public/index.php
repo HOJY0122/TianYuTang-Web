@@ -216,6 +216,9 @@ $router->get('/admin/receipts/edit',    'ReceiptController@edit');
 $router->post('/admin/receipts/save',   'ReceiptController@save');
 $router->post('/admin/receipts/delete', 'ReceiptController@delete');
 $router->post('/admin/receipts/cancel', 'ReceiptController@cancel');
+$router->get('/admin/receipts/bulk',         'ReceiptController@bulk');
+$router->post('/admin/receipts/bulk-upload', 'ReceiptController@bulkUpload');
+$router->post('/admin/receipts/ai-read',     'ReceiptController@aiRead');
 $router->get('/admin/receipts/image',   'ReceiptController@image');
 $router->get('/admin/receipts/excel',   'ReceiptController@excel');
 
@@ -249,6 +252,20 @@ try {
     // up to date with the code. Show something a committee member can
     // act on rather than a PHP stack trace.
     //   42S02 = table not found, 42S22 = column not found
+    // 22001 = a value longer than its column. Every form checks lengths
+    // first (audited against the database); this is the safety net, so a
+    // future slip shows a clear message instead of an error page.
+    if ($e->getCode() === '22001') {
+        http_response_code(422);
+        header('Content-Type: text/html; charset=utf-8');
+        error_log('Data too long: ' . $e->getMessage());
+        echo '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>內容太長 Too long</title>'
+           . '<div style="font-family:sans-serif;max-width:32rem;margin:4rem auto;padding:0 1rem;text-align:center;line-height:1.7">'
+           . '<h1 style="color:#9f211b">內容太長</h1><p>其中一個欄位的文字太長，未能儲存。請返回縮短內容後再試。</p>'
+           . '<p>One of the boxes has too much text, so nothing was saved. Please go back, shorten it and try again.</p>'
+           . '<p><a href="javascript:history.back()" style="color:#9f211b;font-weight:700">← 返回 Go back</a></p></div>';
+        exit;
+    }
     if (in_array($e->getCode(), ['42S02', '42S22'], true)) {
         http_response_code(503);
         $detail = DEBUG_MODE ? $e->getMessage() : '';

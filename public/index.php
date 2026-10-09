@@ -219,6 +219,7 @@ $router->post('/admin/receipts/cancel', 'ReceiptController@cancel');
 $router->get('/admin/receipts/bulk',         'ReceiptController@bulk');
 $router->post('/admin/receipts/bulk-upload', 'ReceiptController@bulkUpload');
 $router->post('/admin/receipts/ai-read',     'ReceiptController@aiRead');
+$router->post('/admin/receipts/book',        'ReceiptController@saveBook');
 $router->get('/admin/receipts/image',   'ReceiptController@image');
 $router->get('/admin/receipts/excel',   'ReceiptController@excel');
 

@@ -24,6 +24,15 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
       <p class="help">寫在收據簿封面的號碼，例如 12 或 A03。<span class="en">The number on the book's cover, e.g. 12 or A03.</span></p>
     </div>
     <div>
+      <label for="holder">負責人 <span class="en">Member in charge</span> <span class="req">*</span></label>
+      <input id="holder" name="holder" maxlength="100" autocomplete="off" required placeholder="例 e.g. 陳大文">
+      <label for="holderPhone">負責人電話 <span class="en">Their phone</span> <span class="help">（選填 optional）</span></label>
+      <input id="holderPhone" name="holder_phone" maxlength="30" inputmode="tel" autocomplete="off" placeholder="012-345 6789">
+      <p class="help">誰拿了這本收據簿。已登記的簿號會自動帶出。<span class="en">Who has this receipt book. Filled in for books already registered.</span></p>
+    </div>
+  </div>
+  <div class="form-grid">
+    <div>
       <label for="bookFiles">收據相片 <span class="en">Receipt photos</span> <span class="req">*</span></label>
       <input id="bookFiles" type="file" multiple required data-no-editor class="file-input"
              accept="image/jpeg,image/png,image/gif,image/webp">
@@ -70,6 +79,16 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
       start = document.getElementById('bulkStart'), picked = document.getElementById('bookPicked'),
       box = document.getElementById('bulkProgress'), after = document.getElementById('bulkAfter'), useAi = document.getElementById('useAi');
   var csrf = form.querySelector('[name="csrf_token"]').value;
+  // Who holds each registered book: chosen book → name and phone filled in.
+  var REGISTER = <?= json_encode((object) array_map(static fn($b) => ['h' => $b['holder'], 'p' => $b['holder_phone']], $register), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
+  var holder = document.getElementById('holder'), phone = document.getElementById('holderPhone');
+  function fillHolder() {
+    var r = REGISTER[book.value.trim().toUpperCase()];
+    if (r && r.h) holder.value = r.h;
+    if (r && r.p) phone.value = r.p;
+  }
+  book.addEventListener('change', fillHolder);
+  fillHolder();
   var CHECK = <?= json_encode(url('/admin/receipts') . '?') ?>;
   var esc = TYTBulk.esc, aiLimit = TYTBulk.limiter(2);
 
@@ -102,11 +121,12 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     var b = book.value.trim();
     var files = Array.prototype.slice.call(input.files);
     if (!b) { book.focus(); return; }
+    if (!holder.value.trim()) { holder.focus(); return; }
     if (!files.length) { input.focus(); return; }
     // Phone photos are named in the order they were taken: keep the book's order.
     files.sort(function (x, y) { return x.name.localeCompare(y.name, undefined, { numeric: true }) || x.lastModified - y.lastModified; });
     var ai = AI && useAi && useAi.checked, tally = { up: 0, read: 0, unread: 0, bad: 0 }, uploaded = false, finished = false;
-    start.disabled = input.disabled = book.readOnly = true;
+    start.disabled = input.disabled = book.readOnly = holder.readOnly = phone.readOnly = true;
     after.hidden = true;
     var p = TYTBulk.panel(box, files.length);
     TYTBulk.queue(files, function (file) {
@@ -117,6 +137,8 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
         var fd = new FormData();
         fd.append('csrf_token', csrf);
         fd.append('book_no', b);
+        fd.append('holder', holder.value.trim());
+        fd.append('holder_phone', phone.value.trim());
         fd.append('photo', small, small.name);
         return TYTBulk.send(form.action, fd);
       }).then(function (j) {
@@ -140,7 +162,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
       p.finish();
       document.getElementById('bulkCheck').href = checkLink(b);
       after.hidden = false;
-      start.disabled = input.disabled = book.readOnly = false;
+      start.disabled = input.disabled = book.readOnly = holder.readOnly = phone.readOnly = false;
       input.value = ''; picked.textContent = '';
       TYTDialog.alert(
         '簿 ' + b + '：上傳 ' + tally.up + ' 張' + (ai ? '，AI 已讀 ' + tally.read + ' 張' : '') +

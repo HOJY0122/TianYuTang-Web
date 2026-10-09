@@ -73,6 +73,8 @@ $aiNotes = $isNew ? ($draft['ai_notes'] ?? null) : ($row['ai_notes'] ?? null);
       <label class="paper-no paper-book" title="收據簿的號碼 The receipt book's number">簿 <span class="en">Book</span>
         <input name="book_no" value="<?= $val('book_no') ?>" maxlength="30" list="bookList" autocomplete="off" placeholder="例 12"></label>
       <datalist id="bookList"><?php foreach ($bookList as $b): ?><option value="<?= h($b) ?>"><?php endforeach; ?></datalist>
+      <?php $bookHolder = (string) ($v['book_no'] ?? '') !== '' ? ($register[$v['book_no']]['holder'] ?? null) : null; ?>
+      <?php if ($bookHolder): ?><span class="help book-holder-note"><?= icon('user') ?> 負責人 In charge: <strong><?= h($bookHolder) ?></strong></span><?php endif; ?>
       <label class="paper-no<?= $flag('receipt_no', 'number', 'no') ?>">No.
         <input name="receipt_no" value="<?= $val('receipt_no') ?>" inputmode="numeric" maxlength="30" placeholder="例 26432"></label>
     </div>

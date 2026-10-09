@@ -40,6 +40,8 @@ class ReceiptController extends Controller
             'nav'        => 'receipts',
             'filters'    => $f,
             'books'      => $model->books($f),
+            'holders'    => $model->holders(),
+            'bookInfo'   => is_string($book) ? ($model->book($book) ?? ['book_no' => $book, 'holder' => null, 'holder_phone' => null]) : null,
             'gaps'       => $book !== false ? $model->bookGaps($book) : null,
             'unread'     => $book !== false ? count($model->unread($book)) : 0,
             'rows'       => $model->search($f, self::PER_PAGE, (min($page, $pages) - 1) * self::PER_PAGE),
@@ -149,6 +151,7 @@ class ReceiptController extends Controller
             'draft'     => $draft,
             'duplicate' => (new Receipt())->findByNumber((string) $values['receipt_no'], (int) ($row['id'] ?? 0)),
             'bookList'  => (new Receipt())->bookNumbers(),
+            'register'  => (new Receipt())->bookRegister(),
             'flash'     => $this->takeFlash(),
         ]);
     }
@@ -243,6 +246,7 @@ class ReceiptController extends Controller
             'aiReady'   => ReceiptReader::configured(),
             'book'      => $book ?? '',
             'bookList'  => $model->bookNumbers(),
+            'register'  => $model->bookRegister(),
             'unread'    => $book !== null ? $model->unread($book) : [],
             'resume'    => !empty($_GET['resume']),
             'flash'     => $this->takeFlash(),
@@ -273,7 +277,11 @@ class ReceiptController extends Controller
         } catch (RuntimeException $e) {
             $this->json(['ok' => false, 'error' => $e->getMessage()], 422);
         }
-        $id = (new Receipt())->createDraft($book, $path, $by);
+        $model = new Receipt();
+        // Who has this book: kept with the book, not each receipt. A blank
+        // box leaves the name already saved alone.
+        $model->saveBook($book, $this->holderFrom($_POST['holder'] ?? ''), $this->phoneFrom($_POST['holder_phone'] ?? ''), $by);
+        $id = $model->createDraft($book, $path, $by);
         $this->json(['ok' => true, 'id' => $id, 'edit' => url('/admin/receipts/edit') . '?id=' . $id]);
     }
 
@@ -301,6 +309,27 @@ class ReceiptController extends Controller
         $model->fillFromAi((int) $row['id'], $v, $this->aiNotes($read));
         $this->json(['ok' => true, 'receipt_no' => $v['receipt_no'], 'name' => $v['name'],
                      'total' => rm($v['total']), 'unsure' => (bool) $read['unsure']]);
+    }
+
+    /**
+     * POST /admin/receipts/book — register a receipt book or change who is
+     * in charge of it (負責人). A book can be handed out before any of
+     * its receipts are entered.
+     */
+    public function saveBook(): void
+    {
+        $this->requireReceipts();
+        $this->requireCsrf();
+        $book = $this->bookFrom($_POST['book_no'] ?? '');
+        if ($book === null) {
+            $this->flash('error', '未儲存 Not saved', '請填寫簿號。Please enter the book number.');
+            $this->redirect('/admin/receipts');
+        }
+        $holder = $this->holderFrom($_POST['holder'] ?? '');
+        $phone  = $this->phoneFrom($_POST['holder_phone'] ?? '');
+        (new Receipt())->saveBook($book, $holder, $phone, (string) ($_SESSION['admin_username'] ?? 'admin'), true);
+        $this->flash('success', '已儲存 Saved', "簿 Book {$book} · 負責人 In charge: " . ($holder ?? '—') . ($phone ? " · {$phone}" : ''));
+        $this->redirect('/admin/receipts?' . http_build_query(['book' => $book, 'sort' => 'no', 'dir' => 'asc']));
     }
 
     /** POST /admin/receipts/delete */
@@ -373,10 +402,11 @@ class ReceiptController extends Controller
         $x = new XlsxWriter();
         $x->creator = (new \App\Models\Setting())->site()['site_name'];
         $s = $x->addSheet('Receipts 收據', [
-            'widths' => array_merge([10, 12, 12, 22, 24], array_fill(0, count($cats), 12), [14, 12, 12, 16, 30, 12]),
+            'widths' => array_merge([10, 18, 12, 12, 22, 24], array_fill(0, count($cats), 12), [14, 12, 12, 16, 30, 12]),
             'freeze' => 1, 'filter' => true, 'zebra' => true,
         ]);
-        $head = ['Book 簿號', 'No. 號碼', 'Date 日期', 'Name 姓名', 'Item 項目'];
+        $holders = (new Receipt())->bookRegister();
+        $head = ['Book 簿號', 'In charge 負責人', 'No. 號碼', 'Date 日期', 'Name 姓名', 'Item 項目'];
         foreach ($cats as [$zh, $en]) {
             $head[] = $zh . ' ' . $en;
         }
@@ -385,6 +415,7 @@ class ReceiptController extends Controller
         foreach ($rows as $r) {
             $cells = [
                 [$r['book_no'] ?? '', 'textfmt'],
+                $r['book_no'] !== null ? (string) ($holders[$r['book_no']]['holder'] ?? '') : '',
                 [$r['receipt_no'] ?? '', 'textfmt'],
                 $r['receipt_date'] ? [XlsxWriter::date($r['receipt_date']), 'datetime'] : '',
                 $r['name'] ?? '',
@@ -414,6 +445,7 @@ class ReceiptController extends Controller
         return [
             'q'       => mb_substr($g('q'), 0, 100),
             'book'    => $g('book') === '-' ? '-' : ($this->bookFrom($g('book')) ?? ''),
+            'holder'  => mb_substr($g('holder'), 0, 100),
             'no_from' => $digits('no_from'),
             'no_to'   => $digits('no_to'),
             'check'   => in_array($g('check'), ['0', '1'], true) ? $g('check') : '',
@@ -504,6 +536,20 @@ class ReceiptController extends Controller
     {
         $b = is_string($raw) ? strtoupper(preg_replace('/[^0-9A-Za-z\-\/.]+/', '', $raw)) : '';
         return $b !== '' ? substr($b, 0, 30) : null;
+    }
+
+    /** A person's name as typed: trimmed, inner spaces tidied, at most 100 characters; null when empty. */
+    private function holderFrom($raw): ?string
+    {
+        $n = is_string($raw) ? trim(preg_replace('/\s+/u', ' ', $raw)) : '';
+        return $n !== '' ? mb_substr($n, 0, 100) : null;
+    }
+
+    /** A phone number: digits, +, - and spaces only, at most 30; null when empty. */
+    private function phoneFrom($raw): ?string
+    {
+        $n = is_string($raw) ? trim(preg_replace('/[^0-9+\- ]+/', '', $raw)) : '';
+        return $n !== '' ? substr($n, 0, 30) : null;
     }
 
     /** What the AI was unsure about, as the note shown beside the photo. */

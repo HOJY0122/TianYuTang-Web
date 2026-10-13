@@ -35,6 +35,7 @@ $menu = [
     ],
     '財務 Finance' => [
         ['receipts', 'receipt', '收據紀錄', 'Receipts',       '/admin/receipts'],
+        ['vouchers', 'gift', '布施憑單', 'Donation vouchers', '/admin/vouchers'],
     ],
 ];
 // Receipts switched off in Site settings: gone for admins; system admins
@@ -43,7 +44,7 @@ if (($site['receipts_enabled'] ?? '1') !== '1') {
     if ($isSystem) {
         $menu['財務 Finance'][0][3] = 'Receipts · 停用 Off';
     } else {
-        unset($menu['財務 Finance']);
+        array_shift($menu['財務 Finance']);   // vouchers stay
     }
 }
 // An admin limited to chosen functions sees only those (the server

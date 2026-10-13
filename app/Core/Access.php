@@ -30,6 +30,7 @@ final class Access
         'walkin'        => ['walk',         '現場報名', 'Walk-in register', '活動當天 On the day', '/admin/walkin'],
         'counter'       => ['cash',         '現場布施', 'Counter donation', '活動當天 On the day', '/admin/counter'],
         'receipts'      => ['receipt',      '收據紀錄', 'Receipts',         '財務 Finance',        '/admin/receipts'],
+        'vouchers'      => ['gift',         '布施憑單', 'Donation vouchers', '財務 Finance',       '/admin/vouchers'],
     ];
 
     /**
@@ -62,6 +63,7 @@ final class Access
         '/admin/counter'          => ['counter'],
         '/admin/receipt'          => ['counter'],     // the counter's printed receipt (not /admin/receipts)
         '/admin/receipts'         => ['receipts'],
+        '/admin/vouchers'         => ['vouchers'],
         '/admin/no-access'        => [],              // open to every signed-in admin
     ];
 
@@ -71,7 +73,7 @@ final class Access
         'day'      => ['活動當天', 'On the day',           ['checkin', 'walkin', 'counter']],
         'checkin'  => ['只做報到', 'Check-in only',        ['checkin']],
         'records'  => ['報名與報到', 'Registrations',     ['registrations', 'checkin', 'walkin']],
-        'finance'  => ['財務',     'Finance',              ['donations', 'counter', 'receipts']],
+        'finance'  => ['財務',     'Finance',              ['donations', 'counter', 'receipts', 'vouchers']],
         'content'  => ['網站內容', 'News & photos',        ['posts', 'photos', 'event']],
         'manager'  => ['活動負責', 'Event manager',        ['control', 'event', 'registrations', 'donations', 'checkin', 'walkin', 'counter']],
         'nomoney'  => ['不看金額', 'No money',             ['registrations', 'event', 'posts', 'photos', 'checkin', 'walkin']],

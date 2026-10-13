@@ -149,19 +149,22 @@ class Voucher extends Model
     }
 
     /**
-     * The lines at the top of the printed voucher: the saved ones
-     * (Vouchers → 憑單版面), else the printout letterhead from Site settings.
+     * The payee as printed: [Chinese line or null, English name or null].
+     * A "Chinese name" with no Chinese characters (often the English name
+     * copied into that column) is not printed twice.
      */
-    public static function headerLines(array $site): array
+    public static function payee(array $voucher): array
     {
-        $saved = $site['voucher_header'] ?? null;
-        if ($saved !== null && trim($saved) !== '') {
-            $lines = preg_split('/\R/u', $saved);
-        } else {
-            $lines = [Setting::effective('pdf_name', $site) ?: (string) $site['site_name'], Setting::effective('pdf_name_en', $site),
-                      Setting::effective('pdf_line1', $site), Setting::effective('pdf_line2', $site), Setting::effective('pdf_line3', $site)];
+        $zh = trim((string) ($voucher['name_zh'] ?? ''));
+        $en = trim((string) ($voucher['name_en'] ?? ''));
+        if ($zh !== '' && !preg_match('/\p{Han}/u', $zh)) {
+            $en = $en !== '' ? $en : $zh;
+            $zh = '';
         }
-        return array_values(array_filter(array_map('trim', $lines), static fn($l) => $l !== ''));
+        if ($zh !== '' && $zh === $en) {
+            $en = '';
+        }
+        return [$zh !== '' ? $zh : null, $en !== '' ? $en : null];
     }
 
     public static function amount(array $batch, array $voucher): float
@@ -271,6 +274,11 @@ class Voucher extends Model
             // A Chinese name in the English column (and nothing beside it) is moved across.
             if ($zh === null && $en !== null && preg_match('/\p{Han}/u', $en) && !preg_match('/[A-Za-z]/', $en)) {
                 [$zh, $en] = [$en, null];
+            }
+            // English text in the Chinese column (often the same name again) belongs in English.
+            if ($zh !== null && !preg_match('/\p{Han}/u', $zh)) {
+                $en ??= $zh;
+                $zh = null;
             }
             if ($en === null && $zh === null) {
                 if (array_filter($r, static fn($c) => trim((string) $c) !== '')) {

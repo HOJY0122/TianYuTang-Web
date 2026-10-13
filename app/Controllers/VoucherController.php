@@ -338,9 +338,11 @@ class VoucherController extends Controller
     }
 
     /**
-     * POST /admin/vouchers/layout — 憑單版面: the header lines, title, motto,
-     * approver and signature printed on every voucher. System admin only:
-     * the chairman's signature is not something every helper should change.
+     * POST /admin/vouchers/layout — the approver's signature printed on every
+     * voucher. Everything else on the page is the committee's sample
+     * (public/assets/img/voucher-template.png); the signature is the one
+     * part kept out of the code, in storage/, because the repository is
+     * public. System admin only.
      */
     public function layout(): void
     {
@@ -351,19 +353,6 @@ class VoucherController extends Controller
         }
         $this->requireCsrf();
         $settings = new Setting();
-        $text = static function (string $k, int $max): string {
-            $v = is_string($_POST[$k] ?? null) ? str_replace("\r\n", "\n", $_POST[$k]) : '';
-            return mb_substr(trim($v), 0, $max);
-        };
-        $header = implode("\n", array_slice(array_filter(array_map('trim', explode("\n", $text('voucher_header', 1200))), 'strlen'), 0, 10));
-        // Blank header = follow the printout letterhead (Site settings).
-        $settings->set('voucher_header', $header !== '' ? $header : null);
-        foreach (['voucher_title' => 80, 'voucher_motto_en' => 120, 'voucher_motto_zh' => 60,
-                  'voucher_approver' => 80, 'voucher_approver_title' => 80] as $k => $max) {
-            $settings->set($k, preg_replace('/[ \t]+/u', ' ', str_replace("\n", ' ', $text($k, $max))));
-        }
-        $settings->set('voucher_show_logo', !empty($_POST['voucher_show_logo']) ? '1' : '0');
-
         $uploader = new ImageUploader('vouchers', true);
         $old = (string) ($settings->site()['voucher_signature'] ?? '');
         if (ImageUploader::wasProvided($_FILES['signature'] ?? null)) {
@@ -382,7 +371,7 @@ class VoucherController extends Controller
             $settings->set('voucher_signature', null);
             $uploader->delete($old);
         }
-        $this->flash('success', '已儲存 Saved', "憑單版面已更新。\nThe voucher layout is saved.");
+        $this->flash('success', '已儲存 Saved', "批准人簽名已更新。\nThe approver's signature is saved.");
         $this->redirect('/admin/vouchers#layout');
     }
 

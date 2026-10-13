@@ -16,10 +16,10 @@ use App\Core\Model;
  */
 class Voucher extends Model
 {
-    /** Paper choices for printing. */
+    /** Paper choices for printing — the same page, full size or scaled down. */
     public const PAPERS = [
-        'a5' => ['A5 橫向，每頁一張', 'A5 landscape, one per page'],
-        'a4' => ['A4 直向，每頁兩張', 'A4 portrait, two per page'],
+        'a4' => ['A4，每頁一張（與樣本相同）', 'A4, one per page (as the sample)'],
+        'a5' => ['A5，每頁一張（縮小）', 'A5, one per page (smaller)'],
     ];
 
     // ---------------------------------------------------------- batches
@@ -140,6 +140,28 @@ class Voucher extends Model
     public static function number(array $batch, array $voucher): string
     {
         return 'DV' . str_pad((string) $batch['id'], 3, '0', STR_PAD_LEFT) . '-' . str_pad((string) $voucher['seq'], 3, '0', STR_PAD_LEFT);
+    }
+
+    /** "RM 2,000", or "RM 2,000.50" when there are sen — as on the sample voucher. */
+    public static function rm(float $amount): string
+    {
+        return 'RM ' . number_format($amount, fmod(round($amount, 2), 1.0) == 0.0 ? 0 : 2);
+    }
+
+    /**
+     * The lines at the top of the printed voucher: the saved ones
+     * (Vouchers → 憑單版面), else the printout letterhead from Site settings.
+     */
+    public static function headerLines(array $site): array
+    {
+        $saved = $site['voucher_header'] ?? null;
+        if ($saved !== null && trim($saved) !== '') {
+            $lines = preg_split('/\R/u', $saved);
+        } else {
+            $lines = [Setting::effective('pdf_name', $site) ?: (string) $site['site_name'], Setting::effective('pdf_name_en', $site),
+                      Setting::effective('pdf_line1', $site), Setting::effective('pdf_line2', $site), Setting::effective('pdf_line3', $site)];
+        }
+        return array_values(array_filter(array_map('trim', $lines), static fn($l) => $l !== ''));
     }
 
     public static function amount(array $batch, array $voucher): float

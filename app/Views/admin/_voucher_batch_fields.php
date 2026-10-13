@@ -36,12 +36,12 @@ $bv = static fn(string $k, string $d = ''): string => h((string) ($b[$k] ?? $d))
 
 <label for="vbWords">金額（英文大寫）<span class="en">Amount in words</span></label>
 <input id="vbWords" name="amount_words" maxlength="200" value="<?= $bv('amount_words') ?>" placeholder="留空自動填寫 Leave blank to write it automatically">
-<p class="help">留空時自動寫出，例如「Two Thousand Only」，中文大寫（貳仟令吉正）也會自動印上。<span class="en">Blank = written out for you, e.g. “Two Thousand Only”; the Chinese (貳仟令吉正) is printed too.</span></p>
+<p class="help">留空時自動寫出，例如「Two Thousand Only」；個別金額不同的中心也會自動寫出。<span class="en">Blank = written out for you, e.g. “Two Thousand Only” — centres with their own amount get their own words.</span></p>
 
 <label>列印紙張 <span class="en">Paper</span></label>
 <div class="choice-row">
   <?php foreach (Voucher::PAPERS as $pk => [$pzh, $pen]): ?>
-    <label class="check-inline"><input type="radio" name="paper" value="<?= $pk ?>"<?= ($b['paper'] ?? 'a5') === $pk ? ' checked' : '' ?>> <?= h($pzh) ?> <span class="en"><?= h($pen) ?></span></label>
+    <label class="check-inline"><input type="radio" name="paper" value="<?= $pk ?>"<?= ($b['paper'] ?? 'a4') === $pk ? ' checked' : '' ?>> <?= h($pzh) ?> <span class="en"><?= h($pen) ?></span></label>
   <?php endforeach; ?>
 </div>
 

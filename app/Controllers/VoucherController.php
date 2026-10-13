@@ -3,8 +3,10 @@ namespace App\Controllers;
 
 use App\Core\AmountWords;
 use App\Core\Controller;
+use App\Core\ImageUploader;
 use App\Core\SheetReader;
 use App\Core\XlsxWriter;
+use App\Models\Setting;
 use App\Models\Voucher;
 use RuntimeException;
 
@@ -32,6 +34,8 @@ class VoucherController extends Controller
             'pageTitle' => '布施憑單 Donation vouchers',
             'nav'       => 'vouchers',
             'batches'   => (new Voucher())->batches(),
+            'site'      => (new Setting())->site(),
+            'isSystem'  => $this->isSystemAdmin(),
             'flash'     => $this->takeFlash(),
         ]);
     }
@@ -74,7 +78,7 @@ class VoucherController extends Controller
             'amount'       => $amount ?? 0,
             'amount_words' => $this->str('amount_words', 200),
             'method'       => $this->str('method', 60) ?? 'Bank Transfer',
-            'paper'        => isset(Voucher::PAPERS[$_POST['paper'] ?? '']) ? $_POST['paper'] : 'a5',
+            'paper'        => isset(Voucher::PAPERS[$_POST['paper'] ?? '']) ? $_POST['paper'] : 'a4',
             'notes'        => $this->str('notes', 500),
         ];
         $back = $id ? '/admin/vouchers/batch?id=' . $id : '/admin/vouchers';
@@ -293,7 +297,7 @@ class VoucherController extends Controller
         $this->view('print/vouchers', [
             'batch'    => $batch,
             'vouchers' => $model->vouchers((int) $batch['id'], $ids !== null ? array_slice($ids, 0, 2000) : null),
-            'paper'    => isset(Voucher::PAPERS[$_GET['paper'] ?? '']) ? $_GET['paper'] : $batch['paper'],
+            'paper'    => isset(Voucher::PAPERS[$_GET['paper'] ?? '']) ? $_GET['paper'] : (isset(Voucher::PAPERS[$batch['paper']]) ? $batch['paper'] : 'a4'),
         ]);
     }
 
@@ -331,6 +335,77 @@ class VoucherController extends Controller
         $x->row($s, ['', '', '', '', ['Total 總計', 'header'], [$total, 'money'], AmountWords::en($total), '', ''], 22);
         $slug = preg_replace('/[^A-Za-z0-9]+/', '-', (string) $batch['title']);
         $x->send('vouchers-' . (int) $batch['id'] . (trim($slug, '-') !== '' ? '-' . trim($slug, '-') : '') . '.xlsx');
+    }
+
+    /**
+     * POST /admin/vouchers/layout — 憑單版面: the header lines, title, motto,
+     * approver and signature printed on every voucher. System admin only:
+     * the chairman's signature is not something every helper should change.
+     */
+    public function layout(): void
+    {
+        $this->requireSystemAdmin();
+        if (empty($_POST) && ($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
+            $this->flash('error', '圖片太大 Picture too large', '圖片超過伺服器限制。The picture is over the server limit.');
+            $this->redirect('/admin/vouchers#layout');
+        }
+        $this->requireCsrf();
+        $settings = new Setting();
+        $text = static function (string $k, int $max): string {
+            $v = is_string($_POST[$k] ?? null) ? str_replace("\r\n", "\n", $_POST[$k]) : '';
+            return mb_substr(trim($v), 0, $max);
+        };
+        $header = implode("\n", array_slice(array_filter(array_map('trim', explode("\n", $text('voucher_header', 1200))), 'strlen'), 0, 10));
+        // Blank header = follow the printout letterhead (Site settings).
+        $settings->set('voucher_header', $header !== '' ? $header : null);
+        foreach (['voucher_title' => 80, 'voucher_motto_en' => 120, 'voucher_motto_zh' => 60,
+                  'voucher_approver' => 80, 'voucher_approver_title' => 80] as $k => $max) {
+            $settings->set($k, preg_replace('/[ \t]+/u', ' ', str_replace("\n", ' ', $text($k, $max))));
+        }
+        $settings->set('voucher_show_logo', !empty($_POST['voucher_show_logo']) ? '1' : '0');
+
+        $uploader = new ImageUploader('vouchers', true);
+        $old = (string) ($settings->site()['voucher_signature'] ?? '');
+        if (ImageUploader::wasProvided($_FILES['signature'] ?? null)) {
+            try {
+                // PNG keeps a transparent background, so the signature sits on the line like ink.
+                $new = $uploader->store($_FILES['signature'], 1200);
+            } catch (RuntimeException $e) {
+                $this->flash('error', '簽名圖片 Signature', $e->getMessage());
+                $this->redirect('/admin/vouchers#layout');
+            }
+            $settings->set('voucher_signature', $new);
+            if ($old !== '') {
+                $uploader->delete($old);
+            }
+        } elseif (!empty($_POST['remove_signature']) && $old !== '') {
+            $settings->set('voucher_signature', null);
+            $uploader->delete($old);
+        }
+        $this->flash('success', '已儲存 Saved', "憑單版面已更新。\nThe voucher layout is saved.");
+        $this->redirect('/admin/vouchers#layout');
+    }
+
+    /** GET /admin/vouchers/signature — the approver's signature, only to signed-in voucher staff. */
+    public function signature(): void
+    {
+        $this->requireAdmin();
+        $path = (new Setting())->site()['voucher_signature'] ?? null;
+        $file = (new ImageUploader('vouchers', true))->absolutePath($path);
+        $info = $file !== null ? @getimagesize($file) : false;
+        if ($info === false) {
+            http_response_code(404);
+            exit;
+        }
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        header('Content-Type: ' . $info['mime']);
+        header('Content-Length: ' . filesize($file));
+        header('X-Content-Type-Options: nosniff');
+        header('Cache-Control: private, no-store');
+        readfile($file);
+        exit;
     }
 
     // ------------------------------------------------------------------

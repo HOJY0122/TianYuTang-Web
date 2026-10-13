@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS voucher_batches (
     amount        DECIMAL(12,2) NOT NULL DEFAULT 0,
     amount_words  VARCHAR(200) NULL,
     method        VARCHAR(60)  NOT NULL DEFAULT 'Bank Transfer',
-    paper         VARCHAR(10)  NOT NULL DEFAULT 'a4',
+    paper         VARCHAR(10)  NOT NULL DEFAULT 'a5',
     notes         VARCHAR(500) NULL,
     last_seq      INT UNSIGNED NOT NULL DEFAULT 0,
     created_by    VARCHAR(60)  NULL,

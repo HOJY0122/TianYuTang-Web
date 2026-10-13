@@ -233,6 +233,20 @@ $router->post('/admin/receipts/book',        'ReceiptController@saveBook');
 $router->get('/admin/receipts/image',   'ReceiptController@image');
 $router->get('/admin/receipts/excel',   'ReceiptController@excel');
 
+// 布施憑單 Donation vouchers
+$router->get('/admin/vouchers',               'VoucherController@index');
+$router->get('/admin/vouchers/batch',         'VoucherController@batch');
+$router->post('/admin/vouchers/batch/save',   'VoucherController@saveBatch');
+$router->post('/admin/vouchers/batch/delete', 'VoucherController@deleteBatch');
+$router->post('/admin/vouchers/import',       'VoucherController@import');
+$router->get('/admin/vouchers/template',      'VoucherController@template');
+$router->get('/admin/vouchers/edit',          'VoucherController@edit');
+$router->post('/admin/vouchers/save',         'VoucherController@save');
+$router->post('/admin/vouchers/delete',       'VoucherController@delete');
+$router->post('/admin/vouchers/paid',         'VoucherController@paid');
+$router->get('/admin/vouchers/print',         'VoucherController@print');
+$router->get('/admin/vouchers/excel',         'VoucherController@excel');
+
 // Photo gallery
 $router->get('/admin/photos',          'AdminController@photos');
 $router->post('/admin/photos/upload',  'AdminController@uploadPhotos');

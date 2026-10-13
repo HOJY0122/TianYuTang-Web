@@ -1136,3 +1136,18 @@ tr.is-current > td{background:#fff8e4}
 .cat-tabs a.is-on b{color:#ffe9b8}
 .cat-form{margin:6px 0 0}
 .cat-form select{width:100%;font-size:.85rem;padding:6px 8px;min-height:0}
+
+/* ---------- 布施憑單 Donation vouchers ---------- */
+.choice-row{display:flex;flex-wrap:wrap;gap:10px 22px;margin:4px 0 6px}
+.choice-row .check-inline{font-weight:600}
+.voucher-table td.wrap{white-space:normal;min-width:180px}
+.voucher-table .tick-col{width:36px;text-align:center}
+.voucher-table .tick-col input,.paid-toggle input{width:20px;height:20px;accent-color:#9f211b}
+.voucher-table .v-zh{font-weight:800;font-size:15px}
+.paid-toggle{font-size:13px;white-space:nowrap}
+details.form-panel>summary{cursor:pointer;list-style-position:outside;padding:2px 0}
+details.form-panel[open]>summary{margin-bottom:6px}
+@media(max-width:760px){
+  .voucher-table .tick-col{grid-column:1/-1;text-align:left}
+  .voucher-table td.wrap{min-width:0}
+}

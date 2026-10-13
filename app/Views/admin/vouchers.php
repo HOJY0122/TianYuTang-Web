@@ -4,11 +4,18 @@
  */
 require BASE_PATH . '/app/Views/layouts/admin_header.php';
 ?>
+<?php if (!$site['voucher_signature']): ?>
+  <p class="flash info"><?= icon('pencil') ?> <strong>尚未上傳批准人簽名</strong>，印出的憑單「Approved by」上面會是空白。
+    <?php if ($isSystem): ?><a href="#layout" style="font-weight:800;text-decoration:underline">按這裡上傳 ↓</a><?php else: ?>請系統管理員登入後，在本頁上傳。<?php endif; ?><br>
+    <span class="en">The approver's signature is not uploaded yet, so “Approved by” prints blank.
+    <?= $isSystem ? '<a href="#layout" style="font-weight:800;text-decoration:underline">Upload it here ↓</a>' : 'Ask a system admin to sign in and upload it on this page.' ?></span></p>
+<?php endif; ?>
 <div class="panel">
   <div class="toolbar" style="margin-bottom:6px">
     <p class="help" style="margin:0">本會布施給其他慈善機構時，每個中心一張憑單。先建立批次，再匯入中心名單（Excel 或直接貼上），然後一次列印全部。<br>
       <span class="en">When the temple gives to other charities, each centre gets a voucher. Make a batch, bring in the centre list (Excel or paste), then print them all at once.</span></p>
     <span class="spacer"></span>
+    <?php if ($isSystem): ?><a class="mini-btn" href="#layout"><?= icon('pencil') ?> 批准人簽名 Signature<?= $site['voucher_signature'] ? ' ✓' : '' ?></a><?php endif; ?>
     <a class="mini-btn" href="<?= url('/admin/vouchers/template') ?>"><?= icon('download') ?> 名單範本 List template</a>
   </div>
 
@@ -41,16 +48,6 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   <?php endif; ?>
 </div>
 
-<div class="panel form-panel">
-  <h2><?= icon('plus') ?> 新批次 <span class="en">New batch</span></h2>
-  <form method="POST" action="<?= url('/admin/vouchers/batch/save') ?>">
-    <?= csrf_field() ?>
-    <?php $b = []; require BASE_PATH . '/app/Views/admin/_voucher_batch_fields.php'; ?>
-    <div class="form-actions">
-      <button class="primary" type="submit"><?= icon('save') ?> 建立批次 Create batch</button>
-    </div>
-  </form>
-</div>
 <?php if ($isSystem): ?>
 <details class="panel form-panel" id="layout" style="max-width:none"<?= $site['voucher_signature'] ? '' : ' open' ?>>
   <summary><strong><?= icon('pencil') ?> 批准人簽名 Approver's signature</strong>
@@ -70,4 +67,22 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   </form>
 </details>
 <?php endif; ?>
+<script>
+(function () {
+  var d = document.getElementById('layout');
+  function open() { if (d && location.hash === '#layout') { d.open = true; d.scrollIntoView({ block: 'start' }); } }
+  window.addEventListener('hashchange', open); open();
+})();
+</script>
+
+<div class="panel form-panel">
+  <h2><?= icon('plus') ?> 新批次 <span class="en">New batch</span></h2>
+  <form method="POST" action="<?= url('/admin/vouchers/batch/save') ?>">
+    <?= csrf_field() ?>
+    <?php $b = []; require BASE_PATH . '/app/Views/admin/_voucher_batch_fields.php'; ?>
+    <div class="form-actions">
+      <button class="primary" type="submit"><?= icon('save') ?> 建立批次 Create batch</button>
+    </div>
+  </form>
+</div>
 <?php require BASE_PATH . '/app/Views/layouts/admin_footer.php'; ?>

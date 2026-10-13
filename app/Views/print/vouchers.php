@@ -73,7 +73,7 @@ body { margin: 0; background: #e9e6df; color: #000; }
     <?php endif; ?>
   <?php endforeach; ?>
   <span class="hint"><?= count($vouchers) ?> 張 vouchers · 在列印視窗選擇「另存為 PDF」，紙張 <?= $paper === 'a5' ? 'A5' : 'A4' ?>，邊界「無」。Choose “Save as PDF”, margins “None”.</span>
-  <?php if (!$signUrl): ?><span class="warn">尚未上傳批准人簽名 No signature uploaded yet</span><?php endif; ?>
+  <?php if (!$signUrl): ?><a class="warn" href="<?= url('/admin/vouchers') ?>#layout">尚未上傳批准人簽名 No signature yet — 上傳 Upload</a><?php endif; ?>
 </div>
 
 <div class="sheets">

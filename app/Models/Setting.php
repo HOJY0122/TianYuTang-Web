@@ -104,6 +104,15 @@ class Setting extends Model
         'protect_qr'        => '0',          // Waze QR — off: visitors may save / screenshot it to navigate
         'protect_keys'      => '1',          // F12 / Ctrl+S / Ctrl+U … and right-click on the rest of the page
         'photo_watermark'   => '',           // text tiled over the full-size viewer; empty = none
+        // 布施憑單 Donation vouchers — the printed page (Admin → Vouchers → 憑單版面, system admin)
+        'voucher_header'    => null,         // lines above the title, one per line; null = the printout letterhead
+        'voucher_title'     => 'Payment Voucher',
+        'voucher_motto_en'  => 'Kindness Change Your Prospect',
+        'voucher_motto_zh'  => '上善若水　厚德載福',
+        'voucher_approver'  => '',           // name under "Approved by"
+        'voucher_approver_title' => 'Chairman',
+        'voucher_signature' => null,         // storage/vouchers/… (private, App\Controllers\VoucherController::signature)
+        'voucher_show_logo' => '1',
     ];
 
     /**

@@ -246,6 +246,8 @@ $router->post('/admin/vouchers/delete',       'VoucherController@delete');
 $router->post('/admin/vouchers/paid',         'VoucherController@paid');
 $router->get('/admin/vouchers/print',         'VoucherController@print');
 $router->get('/admin/vouchers/excel',         'VoucherController@excel');
+$router->post('/admin/vouchers/layout',       'VoucherController@layout');
+$router->get('/admin/vouchers/signature',     'VoucherController@signature');
 
 // Photo gallery
 $router->get('/admin/photos',          'AdminController@photos');

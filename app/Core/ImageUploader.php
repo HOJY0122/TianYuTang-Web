@@ -371,6 +371,12 @@ class ImageUploader
 
     private function encode($image, string $target, int $type, int $quality = self::JPEG_QUALITY): bool
     {
+        // Keep a transparent background (a signature, a logo) transparent —
+        // without this a PNG that was not resized came out on black.
+        if ($type === IMAGETYPE_PNG || $type === IMAGETYPE_WEBP) {
+            imagealphablending($image, false);
+            imagesavealpha($image, true);
+        }
         return match ($type) {
             IMAGETYPE_JPEG => imagejpeg($image, $target, $quality),
             IMAGETYPE_PNG  => imagepng($image, $target, 6),

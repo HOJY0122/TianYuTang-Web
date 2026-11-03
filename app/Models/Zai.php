@@ -136,7 +136,31 @@ class Zai extends Model
         $g = $this->fetchOne("SELECT COUNT(*) AS n, COALESCE(SUM(status = 'arrived'), 0) AS arrived FROM zai_groups WHERE event_id = ?", [$eventId]);
         $w = $this->fetchOne("SELECT COALESCE(SUM(status = 'waiting'), 0) AS waiting, COALESCE(SUM(CASE WHEN status = 'waiting' THEN people ELSE 0 END), 0) AS waiting_people
                                 FROM zai_waiting WHERE event_id = ?", [$eventId]);
-        return ['seats' => $seats, 'used' => $used, 'tables_free' => $free] + $p + ['groups' => $g['n'], 'groups_arrived' => $g['arrived']] + $w;
+        return ['seats' => $seats, 'used' => $used, 'tables_free' => $free] + $p + ['groups' => $g['n'], 'groups_arrived' => $g['arrived']] + $w
+            + ['reserved' => $this->reserved($eventId)];
+    }
+
+    /**
+     * 預約總人數 Total people reservation, by where it came from:
+     * QR website, WhatsApp (keyed in), registered at the counter, 團體
+     * groups (organisation registrations + the PM's list), and the
+     * waiting list (not counting those who left).
+     */
+    public function reserved(int $eventId): array
+    {
+        $by = ['online' => 0, 'whatsapp' => 0, 'walkin' => 0];
+        foreach ($this->fetchAll(
+            "SELECT g.source, COUNT(a.id) AS n FROM rsvp_groups g JOIN rsvp_attendees a ON a.group_id = g.id
+              WHERE g.event_id = ? AND g.status <> 'cancelled' AND g.reg_type = 'individual' GROUP BY g.source", [$eventId]) as $r) {
+            $by[$r['source']] = (int) $r['n'];
+        }
+        $this->syncOrganisations($eventId);
+        $by['groups'] = (int) $this->scalar(
+            "SELECT COALESCE(SUM(z.people), 0) FROM zai_groups z LEFT JOIN rsvp_groups g ON g.id = z.rsvp_group_id
+              WHERE z.event_id = ? AND (g.id IS NULL OR g.status <> 'cancelled')", [$eventId]);
+        $by['waiting'] = (int) $this->scalar("SELECT COALESCE(SUM(people), 0) FROM zai_waiting WHERE event_id = ? AND status <> 'left'", [$eventId]);
+        $by['total'] = array_sum($by);
+        return $by;
     }
 
     // ------------------------------------------------- registered people

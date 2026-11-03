@@ -28,6 +28,7 @@ $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confi
         <option value="">全部 All</option>
         <option value="online"<?= $filters['source'] === 'online' ? ' selected' : '' ?>>線上 Online</option>
         <option value="walkin"<?= $filters['source'] === 'walkin' ? ' selected' : '' ?>>現場 Walk-in</option>
+        <option value="whatsapp"<?= $filters['source'] === 'whatsapp' ? ' selected' : '' ?>>WhatsApp</option>
       </select>
     </label>
     <label class="field">類別 Type
@@ -67,7 +68,7 @@ $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confi
         <td data-label="聯絡人 Contact"><?php if (($g['reg_type'] ?? '') === 'organisation'): ?><span class="org-line"><?= icon('users') ?> <?= h($g['org_name']) ?></span><?php endif; ?>
           <?= h($g['lead_name']) ?><span class="sub-line"><?= h($g['lead_contact']) ?></span></td>
         <td data-label="人數 People"><?= (int) $g['attendee_count'] ?>
-          <?= $g['source'] === 'walkin' ? '<span class="badge walkin">現場 Walk-in</span>' : '' ?></td>
+          <?= $g['source'] === 'walkin' ? '<span class="badge walkin">現場 Walk-in</span>' : ($g['source'] === 'whatsapp' ? '<span class="badge">WhatsApp</span>' : '') ?></td>
         <td data-label="狀態 Status"><span class="badge <?= $g['status'] === 'confirmed' ? 'ok' : h($g['status']) ?>"><?= h($statusText[$g['status']]) ?></span></td>
         <td data-label="報到 Arrived"><?= (int) $g['arrived'] ?> / <?= (int) $g['attendee_count'] ?></td>
         <td data-label="操作 Actions">

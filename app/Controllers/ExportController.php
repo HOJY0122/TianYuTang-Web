@@ -43,7 +43,7 @@ class ExportController extends Controller
                 $r['contact_no'],
                 $r['ref_code'],
                 (string) ($r['org_name'] ?? ''),
-                ($r['source'] ?? 'online') === 'walkin' ? '現場 Walk-in' : '線上 Online',
+                ['walkin' => '現場 Walk-in', 'whatsapp' => 'WhatsApp'][$r['source'] ?? 'online'] ?? '線上 Online',
                 $r['status'] === 'confirmed' ? '已確認 Confirmed' : '待確認 Pending',
                 $r['checked_in_at'] ? date('Y-m-d H:i', strtotime($r['checked_in_at'])) : '',
             ];

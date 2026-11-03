@@ -1267,3 +1267,10 @@ details.form-panel[open]>summary{margin-bottom:6px}
   .zai-act select{flex:1 1 120px;max-width:none}
   .zai-act .mini-btn{flex:1 1 auto}
 }
+.zai-reserved-total{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 14px;font-weight:800;font-size:15px}
+.zai-reserved-total b{font-size:34px;color:#9f211b;line-height:1}
+.zai-reserved-total small{color:#2f5a33;font-size:13px}
+.zai-reserved-list{list-style:none;margin:10px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px 14px}
+.zai-reserved-list li{display:flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid #eadcb5;border-radius:10px;background:#fffdf6;font-size:13px;font-weight:700}
+.zai-reserved-list li .en{font-weight:500;color:#7a6a58}
+.zai-reserved-list li b{margin-left:auto;font-size:18px}

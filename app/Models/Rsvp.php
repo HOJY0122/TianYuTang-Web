@@ -80,9 +80,12 @@ class Rsvp extends Model
         int $eventId,
         array $attendees,
         string $recordedBy,
-        string $refPrefix = 'RSVP'
+        string $refPrefix = 'RSVP',
+        string $source = 'walkin'
     ): string {
         $count = count($attendees);
+        // WhatsApp bookings are typed in ahead: confirmed, but not here yet.
+        $source = $source === 'whatsapp' ? 'whatsapp' : 'walkin';
 
         try {
             $this->db->beginTransaction();
@@ -90,7 +93,7 @@ class Rsvp extends Model
             $this->execute(
                 'INSERT INTO rsvp_groups (event_id, source, attendee_count, status, recorded_by)
                  VALUES (?, ?, ?, ?, ?)',
-                [$eventId, 'walkin', $count, 'confirmed', $recordedBy]
+                [$eventId, $source, $count, 'confirmed', $recordedBy]
             );
             $groupId = (int) $this->db->lastInsertId();
             $refCode = $this->assignRefCode('rsvp_groups', $refPrefix, $groupId);
@@ -98,7 +101,7 @@ class Rsvp extends Model
             foreach ($attendees as $a) {
                 $this->execute(
                     'INSERT INTO rsvp_attendees (group_id, name, ic_no, ic_hash, ic_last4, contact_no, checked_in_at)
-                     VALUES (?, ?, ?, ?, ?, ?, NOW())',
+                     VALUES (?, ?, ?, ?, ?, ?, ' . ($source === 'walkin' ? 'NOW()' : 'NULL') . ')',
                     array_merge([$groupId, $a['name']], self::icColumns($a['ic']), [$a['contact']])
                 );
             }
@@ -130,6 +133,7 @@ class Rsvp extends Model
         $out = [
             'online' => ['groups' => 0, 'people' => 0],
             'walkin' => ['groups' => 0, 'people' => 0],
+            'whatsapp' => ['groups' => 0, 'people' => 0],
         ];
         foreach ($rows as $r) {
             $key = $r['source'] ?? 'online';
@@ -147,10 +151,10 @@ class Rsvp extends Model
     public function recentWalkIns(int $eventId, int $limit = 12): array
     {
         return $this->fetchAll(
-            "SELECT g.id, g.ref_code, g.attendee_count, g.recorded_by, g.created_at,
+            "SELECT g.id, g.ref_code, g.source, g.attendee_count, g.recorded_by, g.created_at,
                     (SELECT name FROM rsvp_attendees WHERE group_id = g.id ORDER BY id LIMIT 1) AS lead_name
              FROM rsvp_groups g
-             WHERE g.event_id = ? AND g.source = 'walkin' AND g.status <> 'cancelled'
+             WHERE g.event_id = ? AND g.source IN ('walkin', 'whatsapp') AND g.status <> 'cancelled'
              ORDER BY g.id DESC
              LIMIT " . (int) $limit,
             [$eventId]
@@ -416,7 +420,7 @@ class Rsvp extends Model
             $where[]  = 'g.reg_type = ?';
             $params[] = $filters['type'];
         }
-        if (in_array($filters['source'] ?? '', ['online', 'walkin'], true)) {
+        if (in_array($filters['source'] ?? '', ['online', 'walkin', 'whatsapp'], true)) {
             $where[]  = 'g.source = ?';
             $params[] = $filters['source'];
         }

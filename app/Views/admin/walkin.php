@@ -68,6 +68,13 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
       <?= csrf_field() ?>
       <input type="hidden" name="event_id" value="<?= (int) $event['id'] ?>">
 
+      <label>來源 <span class="en">Where the booking came from</span></label>
+      <div class="seg-toggle walkin-source" role="radiogroup">
+        <label class="seg-on"><input type="radio" name="source" value="walkin" checked><span><?= icon('walk') ?> 現場 Walk-in</span></label>
+        <label class="seg-on"><input type="radio" name="source" value="whatsapp"><span><?= icon('phone') ?> WhatsApp 預約</span></label>
+      </div>
+      <p class="help" id="sourceHelp">現場：登記並立即報到。WhatsApp：只登記，當天到場再報到。<span class="en">Here now: registered and checked in. WhatsApp: registered only — they check in on the day.</span></p>
+
       <label for="rowCount">人數｜Number of People</label>
       <select id="rowCount" onchange="renderRows()">
         <?php for ($i = 1; $i <= $maxPerForm; $i++): ?>
@@ -78,7 +85,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
       <div id="walkinRows"></div>
 
       <div class="form-actions">
-        <button class="primary" type="submit"><?= icon('walk') ?> 登記並報到 <span class="en">Register &amp; check in</span></button>
+        <button class="primary" type="submit" id="walkinSubmit"><?= icon('walk') ?> <span data-for="walkin">登記並報到 <span class="en">Register &amp; check in</span></span><span data-for="whatsapp" hidden>登記 WhatsApp 預約 <span class="en">Save booking</span></span></button>
       </div>
     </form>
   </div>
@@ -89,7 +96,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   <div id="liveRecent" data-live="rsvp_groups rsvp_attendees events">
   <?php if ($recent): ?>
     <div class="panel">
-      <h2>最近現場登記 <span class="en">Recent walk-ins</span></h2>
+      <h2>最近現場 / WhatsApp 登記 <span class="en">Recent walk-ins &amp; WhatsApp</span></h2>
       <div class="scroll">
         <table>
           <thead>
@@ -98,7 +105,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
           <tbody>
             <?php foreach ($recent as $g): ?>
               <tr>
-                <td><?= h($g['ref_code'] ?? '—') ?></td>
+                <td><?= h($g['ref_code'] ?? '—') ?><?= ($g['source'] ?? '') === 'whatsapp' ? ' <span class="badge">WhatsApp</span>' : '' ?></td>
                 <td><?= h($g['lead_name'] ?? '—') ?><?= (int) $g['attendee_count'] > 1 ? ' 等' : '' ?></td>
                 <td><?= (int) $g['attendee_count'] ?></td>
                 <td><?= h($g['recorded_by'] ?? '—') ?></td>
@@ -182,5 +189,13 @@ function renderRows() {
   if (first && !first.value) first.focus();
 }
 renderRows();
+</script>
+<script>
+// 來源: the button says what will happen.
+document.querySelectorAll('.walkin-source input').forEach(function (r) {
+  r.addEventListener('change', function () {
+    document.querySelectorAll('#walkinSubmit [data-for]').forEach(function (s) { s.hidden = s.dataset.for !== r.value; });
+  });
+});
 </script>
 <?php require BASE_PATH . '/app/Views/layouts/admin_footer.php'; ?>

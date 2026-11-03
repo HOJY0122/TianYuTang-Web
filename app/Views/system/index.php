@@ -84,6 +84,7 @@ $line = static function (string $key, string $zh, string $en, int $max, string $
       </div>
     <?php endif; ?>
     <input id="<?= $input ?>" name="<?= $input ?>" type="file" accept="image/jpeg,image/png,image/gif,image/webp"
+           data-current="<?= h($img($settings[$key] ?? null)) ?>"<?= $input === 'favicon' ? ' data-fixed-shape' : '' ?>
            data-aspects="<?= ['logo' => '1:1,original', 'favicon' => '1:1'][$input] ?>"
            data-max-width="<?= ['logo' => 600, 'favicon' => 256][$input] ?>">
     <p class="help"><?= h($help) ?></p>

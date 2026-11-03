@@ -34,7 +34,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
   <div class="form-grid">
     <div>
       <label for="bookFiles">收據相片 <span class="en">Receipt photos</span> <span class="req">*</span></label>
-      <input id="bookFiles" type="file" multiple required data-no-editor class="file-input"
+      <input id="bookFiles" type="file" multiple required data-aspects="original,3:4,4:3" data-max-width="2600" class="file-input"
              accept="image/jpeg,image/png,image/gif,image/webp">
       <p class="help" id="bookPicked" aria-live="polite"></p>
     </div>

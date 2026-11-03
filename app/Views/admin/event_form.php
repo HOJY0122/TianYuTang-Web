@@ -105,7 +105,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
             <label class="remove-check"><input type="checkbox" name="remove_<?= $qk ?>_qr" value="1"> 移除 Remove</label>
           </div>
         <?php endif; ?>
-        <input id="<?= $qk ?>_qr" name="<?= $qk ?>_qr" type="file" data-aspects="1:1,original" data-max-width="800" accept="image/jpeg,image/png,image/gif,image/webp">
+        <input id="<?= $qk ?>_qr" name="<?= $qk ?>_qr" type="file" data-current="<?= $qr ? h(BASE_URL . '/' . $qr) : '' ?>" data-aspects="1:1,original" data-max-width="800" accept="image/jpeg,image/png,image/gif,image/webp">
       </div>
     <?php endforeach; ?>
   </div>

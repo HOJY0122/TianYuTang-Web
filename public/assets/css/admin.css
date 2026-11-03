@@ -1151,3 +1151,38 @@ details.form-panel[open]>summary{margin-bottom:6px}
   .voucher-table .tick-col{grid-column:1/-1;text-align:left}
   .voucher-table td.wrap{min-width:0}
 }
+
+/* ---------- Upload box (js/image-editor.js) ----------
+   The real <input type=file> lies invisibly over the box, so a click,
+   a dropped file and the form's `required` check all work as normal. */
+.fp{position:relative;display:block;margin:6px 0 10px;border:2px dashed #d3b672;border-radius:14px;background:#fffaf0;
+  transition:border-color .15s,background .15s,box-shadow .15s}
+.fp:hover,.fp.is-over,.fp:focus-within{border-color:#9f211b;background:#fff3e6;box-shadow:0 0 0 3px rgba(159,33,27,.08)}
+.fp.is-over{border-style:solid}
+.fp-face{display:flex;align-items:center;gap:14px;padding:14px 16px;min-height:76px;flex-wrap:wrap}
+.fp-icon{flex:none;width:48px;height:48px;border-radius:12px;background:#9f211b;color:#fff;display:grid;place-items:center;
+  box-shadow:0 6px 14px rgba(159,33,27,.22)}
+.fp-icon svg{width:26px;height:26px}
+.fp-text{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 220px}
+.fp-text strong{font-size:15px;color:#4a2b1a}
+.fp-text strong .en{font-weight:600;color:#7a6a58;font-size:.88em;margin-left:4px}
+.fp-sub{font-size:12.5px;color:#7a6a58}
+.fp-types{font-size:11px;color:#9a8a76;letter-spacing:.03em}
+.fp-picked{flex:1 1 100%;font-size:13px;color:#2f5a33;display:none;align-items:center;gap:6px;overflow-wrap:anywhere}
+.fp-picked svg{width:18px;height:18px;flex:none}
+.fp-picked u{color:#9f211b;text-decoration-thickness:1px}
+.fp.has-files .fp-picked:not(:empty){display:flex}
+.fp-input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:1;font-size:0}
+.fp-input:disabled{cursor:not-allowed}
+.fp:has(.fp-input:disabled){opacity:.6}
+.ie-current{margin:6px 0 4px}
+.ie-thumb{position:relative}
+.ie-thumb-tools{position:absolute;top:4px;right:4px;display:flex;gap:4px}
+.ie-tbtn{width:30px;height:30px;border:0;border-radius:8px;background:rgba(255,255,255,.92);color:#9f211b;font-size:16px;font-weight:800;
+  cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.25);display:grid;place-items:center;padding:0}
+.ie-tbtn:hover{background:#9f211b;color:#fff}
+.ie-zoom{display:flex;align-items:center;gap:8px;flex:1 1 240px;margin:0}
+.ie-zbtn{flex:none;width:40px;height:40px;border:1px solid #d8bf79;border-radius:10px;background:#fff;font-size:22px;font-weight:800;color:#9f211b;cursor:pointer;line-height:1}
+.ie-zbtn:hover{background:#fff1e8}
+@media (max-width:600px){ .fp-face{padding:12px;gap:10px} .fp-icon{width:42px;height:42px} }
+.admin-photo.is-saving{opacity:.55;pointer-events:none}

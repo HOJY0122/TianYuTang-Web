@@ -482,6 +482,36 @@ class AdminController extends Controller
     }
 
     /** POST /admin/photos/delete */
+    /**
+     * POST /admin/photos/replace — an album photo cropped / rotated after
+     * it was uploaded (JSON, from the ✎ button). The edited picture goes
+     * through the same checks and resizing as a new upload; the old files
+     * are deleted once the row points at the new ones.
+     */
+    public function replacePhoto(): void
+    {
+        $this->requireAdmin();
+        if (empty($_POST) && empty($_FILES) && ($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
+            $this->json(['ok' => false, 'error' => '檔案超過伺服器限制 Over the server limit'], 413);
+        }
+        $this->requireCsrf();
+        $model = new Photo();
+        $photo = $model->find((int) ($_POST['photo_id'] ?? 0));
+        if ($photo === null) {
+            $this->json(['ok' => false, 'error' => '找不到相片 Photo not found'], 404);
+        }
+        $uploader = new ImageUploader('photos');
+        try {
+            $stored = $uploader->storeWithThumbnail($_FILES['photo'] ?? []);
+        } catch (RuntimeException $e) {
+            $this->json(['ok' => false, 'error' => $e->getMessage()], 422);
+        }
+        $model->setFiles((int) $photo['id'], $stored['path'], $stored['thumb']);
+        $uploader->delete($photo['file_path']);
+        $uploader->delete($photo['thumb_path']);
+        $this->json(['ok' => true, 'thumb' => media_url($stored['thumb']), 'full' => media_url($stored['path'])]);
+    }
+
     public function deletePhoto(): void
     {
         $this->requireAdmin();

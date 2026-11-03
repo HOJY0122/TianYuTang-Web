@@ -133,7 +133,7 @@ $aiNotes = $isNew ? ($draft['ai_notes'] ?? null) : ($row['ai_notes'] ?? null);
         </div>
       <?php endif; ?>
       <label for="bankSlipFile"><?= $slipUrl ? '更換單據' : '上傳單據' ?> <span class="en"><?= $slipUrl ? 'Replace slip' : 'Upload slip' ?></span></label>
-      <input id="bankSlipFile" name="bank_slip" type="file" accept="image/jpeg,image/png,image/gif,image/webp" data-aspects="original" data-max-width="2000">
+      <input id="bankSlipFile" name="bank_slip" type="file" data-current="<?= h((string) $slipUrl) ?>" accept="image/jpeg,image/png,image/gif,image/webp" data-aspects="original" data-max-width="2000">
       <p class="help">JPG / PNG / WebP，20MB 以內。只有登入的工作人員看得到。<span class="en">Up to 20 MB. Only signed-in staff can see it.</span></p>
     </div>
 
@@ -149,7 +149,7 @@ $aiNotes = $isNew ? ($draft['ai_notes'] ?? null) : ($row['ai_notes'] ?? null);
         <?php if ($row['updated_at']): ?> · 修改 Edited <?= h(date('d/m/Y H:i', strtotime($row['updated_at']))) ?> <?= h($row['updated_by'] ?? '') ?><?php endif; ?>
       </p>
       <label for="newPhoto"><?= $row['image_path'] ? '更換相片' : '加上相片' ?> <span class="en"><?= $row['image_path'] ? 'Replace photo' : 'Add a photo' ?> (optional)</span></label>
-      <input id="newPhoto" name="photo" type="file" accept="image/jpeg,image/png,image/gif,image/webp" data-aspects="original,3:2,4:3" data-max-width="2000">
+      <input id="newPhoto" name="photo" type="file" data-current="<?= h((string) $imgUrl) ?>" accept="image/jpeg,image/png,image/gif,image/webp" data-aspects="original,3:2,4:3" data-max-width="2000">
     <?php endif; ?>
 
     <div class="form-actions">

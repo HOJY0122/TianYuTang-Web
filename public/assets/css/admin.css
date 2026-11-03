@@ -1186,3 +1186,10 @@ details.form-panel[open]>summary{margin-bottom:6px}
 .ie-zbtn:hover{background:#fff1e8}
 @media (max-width:600px){ .fp-face{padding:12px;gap:10px} .fp-icon{width:42px;height:42px} }
 .admin-photo.is-saving{opacity:.55;pointer-events:none}
+/* Zoomed out: colour of the empty space */
+.ie-backs{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.85rem;font-weight:700;color:#6a4a12}
+.ie-backs[hidden]{display:none}
+.ie-back{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:4px 10px;border:2px solid #eadcb5;border-radius:10px;background:#fff;cursor:pointer;font-weight:700}
+.ie-back[aria-pressed="true"]{border-color:#9f211b;background:#fff1e8;color:#9f211b}
+.ie-back i{width:16px;height:16px;border-radius:4px;border:1px solid #bbb;display:inline-block}
+.ie-checker{background:repeating-conic-gradient(#ccc 0 25%,#fff 0 50%) 0 0/8px 8px}

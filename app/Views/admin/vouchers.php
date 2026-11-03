@@ -61,7 +61,8 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
         <label class="remove-check"><input type="checkbox" name="remove_signature" value="1"> 移除簽名 Remove the signature</label></div>
     <?php endif; ?>
     <label for="vlSign"><?= $site['voucher_signature'] ? '更換簽名' : '上傳簽名' ?> <span class="en"><?= $site['voucher_signature'] ? 'Replace' : 'Upload' ?> (PNG, transparent background)</span></label>
-    <input id="vlSign" type="file" name="signature" accept="image/png,image/jpeg,image/webp">
+    <input id="vlSign" type="file" name="signature" accept="image/png,image/jpeg,image/webp" data-aspects="original" data-max-width="1200"
+           data-current="<?= $site['voucher_signature'] ? url('/admin/vouchers/signature') . '?v=' . substr(md5((string) $site['voucher_signature']), 0, 8) : '' ?>">
     <div class="form-actions"><button class="primary" type="submit"><?= icon('save') ?> 儲存 Save</button>
       <?php if ($batches): ?><a class="mini-btn ghost" target="_blank" href="<?= url('/admin/vouchers/print') ?>?batch=<?= (int) $batches[0]['id'] ?>"><?= icon('eye') ?> 預覽 Preview</a><?php endif; ?></div>
   </form>

@@ -57,7 +57,7 @@ $evq = '?event=' . (int) $event['id'];
       <label for="uploadCat">放進哪個相簿類別 <span class="en">Into which album category</span></label>
       <?= $catSelect('category_id', $cat ?? (int) ($categories[0]['id'] ?? 0), 'id="uploadCat" class="upload-cat"') ?>
 
-      <input type="file" name="photos[]" multiple required data-no-editor
+      <input type="file" name="photos[]" multiple required data-aspects="original,1:1,4:3,3:4,16:9" data-max-width="3200"
              accept="image/jpeg,image/png,image/gif,image/webp"
              class="file-input" id="photoFiles">
 
@@ -152,6 +152,8 @@ $evq = '?event=' . (int) $event['id'];
             </form>
 
             <div class="admin-photo-actions">
+              <button class="mini-btn ghost" type="button" data-edit-photo="<?= (int) $photo['id'] ?>" data-src="<?= h(media_url($photo['file_path'])) ?>"
+                      title="裁切 / 旋轉 Crop / rotate">✎ <span class="hide-sm">編輯 Edit</span></button>
               <form method="POST" action="<?= url('/admin/photos/move') ?>" style="margin:0">
                 <?= csrf_field() ?>
                 <input type="hidden" name="photo_id" value="<?= (int) $photo['id'] ?>">
@@ -181,6 +183,34 @@ $evq = '?event=' . (int) $event['id'];
 
 </div>
 <script src="<?= asset('js/sortable.js') ?>"></script>
+<script>
+// ✎ on an uploaded photo: open it in the editor, send the edited copy back (replaces the photo).
+document.addEventListener('click', function (e) {
+  var b = e.target.closest && e.target.closest('[data-edit-photo]');
+  if (!b || !window.TYTImageEditor) return;
+  var card = b.closest('.admin-photo'), csrf = card.querySelector('input[name="csrf_token"]').value;
+  b.disabled = true;
+  TYTImageEditor.fromUrl(b.dataset.src, 'photo-' + b.dataset.editPhoto).then(function (f) {
+    return TYTImageEditor.edit(f, { aspects: 'original,1:1,4:3,3:4,16:9', maxWidth: 3200 });
+  }).then(function (out) {
+    if (!out) return;
+    var fd = new FormData();
+    fd.append('csrf_token', csrf);
+    fd.append('photo_id', b.dataset.editPhoto);
+    fd.append('photo', out, out.name);
+    card.classList.add('is-saving');
+    return fetch('<?= url('/admin/photos/replace') ?>', { method: 'POST', body: fd, credentials: 'same-origin', headers: { Accept: 'application/json' } })
+      .then(function (r) { return r.json().catch(function () { return { ok: false, error: r.status }; }); })
+      .then(function (j) {
+        if (!j.ok) throw new Error(j.error || '未成功 Failed');
+        card.querySelector('.drag-area img').src = j.thumb;
+        b.dataset.src = j.full;
+      });
+  }).catch(function (err) {
+    TYTDialog.alert('相片未更新：' + err.message + '\nThe photo was not changed.', { type: 'error' });
+  }).then(function () { b.disabled = false; card.classList.remove('is-saving'); });
+});
+</script>
 <script src="<?= asset('js/bulk-upload.js') ?>"></script>
 <script>
 (function () {

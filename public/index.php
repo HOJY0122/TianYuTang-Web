@@ -260,6 +260,7 @@ $router->post('/admin/photos/categories/move',    'AdminController@moveCategory'
 $router->post('/admin/photos/move',    'AdminController@movePhoto');
 $router->post('/admin/photos/reorder', 'AdminController@reorderPhotos');
 $router->post('/admin/photos/delete',  'AdminController@deletePhoto');
+$router->post('/admin/photos/replace', 'AdminController@replacePhoto');
 
 // ---------- 6. Go ----------
 // Sleep mode (System → 休眠模式): visitors get the one "see you next year"

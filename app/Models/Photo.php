@@ -159,6 +159,12 @@ class Photo extends Model
         ) >= 0;
     }
 
+    /** Point a photo at new files (after it was cropped / rotated). */
+    public function setFiles(int $id, string $path, string $thumb): void
+    {
+        $this->execute('UPDATE event_photos SET file_path = ?, thumb_path = ? WHERE id = ?', [$path, $thumb, $id]);
+    }
+
     /** Remove a photo row. The files are deleted by the controller. */
     public function delete(int $id): bool
     {

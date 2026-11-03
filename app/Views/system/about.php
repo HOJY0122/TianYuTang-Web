@@ -71,7 +71,7 @@ $layout = static function (?array $b): string {
               <img class="about-admin-img" src="<?= h($aboutImg($b)) ?>" alt="">
               <div>
                 <label>更換圖片 <span class="en">Replace picture (optional)</span></label>
-                <input type="file" name="image" accept="image/jpeg,image/png,image/webp" data-aspects="original,3:4,2:3,1:1" data-max-width="2400">
+                <input type="file" name="image" accept="image/jpeg,image/png,image/webp" data-aspects="original,3:4,2:3,1:1" data-max-width="2400" data-current="<?= h($aboutImg($b)) ?>">
                 <label>圖片標題（中文）<span class="en">Caption (Chinese)</span></label>
                 <input name="heading_zh" maxlength="120" value="<?= h($b['heading_zh'] ?? '') ?>" placeholder="例 中壇元帥">
                 <label>圖片標題（英文）<span class="en">Caption (English)</span></label>

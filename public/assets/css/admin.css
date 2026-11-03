@@ -1210,3 +1210,60 @@ details.form-panel[open]>summary{margin-bottom:6px}
 .bn-fitnote.ok{color:#2f5a33;font-weight:700}
 .bn-fitnote.warn{color:#8a4a12;background:#fff3d6;border-radius:8px;padding:4px 8px;line-height:1.5}
 .bn-tuner.fit-plain{background:var(--edge,#f6e7bd)}
+
+/* ---------- 施齋 Day 3 seating (ZaiController) — made for a phone in a busy hall ---------- */
+.zai-head{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.zai-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:17px}
+.zai-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
+.zai-tabs a{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:8px 14px;border:1px solid #e3cf98;border-radius:12px;
+  background:#fffaf0;color:#4a2b1a;text-decoration:none;font-weight:800;font-size:14px}
+.zai-tabs a .en{font-weight:600;font-size:.82em;color:#7a6a58}
+.zai-tabs a.is-on{background:#9f211b;border-color:#9f211b;color:#fff}
+.zai-tabs a.is-on .en{color:#fde9d6}
+.zai-search .lookup-form{display:flex;gap:8px;flex-wrap:wrap}
+.zai-search input[type=search]{flex:1 1 260px;min-height:52px;font-size:17px;padding:10px 14px;border:2px solid #d8bf79;border-radius:12px;background:#fffdf6}
+.zai-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
+.zai-table{border-radius:12px;border:2px solid #cfe0c6;background:#f2f8ee}
+.zai-table summary{list-style:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;padding:10px 6px}
+.zai-table summary::-webkit-details-marker{display:none}
+.zai-table summary b{font-size:22px;line-height:1.1}
+.zai-table summary span{font-size:13px;font-weight:700}
+.zai-table.is-full{border-color:#e7cf7d;background:#fff7dc}
+.zai-table.is-over{border-color:#e3a39c;background:#fdebe8}
+.zai-table.is-unknown{border-color:#ccc;background:#f3f3f3;border-style:dashed}
+.zai-table[open]{grid-column:1/-1}
+.zai-table ul{margin:0;padding:0 12px 10px 28px;font-size:13px;line-height:1.7}
+.zai-kind{display:inline-block;font-size:11px;font-weight:800;padding:0 6px;border-radius:6px;background:#eee}
+.zai-kind.k-person{background:#e3efdf;color:#2f5a33}.zai-kind.k-group{background:#fbeecb;color:#8a5a12}.zai-kind.k-waiting{background:#ece4f5;color:#5b3f86}
+.zai-reg-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-bottom:10px;font-size:16px}
+.zai-person,.zai-wait{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;padding:12px 0;border-top:1px solid #eadcb5}
+.zai-who{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;min-width:0;flex:1 1 260px}
+.zai-who strong{font-size:16px}
+.zai-act{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.zai-act select,.zai-all select{min-height:44px;padding:6px 10px;border:1px solid #d8bf79;border-radius:10px;background:#fffdf6;font:inherit;font-size:15px;max-width:170px}
+.zai-act .mini-btn{min-height:44px}
+.zai-all{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px;padding:10px 12px;border-radius:12px;background:#fff7e6}
+.zai-group.is-done{border-color:#bcd7b1;background:#f7fbf4}
+.zai-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 14px}
+.zai-fields label{display:flex;flex-direction:column;gap:4px;font-weight:800;font-size:13px;margin:0}
+.zai-fields label .en{font-weight:600;color:#7a6a58}
+.zai-fields input{min-height:46px;padding:8px 12px;border:1px solid #d8bf79;border-radius:10px;background:#fffdf6;font:inherit;font-size:16px;width:100%}
+.zai-fields .wide{grid-column:1/-1}
+.zai-cheque{display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px;margin:12px 0 4px}
+.zai-cheque img{display:block;max-width:180px;max-height:130px;border-radius:10px;border:1px solid #eadcb5}
+.zai-cheque-pick{flex:1 1 260px;min-width:0}
+.zai-group .zai-act{margin-top:10px}
+.zai-wait.is-seated{opacity:.75}.zai-wait.is-left{opacity:.55}
+.zai-qno{display:inline-grid;place-items:center;min-width:44px;height:36px;padding:0 8px;border-radius:10px;background:#9f211b;color:#fff;font-weight:800;font-size:16px}
+.zai-seat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.form-panel .zai-seat-grid label{display:flex;align-items:center;gap:6px;margin:0;flex-wrap:wrap;padding:6px 8px;border:1px solid #eadcb5;border-radius:10px;background:#fffdf6}
+.zai-seat-grid b{min-width:26px;font-size:16px}
+.form-panel .zai-seat-grid input{width:64px;min-height:40px;padding:4px 8px}
+.zai-seat-grid small{width:100%;color:#7a6a58}
+@media (max-width:600px){
+  .zai-search .lookup-form input[type=search]{flex:1 1 100%}
+  .zai-search .lookup-form .mini-btn{flex:1 1 100%}
+  .zai-act{width:100%}
+  .zai-act select{flex:1 1 120px;max-width:none}
+  .zai-act .mini-btn{flex:1 1 auto}
+}

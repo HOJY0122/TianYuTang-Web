@@ -33,7 +33,8 @@ $tableSelect = static function (string $name, ?int $current, string $attrs = '')
 ?>
 <div class="zai-head">
   <div class="zai-title"><?= icon('chair') ?> <strong>施齋入座 <span class="en">Day 3 meal seating</span></strong>
-    <span class="help"><?= h($event['year'] . ' ' . $event['name']) ?></span></div>
+    <span class="help"><?= h($event['year'] . ' ' . $event['name']) ?></span>
+    <a class="mini-btn zai-easy-link" href="<?= url('/admin/zai/easy') ?>"><?= icon('smartphone') ?> 簡易模式 <span class="en">Easy mode for helpers</span></a></div>
   <nav class="zai-tabs" aria-label="施齋 Day 3">
     <?php foreach ($zaiTabs as $k => [$ic, $zh, $en, $href]): ?>
       <a href="<?= url($href) . $evq ?>"<?= $tab === $k ? ' class="is-on" aria-current="page"' : '' ?>><?= icon($ic) ?> <?= $zh ?> <span class="en"><?= $en ?></span></a>

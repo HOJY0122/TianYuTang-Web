@@ -73,6 +73,7 @@ final class Access
     public const PRESETS = [
         'all'      => ['全部功能', 'Everything',           null],
         'day'      => ['活動當天', 'On the day',           ['checkin', 'walkin', 'counter', 'zai']],
+        'zai'      => ['只做施齋入座', 'Day 3 seating only', ['zai']],
         'checkin'  => ['只做報到', 'Check-in only',        ['checkin']],
         'records'  => ['報名與報到', 'Registrations',     ['registrations', 'checkin', 'walkin']],
         'finance'  => ['財務',     'Finance',              ['donations', 'counter', 'receipts', 'vouchers']],
@@ -153,6 +154,10 @@ final class Access
     {
         if (($_SESSION['admin_role'] ?? '') === 'system_admin') {
             return '/system';
+        }
+        // A Day 3 helper (施齋入座 only) opens straight into the easy screens.
+        if (($_SESSION['admin_perms'] ?? null) === ['zai']) {
+            return '/admin/zai/easy';
         }
         foreach (self::MODULES as $key => $m) {
             if (self::can($key)) {

@@ -1274,3 +1274,97 @@ details.form-panel[open]>summary{margin-bottom:6px}
 .zai-reserved-list li{display:flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid #eadcb5;border-radius:10px;background:#fffdf6;font-size:13px;font-weight:700}
 .zai-reserved-list li .en{font-weight:500;color:#7a6a58}
 .zai-reserved-list li b{margin-left:auto;font-size:18px}
+
+/* ==========================================================
+   施齋入座 簡易模式 Easy mode (app/Views/zai_easy) — for helpers on the day:
+   one question per screen, huge buttons, no menu.
+   ========================================================== */
+body.ez{margin:0;background:#f7efdc;color:#2b1d14;font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;font-size:18px;
+  -webkit-text-size-adjust:100%}
+.ez-bar{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:8px 10px;padding-top:max(8px,env(safe-area-inset-top));background:#9f211b;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.ez-bar-title{display:flex;align-items:center;gap:6px;font-weight:900;font-size:19px}
+.ez-bar-title .ic{width:22px;height:22px}
+.ez-home{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:64px;min-height:52px;padding:4px 8px;
+  border:0;border-radius:12px;background:rgba(255,255,255,.16);color:#fff;text-decoration:none;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
+.ez-home .ic{width:22px;height:22px}
+.ez-home-ph{visibility:hidden}
+.ez-out{margin:0}
+.ez-main{max-width:640px;margin:0 auto;padding:16px 14px 40px}
+.ez-q{margin:6px 0 16px;font-size:26px;font-weight:900;line-height:1.3;color:#7d1712}
+.ez-q small{display:block;font-size:15px;font-weight:600;color:#7a6a58;margin-top:2px}
+.ez-choices{display:grid;gap:14px}
+.ez-big{position:relative;display:flex;align-items:center;gap:14px;min-height:104px;padding:16px 18px;border-radius:20px;text-decoration:none;color:#fff;
+  box-shadow:0 8px 20px rgba(0,0,0,.14);border:3px solid rgba(255,255,255,.4)}
+.ez-big:active{transform:scale(.98)}
+.ez-c1{background:#2f7d4a}.ez-c2{background:#c27a12}.ez-c3{background:#9f211b}.ez-c4{background:#5b3f86}
+.ez-num{flex:none;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.95);color:#2b1d14;display:grid;place-items:center;font-weight:900;font-size:22px}
+.ez-ico .ic{width:40px;height:40px}
+.ez-txt{display:flex;flex-direction:column}
+.ez-txt b{font-size:27px;line-height:1.2}
+.ez-txt small{font-size:15px;opacity:.92}
+.ez-count{position:absolute;top:-8px;right:-6px;min-width:36px;height:36px;padding:0 8px;border-radius:18px;background:#fff;color:#5b3f86;
+  display:grid;place-items:center;font-weight:900;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.ez-foot{text-align:center;color:#7a6a58;margin-top:18px}
+.ez-search{display:flex;flex-direction:column;gap:10px}
+.ez-search input{min-height:64px;font-size:26px;font-weight:700;padding:10px 16px;border:3px solid #c9a24c;border-radius:16px;background:#fff;letter-spacing:.04em}
+.ez-search input:focus{outline:none;border-color:#9f211b;box-shadow:0 0 0 4px rgba(159,33,27,.15)}
+.ez-hint{color:#7a6a58;font-size:15px;margin:8px 0 14px}
+.ez-hint.ez-bad{color:#a3361f;font-weight:800}
+.ez-btn{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px 10px;width:100%;min-height:68px;margin:12px 0 0;padding:10px 16px;
+  border:0;border-radius:18px;font:inherit;font-size:23px;font-weight:900;text-decoration:none;cursor:pointer;box-sizing:border-box;text-align:center}
+.ez-btn small{font-size:15px;font-weight:600;opacity:.9;width:100%}
+.ez-btn .ic{width:24px;height:24px}
+.ez-ok{background:#2f7d4a;color:#fff;box-shadow:0 6px 16px rgba(47,125,74,.3)}
+.ez-go{background:#9f211b;color:#fff}
+.ez-alt{background:#fff;color:#5a3a2a;border:3px solid #d8bf79}
+.ez-btn:active{transform:scale(.98)}
+.ez-msg{margin:14px 0;padding:16px;border-radius:16px;background:#fff;border:3px solid #d8bf79}
+.ez-msg b{font-size:21px}.ez-msg p{margin:6px 0 0;font-size:16px;color:#5a4a3a}
+.ez-warn{border-color:#e0a14b;background:#fff6e5}.ez-info{border-color:#a9cba0;background:#f1f8ed}
+.ez-step{display:flex;align-items:center;gap:10px;margin:20px 0 10px;font-size:20px;font-weight:900}
+.ez-step span{flex:none;width:34px;height:34px;border-radius:50%;background:#9f211b;color:#fff;display:grid;place-items:center;font-size:18px}
+.ez-step small{font-size:14px;font-weight:600;color:#7a6a58}
+.ez-person{position:relative;display:flex;align-items:center;gap:14px;padding:14px;margin-bottom:10px;border-radius:16px;background:#fff;border:3px solid #e3d3a8;cursor:pointer}
+.ez-person input{position:absolute;opacity:0;pointer-events:none}
+.ez-tick{flex:none;width:44px;height:44px;border-radius:12px;border:3px solid #c9b78a;display:grid;place-items:center;font-size:28px;font-weight:900;color:transparent}
+.ez-person:has(input:checked){border-color:#2f7d4a;background:#f1f8ed}
+.ez-person:has(input:checked) .ez-tick{background:#2f7d4a;border-color:#2f7d4a;color:#fff}
+.ez-pname{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ez-pname b{font-size:24px}.ez-pname small{font-size:14px;color:#7a6a58}
+.ez-pname em{font-style:normal;font-size:15px;font-weight:800}.ez-pname em.ok{color:#2f7d4a}.ez-pname em.warn{color:#a3561f}
+.ez-who{padding:12px 14px;border-radius:14px;background:#fff;border:2px solid #e3d3a8;font-size:18px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ez-who span{color:#7a6a58}
+.ez-tables{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px}
+.ez-tbl{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:92px;border-radius:16px;border:3px solid #a9cba0;
+  background:#f1f8ed;color:#1f5130;font:inherit;cursor:pointer;padding:6px}
+.ez-tbl b{font-size:34px;line-height:1}.ez-tbl small{font-size:14px;font-weight:800}
+.ez-tbl.some{border-color:#e3cf7d;background:#fff7dc;color:#7a5a10}
+.ez-tbl.full{border-color:#ccc;background:#eee;color:#888}
+.ez-tbl input{position:absolute;opacity:0;pointer-events:none}
+.ez-tables-multi .ez-tbl:has(input:checked){background:#2f7d4a;border-color:#2f7d4a;color:#fff}
+.ez-tbl:active{transform:scale(.96)}
+.ez-list{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.ez-row{display:flex;align-items:center;gap:12px;min-height:76px;padding:12px 14px;border-radius:16px;background:#fff;border:3px solid #e3d3a8;text-decoration:none;color:inherit}
+.ez-row.is-done{border-color:#a9cba0;background:#f1f8ed}
+.ez-row-main{display:flex;flex-direction:column;min-width:0;flex:1}
+.ez-row-main b{font-size:22px}.ez-row-main small{font-size:14px;color:#7a6a58}
+.ez-row-state{flex:none;text-align:right;font-weight:900;color:#9f211b;font-size:16px}
+.ez-row.is-done .ez-row-state{color:#2f7d4a}
+.ez-qno{flex:none;min-width:58px;height:48px;border-radius:12px;background:#5b3f86;color:#fff;display:grid;place-items:center;font-weight:900;font-size:22px}
+.ez-stepper{display:flex;align-items:center;gap:10px}
+.ez-stepper input{flex:1;min-width:0;min-height:64px;text-align:center;font-size:32px;font-weight:900;border:3px solid #c9a24c;border-radius:16px;background:#fff}
+.ez-pm{flex:none;width:72px;height:64px;border-radius:16px;border:0;background:#9f211b;color:#fff;font-size:36px;font-weight:900;cursor:pointer}
+.ez-form label,.ez-small{display:flex;flex-direction:column;gap:6px;margin:14px 0 0;font-size:19px;font-weight:900}
+.ez-form label .en,.ez-small .en{font-size:14px;font-weight:600;color:#7a6a58}
+.ez-form input,.ez-small input{min-height:58px;font-size:22px;padding:8px 14px;border:3px solid #d8bf79;border-radius:14px;background:#fff}
+.ez-photo{display:block;max-width:100%;max-height:200px;margin-top:10px;border-radius:12px}
+.ez-group .fp{margin-top:0}
+.ez-done{text-align:center;padding:24px 16px;border-radius:22px;background:#fff;border:4px solid #a9cba0}
+.ez-done.tone-warn{border-color:#e0a14b;background:#fff6e5}.ez-done.tone-info{border-color:#b7a6d8;background:#f5f0fb}
+.ez-done-icon{width:84px;height:84px;margin:0 auto 10px;border-radius:50%;background:#2f7d4a;color:#fff;display:grid;place-items:center;font-size:52px;font-weight:900}
+.tone-warn .ez-done-icon{background:#d98a1c}.tone-info .ez-done-icon{background:#5b3f86}
+.ez-done-big{font-size:52px;font-weight:900;line-height:1.1;color:#2b1d14}
+.ez-done-title{font-size:22px;font-weight:800;margin-top:6px}
+.ez-done-text{font-size:18px;color:#5a4a3a;margin:10px 0 0}
+.zai-easy-link{margin-left:auto}

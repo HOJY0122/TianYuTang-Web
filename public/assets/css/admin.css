@@ -1202,3 +1202,11 @@ details.form-panel[open]>summary{margin-bottom:6px}
 .form-panel .bn-fit .bn-fit-opt{display:flex;align-items:center;gap:8px;font-weight:600;margin:0;cursor:pointer;font-size:13px}
 .form-panel .bn-fit .bn-fit-opt input{width:18px;height:18px;accent-color:#9f211b;margin:0;flex:none}
 .bn-fit-opt .en{font-size:.85em;color:#7a6a58}
+/* 首頁橫幅: best picture size, and how each picture matches the banner */
+.bn-size{margin:8px 0 0;font-size:13px;color:#4a2b1a}
+.bn-size b{font-size:15px;color:#9f211b}
+.bn-size-add{margin:0 0 6px}
+.bn-dim{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;margin:8px 0 0;font-size:13px}
+.bn-fitnote.ok{color:#2f5a33;font-weight:700}
+.bn-fitnote.warn{color:#8a4a12;background:#fff3d6;border-radius:8px;padding:4px 8px;line-height:1.5}
+.bn-tuner.fit-plain{background:var(--edge,#f6e7bd)}

@@ -55,3 +55,5 @@
   filter:blur(22px) brightness(.88) saturate(1.1)}
 .banner-slide.fit-blur .banner-frame :is(img,canvas):not(.banner-bg),
 .banner-slide.fit-plain .banner-frame :is(img,canvas):not(.banner-bg){object-fit:contain}
+/* plain: the sides take the picture's own edge colour (Banner::edgeColor), so it blends in */
+.banner-slide.fit-plain .banner-frame{background:var(--edge,transparent)}

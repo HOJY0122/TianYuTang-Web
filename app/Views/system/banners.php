@@ -58,6 +58,7 @@ $hM = (int) $site['banner_height_mobile'];
             <input type="range" name="height_<?= $dev ?>" min="<?= BC::HEIGHT_MIN ?>" max="<?= BC::HEIGHT_MAX ?>" step="1" value="<?= $h ?: 35 ?>">
             <output>高度 = 寬度的 <?= $h ?: 35 ?>% · height <?= $h ?: 35 ?>% of width</output>
           </div>
+          <p class="bn-size" data-size="<?= $dev ?>" data-base="<?= $dev === 'desktop' ? 1920 : 1080 ?>"></p>
         </fieldset>
       <?php endforeach; ?>
 
@@ -103,12 +104,14 @@ $hM = (int) $site['banner_height_mobile'];
           </div>
 
           <?php $fit = isset(App\Models\Banner::FITS[$s['fit'] ?? '']) ? $s['fit'] : 'cover'; ?>
-          <div class="bn-tuner fit-<?= $fit ?>" tabindex="0" aria-label="拖動或用方向鍵調整位置 Drag or use arrow keys to move the picture">
+          <div class="bn-tuner fit-<?= $fit ?>"<?= !empty($s['edge_color']) && preg_match('/^#[0-9a-f]{6}$/', $s['edge_color']) ? ' style="--edge:' . $s['edge_color'] . '"' : '' ?> tabindex="0" aria-label="拖動或用方向鍵調整位置 Drag or use arrow keys to move the picture">
             <img class="bn-bg" src="<?= h(media_url($s['image_path'])) ?>" alt="" draggable="false" aria-hidden="true">
             <img class="bn-pic" src="<?= h(media_url($s['image_path'])) ?>" alt="" draggable="false"
                  style="object-position:<?= (int) $s['pos_x'] ?>% <?= (int) $s['pos_y'] ?>%;transform:scale(<?= max(100, (int) $s['zoom']) / 100 ?>);transform-origin:<?= (int) $s['pos_x'] ?>% <?= (int) $s['pos_y'] ?>%">
             <span class="bn-cross" style="left:<?= (int) $s['pos_x'] ?>%;top:<?= (int) $s['pos_y'] ?>%" aria-hidden="true"></span>
           </div>
+          <p class="bn-dim"><span>此圖 <span class="en">This picture</span>: <b><?= (int) $s['img_w'] ?> × <?= (int) $s['img_h'] ?> px</b></span>
+            <span class="bn-fitnote" aria-live="polite"></span></p>
           <input type="hidden" name="slide[<?= $id ?>][pos_x]" value="<?= (int) $s['pos_x'] ?>" data-pos="x">
           <input type="hidden" name="slide[<?= $id ?>][pos_y]" value="<?= (int) $s['pos_y'] ?>" data-pos="y">
 
@@ -154,6 +157,7 @@ $hM = (int) $site['banner_height_mobile'];
   <h2 style="margin-top:0">④ 加入圖片 <span class="en">Add a picture</span></h2>
   <input id="bannerFile" name="banner" type="file" accept="image/jpeg,image/png,image/gif,image/webp"
          data-aspects="original,3:1,16:9,21:9" data-max-width="1920" required>
+  <p class="bn-size bn-size-add" data-size="add"></p>
   <p class="help">JPG / PNG / WebP，20MB 以內，建議寬 1920px。選好後可先裁切。<span class="en">Up to 20 MB, 1920px wide is ideal. You can crop it after choosing.</span></p>
   <div class="form-actions"><button class="primary" type="submit"><?= icon('plus') ?> 加入 <span class="en">Add</span></button></div>
 </form>

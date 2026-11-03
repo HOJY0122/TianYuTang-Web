@@ -26,8 +26,8 @@ class Banner extends Model
     }
 
     /**
-     * Slides carried over from the old single banner have no stored size;
-     * read it from the file once and keep it.
+     * Slides carried over from the old single banner have no stored size,
+     * and older slides no edge colour; read them from the file once and keep them.
      */
     public function withSizes(array $rows): array
     {
@@ -40,9 +40,63 @@ class Banner extends Model
                     $this->execute('UPDATE site_banners SET img_w = ?, img_h = ? WHERE id = ?', [$r['img_w'], $r['img_h'], $r['id']]);
                 }
             }
+            if (empty($r['edge_color'])) {
+                $r['edge_color'] = self::edgeColor(BASE_PATH . '/public/' . $r['image_path']);
+                if ($r['edge_color'] !== null) {
+                    $this->execute('UPDATE site_banners SET edge_color = ? WHERE id = ?', [$r['edge_color'], $r['id']]);
+                }
+            }
         }
         unset($r);
         return $rows;
+    }
+
+    /**
+     * The most common colour along the picture's four edges ("#fff4c4"), so
+     * the sides of a picture shown whole can match its own background.
+     * Colours are grouped coarsely to find the winner, then that group's
+     * real colours are averaged.
+     */
+    public static function edgeColor(string $file): ?string
+    {
+        $info = @getimagesize($file);
+        if (!$info || $info[0] * $info[1] > 40_000_000) {
+            return null;
+        }
+        $im = match ($info[2]) {
+            IMAGETYPE_JPEG => @imagecreatefromjpeg($file),
+            IMAGETYPE_PNG  => @imagecreatefrompng($file),
+            IMAGETYPE_WEBP => @imagecreatefromwebp($file),
+            IMAGETYPE_GIF  => @imagecreatefromgif($file),
+            default        => false,
+        };
+        if (!$im) {
+            return null;
+        }
+        [$w, $h] = [imagesx($im), imagesy($im)];
+        $band = max(2, (int) round(min($w, $h) * 0.01));
+        $step = max(1, (int) round(max($w, $h) / 400));
+        $groups = [];
+        $take = static function (int $x, int $y) use ($im, &$groups): void {
+            $c = imagecolorsforindex($im, imagecolorat($im, $x, $y));
+            if ($c['alpha'] > 64) {
+                return;                                   // transparent edge: not a colour
+            }
+            $k = ($c['red'] >> 4) . '.' . ($c['green'] >> 4) . '.' . ($c['blue'] >> 4);
+            $g = &$groups[$k];
+            $g = [($g[0] ?? 0) + 1, ($g[1] ?? 0) + $c['red'], ($g[2] ?? 0) + $c['green'], ($g[3] ?? 0) + $c['blue']];
+        };
+        for ($i = 0; $i < $band; $i++) {
+            for ($x = 0; $x < $w; $x += $step) { $take($x, $i); $take($x, $h - 1 - $i); }
+            for ($y = 0; $y < $h; $y += $step) { $take($i, $y); $take($w - 1 - $i, $y); }
+        }
+        imagedestroy($im);
+        if (!$groups) {
+            return null;
+        }
+        usort($groups, static fn($a, $b) => $b[0] <=> $a[0]);
+        [$n, $r, $g, $b] = $groups[0];
+        return sprintf('#%02x%02x%02x', (int) round($r / $n), (int) round($g / $n), (int) round($b / $n));
     }
 
     public function find(int $id): ?array
@@ -65,7 +119,7 @@ class Banner extends Model
     public const FITS = [
         'cover' => ['填滿（多出的部分會裁掉）', 'Fill — the extra is cropped'],
         'blur'  => ['整張顯示，兩旁模糊', 'Whole picture, blurred sides'],
-        'plain' => ['整張顯示，兩旁素色', 'Whole picture, plain sides'],
+        'plain' => ['整張顯示，兩旁用圖片邊緣的顏色', 'Whole picture, sides in its own edge colour'],
     ];
 
     /** Position, zoom, fit, caption, link and on/off for one slide (values already checked). */

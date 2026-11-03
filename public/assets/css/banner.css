@@ -46,3 +46,12 @@
 .banner-show.no-controls .banner-nav,.banner-show.no-controls .banner-dots{display:none}
 @media (max-width:700px){ .banner-show figcaption{padding:1rem .9rem 1.9rem} .banner-dots{bottom:6px} }
 @media (prefers-reduced-motion:reduce){ .fx-fade .banner-slide,.fx-slide .banner-track{transition:none} }
+
+/* 顯示方式 Fit (首頁橫幅): the whole picture instead of filling and cropping.
+   blur: a blurred, enlarged copy of the same picture fills the sides;
+   plain: the banner's own colour. */
+.banner-frame .banner-bg{display:none}
+.banner-slide.fit-blur .banner-frame .banner-bg{display:block;object-fit:cover;object-position:50% 50%;transform:scale(1.15);
+  filter:blur(22px) brightness(.88) saturate(1.1)}
+.banner-slide.fit-blur .banner-frame :is(img,canvas):not(.banner-bg),
+.banner-slide.fit-plain .banner-frame :is(img,canvas):not(.banner-bg){object-fit:contain}

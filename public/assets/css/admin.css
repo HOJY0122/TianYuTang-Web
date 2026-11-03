@@ -1193,3 +1193,12 @@ details.form-panel[open]>summary{margin-bottom:6px}
 .ie-back[aria-pressed="true"]{border-color:#9f211b;background:#fff1e8;color:#9f211b}
 .ie-back i{width:16px;height:16px;border-radius:4px;border:1px solid #bbb;display:inline-block}
 .ie-checker{background:repeating-conic-gradient(#ccc 0 25%,#fff 0 50%) 0 0/8px 8px}
+/* 首頁橫幅: whole-picture choice, mirrored in the tuning frame */
+.bn-tuner .bn-bg{display:none}
+.bn-tuner.fit-blur .bn-bg{display:block;transform:scale(1.15);filter:blur(16px) brightness(.88)}
+.bn-tuner.fit-blur .bn-pic,.bn-tuner.fit-plain .bn-pic{object-fit:contain}
+.bn-fit{display:flex;flex-direction:column;gap:6px;margin:10px 0 4px;padding:10px 12px;border:1px solid #eadcb5;border-radius:10px;background:#fffdf6;font-size:13px}
+.bn-fit-label{font-weight:800;display:inline-flex;align-items:center;gap:4px}
+.form-panel .bn-fit .bn-fit-opt{display:flex;align-items:center;gap:8px;font-weight:600;margin:0;cursor:pointer;font-size:13px}
+.form-panel .bn-fit .bn-fit-opt input{width:18px;height:18px;accent-color:#9f211b;margin:0;flex:none}
+.bn-fit-opt .en{font-size:.85em;color:#7a6a58}

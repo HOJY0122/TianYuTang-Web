@@ -94,12 +94,12 @@
       img.style.transform = 'scale(' + z + ')';
       img.style.transformOrigin = x + '% ' + y + '%';
     };
-    css(card.querySelector('.bn-tuner img'));
+    css(card.querySelector('.bn-tuner .bn-pic'));
     var cross = card.querySelector('.bn-cross');
     cross.style.left = x + '%'; cross.style.top = y + '%';
     card.querySelector('.bn-zoom output').textContent = Math.round(z * 100) + '%';
     var s = previewSlide(card);
-    if (s) css(s.querySelector('img'));
+    if (s) css(s.querySelector('img:not(.banner-bg)'));
   }
   function setPos(card, x, y) {
     card.querySelector('[data-pos=x]').value = Math.round(Math.max(0, Math.min(100, x)));
@@ -111,7 +111,7 @@
 
   form.querySelectorAll('.bn-card').forEach(function (card) {
     var tuner = card.querySelector('.bn-tuner');
-    var img = tuner.querySelector('img');
+    var img = tuner.querySelector('.bn-pic');
     var zoom = card.querySelector('[data-zoom]');
     var start = null;
 
@@ -149,6 +149,15 @@
     zoom.addEventListener('input', function () { paint(card); showInPreview(card); });
     card.querySelector('[data-center]').addEventListener('click', function () { setPos(card, 50, 50); showInPreview(card); });
     card.querySelector('[data-reset]').addEventListener('click', function () { zoom.value = 100; setPos(card, 50, 50); showInPreview(card); });
+    // 顯示方式 Fit: fill (crop) or the whole picture with blurred / plain sides.
+    card.querySelectorAll('[data-fit]').forEach(function (r) {
+      r.addEventListener('change', function () {
+        if (!r.checked) return;
+        var set = function (el) { if (el) { el.classList.remove('fit-cover', 'fit-blur', 'fit-plain'); el.classList.add('fit-' + r.value); } };
+        set(tuner); set(previewSlide(card));
+        showInPreview(card);
+      });
+    });
     card.querySelector('[data-active]').addEventListener('change', function (e) { card.classList.toggle('is-off', !e.target.checked); });
     card.querySelectorAll('[data-cap]').forEach(function (inp) {
       inp.addEventListener('input', function () {

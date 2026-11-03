@@ -58,13 +58,23 @@ class Banner extends Model
         return (int) $this->db->lastInsertId();
     }
 
-    /** Position, zoom, caption, link and on/off for one slide (values already checked). */
+    /**
+     * How a picture fills the banner: cover = fill and crop; blur / plain =
+     * the whole picture, the empty sides blurred or the banner's colour.
+     */
+    public const FITS = [
+        'cover' => ['填滿（多出的部分會裁掉）', 'Fill — the extra is cropped'],
+        'blur'  => ['整張顯示，兩旁模糊', 'Whole picture, blurred sides'],
+        'plain' => ['整張顯示，兩旁素色', 'Whole picture, plain sides'],
+    ];
+
+    /** Position, zoom, fit, caption, link and on/off for one slide (values already checked). */
     public function tune(int $id, array $v): void
     {
         $this->execute(
-            'UPDATE site_banners SET pos_x = ?, pos_y = ?, zoom = ?, is_active = ?, caption_zh = ?, caption_en = ?, link_url = ?
+            'UPDATE site_banners SET pos_x = ?, pos_y = ?, zoom = ?, fit = ?, is_active = ?, caption_zh = ?, caption_en = ?, link_url = ?
               WHERE id = ?',
-            [$v['pos_x'], $v['pos_y'], $v['zoom'], $v['is_active'], $v['caption_zh'], $v['caption_en'], $v['link_url'], $id]
+            [$v['pos_x'], $v['pos_y'], $v['zoom'], $v['fit'], $v['is_active'], $v['caption_zh'], $v['caption_en'], $v['link_url'], $id]
         );
     }
 

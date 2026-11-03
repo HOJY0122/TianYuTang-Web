@@ -15,7 +15,8 @@
  *    "編輯目前的圖片 Edit this picture"; the edited copy goes into the
  *    input and replaces the old one when the form is saved.
  * 4. The editor: drag to move, zoom − / slider / + (or pinch / wheel),
- *    rotate ↺ ↻, crop shapes (data-aspects="original,1:1,16:9"; "自由
+ *    zoom out below the original size too (the empty space is white,
+ *    black or transparent — your choice), rotate ↺ ↻, crop shapes (data-aspects="original,1:1,16:9"; "自由
  *    Free" is always offered — drag the frame's corners).
  *    data-max-width="1920" caps the saved picture's longest side.
  *
@@ -255,7 +256,8 @@
 
   // ----------------------------------------------------------------- editor
   var modal, canvas, ctx, zoomEl, shapeRow, state;
-  var MAX_ZOOM = 6, HANDLE = 34;   // handle reach, canvas px
+  var MAX_ZOOM = 6, MIN_ZOOM = 0.2, HANDLE = 34;   // zoom 1 = the picture just fills the frame; handle reach, canvas px
+  var BACKS = { white: '#ffffff', black: '#000000', transparent: null };
 
   function buildModal() {
     modal = el('div', 'ie-modal');
@@ -272,11 +274,17 @@
       '  <div class="ie-shapes" role="group" aria-label="裁切比例 Crop shape"></div>' +
       '  <div class="ie-controls">' +
       '    <div class="ie-zoom"><button type="button" class="ie-zbtn" data-act="zoom-out" aria-label="縮小 Zoom out">−</button>' +
-      '      <input type="range" min="1" max="' + MAX_ZOOM + '" step="0.01" value="1" aria-label="縮放 Zoom">' +
+      '      <input type="range" min="' + MIN_ZOOM + '" max="' + MAX_ZOOM + '" step="0.01" value="1" aria-label="縮放 Zoom">' +
       '      <button type="button" class="ie-zbtn" data-act="zoom-in" aria-label="放大 Zoom in">+</button></div>' +
       '    <button type="button" class="mini-btn ghost" data-act="rotate-left" title="向左轉 Rotate left">↺ 左轉</button>' +
       '    <button type="button" class="mini-btn ghost" data-act="rotate">↻ 右轉 <span class="en">Rotate</span></button>' +
       '    <button type="button" class="mini-btn ghost" data-act="reset">重設 <span class="en">Reset</span></button>' +
+      '  </div>' +
+      '  <div class="ie-backs" role="group" aria-label="空白位置的顏色 Colour of the empty space">' +
+      '    <span>縮小後空白處 <span class="en">Empty space when zoomed out</span>:</span>' +
+      '    <button type="button" class="ie-back" data-back="white"><i style="background:#fff"></i>白 White</button>' +
+      '    <button type="button" class="ie-back" data-back="black"><i style="background:#000"></i>黑 Black</button>' +
+      '    <button type="button" class="ie-back" data-back="transparent"><i class="ie-checker"></i>透明 Transparent</button>' +
       '  </div>' +
       '  <div class="ie-foot">' +
       '    <button type="button" class="mini-btn ghost btn-lg" data-act="cancel">取消 Cancel</button>' +
@@ -302,6 +310,12 @@
       if (a === 'rotate-left') { state.rot = (state.rot + 270) % 360; layout(true); }
       if (a === 'reset') { state.rot = 0; layout(true); }
       if (a === 'apply') apply();
+    });
+    modal.addEventListener('click', function (e) {
+      var b = e.target.closest && e.target.closest('[data-back]');
+      if (!b) return;
+      state.back = b.dataset.back;
+      showBack(); draw();
     });
     document.addEventListener('keydown', function (e) { if (!modal.hidden && e.key === 'Escape') close(null); });
     window.addEventListener('resize', function () { if (!modal.hidden) layout(true); });
@@ -373,6 +387,7 @@
         var aspects = String(opts.aspects || 'original,1:1,4:3,16:9').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
         if (aspects.indexOf('free') < 0 && !opts.fixed) aspects.push('free');
         state = { file: file, img: img, rot: 0, zoom: 1, ox: 0, oy: 0, aspect: aspects[0],
+                  back: /png|gif|webp/.test(file.type) ? 'transparent' : 'white',
                   maxW: parseInt(opts.maxWidth || '1920', 10) || 1920 };
         shapeRow.innerHTML = '';
         aspects.forEach(function (a) {
@@ -386,6 +401,7 @@
           shapeRow.appendChild(b);
         });
         pending = resolve;
+        showBack();
         modal.hidden = false;
         document.body.classList.add('ie-open');
         layout(true);
@@ -443,7 +459,7 @@
   function setZoom(z) {
     var cx = state.frame.x + state.frame.w / 2 - canvas.width / 2, cy = state.frame.y + state.frame.h / 2 - canvas.height / 2;
     var old = state.zoom;
-    state.zoom = Math.min(MAX_ZOOM, Math.max(1, z));
+    state.zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z));
     // Zoom around the middle of the frame, so what you look at stays put.
     var k = state.zoom / old;
     state.ox = cx + (state.ox - cx) * k;
@@ -452,13 +468,26 @@
     clamp(); draw();
   }
 
-  /** Keep the frame fully covered by the picture — no empty corners. */
+  /**
+   * Picture bigger than the frame: it must cover the frame (no empty edge).
+   * Zoomed out, smaller than the frame: it must stay inside the frame
+   * (the rest is filled with the chosen background).
+   */
   function clamp() {
     var r = rotSize(), s = state.base * state.zoom, f = state.frame;
     var hw = r.w * s / 2, hh = r.h * s / 2, cx = canvas.width / 2, cy = canvas.height / 2;
-    // picture spans (cx+ox-hw … cx+ox+hw); it must reach both edges of the frame
-    state.ox = Math.min(f.x - cx + hw, Math.max(f.x + f.w - cx - hw, state.ox));
-    state.oy = Math.min(f.y - cy + hh, Math.max(f.y + f.h - cy - hh, state.oy));
+    var ax = f.x - cx + hw, bx = f.x + f.w - cx - hw, ay = f.y - cy + hh, by = f.y + f.h - cy - hh;
+    state.ox = Math.min(Math.max(ax, bx), Math.max(Math.min(ax, bx), state.ox));
+    state.oy = Math.min(Math.max(ay, by), Math.max(Math.min(ay, by), state.oy));
+    showBack();
+  }
+
+  /** The background choice matters only when the picture is smaller than the frame. */
+  function showBack() {
+    var row = modal.querySelector('.ie-backs');
+    var r = rotSize(), s = state.base * state.zoom, f = state.frame;
+    row.hidden = !(f && (r.w * s < f.w - 1 || r.h * s < f.h - 1));
+    row.querySelectorAll('[data-back]').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.back === state.back ? 'true' : 'false'); });
   }
 
   /** Free crop: move one corner of the frame, staying on the picture. */
@@ -468,8 +497,10 @@
     var px2 = px1 + r.w * s, py2 = py1 + r.h * s;
     var x1 = f.x, y1 = f.y, x2 = f.x + f.w, y2 = f.y + f.h, min = 60;
     var lim = function (v, lo, hi) { return Math.min(hi, Math.max(lo, v)); };
-    if (which.indexOf('w') >= 0) x1 = lim(p.x, Math.max(0, px1), x2 - min); else x2 = lim(p.x, x1 + min, Math.min(canvas.width, px2));
-    if (which.indexOf('n') >= 0) y1 = lim(p.y, Math.max(0, py1), y2 - min); else y2 = lim(p.y, y1 + min, Math.min(canvas.height, py2));
+    // On the picture when zoomed in; anywhere on the canvas once zoomed out.
+    var out = state.zoom < 1;
+    if (which.indexOf('w') >= 0) x1 = lim(p.x, out ? 0 : Math.max(0, px1), x2 - min); else x2 = lim(p.x, x1 + min, out ? canvas.width : Math.min(canvas.width, px2));
+    if (which.indexOf('n') >= 0) y1 = lim(p.y, out ? 0 : Math.max(0, py1), y2 - min); else y2 = lim(p.y, y1 + min, out ? canvas.height : Math.min(canvas.height, py2));
     state.frame = { x: x1, y: y1, w: x2 - x1, h: y2 - y1 };
     draw();
   }
@@ -478,8 +509,8 @@
   function rebase() {
     var r = rotSize(), s = state.base * state.zoom, f = state.frame;
     state.base = Math.max(f.w / r.w, f.h / r.h);
-    state.zoom = Math.max(1, s / state.base);
-    zoomEl.value = Math.min(MAX_ZOOM, state.zoom);
+    state.zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, s / state.base));
+    zoomEl.value = state.zoom;
     clamp(); draw();
   }
 
@@ -497,6 +528,17 @@
     var f = state.frame, s = state.base * state.zoom;
     ctx.fillStyle = '#2b211b';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // What the empty space will be: the chosen colour, or a checkerboard for transparent.
+    if (BACKS[state.back]) {
+      ctx.fillStyle = BACKS[state.back];
+      ctx.fillRect(f.x, f.y, f.w, f.h);
+    } else {
+      var t = 16;
+      for (var yy = 0; yy < f.h; yy += t) for (var xx = 0; xx < f.w; xx += t) {
+        ctx.fillStyle = ((xx + yy) / t) % 2 ? '#d9d9d9' : '#f4f4f4';
+        ctx.fillRect(f.x + xx, f.y + yy, Math.min(t, f.w - xx), Math.min(t, f.h - yy));
+      }
+    }
     paint(ctx, canvas.width / 2 + state.ox, canvas.height / 2 + state.oy, s);
     // Dim everything outside the frame, then outline it.
     ctx.fillStyle = 'rgba(20,12,8,.6)';
@@ -528,13 +570,19 @@
     var f = state.frame, s = state.base * state.zoom;
     // Size of the framed region in ORIGINAL picture pixels, capped at maxW.
     var srcW = f.w / s, srcH = f.h / s;
-    var k = Math.min(1, state.maxW / Math.max(srcW, srcH));
+    // Zoomed out: the whole frame comes out no bigger than the picture was, so the picture really is smaller.
+    var k = Math.min(1, state.zoom, state.maxW / Math.max(srcW, srcH));
     var out = document.createElement('canvas');
     out.width = Math.max(1, Math.round(srcW * k));
     out.height = Math.max(1, Math.round(srcH * k));
     var oc = out.getContext('2d');
-    var type = /png|gif|webp/.test(state.file.type) ? 'image/png' : 'image/jpeg';   // keep transparency for logos
-    if (type === 'image/jpeg') { oc.fillStyle = '#fff'; oc.fillRect(0, 0, out.width, out.height); }
+    // PNG keeps transparency: a PNG / WebP logo's own, or a transparent empty space after zooming out.
+    var zoomedOut = state.zoom < 1;
+    var type = /png|gif|webp/.test(state.file.type) || (zoomedOut && !BACKS[state.back]) ? 'image/png' : 'image/jpeg';
+    if (type === 'image/jpeg' || (zoomedOut && BACKS[state.back])) {
+      oc.fillStyle = BACKS[state.back] || '#fff';
+      oc.fillRect(0, 0, out.width, out.height);
+    }
     oc.imageSmoothingQuality = 'high';
     var q = out.width / f.w;   // frame px → output px
     paint(oc, (canvas.width / 2 + state.ox - f.x) * q, (canvas.height / 2 + state.oy - f.y) * q, s * q);

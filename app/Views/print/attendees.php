@@ -62,7 +62,7 @@ require BASE_PATH . '/app/Views/print/_letterhead.php';
           <td><strong><?= h($a['name']) ?></strong></td>
           <td><?= h($a['ic_no']) ?></td>
           <td><?= h($a['contact_no']) ?></td>
-          <td class="ref"><?= h($a['ref_code']) ?><?= ($a['source'] ?? 'online') === 'walkin' ? ' 現場' : '' ?></td>
+          <td class="ref"><?= h($a['ref_code']) ?><?= ['walkin' => ' 現場', 'whatsapp' => ' WhatsApp'][$a['source'] ?? 'online'] ?? '' ?></td>
           <td><?= $in ? '已報到 ' . h(date('H:i', strtotime($a['checked_in_at']))) : ($a['status'] === 'confirmed' ? '已確認' : '待確認') ?></td>
         </tr>
       <?php endforeach; ?>

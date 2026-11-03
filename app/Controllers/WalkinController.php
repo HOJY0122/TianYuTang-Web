@@ -141,12 +141,15 @@ class WalkinController extends Controller
             $this->redirect("/admin/walkin?event={$eventId}");
         }
 
+        // 來源: someone at the counter now, or a WhatsApp booking typed in ahead.
+        $source = ($_POST['source'] ?? '') === 'whatsapp' ? 'whatsapp' : 'walkin';
         try {
             $refCode = (new Rsvp())->createWalkIn(
                 $eventId,
                 $attendees,
                 (string) ($_SESSION['admin_username'] ?? 'admin'),
-                Event::refPrefix($event, 'RSVP')
+                Event::refPrefix($event, 'RSVP'),
+                $source
             );
         } catch (Exception $e) {
             $this->flash('error', '儲存失敗',
@@ -155,13 +158,10 @@ class WalkinController extends Controller
         }
 
         $count = count($attendees);
-        $this->flash(
-            'success',
-            '已登記並報到',
-            "{$refCode}　{$attendees[0]['name']}"
-            . ($count > 1 ? " 等 {$count} 位" : '')
-            . '　已登記並完成報到。'
-        );
+        $who = "{$refCode}　{$attendees[0]['name']}" . ($count > 1 ? " 等 {$count} 位" : '');
+        $source === 'whatsapp'
+            ? $this->flash('success', '已登記 WhatsApp 預約', $who . "　已登記（當天到場再報到）。\nWhatsApp booking saved — they check in on the day.")
+            : $this->flash('success', '已登記並報到', $who . '　已登記並完成報到。');
         $this->redirect("/admin/walkin?event={$eventId}");
     }
 

@@ -246,6 +246,21 @@ $router->post('/admin/vouchers/delete',       'VoucherController@delete');
 $router->post('/admin/vouchers/paid',         'VoucherController@paid');
 $router->get('/admin/vouchers/print',         'VoucherController@print');
 $router->get('/admin/vouchers/excel',         'VoucherController@excel');
+// 施齋 Day 3: tables and seating
+$router->get('/admin/zai',                    'ZaiController@index');
+$router->get('/admin/zai/registered',         'ZaiController@registered');
+$router->post('/admin/zai/person',            'ZaiController@person');
+$router->post('/admin/zai/person-group',      'ZaiController@personGroup');
+$router->get('/admin/zai/groups',             'ZaiController@groups');
+$router->post('/admin/zai/group',             'ZaiController@saveGroup');
+$router->post('/admin/zai/groups/import',     'ZaiController@importGroups');
+$router->post('/admin/zai/groups/delete',     'ZaiController@deleteGroup');
+$router->get('/admin/zai/cheque',             'ZaiController@cheque');
+$router->get('/admin/zai/waiting',            'ZaiController@waiting');
+$router->post('/admin/zai/waiting/add',       'ZaiController@addWaiting');
+$router->post('/admin/zai/waiting/update',    'ZaiController@updateWaiting');
+$router->get('/admin/zai/tables',             'ZaiController@tables');
+$router->post('/admin/zai/tables',            'ZaiController@saveTables');
 $router->post('/admin/vouchers/layout',       'VoucherController@layout');
 $router->get('/admin/vouchers/signature',     'VoucherController@signature');
 

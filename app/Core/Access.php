@@ -29,6 +29,7 @@ final class Access
         'checkin'       => ['check-circle', '現場報到', 'Check-in',         '活動當天 On the day', '/admin/checkin'],
         'walkin'        => ['walk',         '現場報名', 'Walk-in register', '活動當天 On the day', '/admin/walkin'],
         'counter'       => ['cash',         '現場布施', 'Counter donation', '活動當天 On the day', '/admin/counter'],
+        'zai'           => ['chair',        '施齋入座', 'Day 3 meal seating', '活動當天 On the day', '/admin/zai'],
         'receipts'      => ['receipt',      '收據紀錄', 'Receipts',         '財務 Finance',        '/admin/receipts'],
         'vouchers'      => ['gift',         '布施憑單', 'Donation vouchers', '財務 Finance',       '/admin/vouchers'],
     ];
@@ -61,6 +62,7 @@ final class Access
         '/admin/checkin'          => ['checkin'],
         '/admin/walkin'           => ['walkin'],
         '/admin/counter'          => ['counter'],
+        '/admin/zai'              => ['zai'],
         '/admin/receipt'          => ['counter'],     // the counter's printed receipt (not /admin/receipts)
         '/admin/receipts'         => ['receipts'],
         '/admin/vouchers'         => ['vouchers'],
@@ -70,12 +72,12 @@ final class Access
     /** Ready-made choices for the account form. */
     public const PRESETS = [
         'all'      => ['全部功能', 'Everything',           null],
-        'day'      => ['活動當天', 'On the day',           ['checkin', 'walkin', 'counter']],
+        'day'      => ['活動當天', 'On the day',           ['checkin', 'walkin', 'counter', 'zai']],
         'checkin'  => ['只做報到', 'Check-in only',        ['checkin']],
         'records'  => ['報名與報到', 'Registrations',     ['registrations', 'checkin', 'walkin']],
         'finance'  => ['財務',     'Finance',              ['donations', 'counter', 'receipts', 'vouchers']],
         'content'  => ['網站內容', 'News & photos',        ['posts', 'photos', 'event']],
-        'manager'  => ['活動負責', 'Event manager',        ['control', 'event', 'registrations', 'donations', 'checkin', 'walkin', 'counter']],
+        'manager'  => ['活動負責', 'Event manager',        ['control', 'event', 'registrations', 'donations', 'checkin', 'walkin', 'counter', 'zai']],
         'nomoney'  => ['不看金額', 'No money',             ['registrations', 'event', 'posts', 'photos', 'checkin', 'walkin']],
     ];
 

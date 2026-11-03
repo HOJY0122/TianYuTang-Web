@@ -39,7 +39,7 @@ $count = count($bannerSlides);
     ?>
       <figure class="banner-slide fit-<?= $fit ?><?= $i === 0 ? ' is-active' : '' ?>" data-slide="<?= (int) $s['id'] ?>"
               role="group" aria-roledescription="slide" aria-label="<?= $i + 1 ?> / <?= $count ?>"<?= $i === 0 ? '' : ' aria-hidden="true"' ?>>
-        <<?= $tag ?> class="banner-frame"<?= $link !== '' ? ' href="' . h(str_starts_with($link, '/') ? url($link) : $link) . '"' : '' ?>>
+        <<?= $tag ?> class="banner-frame"<?= !empty($s['edge_color']) && preg_match('/^#[0-9a-f]{6}$/', $s['edge_color']) ? ' style="--edge:' . $s['edge_color'] . '"' : '' ?><?= $link !== '' ? ' href="' . h(str_starts_with($link, '/') ? url($link) : $link) . '"' : '' ?>>
           <?php
             $_bAttrs = [
                 'alt'    => $cap ? trim(($s['caption_zh'] ?? '') . ' ' . ($s['caption_en'] ?? '')) : $bannerAlt,

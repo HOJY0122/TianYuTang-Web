@@ -104,7 +104,7 @@ $hM = (int) $site['banner_height_mobile'];
           </div>
 
           <?php $fit = isset(App\Models\Banner::FITS[$s['fit'] ?? '']) ? $s['fit'] : 'cover'; ?>
-          <div class="bn-tuner fit-<?= $fit ?>" tabindex="0" aria-label="拖動或用方向鍵調整位置 Drag or use arrow keys to move the picture">
+          <div class="bn-tuner fit-<?= $fit ?>"<?= !empty($s['edge_color']) && preg_match('/^#[0-9a-f]{6}$/', $s['edge_color']) ? ' style="--edge:' . $s['edge_color'] . '"' : '' ?> tabindex="0" aria-label="拖動或用方向鍵調整位置 Drag or use arrow keys to move the picture">
             <img class="bn-bg" src="<?= h(media_url($s['image_path'])) ?>" alt="" draggable="false" aria-hidden="true">
             <img class="bn-pic" src="<?= h(media_url($s['image_path'])) ?>" alt="" draggable="false"
                  style="object-position:<?= (int) $s['pos_x'] ?>% <?= (int) $s['pos_y'] ?>%;transform:scale(<?= max(100, (int) $s['zoom']) / 100 ?>);transform-origin:<?= (int) $s['pos_x'] ?>% <?= (int) $s['pos_y'] ?>%">

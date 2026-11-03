@@ -1209,3 +1209,4 @@ details.form-panel[open]>summary{margin-bottom:6px}
 .bn-dim{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;margin:8px 0 0;font-size:13px}
 .bn-fitnote.ok{color:#2f5a33;font-weight:700}
 .bn-fitnote.warn{color:#8a4a12;background:#fff3d6;border-radius:8px;padding:4px 8px;line-height:1.5}
+.bn-tuner.fit-plain{background:var(--edge,#f6e7bd)}

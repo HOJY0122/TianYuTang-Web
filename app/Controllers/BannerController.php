@@ -99,6 +99,7 @@ class BannerController extends Controller
                 'pos_x'      => $int($v['pos_x'] ?? null, 0, 100, 50),
                 'pos_y'      => $int($v['pos_y'] ?? null, 0, 100, 50),
                 'zoom'       => $int($v['zoom'] ?? null, 100, self::ZOOM_MAX, 100),
+                'fit'        => is_string($v['fit'] ?? null) && isset(Banner::FITS[$v['fit']]) ? $v['fit'] : 'cover',
                 'is_active'  => !empty($v['is_active']) ? 1 : 0,
                 'caption_zh' => $str('caption_zh', 120),
                 'caption_en' => $str('caption_en', 160),

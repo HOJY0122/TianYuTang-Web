@@ -102,8 +102,10 @@ $hM = (int) $site['banner_height_mobile'];
             <button type="submit" form="del-<?= $id ?>" class="mini-btn danger"><?= icon('trash') ?> 刪除 <span class="en">Delete</span></button>
           </div>
 
-          <div class="bn-tuner" tabindex="0" aria-label="拖動或用方向鍵調整位置 Drag or use arrow keys to move the picture">
-            <img src="<?= h(media_url($s['image_path'])) ?>" alt="" draggable="false"
+          <?php $fit = isset(App\Models\Banner::FITS[$s['fit'] ?? '']) ? $s['fit'] : 'cover'; ?>
+          <div class="bn-tuner fit-<?= $fit ?>" tabindex="0" aria-label="拖動或用方向鍵調整位置 Drag or use arrow keys to move the picture">
+            <img class="bn-bg" src="<?= h(media_url($s['image_path'])) ?>" alt="" draggable="false" aria-hidden="true">
+            <img class="bn-pic" src="<?= h(media_url($s['image_path'])) ?>" alt="" draggable="false"
                  style="object-position:<?= (int) $s['pos_x'] ?>% <?= (int) $s['pos_y'] ?>%;transform:scale(<?= max(100, (int) $s['zoom']) / 100 ?>);transform-origin:<?= (int) $s['pos_x'] ?>% <?= (int) $s['pos_y'] ?>%">
             <span class="bn-cross" style="left:<?= (int) $s['pos_x'] ?>%;top:<?= (int) $s['pos_y'] ?>%" aria-hidden="true"></span>
           </div>
@@ -116,6 +118,14 @@ $hM = (int) $site['banner_height_mobile'];
             <output><?= max(100, (int) $s['zoom']) ?>%</output>
             <button type="button" class="mini-btn ghost" data-center>⊕ 置中 <span class="en">Centre</span></button>
             <button type="button" class="mini-btn ghost" data-reset>↺ 重設 <span class="en">Reset</span></button>
+          </div>
+
+          <div class="bn-fit" role="radiogroup" aria-label="顯示方式 How the picture fills the banner">
+            <span class="bn-fit-label"><?= icon('image') ?> 顯示方式 <span class="en">Fit</span></span>
+            <?php foreach (App\Models\Banner::FITS as $fk => [$fzh, $fen]): ?>
+              <label class="bn-fit-opt"><input type="radio" name="slide[<?= $id ?>][fit]" value="<?= $fk ?>"<?= $fit === $fk ? ' checked' : '' ?> data-fit>
+                <?= h($fzh) ?> <span class="en"><?= h($fen) ?></span></label>
+            <?php endforeach; ?>
           </div>
 
           <div class="form-grid">

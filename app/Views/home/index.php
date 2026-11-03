@@ -29,7 +29,7 @@ $autoQr = (bool) array_filter($qrCodes, static fn($q) => !$q['img']);
 $bannerSlides = (new App\Models\Banner())->active();
 if (!$bannerSlides && $siteHeroBanner) {
     $bannerSlides = (new App\Models\Banner())->withSizes([['id' => 0, 'image_path' => $siteHeroBanner, 'img_w' => null, 'img_h' => null,
-        'pos_x' => 50, 'pos_y' => 50, 'zoom' => 100, 'caption_zh' => null, 'caption_en' => null, 'link_url' => null]]);
+        'pos_x' => 50, 'pos_y' => 50, 'zoom' => 100, 'fit' => 'cover', 'caption_zh' => null, 'caption_en' => null, 'link_url' => null]]);
 }
 ?>
 <div id="liveBanner" data-live="site_banners settings">

@@ -32,11 +32,12 @@ $count = count($bannerSlides);
   <div class="banner-track">
     <?php foreach ($bannerSlides as $i => $s):
       $x = (int) $s['pos_x']; $y = (int) $s['pos_y']; $z = max(100, (int) $s['zoom']) / 100;
+      $fit = isset(App\Models\Banner::FITS[$s['fit'] ?? '']) ? $s['fit'] : 'cover';
       $cap = trim((string) ($s['caption_zh'] ?? '')) !== '' || trim((string) ($s['caption_en'] ?? '')) !== '';
       $link = !$bannerPreview ? trim((string) ($s['link_url'] ?? '')) : '';
       $tag = $link !== '' ? 'a' : 'div';
     ?>
-      <figure class="banner-slide<?= $i === 0 ? ' is-active' : '' ?>" data-slide="<?= (int) $s['id'] ?>"
+      <figure class="banner-slide fit-<?= $fit ?><?= $i === 0 ? ' is-active' : '' ?>" data-slide="<?= (int) $s['id'] ?>"
               role="group" aria-roledescription="slide" aria-label="<?= $i + 1 ?> / <?= $count ?>"<?= $i === 0 ? '' : ' aria-hidden="true"' ?>>
         <<?= $tag ?> class="banner-frame"<?= $link !== '' ? ' href="' . h(str_starts_with($link, '/') ? url($link) : $link) . '"' : '' ?>>
           <?php
@@ -49,7 +50,14 @@ $count = count($bannerSlides);
             // tile-shuffled copy, drawn back whole on a canvas by js/photos.js —
             // DevTools → Sources shows the jumbled file. The admin preview keeps
             // a plain picture so it can be tuned.
-            if (!$bannerPreview && App\Core\Media::guarded('banner')) {
+            $_bArea = !$bannerPreview && App\Core\Media::guarded('banner') ? 'banner' : 'none';
+            // 整張＋模糊 Whole picture: a blurred, enlarged copy fills the sides
+            // behind it (always there in the admin preview, so the choice can be switched live).
+            if ($fit === 'blur' || $bannerPreview) {
+                echo photo_img($s['image_path'], $_bArea, ['class' => 'banner-bg', 'alt' => '', 'aria-hidden' => 'true',
+                    'width' => (int) $s['img_w'], 'height' => (int) $s['img_h']] + ($_bArea === 'banner' ? ['data-eager' => '1'] : ['loading' => 'lazy']));
+            }
+            if ($_bArea === 'banner') {
                 echo photo_img($s['image_path'], 'banner', $_bAttrs + ['data-eager' => '1']);
             } else {
                 echo photo_img($s['image_path'], 'none', $_bAttrs + ($i === 0 ? ['fetchpriority' => 'high'] : ['loading' => 'lazy']));

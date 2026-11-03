@@ -248,6 +248,19 @@ $router->get('/admin/vouchers/print',         'VoucherController@print');
 $router->get('/admin/vouchers/excel',         'VoucherController@excel');
 // 施齋 Day 3: tables and seating
 $router->get('/admin/zai',                    'ZaiController@index');
+// 施齋入座 簡易模式 Easy mode for helpers on the day
+$router->get('/admin/zai/easy',               'ZaiEasyController@start');
+$router->get('/admin/zai/easy/find',          'ZaiEasyController@find');
+$router->post('/admin/zai/easy/pick',         'ZaiEasyController@pick');
+$router->get('/admin/zai/easy/table',         'ZaiEasyController@table');
+$router->post('/admin/zai/easy/seat',         'ZaiEasyController@seat');
+$router->get('/admin/zai/easy/groups',        'ZaiEasyController@groups');
+$router->get('/admin/zai/easy/group',         'ZaiEasyController@group');
+$router->post('/admin/zai/easy/group',        'ZaiEasyController@saveGroup');
+$router->get('/admin/zai/easy/wait',          'ZaiEasyController@wait');
+$router->post('/admin/zai/easy/wait',         'ZaiEasyController@addWait');
+$router->get('/admin/zai/easy/waitlist',      'ZaiEasyController@waitlist');
+$router->get('/admin/zai/easy/done',          'ZaiEasyController@doneScreen');
 $router->get('/admin/zai/registered',         'ZaiController@registered');
 $router->post('/admin/zai/person',            'ZaiController@person');
 $router->post('/admin/zai/person-group',      'ZaiController@personGroup');

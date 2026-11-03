@@ -25,6 +25,39 @@
     var c = firstCard();
     return c ? (c.dataset.w + ' / ' + c.dataset.h) : '3 / 1';
   }
+  // "100 / 35" → 0.35 (height ÷ width)
+  function hOverW(ratio) { var p = ratio.split('/'); return (+p[1]) / (+p[0]); }
+
+  /** Best picture size for each device, and whether each picture matches the banner's shape. */
+  function showSizes() {
+    var c = firstCard();
+    document.querySelectorAll('[data-size]').forEach(function (p) {   // also the ④ Add form below
+      var dev = p.dataset.size === 'add' ? device : p.dataset.size;
+      var base = p.dataset.size === 'add' ? 1920 : +p.dataset.base;
+      var whole = form.querySelector('[name="whole_' + dev + '"]').checked;
+      var h = Math.round(base * hOverW(ratioFor(dev)));
+      p.innerHTML = (p.dataset.size === 'add' ? '建議圖片尺寸（' + (dev === 'mobile' ? '手機' : '電腦') + '）' : '建議圖片尺寸 ') +
+        '<b>' + base + ' × ' + h + ' px</b>' + (whole && c ? '（和第一張圖一樣的比例 same shape as the first picture）' : '') +
+        ' <span class="en">Best picture size' + (p.dataset.size === 'add' ? '' : '') + '</span>';
+    });
+    var want = hOverW(ratioFor(device));
+    form.querySelectorAll('.bn-card').forEach(function (card) {
+      var note = card.querySelector('.bn-fitnote');
+      var have = (+card.dataset.h) / (+card.dataset.w);
+      var fit = (card.querySelector('[data-fit]:checked') || {}).value || 'cover';
+      var diff = have / want;
+      note.className = 'bn-fitnote';
+      if (Math.abs(diff - 1) < 0.04) { note.textContent = '✓ 剛好符合橫幅 Fits the banner exactly'; note.classList.add('ok'); }
+      else if (fit !== 'cover') { note.textContent = '✓ 整張顯示 Shown whole'; note.classList.add('ok'); }
+      else {
+        var part = diff > 1 ? '上下' : '左右', cut = Math.round((1 - Math.min(diff, 1 / diff)) * 100);
+        note.textContent = '⚠ 比橫幅' + (diff > 1 ? '高' : '寬') + '，' + part + '約 ' + cut + '% 會被裁掉；要整張顯示請選下面「整張顯示」。' +
+          ' ' + (diff > 1 ? 'Taller' : 'Wider') + ' than the banner — about ' + cut + '% is cut off ' + (diff > 1 ? 'top and bottom' : 'at the sides') + '. Choose “Whole picture” below to show it all.';
+        note.classList.add('warn');
+      }
+    });
+  }
+
   function applyShape() {
     var d = ratioFor('desktop'), m = ratioFor('mobile');
     if (preview) {
@@ -35,6 +68,7 @@
     }
     if (wrap) wrap.classList.toggle('phone', device === 'mobile');
     form.querySelectorAll('.bn-tuner').forEach(function (t) { t.style.aspectRatio = device === 'mobile' ? m : d; });
+    showSizes();
   }
 
   // ---- ② settings ----
@@ -155,6 +189,7 @@
         if (!r.checked) return;
         var set = function (el) { if (el) { el.classList.remove('fit-cover', 'fit-blur', 'fit-plain'); el.classList.add('fit-' + r.value); } };
         set(tuner); set(previewSlide(card));
+        showSizes();
         showInPreview(card);
       });
     });

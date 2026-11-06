@@ -8,7 +8,8 @@
 $oldNames    = $old['values']['names']    ?? [];
 $oldIcs      = $old['values']['ics']      ?? [];
 $oldContacts = $old['values']['contacts'] ?? [];
-$startRows   = max(1, min(count($oldNames), $maxPerForm));
+$oldSource   = ($old['values']['source'] ?? '') === 'whatsapp' ? 'whatsapp' : 'walkin';
+$startRows   = $oldSource === 'walkin' ? 1 : max(1, min(count($oldNames), $maxPerForm));
 ?>
 <?php
 $pageTitle = '現場報名 Walk-in Registration';
@@ -70,22 +71,24 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
 
       <label>來源 <span class="en">Where the booking came from</span></label>
       <div class="seg-toggle walkin-source" role="radiogroup">
-        <label class="seg-on"><input type="radio" name="source" value="walkin" checked><span><?= icon('walk') ?> 現場 Walk-in</span></label>
-        <label class="seg-on"><input type="radio" name="source" value="whatsapp"><span><?= icon('phone') ?> WhatsApp 預約</span></label>
+        <label class="seg-on"><input type="radio" name="source" value="walkin"<?= $oldSource === 'walkin' ? ' checked' : '' ?>><span><?= icon('walk') ?> 現場 Walk-in</span></label>
+        <label class="seg-on"><input type="radio" name="source" value="whatsapp"<?= $oldSource === 'whatsapp' ? ' checked' : '' ?>><span><?= icon('phone') ?> WhatsApp 預約</span></label>
       </div>
-      <p class="help" id="sourceHelp">現場：登記並立即報到。WhatsApp：只登記，當天到場再報到。<span class="en">Here now: registered and checked in. WhatsApp: registered only — they check in on the day.</span></p>
+      <p class="help" id="sourceHelp">現場：1 人 1 身份證，登記並立即報到。WhatsApp：只登記，當天到場再報到。<span class="en">Walk-in: one person, one IC — registered and checked in. WhatsApp: registered only — they check in on the day.</span></p>
 
+      <div id="rowCountBox"<?= $oldSource === 'walkin' ? ' hidden' : '' ?>>
       <label for="rowCount">人數｜Number of People</label>
       <select id="rowCount" onchange="renderRows()">
         <?php for ($i = 1; $i <= $maxPerForm; $i++): ?>
           <option value="<?= $i ?>"<?= $i === $startRows ? ' selected' : '' ?>><?= $i ?> 位</option>
         <?php endfor; ?>
       </select>
+      </div>
 
       <div id="walkinRows"></div>
 
       <div class="form-actions">
-        <button class="primary" type="submit" id="walkinSubmit"><?= icon('walk') ?> <span data-for="walkin">登記並報到 <span class="en">Register &amp; check in</span></span><span data-for="whatsapp" hidden>登記 WhatsApp 預約 <span class="en">Save booking</span></span></button>
+        <button class="primary" type="submit" id="walkinSubmit"><?= icon('walk') ?> <span data-for="walkin"<?= $oldSource === 'walkin' ? '' : ' hidden' ?>>登記並報到 <span class="en">Register &amp; check in</span></span><span data-for="whatsapp"<?= $oldSource === 'whatsapp' ? '' : ' hidden' ?>>登記 WhatsApp 預約 <span class="en">Save booking</span></span></button>
       </div>
     </form>
   </div>
@@ -135,7 +138,8 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     <ul>
       <li>適用於當天才到、沒有網上報名的善信。<span class="en">For people who did not register online.</span></li>
       <li>儲存後即自動報到，不必再掃描。<span class="en">Saving also checks them in — no scan needed.</span></li>
-      <li>身份證與電話可留空，但有填寫較易查找。<span class="en">IC and phone are optional, but make finding them later easier.</span></li>
+      <li>現場報名 1 人 1 身份證（必填），年齡規定與網上報名相同。<span class="en">Walk-in: one person, one IC (required); same age rule as online registration.</span></li>
+      <li>電話可留空。<span class="en">The phone number is optional.</span></li>
       <li>已在網上報名？請用「現場報到」。<span class="en">Registered online? Use Check-in instead.</span></li>
     </ul>
   </details>
@@ -153,7 +157,9 @@ const OLD = {
 };
 
 function renderRows() {
-  const n   = Number(document.getElementById('rowCount').value);
+  // Walk-in: always one person. WhatsApp booking: the number picked.
+  const walkin = document.querySelector('.walkin-source input[value="walkin"]').checked;
+  const n   = walkin ? 1 : Number(document.getElementById('rowCount').value);
   const box = document.getElementById('walkinRows');
   box.innerHTML = '';
 
@@ -169,8 +175,8 @@ function renderRows() {
       <input name="attendee_name[]" maxlength="100" placeholder="請輸入姓名" required>
       <div class="form-row">
         <div>
-          <label>身份證號碼｜IC No.（選填）</label>
-          <input name="attendee_ic[]" maxlength="30" placeholder="例如：651020-10-2020">
+          <label>身份證號碼｜IC No. *</label>
+          <input name="attendee_ic[]" maxlength="30" placeholder="例如：651020-10-2020" required>
         </div>
         <div>
           <label>聯絡號碼｜Contact（選填）</label>
@@ -195,6 +201,8 @@ renderRows();
 document.querySelectorAll('.walkin-source input').forEach(function (r) {
   r.addEventListener('change', function () {
     document.querySelectorAll('#walkinSubmit [data-for]').forEach(function (s) { s.hidden = s.dataset.for !== r.value; });
+    document.getElementById('rowCountBox').hidden = r.value === 'walkin';
+    renderRows();
   });
 });
 </script>

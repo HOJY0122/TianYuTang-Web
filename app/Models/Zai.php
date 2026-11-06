@@ -412,6 +412,27 @@ class Zai extends Model
             [$status, $status === 'seated' ? $tableNo : null, $status, $id]);
     }
 
+    /**
+     * A walk-in (waiting list) is one person with one IC, checked like the
+     * online form: a valid IC / passport and the same age rule.
+     * Returns the problem to show, or null when the IC is fine.
+     */
+    public static function walkInIcProblem(string $ic, array $event): ?string
+    {
+        if (trim($ic) === '') {
+            return '請輸入身份證號碼。Please type the IC number.';
+        }
+        $ok = \App\Core\Validate::icOrPassport($ic);
+        if ($ok === null) {
+            return \App\Core\Validate::IC_MESSAGE;
+        }
+        $rule = \App\Core\FormRules::ageRule();
+        if ($rule !== null && ($problem = \App\Core\FormRules::groupAgeProblem([$ok], $rule, $event)) !== null) {
+            return str_replace(['第 1 位：', 'Person 1: '], '', $problem);
+        }
+        return null;
+    }
+
     /** Last 4 digits of every IC on a waiting row: the lead's first, then the others'. */
     public static function waitingLast4(array $row): array
     {
@@ -420,17 +441,6 @@ class Zai extends Model
             $out[] = (string) ($x['l'] ?? '');
         }
         return array_values(array_filter($out, 'strlen'));
-    }
-
-    /** The first of these ICs that is already registered online, or null. */
-    public function registeredAny(int $eventId, array $ics): ?array
-    {
-        foreach ($ics as $ic) {
-            if (($reg = $this->registeredIc($eventId, (string) $ic)) !== null) {
-                return $reg;
-            }
-        }
-        return null;
     }
 
     /** Is this IC already registered online for the event? [group ref, name] or null. */

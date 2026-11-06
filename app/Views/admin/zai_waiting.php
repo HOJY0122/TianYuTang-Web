@@ -14,14 +14,13 @@ $statusLabel = ['waiting' => ['pending', '候補中 Waiting'], 'seated' => ['ok'
   <form method="POST" action="<?= url('/admin/zai/waiting/add') ?>" class="zai-fields">
     <?= csrf_field() ?><input type="hidden" name="event_id" value="<?= (int) $event['id'] ?>">
     <label>姓名 <span class="en">Name</span> *<input name="name" required maxlength="100" autocomplete="off"></label>
-    <label>身份證（可選）<span class="en">IC (optional)</span><input name="ic" maxlength="20" autocomplete="off" inputmode="numeric"></label>
+    <label>身份證 <span class="en">IC</span> *<input name="ic" required maxlength="30" autocomplete="off" inputmode="numeric" placeholder="例 650101-10-1234"></label>
     <label>電話 <span class="en">Phone</span><input name="contact" maxlength="30" inputmode="tel" autocomplete="off"></label>
-    <label>人數 <span class="en">People</span><input type="number" name="people" min="1" max="50" value="1"></label>
     <label class="wide">備註 <span class="en">Notes</span><input name="notes" maxlength="300"></label>
     <div class="form-actions wide" style="margin-top:4px;padding-top:12px"><button class="primary" type="submit"><?= icon('plus') ?> 加入，給號碼 <span class="en">Add &amp; give a number</span></button></div>
   </form>
-  <p class="help">有身份證時會先檢查：如果已經網上登記，會帶你去「已登記」。只存身份證的雜湊與後 4 位。<br>
-    <span class="en">With an IC we first check whether they registered online (then you are taken to Registered). Only a keyed hash and the last 4 digits are kept.</span></p>
+  <p class="help">候補 1 人 1 身份證（必填），年齡規定與網上報名相同。如果已經網上登記，會帶你去「已登記」。只存身份證的雜湊與後 4 位。<br>
+    <span class="en">One person, one IC (required), same age rule as online registration. If they registered online you are taken to Registered. Only a keyed hash and the last 4 digits are kept.</span></p>
 </div>
 
 <div class="panel">

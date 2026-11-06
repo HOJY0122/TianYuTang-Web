@@ -2,7 +2,7 @@
 /**
  * 施齋 Day 3 — 團體 groups: organisation registrations (added
  * automatically) and the PM's own list (imported). On arrival: mark
- * arrived, give the table(s), take a photo of the cheque.
+ * arrived, give the table(s); then a reminder to take the cheque photo (on the staff phone, not uploaded).
  */
 require BASE_PATH . '/app/Views/layouts/admin_header.php';
 require BASE_PATH . '/app/Views/admin/_zai_head.php';
@@ -25,7 +25,7 @@ $arrived = count(array_filter($groups, static fn($g) => $g['status'] === 'arrive
 </div>
 
 <?php foreach ($groups as $g): $zid = (int) $g['id']; $done = $g['status'] === 'arrived'; ?>
-  <form method="POST" action="<?= url('/admin/zai/group') ?>" enctype="multipart/form-data" class="panel zai-group<?= $done ? ' is-done' : '' ?>" id="zg<?= $zid ?>">
+  <form method="POST" action="<?= url('/admin/zai/group') ?>" class="panel zai-group<?= $done ? ' is-done' : '' ?>" id="zg<?= $zid ?>">
     <?= csrf_field() ?><input type="hidden" name="id" value="<?= $zid ?>"><input type="hidden" name="q" value="<?= h($q) ?>">
     <div class="zai-reg-head">
       <strong><?= h($g['name']) ?></strong>
@@ -40,17 +40,7 @@ $arrived = count(array_filter($groups, static fn($g) => $g['status'] === 'arrive
       <label>支票號碼 <span class="en">Cheque no.</span><input name="cheque_no" value="<?= h($g['cheque_no'] ?? '') ?>" maxlength="40"></label>
       <label class="wide">備註 <span class="en">Notes</span><input name="notes" value="<?= h($g['notes'] ?? '') ?>" maxlength="500"></label>
     </div>
-    <div class="zai-cheque">
-      <?php if ($g['cheque_path']): ?>
-        <a href="<?= url('/admin/zai/cheque') ?>?id=<?= $zid ?>" target="_blank"><img src="<?= url('/admin/zai/cheque') ?>?id=<?= $zid ?>&amp;v=<?= substr(md5((string) $g['cheque_path']), 0, 6) ?>" alt="支票 Cheque"></a>
-        <label class="check-inline"><input type="checkbox" name="remove_cheque" value="1"> 移除 <span class="en">Remove</span></label>
-      <?php endif; ?>
-      <div class="zai-cheque-pick">
-        <span class="help"><?= icon('camera') ?> 與支票合照 <span class="en">Photo with the cheque</span></span>
-        <input type="file" name="cheque" accept="image/jpeg,image/png,image/webp" capture="environment" data-aspects="original,4:3,3:4" data-max-width="2000"
-               <?= $g['cheque_path'] ? 'data-current="' . url('/admin/zai/cheque') . '?id=' . $zid . '"' : '' ?>>
-      </div>
-    </div>
+    <p class="help zai-cheque-note"><?= icon('camera') ?> 按「已到」後，請用手機與支票合照（不用上傳）。<span class="en">After “Arrived”, take the cheque photo on your phone — no upload.</span></p>
     <div class="zai-act">
       <?php if (!$done): ?>
         <button class="mini-btn btn-lg" name="status" value="arrived" type="submit">✓ 已到，儲存 <span class="en">Arrived — save</span></button>

@@ -2,11 +2,9 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
-use App\Core\ImageUploader;
 use App\Models\Event;
 use App\Models\Rsvp;
 use App\Models\Zai;
-use RuntimeException;
 
 /**
  * ZaiEasyController — 施齋入座 簡易模式 Easy mode, for the helpers on the day.
@@ -15,7 +13,7 @@ use RuntimeException;
  *
  *   start   "誰來了？Who is here?"
  *             ① 已經網上登記  → type IC → tick people → ✓ → tap a table → done
- *             ② 團體          → tap the group → people / tables / cheque photo → done
+ *             ② 團體          → tap the group → people / tables → done (+ cheque photo reminder)
  *             ③ 沒有登記      → name, phone, how many → queue number → done
  *             ④ 候補名單      → tap a waiting person → tap a table → done
  *   done    a big ✓ with what happened, and "下一位 Next".
@@ -182,13 +180,10 @@ class ZaiEasyController extends Controller
         $this->screen('group', ['g' => $g, 'seating' => $zai->seating((int) $event['id'])]);
     }
 
-    /** POST /admin/zai/easy/group — arrived, people, tables, cheque photo in one go. */
+    /** POST /admin/zai/easy/group — arrived, people, tables in one go; then the cheque-photo reminder. */
     public function saveGroup(): void
     {
         $this->requireAdmin();
-        if (empty($_POST) && ($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
-            $this->done('!', '相片太大 Photo too large', '請再拍一次。Please take the photo again.', 'warn', ['/admin/zai/easy/groups', '返回 Back']);
-        }
         $this->requireCsrf();
         $event = (new Event())->active();
         $zai = new Zai();
@@ -208,22 +203,10 @@ class ZaiEasyController extends Controller
             'status'    => 'arrived',
             'by'        => $this->by(),
         ]);
-        $photo = '';
-        if (ImageUploader::wasProvided($_FILES['cheque'] ?? null)) {
-            $uploader = new ImageUploader('zai', true);
-            try {
-                $path = $uploader->store($_FILES['cheque'], 2000);
-                $zai->setCheque((int) $g['id'], $path);
-                $uploader->delete($g['cheque_path']);
-                $photo = "\n📷 支票相片已存 Cheque photo saved";
-            } catch (RuntimeException $e) {
-                $photo = "\n⚠ 相片未存：" . $e->getMessage();
-            }
-        } elseif (!$g['cheque_path']) {
-            $photo = "\n⚠ 還沒有支票相片 No cheque photo yet";
-        }
-        $this->done('第 ' . implode('、', $tables) . ' 桌', $g['name'] . ' · ' . (int) ($_POST['people'] ?? $g['people']) . ' 人', '✓ 已到 Arrived' . $photo,
-            str_contains($photo, '⚠') ? 'warn' : 'ok', ['/admin/zai/easy/groups', '下一個團體 Next group']);
+        // The cheque photo is taken by the staff on their own phone — nothing is
+        // uploaded here. The done screen only reminds them to take it.
+        $this->done('第 ' . implode('、', $tables) . ' 桌', $g['name'] . ' · ' . (int) ($_POST['people'] ?? $g['people']) . ' 人', '✓ 已到 Arrived',
+            'ok', ['/admin/zai/easy/groups', '下一個團體 Next group'], true);
     }
 
     /** GET /admin/zai/easy/wait — someone who did not register. */
@@ -231,8 +214,9 @@ class ZaiEasyController extends Controller
     {
         $this->requireAdmin();
         $error = $_SESSION['zai_wait_error'] ?? null;
-        unset($_SESSION['zai_wait_error']);
-        $this->screen('wait', ['error' => $error]);
+        $old = $_SESSION['zai_wait_old'] ?? [];
+        unset($_SESSION['zai_wait_error'], $_SESSION['zai_wait_old']);
+        $this->screen('wait', ['error' => $error, 'old' => $old]);
     }
 
     /** POST /admin/zai/easy/wait */
@@ -246,23 +230,20 @@ class ZaiEasyController extends Controller
         if ($name === null) {
             $this->redirect('/admin/zai/easy/wait');
         }
-        $ic = $this->str('ic', 20) ?? '';
-        if (strlen(Rsvp::icNormal($ic)) < 6) {
-            // The lead's IC is required: it is how we spot someone who did register.
-            $_SESSION['zai_wait_error'] = '請輸入身份證號碼。Please type the IC number.';
+        // Walk-in: one person, one IC (required), same age rule as online.
+        $ic = $this->str('ic', 30) ?? '';
+        if (($problem = Zai::walkInIcProblem($ic, $event)) !== null) {
+            $_SESSION['zai_wait_error'] = $problem;
+            $_SESSION['zai_wait_old'] = ['name' => $name, 'ic' => $ic, 'contact' => (string) $this->str('contact', 30)];
             $this->redirect('/admin/zai/easy/wait');
         }
-        $people = max(1, min(50, (int) ($_POST['people'] ?? 1)));
-        // The others in the party: optional, one box each (never more than the party).
-        $extra = array_slice(array_filter(array_map(
-            static fn($v) => mb_substr(trim((string) $v), 0, 20), (array) ($_POST['ic_more'] ?? [])), 'strlen'), 0, $people - 1);
-        if (($reg = $zai->registeredAny((int) $event['id'], array_merge([$ic], $extra))) !== null) {
+        if (($reg = $zai->registeredIc((int) $event['id'], $ic)) !== null) {
             // Registered after all: go straight to their registration.
             $this->redirect('/admin/zai/easy/find?q=' . urlencode($reg['ref_code']) . '&found=1');
         }
         $no = $zai->addWaiting((int) $event['id'], [
-            'name' => $name, 'ic' => $ic, 'extra_ics' => $extra, 'contact' => $this->str('contact', 30),
-            'people' => $people, 'notes' => null,
+            'name' => $name, 'ic' => $ic, 'contact' => $this->str('contact', 30),
+            'people' => 1, 'notes' => null,
         ], $this->by());
         $this->done('#' . $no, '候補號碼 Waiting number', $name . "\n請到候補區等候，叫號後安排座位。\nPlease wait in the waiting area until called.", 'info');
     }
@@ -300,10 +281,10 @@ class ZaiEasyController extends Controller
     }
 
     /** Show the big ✓ screen (POST → redirect → GET, so a refresh never repeats it). */
-    private function done(string $big, string $title, string $text, string $tone = 'ok', ?array $next = null): void
+    private function done(string $big, string $title, string $text, string $tone = 'ok', ?array $next = null, bool $chequeReminder = false): void
     {
         $_SESSION['zai_done'] = ['big' => $big, 'title' => $title, 'text' => $text, 'tone' => $tone,
-                                 'next' => $next ?? ['/admin/zai/easy', '下一位 Next person']];
+                                 'next' => $next ?? ['/admin/zai/easy', '下一位 Next person'], 'cheque' => $chequeReminder];
         $this->redirect('/admin/zai/easy/done');
     }
 

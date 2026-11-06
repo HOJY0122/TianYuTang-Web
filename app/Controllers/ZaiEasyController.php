@@ -263,7 +263,7 @@ class ZaiEasyController extends Controller
         $zai->saveGroup((int) $g['id'], [
             'people'    => max(0, min(5000, (int) ($_POST['people'] ?? $g['people']))),
             'tables'    => implode(', ', $tables),
-            'cheque_no' => $this->str('cheque_no', 40) ?? $g['cheque_no'],
+            'cheque_no' => $g['cheque_no'],     // not asked in easy mode; kept as it is (admin 團體 page can set it)
             'notes'     => $g['notes'],
             'status'    => 'arrived',
             'by'        => $this->by(),

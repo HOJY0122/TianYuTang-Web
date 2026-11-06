@@ -1373,3 +1373,45 @@ body.ez{margin:0;background:#f7efdc;color:#2b1d14;font-family:"Noto Sans TC","Mi
 .role-form select{min-height:40px;padding:4px 8px;border:1px solid #d8bf79;border-radius:10px;background:#fffdf6;font:inherit;font-size:13px}
 .badge.helper{background:#efe4f5;color:#5b3f86}
 .badge.helper .ic{width:14px;height:14px;vertical-align:-2px}
+
+/* ---------- 施齋 Day 3 平面圖 Table map ---------- */
+.zai-map-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.zai-map-head .help{flex-basis:100%}
+.zai-map-legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;font-weight:700}
+.zai-map-legend .lg{display:inline-block;width:16px;height:16px;border-radius:4px;vertical-align:-3px;margin-right:2px;border:2px solid}
+.lg-open{background:#f2f8ee;border-color:#a9cba0}.lg-group{background:#f4eefb;border-color:#9b82c4}
+.lg-res{background:#fff;border-color:#9b82c4;border-style:dashed}.lg-full{background:#fff7dc;border-color:#e3c35b}.lg-over{background:#fdebe8;border-color:#d9776b}
+.zai-map-cols{margin:0 0 0 auto}
+.zai-map-cols label{display:flex;align-items:center;gap:6px;font-weight:800;font-size:13px;margin:0}
+.zai-map-cols select{min-height:40px;padding:4px 8px;border:1px solid #d8bf79;border-radius:10px;background:#fffdf6;font:inherit}
+.zai-map-wrap{overflow-x:auto}
+.zai-map{display:grid;grid-template-columns:repeat(var(--cols,4),minmax(132px,1fr));gap:12px;min-width:calc(var(--cols,4) * 132px + (var(--cols,4) - 1) * 12px)}
+.zai-cell{display:flex;flex-direction:column;gap:6px;min-height:118px;padding:10px 12px;border-radius:14px;border:3px solid #a9cba0;background:#f2f8ee;
+  color:#2b1d14;text-decoration:none;box-shadow:0 3px 8px rgba(67,39,18,.06);transition:transform .12s}
+.zai-cell:hover{transform:translateY(-2px)}
+.zai-cell.kind-group{border-color:#9b82c4;background:#f4eefb}
+.zai-cell.has-res{border-style:dashed}
+.zai-cell.st-full{border-color:#e3c35b;background:#fff7dc}
+.zai-cell.st-over{border-color:#d9776b;background:#fdebe8}
+.zai-cell.is-edit{outline:4px solid #9f211b;outline-offset:2px}
+.zc-top{display:flex;align-items:center;justify-content:space-between}
+.zc-top b{font-size:26px;line-height:1}
+.zc-top em{font-style:normal;font-size:11px;font-weight:800;padding:2px 7px;border-radius:999px;background:#fff;border:1px solid #d9cba6}
+.kind-group .zc-top em{color:#5b3f86;border-color:#c7b6e3}
+.zc-bar{height:6px;border-radius:3px;background:rgba(0,0,0,.08);overflow:hidden}
+.zc-bar i{display:block;height:100%;background:#2f7d4a}
+.st-full .zc-bar i{background:#c79a12}.st-over .zc-bar i{background:#c0392b}
+.zc-n{font-size:13px;font-weight:800}
+.zc-who{font-size:12px;color:#5a4a3a;line-height:1.35;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.zai-map-edit{border:2px solid #9f211b}
+.zai-map-edit-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.zai-map-edit-head .mini-btn{margin-left:auto}
+.zai-map-edit h3{font-size:16px;margin:16px 0 6px}
+.zai-map-form{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:12px}
+.zai-map-form select{min-height:44px;max-width:100%;padding:6px 10px;border:1px solid #d8bf79;border-radius:10px;background:#fffdf6;font:inherit}
+.zai-map-seats{display:flex;align-items:center;gap:6px;font-weight:800;margin:0}
+.zai-map-seats input{width:76px;min-height:42px;padding:4px 8px;border:1px solid #d8bf79;border-radius:10px;background:#fffdf6;font:inherit}
+.zai-map-who{margin:0;padding-left:20px;line-height:2}
+.zai-map-form .seg-toggle small{font-weight:600;opacity:.8;margin-left:4px}
+.ez-tbl.grp{border-color:#c7b6e3;background:#f4eefb;color:#5b3f86}
+.ez-step-sub{grid-column:1/-1;font-size:16px;margin:10px 0 0}

@@ -107,6 +107,7 @@ class Setting extends Model
         // 布施憑單 Donation vouchers: the approver's signature printed on the voucher (Admin → Vouchers,
         // system admin). Kept in storage/ (private), never in the code: the repository is public.
         'voucher_signature' => null,
+        'zai_map_cols'      => '4',          // 施齋 Day 3 平面圖 Map: tables per row
     ];
 
     /**

@@ -48,8 +48,8 @@ $hidden = '<input type="hidden" name="event_id" value="' . (int) $event['id'] . 
           <?php else: ?><span class="badge">未處理 Not yet</span><?php endif; ?>
         </div>
         <div class="zai-act">
-          <?= $tableSelect('table_no', $st && $st['table_no'] !== null ? (int) $st['table_no'] : null, 'aria-label="桌號 Table"') ?>
-          <button class="mini-btn" name="status" value="confirmed" type="submit">✓ 確認 <span class="en">Confirm</span></button>
+          <?= $tableSelect('table_no', $st && $st['table_no'] !== null ? (int) $st['table_no'] : null, 'aria-label="桌號 Table"', 1, (string) $a['name']) ?>
+          <button class="mini-btn" name="status" value="confirmed" type="submit" data-needs-table data-table-optional>✓ 確認 <span class="en">Confirm</span></button>
           <button class="mini-btn ghost" name="status" value="pending" type="submit">… 待定 <span class="en">Pending</span></button>
           <?php if ($st): ?><button class="mini-btn ghost" name="status" value="clear" type="submit" title="清除 Clear">↺</button><?php endif; ?>
         </div>
@@ -60,8 +60,8 @@ $hidden = '<input type="hidden" name="event_id" value="' . (int) $event['id'] . 
       <form method="POST" action="<?= url('/admin/zai/person-group') ?>" class="zai-all">
         <?= csrf_field() ?><?= $hidden ?><input type="hidden" name="group_id" value="<?= $gid ?>">
         <span><?= icon('users') ?> 全部 <?= count($g['people']) ?> 人 <span class="en">Everyone</span>:</span>
-        <?= $tableSelect('table_no', null, 'aria-label="桌號 Table"') ?>
-        <button class="mini-btn" name="status" value="confirmed" type="submit">✓ 全部確認 <span class="en">Confirm all</span></button>
+        <?= $tableSelect('table_no', null, 'aria-label="桌號 Table"', count($g['people']), $g['ref_code'] . ' 全部 everyone') ?>
+        <button class="mini-btn" name="status" value="confirmed" type="submit" data-needs-table data-table-optional>✓ 全部確認 <span class="en">Confirm all</span></button>
         <button class="mini-btn ghost" name="status" value="pending" type="submit">… 全部待定 <span class="en">All pending</span></button>
       </form>
     <?php endif; ?>

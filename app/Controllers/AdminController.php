@@ -96,7 +96,8 @@ class AdminController extends Controller
         // opens a session: anyone can read it, so whoever tried it first
         // would get to choose the "new" password and keep the account.
         // The server operator sets the first password from the shell.
-        if (AdminUser::isDefaultPassword($password)) {
+        // Judged on the account's stored hash, not on the typed text.
+        if (!empty($user['has_default_password']) || AdminUser::isDefaultPassword($password)) {
             $_SESSION['login_error'] = [
                 'message'  => "此帳號仍是系統預設密碼，不能登入。請伺服器管理員執行 php bin/set-password.php " . $name . " 設定新密碼。"
                     . "\nThis account still has the default password and cannot sign in. The server operator must set a new one with: php bin/set-password.php " . $name,

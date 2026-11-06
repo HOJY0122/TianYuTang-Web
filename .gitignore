@@ -23,5 +23,7 @@ Thumbs.db
 .vscode/
 
 # This machine's real settings and secrets — never commit
-/config/config.local.php
+/config/config.local.php*
+/config/*.local.*
+!/config/config.local.example.php
 .env

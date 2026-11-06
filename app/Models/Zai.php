@@ -97,6 +97,46 @@ class Zai extends Model
      * Who sits at each table: table_no => ['used' => n, 'who' => [[kind, label, n], …]].
      * Includes table numbers in use that are not (or no longer) set up.
      */
+    /** Where the 櫃台 counter can be drawn on the hall map. */
+    public const COUNTER_SPOTS = [
+        'bottom-left' => '下方左邊 Bottom left', 'bottom-center' => '下方中間 Bottom centre', 'bottom-right' => '下方右邊 Bottom right',
+        'top-left' => '上方左邊 Top left', 'top-center' => '上方中間 Top centre', 'top-right' => '上方右邊 Top right',
+        'none' => '不顯示 Hide',
+    ];
+
+    /**
+     * The hall layout, like the floor: tables per row, a walkway after every
+     * N rows, and where the counter is. Used by the admin map and the easy
+     * screens, so everyone sees the same picture.
+     * @return array{cols:int, aisle:int, counter:string}
+     */
+    public static function hallLayout(?array $site = null): array
+    {
+        $site ??= (new Setting())->site();
+        $counter = (string) ($site['zai_map_counter'] ?? 'bottom-left');
+        return [
+            'cols'    => max(2, min(10, (int) ($site['zai_map_cols'] ?? 4))),
+            'aisle'   => max(0, min(10, (int) ($site['zai_map_aisle'] ?? 3))),
+            'counter' => isset(self::COUNTER_SPOTS[$counter]) ? $counter : 'bottom-left',
+        ];
+    }
+
+    /**
+     * Table numbers in rows of $cols, with null marking a walkway after every
+     * $aisle rows. [[1,2,3,4],[5,6,7,8],[9,…], null, [13,…]]
+     */
+    public static function hallRows(array $tableNos, int $cols, int $aisle): array
+    {
+        $out = [];
+        foreach (array_chunk(array_values($tableNos), max(1, $cols)) as $i => $row) {
+            if ($i > 0 && $aisle > 0 && $i % $aisle === 0) {
+                $out[] = null;
+            }
+            $out[] = $row;
+        }
+        return $out;
+    }
+
     public function seating(int $eventId): array
     {
         $tables = $this->tables($eventId);

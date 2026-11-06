@@ -178,6 +178,16 @@ class ZaiEasyController extends Controller
         if ($table < 1) {
             $this->redirect('/admin/zai/easy');
         }
+        // Full already (maybe filled from another phone since this screen was
+        // opened): refuse, and go back to the tables to choose another.
+        $now = $zai->seating($eventId)[$table] ?? null;
+        if ($now !== null && $now['seats'] > 0 && $now['used'] >= $now['seats']) {
+            $back = ($_POST['for'] ?? '') === 'wait'
+                ? '/admin/zai/easy/table?for=wait&id=' . (int) ($_POST['id'] ?? 0)
+                : '/admin/zai/easy/table?for=people&ids=' . implode(',', $this->ids(explode(',', (string) ($_POST['ids'] ?? ''))));
+            $this->done('!', '第 ' . $table . ' 桌已滿 Table ' . $table . ' is full',
+                "請選另一張桌。\nPlease choose another table.", 'warn', [$back, '選另一張桌 Choose another table']);
+        }
         $names = [];
         if (($_POST['for'] ?? '') === 'wait') {
             $w = $zai->waitingRow((int) ($_POST['id'] ?? 0));
@@ -236,6 +246,17 @@ class ZaiEasyController extends Controller
             $this->redirect('/admin/zai/easy/groups');
         }
         $tables = array_slice(Zai::tableList(implode(',', array_map('strval', (array) ($_POST['tables'] ?? [])))), 0, 30);
+        // A table that is full (and not already this group's) cannot be chosen —
+        // it may have filled from another phone since the screen was opened.
+        $seatingNow = $zai->seating((int) $event['id']);
+        $own = Zai::spread($g, array_map(static fn($t) => $t['seats'], $seatingNow));
+        foreach ($tables as $no) {
+            $t = $seatingNow[$no] ?? null;
+            if ($t !== null && $t['seats'] > 0 && !isset($own[$no]) && $t['seats'] - $t['used'] <= 0) {
+                $this->done('!', '第 ' . $no . ' 桌已滿 Table ' . $no . ' is full', "請選另一張桌。\nPlease choose another table.", 'warn',
+                    ['/admin/zai/easy/group?id=' . (int) $g['id'], '返回 Back']);
+            }
+        }
         if (!$tables) {
             $this->done('!', '請選桌號 Choose a table', '請按一張或多張桌子。Tap one or more tables.', 'warn', ['/admin/zai/easy/group?id=' . (int) $g['id'], '返回 Back']);
         }
@@ -340,6 +361,7 @@ class ZaiEasyController extends Controller
             'event'  => (new Event())->active(),
             'screen' => $name,
             'onlyZai' => \App\Core\Access::isHelper(),
+            'hall'    => Zai::hallLayout(),
         ]);
     }
 

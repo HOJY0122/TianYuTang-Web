@@ -54,7 +54,7 @@ class ZaiController extends Controller
         $no = (int) ($_GET['table'] ?? 0);
         $this->page('admin/zai_map', 'map', $event, [
             'seating' => $seating,
-            'cols'    => max(2, min(10, (int) ((new \App\Models\Setting())->site()['zai_map_cols'] ?? 4))),
+            'hall'    => Zai::hallLayout(),
             'edit'    => isset($seating[$no]) && $seating[$no]['seats'] > 0 ? $no : null,
             'groups'  => $zai->groups((int) $event['id']),
         ]);
@@ -97,7 +97,15 @@ class ZaiController extends Controller
     {
         $this->requireAdmin();
         $this->requireCsrf();
-        (new \App\Models\Setting())->set('zai_map_cols', (string) max(2, min(10, (int) ($_POST['cols'] ?? 4))));
+        // The hall layout: tables per row, a walkway every N rows, the counter.
+        $s = new \App\Models\Setting();
+        $s->set('zai_map_cols', (string) max(2, min(10, (int) ($_POST['cols'] ?? 4))));
+        if (isset($_POST['aisle'])) {
+            $s->set('zai_map_aisle', (string) max(0, min(10, (int) $_POST['aisle'])));
+        }
+        if (isset($_POST['counter']) && isset(Zai::COUNTER_SPOTS[(string) $_POST['counter']])) {
+            $s->set('zai_map_counter', (string) $_POST['counter']);
+        }
         $this->redirect('/admin/zai/map?event=' . (int) ($_POST['event_id'] ?? 0));
     }
 

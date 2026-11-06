@@ -6,6 +6,9 @@ $mine = App\Models\Zai::tableList((string) ($g['tables'] ?? ''));
 // Seats left at each table, not counting this group's own people already there.
 $ownSpread = App\Models\Zai::spread($g, array_map(static fn($t) => $t['seats'], $seating));
 ?>
+<?php if (($_GET['from'] ?? '') === 'find'): ?>
+  <div class="ez-msg ez-info"><b>這個人是團體報名 ✓</b><p>請在這裡跟整個團體一起處理。<br><span class="en">This person registered as part of a group — handle the whole group here.</span></p></div>
+<?php endif; ?>
 <form method="POST" action="<?= url('/admin/zai/easy/group') ?>" class="ez-group">
   <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $g['id'] ?>">
 

@@ -15,13 +15,15 @@ require BASE_PATH . '/app/Views/layouts/header.php';
     </p>
 
     <!-- No QR here: staff check each registration first, then send the
-         check-in QR themselves (報名紀錄 → QR Code). Donations need none. -->
+         check-in QR themselves (報名紀錄 → QR Code), without promising it on
+         this page. Donations need none. -->
     <div class="ref-box">
       <div class="ref-label"><?= $isRsvp ? '報名編號 Reference' : '布施編號 Reference' ?></div>
       <div class="ref-code"><?= h($refCode) ?></div>
     </div>
     <?php if ($isRsvp): ?>
-      <p class="qr-later"><?= icon('phone') ?> <span><?= tb('success.rsvp_qr') ?></span></p>
+      <div class="confirm-remark"><b>備註！<span class="en">Remarks!</span></b>
+        <p><?= icon('id-card') ?> <span><?= tb('success.rsvp_note') ?></span></p></div>
     <?php endif; ?>
 
     <?php if ($isRsvp): ?>

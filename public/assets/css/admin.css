@@ -1506,3 +1506,11 @@ input[aria-invalid="true"]{border-color:#a3281f !important;background:#fff5f3}
 .zai-cell.st-over{border-color:#a3281f;background:#f6cfc9}
 .st-full .zc-bar i{background:#d9534f}.st-over .zc-bar i{background:#a3281f}
 .ez-tables-multi .ez-tbl:has(input:checked) b,.ez-tables-multi .ez-tbl:has(input:checked) small{color:#fff}
+/* ① ticket-style picking */
+.ez-picked{margin:4px 0 10px;font-size:18px;font-weight:800;color:#7a6a58}
+.ez-picked.has-pick{color:#2f7d4a}.ez-picked b{font-size:24px}
+.ez-picked small{font-size:14px;font-weight:700;color:#7a6a58}
+.ez-btn[disabled]{opacity:.45;cursor:not-allowed;filter:grayscale(.4)}
+.ez-btn[disabled]:active{transform:none}
+.ez-members-head{margin-top:26px;padding-top:14px;border-top:2px dashed #e3d3a8;color:#9f211b}
+.ez-members-head .icon{width:18px;height:18px;vertical-align:-3px}

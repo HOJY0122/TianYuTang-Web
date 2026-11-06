@@ -12,6 +12,37 @@ require __DIR__ . '/_top.php';
 
 <div id="ezResults" aria-live="polite">
 
+<?php if ($q !== '' && !$people && empty($members)): ?>
+  <div class="ez-msg ez-warn">
+    <b>找不到 Not found</b>
+    <p>請再看一次號碼。如果真的沒有登記，請排候補。團體請用 ②「團體」。<br><span class="en">Check the number again. If they really did not register, add them to the waiting list. For a group, use ② Groups.</span></p>
+    <a class="ez-btn ez-alt" href="<?= url('/admin/zai/easy/wait') ?>"><?= icon('hand') ?> 加入候補 Add to waiting list</a>
+  </div>
+<?php elseif ($people): ?>
+  <?php if (!empty($more)): ?><p class="ez-hint">只顯示前 <?= (int) $more ?> 筆，請多打幾個字。<span class="en">Showing the first <?= (int) $more ?> — keep typing to narrow it down.</span></p><?php endif; ?>
+  <form method="POST" action="<?= url('/admin/zai/easy/pick') ?>" class="ez-people">
+    <?= csrf_field() ?>
+    <p class="ez-step"><span>1</span> 按名字選人（可選多位）<small>Tap each person who is here — nobody is ticked for you</small></p>
+    <?php foreach ($people as $a): $z = $a['zai']; ?>
+      <label class="ez-person<?= $z && $z['table_no'] ? ' is-seated' : '' ?>">
+        <input type="checkbox" name="ids[]" value="<?= (int) $a['id'] ?>">
+        <span class="ez-tick" aria-hidden="true">✓</span>
+        <span class="ez-pname"><b><?= h($a['name']) ?></b>
+          <small class="ez-id"><b>IC <?= h($a['ic_no'] ?: '—') ?></b></small>
+          <?php if (!empty($a['contact_no']) && $a['contact_no'] !== '—'): ?><small class="ez-id"><?= icon('phone') ?> <?= h($a['contact_no']) ?></small><?php endif; ?>
+          <small><?= h($a['ref_code']) ?><?= $a['org_name'] ? ' · 團體 ' . h($a['org_name']) : '' ?></small>
+          <?php if ($z): ?><em class="<?= $z['status'] === 'confirmed' ? 'ok' : 'warn' ?>"><?= $z['status'] === 'confirmed' ? '已確認' : '待定' ?><?= $z['table_no'] ? ' · 已在第 ' . (int) $z['table_no'] . ' 桌' : '' ?></em><?php endif; ?></span>
+      </label>
+    <?php endforeach; ?>
+    <p class="ez-step"><span>2</span> 然後按 <small>Then tap</small></p>
+    <p class="ez-picked" data-picked aria-live="polite">還沒有選人 <small>No one ticked yet</small></p>
+    <button type="submit" name="go" value="table" class="ez-btn ez-ok" data-need-pick disabled>✓ 確認，選桌號 <small>Confirm &amp; choose a table</small></button>
+    <button type="submit" name="go" value="pending" class="ez-btn ez-alt" data-need-pick disabled>… 待定，等一下 <small>Pending — not yet</small></button>
+  </form>
+<?php endif; ?>
+<?php if (!empty($members)): ?>
+  <!-- Last, after the people to tick: these belong to a 團體 group (option ②). -->
+  <p class="ez-step ez-step-sub ez-members-head"><?= icon('users') ?> 屬於團體的人 <small>Belong to a group — handled under ② Groups</small></p>
 <?php foreach ($members ?? [] as $k => $m): $zg = $m['group']; $done = $zg['status'] === 'arrived';
   // The group screen gets the search along, so staff see who they were looking for.
   $go = url('/admin/zai/easy/group') . '?id=' . (int) $zg['id'] . '&from=find&q=' . rawurlencode($q) . '&who=' . rawurlencode((string) $m['name']); ?>
@@ -24,34 +55,27 @@ require __DIR__ . '/_top.php';
     <span class="ez-row-state"><?= $done ? '✓ 已到<br>第 ' . h($zg['tables'] ?? '') . ' 桌' : '團體 →<br><small>Group</small>' ?></span>
   </a>
 <?php endforeach; ?>
-<?php if ($q !== '' && !$people && empty($members)): ?>
-  <div class="ez-msg ez-warn">
-    <b>找不到 Not found</b>
-    <p>請再看一次號碼。如果真的沒有登記，請排候補。團體請用 ②「團體」。<br><span class="en">Check the number again. If they really did not register, add them to the waiting list. For a group, use ② Groups.</span></p>
-    <a class="ez-btn ez-alt" href="<?= url('/admin/zai/easy/wait') ?>"><?= icon('hand') ?> 加入候補 Add to waiting list</a>
-  </div>
-<?php elseif ($people): ?>
-  <?php if (!empty($more)): ?><p class="ez-hint">只顯示前 <?= (int) $more ?> 筆，請多打幾個字。<span class="en">Showing the first <?= (int) $more ?> — keep typing to narrow it down.</span></p><?php endif; ?>
-  <form method="POST" action="<?= url('/admin/zai/easy/pick') ?>" class="ez-people">
-    <?= csrf_field() ?>
-    <p class="ez-step"><span>1</span> 按名字選人（可選多位）<small>Tap each person who is here</small></p>
-    <?php foreach ($people as $a): $z = $a['zai']; ?>
-      <label class="ez-person<?= $z && $z['table_no'] ? ' is-seated' : '' ?>">
-        <input type="checkbox" name="ids[]" value="<?= (int) $a['id'] ?>"<?= $z && $z['table_no'] ? '' : ' checked' ?>>
-        <span class="ez-tick" aria-hidden="true">✓</span>
-        <span class="ez-pname"><b><?= h($a['name']) ?></b>
-          <small class="ez-id"><b>IC <?= h($a['ic_no'] ?: '—') ?></b></small>
-          <?php if (!empty($a['contact_no']) && $a['contact_no'] !== '—'): ?><small class="ez-id"><?= icon('phone') ?> <?= h($a['contact_no']) ?></small><?php endif; ?>
-          <small><?= h($a['ref_code']) ?><?= $a['org_name'] ? ' · 團體 ' . h($a['org_name']) : '' ?></small>
-          <?php if ($z): ?><em class="<?= $z['status'] === 'confirmed' ? 'ok' : 'warn' ?>"><?= $z['status'] === 'confirmed' ? '已確認' : '待定' ?><?= $z['table_no'] ? ' · 已在第 ' . (int) $z['table_no'] . ' 桌' : '' ?></em><?php endif; ?></span>
-      </label>
-    <?php endforeach; ?>
-    <p class="ez-step"><span>2</span> 然後按 <small>Then tap</small></p>
-    <button type="submit" name="go" value="table" class="ez-btn ez-ok">✓ 確認，選桌號 <small>Confirm &amp; choose a table</small></button>
-    <button type="submit" name="go" value="pending" class="ez-btn ez-alt">… 待定，等一下 <small>Pending — not yet</small></button>
-  </form>
 <?php endif; ?>
 </div>
+<script>
+// Ticket-style: nobody is pre-ticked; the buttons wake up once someone is ticked.
+(function () {
+  function count() {
+    var form = document.querySelector('.ez-people');
+    if (!form) return;
+    var n = form.querySelectorAll('input[name="ids[]"]:checked').length;
+    var box = form.querySelector('[data-picked]');
+    if (box) {
+      box.innerHTML = n ? '已選 <b>' + n + '</b> 位 <small>' + n + ' ticked</small>' : '還沒有選人 <small>No one ticked yet</small>';
+      box.classList.toggle('has-pick', n > 0);
+    }
+    form.querySelectorAll('[data-need-pick]').forEach(function (b) { b.disabled = n === 0; });
+  }
+  document.addEventListener('change', function (e) { if (e.target.matches && e.target.matches('.ez-people input[name="ids[]"]')) count(); });
+  document.addEventListener('live:results', count);
+  document.addEventListener('DOMContentLoaded', count);
+})();
+</script>
 <script>
 // A group member found in ①: say so in a box, and offer to go to the group (with the search).
 (function () {

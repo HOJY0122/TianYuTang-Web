@@ -220,17 +220,14 @@ class ZaiController extends Controller
         foreach (Zai::tableList($tables) as $no) {
             $this->warnIfFull($zai, (int) $g['event_id'], $no);
         }
-        // Just checked in: remind the staff to take the cheque photo on their phone
-        // (nothing is uploaded here). A table warning, if any, is kept underneath.
+        // Just checked in: remind everyone the cheque photo is due (the photographer
+        // there takes it; nothing is uploaded). A table warning, if any, stays underneath.
         if (($_POST['status'] ?? '') === 'arrived' && $g['status'] !== 'arrived') {
             $prev = isset($_SESSION['flash']) ? $_SESSION['flash']['title'] . "\n" . $_SESSION['flash']['message'] : '';
-            $this->flash('info', '📷 請拍支票照片 Take the cheque photo',
-                "「{$g['name']}」已到。請團體代表拿著支票，用你的手機拍照（不用上傳）。
-"
-                . "{$g['name']} has arrived — take a photo of the representative with the cheque on your phone (no upload)."
-                . ($prev !== '' ? "
-
-" . $prev : ''));
+            $this->flash('info', '📷 請拍支票照片 Cheque photo',
+                "「{$g['name']}」已到。請團體代表拿著支票。\n"
+                . "{$g['name']} has arrived — please ask the group's representative to hold the cheque."
+                . ($prev !== '' ? "\n\n" . $prev : ''));
         }
         $this->redirect($back);
     }

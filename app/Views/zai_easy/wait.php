@@ -15,8 +15,9 @@ $old = $old ?? [];
   <?= csrf_field() ?>
   <label>姓名 <span class="en">Name</span><input name="name" required maxlength="100" autocomplete="off" value="<?= h($old['name'] ?? '') ?>"<?= empty($old) ? ' autofocus' : '' ?>></label>
   <label>身份證 <b class="ez-req">*必填</b> <span class="en">IC (required)</span>
-    <input name="ic" required minlength="6" maxlength="30" inputmode="numeric" autocomplete="off" placeholder="例 650101-10-1234" value="<?= h($old['ic'] ?? '') ?>"<?= empty($old) ? '' : ' autofocus' ?>></label>
-  <label>電話 <span class="en">Phone</span><input name="contact" maxlength="30" inputmode="tel" autocomplete="off" value="<?= h($old['contact'] ?? '') ?>"></label>
+    <input name="ic" required maxlength="30" inputmode="numeric" autocomplete="off" data-validate="ic" placeholder="例 650101-10-1234" value="<?= h($old['ic'] ?? '') ?>"<?= empty($old) ? '' : ' autofocus' ?>></label>
+  <label>電話 <span class="en">Phone</span><input name="contact" maxlength="30" inputmode="tel" autocomplete="off" data-validate="phone" value="<?= h($old['contact'] ?? '') ?>"></label>
   <button type="submit" class="ez-btn ez-ok">✓ 給候補號碼 <small>Give a waiting number</small></button>
 </form>
+<?php require BASE_PATH . '/app/Views/partials/ic_validate.php'; ?>
 <?php require __DIR__ . '/_bottom.php'; ?>

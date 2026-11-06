@@ -14,8 +14,8 @@ $statusLabel = ['waiting' => ['pending', '候補中 Waiting'], 'seated' => ['ok'
   <form method="POST" action="<?= url('/admin/zai/waiting/add') ?>" class="zai-fields">
     <?= csrf_field() ?><input type="hidden" name="event_id" value="<?= (int) $event['id'] ?>">
     <label>姓名 <span class="en">Name</span> *<input name="name" required maxlength="100" autocomplete="off"></label>
-    <label>身份證 <span class="en">IC</span> *<input name="ic" required maxlength="30" autocomplete="off" inputmode="numeric" placeholder="例 650101-10-1234"></label>
-    <label>電話 <span class="en">Phone</span><input name="contact" maxlength="30" inputmode="tel" autocomplete="off"></label>
+    <label>身份證 <span class="en">IC</span> *<input name="ic" required maxlength="30" autocomplete="off" inputmode="numeric" data-validate="ic" placeholder="例 650101-10-1234"></label>
+    <label>電話 <span class="en">Phone</span><input name="contact" maxlength="30" inputmode="tel" autocomplete="off" data-validate="phone"></label>
     <label class="wide">備註 <span class="en">Notes</span><input name="notes" maxlength="300"></label>
     <div class="form-actions wide" style="margin-top:4px;padding-top:12px"><button class="primary" type="submit"><?= icon('plus') ?> 加入，給號碼 <span class="en">Add &amp; give a number</span></button></div>
   </form>
@@ -46,4 +46,5 @@ $statusLabel = ['waiting' => ['pending', '候補中 Waiting'], 'seated' => ['ok'
   <?php endforeach; ?>
   </div>
 </div>
+<?php require BASE_PATH . '/app/Views/partials/ic_validate.php'; ?>
 <?php require BASE_PATH . '/app/Views/layouts/admin_footer.php'; ?>

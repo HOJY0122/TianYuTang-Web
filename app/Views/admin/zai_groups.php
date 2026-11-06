@@ -40,7 +40,7 @@ $arrived = count(array_filter($groups, static fn($g) => $g['status'] === 'arrive
       <label>支票號碼 <span class="en">Cheque no.</span><input name="cheque_no" value="<?= h($g['cheque_no'] ?? '') ?>" maxlength="40"></label>
       <label class="wide">備註 <span class="en">Notes</span><input name="notes" value="<?= h($g['notes'] ?? '') ?>" maxlength="500"></label>
     </div>
-    <p class="help zai-cheque-note"><?= icon('camera') ?> 按「已到」後，請用手機與支票合照（不用上傳）。<span class="en">After “Arrived”, take the cheque photo on your phone — no upload.</span></p>
+    <p class="help zai-cheque-note"><?= icon('camera') ?> 按「已到」後會提醒拍支票照片（請團體代表拿著支票）。<span class="en">After “Arrived”, a reminder shows: cheque photo — the representative holds the cheque.</span></p>
     <div class="zai-act">
       <?php if (!$done): ?>
         <button class="mini-btn btn-lg" name="status" value="arrived" type="submit">✓ 已到，儲存 <span class="en">Arrived — save</span></button>

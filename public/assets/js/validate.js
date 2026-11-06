@@ -9,8 +9,13 @@
  * and put an empty <p class="field-error"></p> right after it.
  *
  * A page can add its own rule on top: TYTValidate.extra.ic = function
- * (tidiedValue, input) { return '' or a message }  (the register page
- * uses it for the minimum age worked out from the IC).
+ * (tidiedValue, input) { return '' or a message }.
+ *
+ * The age rule ("66 and above", from Forms settings) is shared by the
+ * register page, easy mode and the walk-in forms:
+ *   TYTValidate.useAge({min, basis, who, other, on})
+ * checks each IC as it is typed and shows "born 1950 · age 76" under it.
+ * Mirrors App\Core\FormRules (ageRule / birthDate / age).
  */
 (function () {
   function ic(raw) {
@@ -101,7 +106,11 @@
   document.addEventListener('input', function (e) {
     // Only re-check while typing once the person has left the field once —
     // shouting "invalid" at the first keystroke is unkind.
-    if (e.target.matches && e.target.matches('[data-validate]') && e.target.dataset.touched) check(e.target, false);
+    var el = e.target;
+    if (!el.matches || !el.matches('[data-validate]')) return;
+    // …except a complete MyKad number: check it straight away (format + age).
+    if (!el.dataset.touched && el.getAttribute('data-validate') === 'ic' && el.value.replace(/\D/g, '').length >= 12) el.dataset.touched = '1';
+    if (el.dataset.touched) check(el, false);
   });
   document.addEventListener('submit', function (e) {
     var bad = null;
@@ -116,5 +125,52 @@
     }
   }, true);
 
-  window.TYTValidate = { ic: ic, phone: phone, check: check, extra: EXTRA };
+  // ---- Age from a MyKad number (YYMMDD…) ----
+  function useAge(AGE) {
+    var on = new Date(AGE.on + 'T00:00:00');
+    function born(raw) {
+      var d = String(raw).replace(/[\s-]/g, '');
+      if (!/^\d{12}$/.test(d)) return null;
+      var y = 2000 + +d.slice(0, 2);
+      if (y > on.getFullYear()) y -= 100;
+      var b = new Date(y, +d.slice(2, 4) - 1, +d.slice(4, 6));
+      return b.getMonth() === +d.slice(2, 4) - 1 ? b : null;
+    }
+    function ageOf(b) {
+      var a = on.getFullYear() - b.getFullYear();
+      if (AGE.basis === 'event' && (on.getMonth() < b.getMonth() || (on.getMonth() === b.getMonth() && on.getDate() < b.getDate()))) a--;
+      return a;
+    }
+    /** "✓ born 1950 · age 76" under the field (made if the page has none). */
+    function tag(input) {
+      var t = input.parentNode.querySelector('.age-tag');
+      if (!t) { t = document.createElement('p'); t.className = 'age-tag'; errorBox(input).insertAdjacentElement('afterend', t); }
+      var b = born(input.value);
+      if (!b) { t.textContent = ''; t.className = 'age-tag'; return; }
+      var a = ageOf(b), ok = a >= AGE.min;
+      t.className = 'age-tag ' + (ok ? 'ok' : 'low');
+      t.textContent = (ok ? '✓ ' : '') + b.getFullYear() + ' 年出生 · ' + a + ' 歲 — Born ' + b.getFullYear() + ', age ' + a;
+    }
+    /** '' when this IC meets the rule, otherwise the message. */
+    function problem(value) {
+      var b = born(value);
+      if (!b) {
+        return AGE.other === 'block'
+          ? '本活動只接受大馬身份證號碼（用來核對 ' + AGE.min + ' 歲或以上）。\nOnly Malaysian IC numbers are accepted (to check the age of ' + AGE.min + ' and above).'
+          : '';
+      }
+      var a = ageOf(b);
+      if (AGE.who === 'all' && a < AGE.min) {
+        return '本活動只限 ' + AGE.min + ' 歲或以上，此身份證為 ' + a + ' 歲。\nThis event is for ages ' + AGE.min + ' and above — this IC shows age ' + a + '.';
+      }
+      return '';
+    }
+    EXTRA.ic = function (value, input) {
+      setTimeout(function () { tag(input); }, 0);
+      return problem(value);
+    };
+    return { born: born, ageOf: ageOf, tag: tag, problem: problem };
+  }
+
+  window.TYTValidate = { ic: ic, phone: phone, check: check, extra: EXTRA, useAge: useAge };
 })();

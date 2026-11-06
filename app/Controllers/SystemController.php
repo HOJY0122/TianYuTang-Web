@@ -424,13 +424,16 @@ class SystemController extends Controller
             $this->redirect('/system/users');
         }
 
-        $perms = $role === AdminUser::ROLE_SYSTEM ? null : \App\Core\Access::fromForm($_POST['perms'] ?? []);
+        $role  = isset(AdminUser::ROLES[$role]) ? $role : AdminUser::ROLE_ADMIN;
+        // Only an admin has chosen functions; a system admin has everything, a helper the easy screens.
+        $perms = $role === AdminUser::ROLE_ADMIN ? \App\Core\Access::fromForm($_POST['perms'] ?? []) : null;
         $users->create($username, $password, $role, $displayName !== '' ? $displayName : null, $perms);
 
         $this->flash(
             'success',
             '帳號已建立',
-            "{$username} 已建立（" . ($role === AdminUser::ROLE_SYSTEM ? '系統管理員' : '管理員：' . \App\Core\Access::describe($perms)) . '）。'
+            "{$username} 已建立（" . ($role === AdminUser::ROLE_ADMIN ? '管理員：' . \App\Core\Access::describe($perms) : AdminUser::ROLES[$role][0]) . '）。'
+            . ($role === AdminUser::ROLE_HELPER ? '登入後直接進入施齋入座簡易模式。' : '')
             . '請將密碼親自交給對方，不要用訊息傳送。'
         );
         $this->redirect('/system/users');
@@ -450,8 +453,8 @@ class SystemController extends Controller
             $this->flash('error', '找不到帳號', '找不到這個帳號。');
             $this->redirect('/system/users');
         }
-        if ($user['role'] === AdminUser::ROLE_SYSTEM) {
-            $this->flash('error', '不需設定 Not needed', "系統管理員一律可使用全部功能。\nSystem admins can always use everything.");
+        if ($user['role'] !== AdminUser::ROLE_ADMIN) {
+            $this->flash('error', '不需設定 Not needed', "只有「管理員」需要選功能：系統管理員有全部功能，施齋助理只用簡易模式。\nOnly admins have chosen functions.");
             $this->redirect('/system/users');
         }
         $perms = \App\Core\Access::fromForm($_POST['perms'] ?? []);
@@ -500,7 +503,7 @@ class SystemController extends Controller
             $_SESSION['admin_role'] = $role;
         }
 
-        $this->flash('success', '已更新', "{$user['username']} 的權限已變更。");
+        $this->flash('success', '已更新', "{$user['username']} 的權限已變更為「" . (AdminUser::ROLES[$role][0] ?? '管理員') . "」。");
         $this->redirect('/system/users');
     }
 

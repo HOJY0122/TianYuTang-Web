@@ -6,10 +6,11 @@ use App\Core\Model;
 /**
  * AdminUser — committee member accounts.
  *
- * Two roles:
- *   admin         day-to-day committee work
+ * Three roles:
+ *   admin         day-to-day committee work (functions chosen per account)
  *   system_admin  the above PLUS branding, the QR generator, and
  *                 managing who has a login
+ *   helper        施齋助理 a Day 3 helper: only the 施齋入座 easy screens
  *
  * system_admin is a superset rather than a parallel role, so nobody
  * needs two accounts — which is what leads to shared passwords.
@@ -18,6 +19,14 @@ class AdminUser extends Model
 {
     public const ROLE_ADMIN  = 'admin';
     public const ROLE_SYSTEM = 'system_admin';
+    public const ROLE_HELPER = 'helper';
+
+    /** role => [中文, English, what it can do] — for the accounts page. */
+    public const ROLES = [
+        'admin'        => ['管理員', 'Admin', '下面選擇可用功能 functions chosen below'],
+        'helper'       => ['施齋助理', 'Day 3 helper', '只有施齋入座簡易模式 only the Day 3 seating easy screens'],
+        'system_admin' => ['系統管理員', 'System admin', '全部功能及網站設定 everything + site settings'],
+    ];
 
     /**
      * Passwords that ship with the source code, so anyone can read them:
@@ -222,6 +231,6 @@ class AdminUser extends Model
 
     private function normaliseRole(string $role): string
     {
-        return $role === self::ROLE_SYSTEM ? self::ROLE_SYSTEM : self::ROLE_ADMIN;
+        return isset(self::ROLES[$role]) ? $role : self::ROLE_ADMIN;
     }
 }

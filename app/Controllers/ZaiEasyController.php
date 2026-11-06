@@ -284,7 +284,7 @@ class ZaiEasyController extends Controller
         $this->view('zai_easy/' . $name, $data + [
             'event'  => (new Event())->active(),
             'screen' => $name,
-            'onlyZai' => \App\Core\Access::limited() && ($_SESSION['admin_perms'] ?? null) === ['zai'],
+            'onlyZai' => \App\Core\Access::isHelper(),
         ]);
     }
 

@@ -1368,3 +1368,8 @@ body.ez{margin:0;background:#f7efdc;color:#2b1d14;font-family:"Noto Sans TC","Mi
 .ez-done-title{font-size:22px;font-weight:800;margin-top:6px}
 .ez-done-text{font-size:18px;color:#5a4a3a;margin:10px 0 0}
 .zai-easy-link{margin-left:auto}
+/* 帳號管理: role dropdown, and the Day 3 helper badge */
+.role-form{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.role-form select{min-height:40px;padding:4px 8px;border:1px solid #d8bf79;border-radius:10px;background:#fffdf6;font:inherit;font-size:13px}
+.badge.helper{background:#efe4f5;color:#5b3f86}
+.badge.helper .ic{width:14px;height:14px;vertical-align:-2px}

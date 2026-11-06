@@ -603,10 +603,21 @@ class SystemController extends Controller
         // Prove they are who the session says before letting them change
         // the credential — an unattended logged-in browser should not be
         // enough to lock the real owner out.
-        if ($users->verify((string) ($_SESSION['admin_username'] ?? ''), $current) === null) {
+        // Wrong guesses here count toward the same 5-try lock as the login
+        // page, so a borrowed session cannot try passwords without limit.
+        $username = (string) ($_SESSION['admin_username'] ?? '');
+        $attempts = new \App\Models\LoginAttempt();
+        if ($attempts->isLockedOut($username)) {
+            $min = $attempts->minutesLeft($username);
+            $this->flash('error', '暫停變更 Locked', "目前密碼錯誤太多次，請 {$min} 分鐘後再試。\nToo many wrong current passwords. Try again in {$min} minute" . ($min > 1 ? 's' : '') . '.');
+            $this->redirect('/account/password');
+        }
+        if ($users->verify($username, $current) === null) {
+            $attempts->recordFailure($username, (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
             $this->flash('error', '密碼錯誤', '目前的密碼不正確。');
             $this->redirect('/account/password');
         }
+        $attempts->clear($username);
 
         $errors = AdminUser::validatePassword($new, $confirm);
         if ($errors) {

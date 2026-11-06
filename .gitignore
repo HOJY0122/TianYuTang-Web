@@ -21,3 +21,7 @@
 Thumbs.db
 .idea/
 .vscode/
+
+# This machine's real settings and secrets — never commit
+/config/config.local.php
+.env

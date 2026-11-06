@@ -25,6 +25,16 @@ php bin/migrate.php            # back up, then run everything pending
 A fresh install still starts with importing `schema.sql`; the command then
 simply records that everything is already in place.
 
+**First sign-in.** The seeded `admin` account (and `sysadmin`, on databases
+upgraded through migration 006) has a password printed in the source code,
+so it can never sign in on the web. Set the real password from the server:
+
+```bash
+php bin/set-password.php admin
+```
+
+The same command recovers an account when nobody can sign in.
+
 Adding a migration: create the next numbered file in `migrations/`
 (e.g. `008_add_something.sql`) and run the command.
 
@@ -117,7 +127,7 @@ Registration, donation and receipt lists sort by clicking a column heading.
 ### What is protected, and how
 | Area | Protection |
 |---|---|
-| Sign-in | Passwords hashed with bcrypt (re-hashed automatically if the algorithm improves); an unknown username is told so and costs nothing; 5 wrong passwords lock that account (on every device) for 15 minutes, lifted early by a password reset; a per-connection cap stops scripted guessing; default passwords must be changed first |
+| Sign-in | Passwords hashed with bcrypt (re-hashed automatically if the algorithm improves); an unknown username is told so and costs nothing; 5 wrong passwords lock that account (on every device) for 15 minutes, lifted early by a password reset; a per-connection cap stops scripted guessing; wrong "current password" guesses on the change-password page count toward the same lock; the published default passwords never sign in (set the first one with `php bin/set-password.php`) |
 | Sessions | Own cookie `TYTSESS`, HttpOnly, SameSite=Lax, Secure on HTTPS, never in URLs, made-up ids refused; new id at sign-in and every 15 min; signed out after **60 min idle** or **12 h**; a cookie used from a different browser ends the session; changing a password or role, or deleting an account, signs that person out everywhere (`session_version`) |
 | Forms | Every POST needs the session's CSRF token; public forms have a hidden bot trap and a limit of 10 submissions per address per 10 minutes |
 | Redirects | Only to paths on this site (`/admin/…`); full addresses (QR posters) come from `SITE_URL` or a checked Host header |
@@ -129,13 +139,14 @@ Registration, donation and receipt lists sort by clicking a column heading.
 | Errors | Visitors see a plain message; details go only to the server's error log |
 
 ### On the real server
-1. **HTTPS**, then in `config/config.php`: `define('FORCE_HTTPS', true);` and `define('SITE_URL', 'https://your-domain');`
+1. **Put this server's settings in `config/config.local.php`** (git-ignored): `cp config/config.local.example.php config/config.local.php && chmod 600 config/config.local.php`, then set the database user and password there. `config/config.php` is public and holds safe defaults only.
+   After HTTPS works, add `define('FORCE_HTTPS', true);` and `define('SITE_URL', 'https://your-domain');` to the same file.
 2. Point the document root at **`public/`** if the host allows it (the root `.htaccess` covers you if not).
 3. Use a database user with rights on this database only, and a strong password.
 4. **Back up `storage/keys/app.key` with every database backup.** It decrypts the IC numbers and AI keys; without it they cannot be read. Never commit it (it is git-ignored) and never share it.
 5. Keep `DEBUG_MODE` false.
    Upload limits (20 MB a picture, 64 MB a request) are set in `public/.user.ini` (PHP-FPM) and `public/.htaccess` (Apache). Bulk uploads send pictures one at a time, so 50, 100 or more go up in one go whatever the host's limits.
-6. Never put API keys in `config.php` in git — paste them into Site settings → ⑤ AI. If a key was ever committed, replace it at the provider.
+6. Never put API keys in `config.php` — paste them into Site settings → ⑤ AI (stored encrypted). If a key was ever committed, **delete or regenerate it at the provider**: blanking it in a later commit leaves it readable in git history.
 
 ### Nginx (it ignores .htaccess)
 ```nginx

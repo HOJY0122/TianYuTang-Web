@@ -3,22 +3,30 @@
 /**
  * 天玉堂 2026 — Application configuration
  *
- * This is the ONLY file you need to edit when moving between machines
- * (local XAMPP → shared hosting → VPS).
+ * This file is PUBLIC (it is in git). It holds safe defaults only.
+ *
+ * Real values for a machine — database password, APP_KEY, FORCE_HTTPS,
+ * SITE_URL, API keys — go in config/config.local.php, which git ignores.
+ * Copy config/config.local.example.php to config.local.php to start.
+ * Anything defined there wins over the default below.
  */
 
+if (is_file(__DIR__ . '/config.local.php')) {
+    require __DIR__ . '/config.local.php';
+}
+
 // ---------- Database ----------
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'tianyutang2026');
-define('DB_USER', 'root');   // change on real hosting
-define('DB_PASS', '');       // change on real hosting
+defined('DB_HOST') || define('DB_HOST', 'localhost');
+defined('DB_NAME') || define('DB_NAME', 'tianyutang2026');
+defined('DB_USER') || define('DB_USER', 'root');   // set the real one in config.local.php
+defined('DB_PASS') || define('DB_PASS', '');       // set the real one in config.local.php
 
 // ---------- Site ----------
 // Fallback name only. The event name, dates, venue, merit-seat price and
 // attendee limit now live on the active row in the `events` table, so the
 // committee edits them in admin rather than in this file. Do not
 // reintroduce them here — two sources of truth is how they drift apart.
-define('SITE_NAME', '天玉堂');
+defined('SITE_NAME') || define('SITE_NAME', '天玉堂');
 
 // ---------- AI receipt reading (optional) ----------
 // 收據掃描 Receipts can read a photo of a handwritten receipt with Claude
@@ -30,30 +38,31 @@ define('SITE_NAME', '天玉堂');
 // Left empty, the server's ANTHROPIC_API_KEY environment variable or the
 // key saved in Site settings is used. With no key, receipts are typed in.
 // Keep a real key out of git: it is a password that costs money.
-define('ANTHROPIC_API_KEY', '');
-define('ANTHROPIC_MODEL', 'claude-opus-5');
-define('ANTHROPIC_API_URL', '');   // leave empty (only changed for testing)
+// Put it in Site settings → ⑤ AI (stored encrypted), never in this file.
+defined('ANTHROPIC_API_KEY') || define('ANTHROPIC_API_KEY', '');
+defined('ANTHROPIC_MODEL') || define('ANTHROPIC_MODEL', 'claude-opus-5');
+defined('ANTHROPIC_API_URL') || define('ANTHROPIC_API_URL', '');   // leave empty (only changed for testing)
 // NVIDIA (build.nvidia.com) instead of Anthropic: choose it in Site
-// settings → ⑤ AI. Its key can go there too, or here:
-define('NVIDIA_API_KEY', '');      // e.g. 'nvapi-xxxxxxxx'
-define('NVIDIA_API_URL', '');      // leave empty (only changed for testing)
+// settings → ⑤ AI, and paste its key there (never in this file).
+defined('NVIDIA_API_KEY') || define('NVIDIA_API_KEY', '');      // e.g. 'nvapi-xxxxxxxx'
+defined('NVIDIA_API_URL') || define('NVIDIA_API_URL', '');      // leave empty (only changed for testing)
 // Google Cloud Vision (free OCR, first 1,000 scans a month): choose it in
-// Site settings → ⑤ AI. Its key can go there too, or here:
-define('GOOGLE_VISION_API_KEY', '');   // e.g. 'AIzaSy…'
-define('GOOGLE_VISION_URL', '');       // leave empty (only changed for testing)
+// Site settings → ⑤ AI, and paste its key there (never in this file).
+defined('GOOGLE_VISION_API_KEY') || define('GOOGLE_VISION_API_KEY', '');   // e.g. 'AIzaSy…'
+defined('GOOGLE_VISION_URL') || define('GOOGLE_VISION_URL', '');       // leave empty (only changed for testing)
 
 // ---------- Security ----------
 // The site's public address, e.g. 'https://www.tianyutang.org' (no trailing
 // slash). Used on printed QR codes. Leave empty to use the address the
 // page was opened with (checked to be a proper host name).
-define('SITE_URL', '');
+defined('SITE_URL') || define('SITE_URL', '');
 // true on the real server once HTTPS works: every http:// visit is sent to
 // https://, and browsers are told to stay on HTTPS.
-define('FORCE_HTTPS', false);
+defined('FORCE_HTTPS') || define('FORCE_HTTPS', false);
 // Encryption key for IC numbers and AI keys (base64 of 32 random bytes).
 // Leave empty to use storage/keys/app.key, created automatically.
 // Either way: BACK IT UP WITH THE DATABASE — without it that data is unreadable.
-define('APP_KEY', '');
+defined('APP_KEY') || define('APP_KEY', '');
 
 // ---------- Time ----------
 // Every date and time in this system means Malaysian local time.
@@ -61,14 +70,14 @@ define('APP_KEY', '');
 // columns store no timezone at all — so without this line a registration
 // window set to close at 23:59 would actually close at 07:59 the next
 // morning. Pin it once, here, and treat everything as local from then on.
-define('APP_TIMEZONE', 'Asia/Kuala_Lumpur');
+defined('APP_TIMEZONE') || define('APP_TIMEZONE', 'Asia/Kuala_Lumpur');
 date_default_timezone_set(APP_TIMEZONE);
 
 // ---------- Environment ----------
 // Off by default, so a fresh upload never shows PHP errors (and the SQL
 // inside them) to visitors. Turn it on only on your own machine while
 // developing — and never commit it as true.
-define('DEBUG_MODE', false);
+defined('DEBUG_MODE') || define('DEBUG_MODE', false);
 
 if (DEBUG_MODE) {
     ini_set('display_errors', '1');

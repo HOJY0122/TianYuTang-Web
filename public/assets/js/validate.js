@@ -5,11 +5,11 @@
  * only lets the visitor see a problem while they are still typing.
  * Keep the two in step when changing either.
  *
- * Mark a field:   <input data-validate="ic">   or   data-validate="phone"
+ * Mark a field:   <input data-validate="ic">,  "phone"  or  "name"
  * and put an empty <p class="field-error"></p> right after it.
  *
- * A page can add its own rule on top: TYTValidate.extra.ic = function
- * (tidiedValue, input) { return '' or a message }.
+ * A page can add its own rules on top (they run in turn, first message wins):
+ *   TYTValidate.addExtra('ic', function (tidiedValue, input) { return '' or a message })
  *
  * The age rule ("66 and above", from Forms settings) is shared by the
  * register page, easy mode and the walk-in forms:
@@ -46,16 +46,24 @@
     return null;
   }
 
+  function name(raw) {
+    var v = String(raw || '').trim().replace(/\s+/g, ' ');
+    return v || null;
+  }
+
   var MESSAGES = {
+    name: '請填寫姓名。\nPlease enter a name.',
     ic: '身份證號碼格式不正確（例：650101-10-1234），或護照號碼須為 6–20 個英文字母／數字。\nIC should look like 650101-10-1234, or a passport number of 6–20 letters/digits.',
     phone: '聯絡號碼格式不正確（例：012-345 6789）。海外號碼請以 + 國碼開頭。\nContact number should look like 012-345 6789. Overseas numbers start with + and the country code.'
   };
-  var CHECK = { ic: ic, phone: phone };
+  var CHECK = { ic: ic, phone: phone, name: name };
   var EXTRA = {};
 
   function errorBox(input) {
-    var box = input.parentNode.querySelector('.field-error');
-    if (!box) {
+    // Only the box right after this field: two fields can share a parent
+    // (the register card's name and IC), and must not share a message.
+    var box = input.nextElementSibling;
+    if (!box || !box.classList.contains('field-error')) {
       box = document.createElement('p');
       box.className = 'field-error';
       input.insertAdjacentElement('afterend', box);
@@ -125,6 +133,17 @@
     }
   }, true);
 
+  /** Add a rule for one kind of field; earlier rules are still checked after it. */
+  function addExtra(kind, fn) {
+    var prev = EXTRA[kind];
+    EXTRA[kind] = function (v, input) { return fn(v, input) || (prev ? prev(v, input) : ''); };
+  }
+  /** The message from the added rules for this field as it stands ('' = fine), without showing it. */
+  function extraProblem(input) {
+    var kind = input.getAttribute('data-validate'), ok = CHECK[kind] && CHECK[kind](input.value);
+    return ok && EXTRA[kind] ? EXTRA[kind](ok, input) : '';
+  }
+
   // ---- Age from a MyKad number (YYMMDD…) ----
   function useAge(AGE) {
     var on = new Date(AGE.on + 'T00:00:00');
@@ -165,12 +184,13 @@
       }
       return '';
     }
-    EXTRA.ic = function (value, input) {
+    addExtra('ic', function (value, input) {
       setTimeout(function () { tag(input); }, 0);
       return problem(value);
-    };
+    });
     return { born: born, ageOf: ageOf, tag: tag, problem: problem };
   }
 
-  window.TYTValidate = { ic: ic, phone: phone, check: check, extra: EXTRA, useAge: useAge };
+  window.TYTValidate = { ic: ic, phone: phone, name: name, check: check, extra: EXTRA,
+                         addExtra: addExtra, extraProblem: extraProblem, useAge: useAge };
 })();

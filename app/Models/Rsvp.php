@@ -630,8 +630,60 @@ class Rsvp extends Model
         return [$ic === '' ? '' : Crypto::encrypt($ic), $norm === '' ? null : Crypto::blindIndex($norm), $norm === '' ? null : substr($norm, -4)];
     }
 
+    /**
+     * One person, one registration per event. A name compared loosely:
+     * case and spaces ignored ("Tan Ah Kow" = "tanahkow").
+     */
+    public static function nameKey(string $name): string
+    {
+        return mb_strtolower(preg_replace('/[\s\x{3000}]+/u', '', trim($name)));
+    }
+
+    /**
+     * Which of these ICs / names are already in a (not cancelled)
+     * registration for the event. Returns ['ics' => [normal IC => true],
+     * 'names' => [nameKey => true]]. ICs are matched by their keyed hash.
+     */
+    public function taken(int $eventId, array $ics, array $names): array
+    {
+        $out = ['ics' => [], 'names' => []];
+        $hashes = [];
+        foreach ($ics as $ic) {
+            $n = self::icNormal((string) $ic);
+            if ($n !== '') {
+                $hashes[Crypto::blindIndex($n)] = $n;
+            }
+        }
+        if ($hashes) {
+            foreach ($this->fetchAll(
+                "SELECT DISTINCT a.ic_hash FROM rsvp_attendees a JOIN rsvp_groups g ON g.id = a.group_id
+                  WHERE g.event_id = ? AND g.status <> 'cancelled' AND a.ic_hash IN (" . implode(',', array_fill(0, count($hashes), '?')) . ')',
+                array_merge([$eventId], array_keys($hashes))) as $r) {
+                $out['ics'][$hashes[$r['ic_hash']]] = true;
+            }
+        }
+        $want = [];
+        foreach ($names as $nm) {
+            $k = self::nameKey((string) $nm);
+            if ($k !== '') {
+                $want[$k] = true;
+            }
+        }
+        if ($want) {
+            foreach ($this->fetchAll(
+                "SELECT a.name FROM rsvp_attendees a JOIN rsvp_groups g ON g.id = a.group_id
+                  WHERE g.event_id = ? AND g.status <> 'cancelled'", [$eventId]) as $r) {
+                $k = self::nameKey((string) $r['name']);
+                if (isset($want[$k])) {
+                    $out['names'][$k] = true;
+                }
+            }
+        }
+        return $out;
+    }
+
     /** Rows with ic_no decrypted for display. */
-    private static function openIc(array $rows): array
+    public static function openIc(array $rows): array
     {
         foreach ($rows as &$r) {
             if (array_key_exists('ic_no', $r)) {

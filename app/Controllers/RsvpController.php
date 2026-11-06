@@ -41,6 +41,53 @@ class RsvpController extends Controller
         ]);
     }
 
+    /** Two people in one form with the same IC or the same name → the message, else null. */
+    private static function duplicateProblem(array $attendees): ?string
+    {
+        $seenIc = $seenName = [];
+        foreach ($attendees as $i => $a) {
+            $n = $i + 1;
+            $ic = Rsvp::icNormal($a['ic']);
+            if (isset($seenIc[$ic])) {
+                return "第 {$n} 位與第 {$seenIc[$ic]} 位的身份證相同。每人須用自己的身份證。\n"
+                     . "Person {$n} has the same IC as person {$seenIc[$ic]} — each person needs their own IC.";
+            }
+            $seenIc[$ic] = $n;
+            $k = Rsvp::nameKey($a['name']);
+            if (isset($seenName[$k])) {
+                return "第 {$n} 位與第 {$seenName[$k]} 位的姓名相同。同一個人不可報名兩次。\n"
+                     . "Person {$n} has the same name as person {$seenName[$k]} — the same person cannot be registered twice.";
+            }
+            $seenName[$k] = $n;
+        }
+        return null;
+    }
+
+    /**
+     * GET /rsvp/check?ic=…&name=… — for the form's live check: is this IC /
+     * name already registered for the active event? Answers only yes / no
+     * (never whose), and is rate-limited so it cannot be used to sweep ICs.
+     */
+    public function check(): void
+    {
+        header('Content-Type: application/json');
+        header('Cache-Control: no-store');
+        if (!\App\Core\RateLimit::allow('rsvp_check', 120, 10)) {
+            http_response_code(429);
+            echo json_encode(['ic' => false, 'name' => false]);
+            exit;
+        }
+        $ic   = Validate::icOrPassport(mb_substr((string) ($_GET['ic'] ?? ''), 0, 30));
+        $name = mb_substr(trim((string) ($_GET['name'] ?? '')), 0, 100);
+        $event = (new Event())->active();
+        $t = (new Rsvp())->taken((int) $event['id'], $ic !== null ? [$ic] : [], $name !== '' ? [$name] : []);
+        echo json_encode([
+            'ic'   => $ic !== null && isset($t['ics'][Rsvp::icNormal($ic)]),
+            'name' => $name !== '' && isset($t['names'][Rsvp::nameKey($name)]),
+        ]);
+        exit;
+    }
+
     /** POST /rsvp/submit */
     public function submit(): void
     {
@@ -135,6 +182,26 @@ class RsvpController extends Controller
             }
 
             $attendees[] = ['name' => $name, 'ic' => $icOk, 'contact' => $phoneOk];
+        }
+
+        // One person, one registration: within this form every IC and every
+        // name must be different, and none may already be registered for the
+        // event (a second form with the same IC, or the same name with
+        // another IC, is refused). Nothing says WHOSE registration it is.
+        if (($problem = self::duplicateProblem($attendees)) !== null) {
+            $this->fail($problem);
+        }
+        $taken = (new Rsvp())->taken((int) $event['id'], array_column($attendees, 'ic'), array_column($attendees, 'name'));
+        foreach ($attendees as $i => $a) {
+            $n = $i + 1;
+            if (isset($taken['ics'][Rsvp::icNormal($a['ic'])])) {
+                $this->fail("第 {$n} 位：此身份證已經報名，每人只可報名一次。如有疑問，請聯絡我們。\n"
+                          . "Person {$n}: this IC is already registered — one registration per person. Please contact us if this is a mistake.");
+            }
+            if (isset($taken['names'][Rsvp::nameKey($a['name'])])) {
+                $this->fail("第 {$n} 位：「{$a['name']}」已經報名，每人只可報名一次。如是同名的另一位，請聯絡我們。\n"
+                          . "Person {$n}: {$a['name']} is already registered — one registration per person. If this is a different person with the same name, please contact us.");
+            }
         }
 
         // Age rule (e.g. 66 and above only), worked out from each IC.

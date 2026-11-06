@@ -34,7 +34,7 @@ $statusLabel = ['waiting' => ['pending', '候補中 Waiting'], 'seated' => ['ok'
         <span class="zai-qno">#<?= (int) $r['queue_no'] ?></span>
         <strong><?= h($r['name']) ?></strong><?= (int) $r['people'] > 1 ? ' <span class="badge">' . (int) $r['people'] . ' 人</span>' : '' ?>
         <span class="badge <?= $cls ?>"><?= $lab ?><?= $r['status'] === 'seated' ? ' · 第 ' . (int) $r['table_no'] . ' 桌' : '' ?></span>
-        <span class="help"><?= ($l4 = App\Models\Zai::waitingLast4($r)) ? 'IC …' . h(implode('、…', $l4)) . ' · ' : '' ?><?= $r['contact'] ? h($r['contact']) . ' · ' : '' ?><?= h(date('H:i', strtotime($r['created_at']))) ?><?= $r['notes'] ? ' · ' . h($r['notes']) : '' ?></span>
+        <span class="help"><?= !empty($r['ic_no']) ? 'IC ' . h($r['ic_no']) . ' · ' : (($l4 = App\Models\Zai::waitingLast4($r)) ? 'IC …' . h(implode('、…', $l4)) . ' · ' : '') ?><?= $r['contact'] ? h($r['contact']) . ' · ' : '' ?><?= h(date('H:i', strtotime($r['created_at']))) ?><?= $r['notes'] ? ' · ' . h($r['notes']) : '' ?></span>
       </div>
       <div class="zai-act">
         <?= $tableSelect('table_no', $r['table_no'] !== null ? (int) $r['table_no'] : null, 'aria-label="桌號 Table"') ?>

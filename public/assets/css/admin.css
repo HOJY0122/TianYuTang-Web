@@ -1463,3 +1463,6 @@ body.ez{margin:0;background:#f7efdc;color:#2b1d14;font-family:"Noto Sans TC","Mi
 input[aria-invalid="true"]{border-color:#a3281f !important;background:#fff5f3}
 .ez-form .field-error,.ez-form .age-tag{font-size:16px}
 .ez-pop-box h2 .en{display:block;font-size:17px;color:#7a6a58;font-weight:700}
+.ez-row-main small.ez-id{color:#2b1d14;font-size:16px}
+.ez-row-main small.ez-id .icon{width:14px;height:14px;vertical-align:-2px}
+.ez-row-main small.ez-id b{font-size:17px;white-space:nowrap}

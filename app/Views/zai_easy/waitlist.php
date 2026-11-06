@@ -5,7 +5,7 @@ require __DIR__ . '/_top.php';
 ?>
 <?php if (count($rows) > 3): ?>
 <div class="ez-search">
-  <input type="search" data-filter-list="#ezWait" autocomplete="off" placeholder="名字、號碼、電話或身份證後 4 位 Name, number, phone or IC" aria-label="搜尋 Search">
+  <input type="search" data-filter-list="#ezWait" autocomplete="off" placeholder="名字、號碼、電話或身份證 Name, number, phone or IC" aria-label="搜尋 Search">
 </div>
 <?php endif; ?>
 <div class="ez-list" id="ezWait">
@@ -14,8 +14,9 @@ require __DIR__ . '/_top.php';
     <a class="ez-row" data-filter-row href="<?= url('/admin/zai/easy/table') ?>?for=wait&amp;id=<?= (int) $r['id'] ?>">
       <span class="ez-qno">#<?= (int) $r['queue_no'] ?></span>
       <span class="ez-row-main"><b><?= h($r['name']) ?></b>
-        <small><?= (int) $r['people'] ?> 人<?= $r['contact'] ? ' · ' . h($r['contact']) : '' ?> · <?= h(date('H:i', strtotime($r['created_at']))) ?>
-          <?= $l4 ? '<br>IC …' . h(implode('、…', $l4)) : '' ?></small></span>
+        <small class="ez-id"><b>IC <?= !empty($r['ic_no']) ? h($r['ic_no']) : ($l4 ? '…' . h(implode('、…', $l4)) : '—') ?></b></small>
+        <?php if ($r['contact']): ?><small class="ez-id"><?= icon('phone') ?> <?= h($r['contact']) ?></small><?php endif; ?>
+        <small><?= (int) $r['people'] > 1 ? (int) $r['people'] . ' 人 · ' : '' ?><?= h(date('H:i', strtotime($r['created_at']))) ?></small></span>
       <span class="ez-row-state">選桌 →</span>
     </a>
   <?php endforeach; ?>

@@ -103,6 +103,7 @@ $router->get('/about',              'AboutController@show');
 $router->get('/register',           'RsvpController@form');
 $router->get('/donate',             'DonationController@form');
 $router->post('/rsvp/submit',       'RsvpController@submit');
+$router->get('/rsvp/check',         'RsvpController@check');
 $router->post('/donation/submit',   'DonationController@submit');
 $router->get('/rsvp/success',       'ConfirmController@rsvp');
 $router->get('/donation/success',   'ConfirmController@donation');

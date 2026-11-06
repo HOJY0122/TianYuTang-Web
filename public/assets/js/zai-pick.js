@@ -14,8 +14,10 @@
  *       → several tables (團體): tap to tick / untick, then 完成 writes "5, 6".
  *
  * Colours as in easy mode: green = enough seats, yellow = not enough,
- * purple = group table, red = full (switched off; the row's own table
- * stays usable). The server still checks and warns.
+ * red = full (switched off; the row's own table stays usable).
+ * 團體桌 group tables (purple) are switched off for people / waiting —
+ * a group buys or reserves its tables whole. In the 團體 multi-pick only
+ * empty tables (or the group's own) can be ticked. The server checks too.
  */
 (function () {
   'use strict';
@@ -36,13 +38,24 @@
     cells.forEach(function (c) {
       var no = c.dataset.no, left = +c.dataset.left, own = mine.indexOf(no) > -1;
       var picked = state.multi && state.picked.indexOf(no) > -1;
-      var full = left <= 0 && !own;
-      var cls = 'tp-cell ' + (full ? 'full' : c.dataset.kind === 'group' ? 'grp' : (left >= need || own ? 'fits' : 'some'));
-      c.className = cls + (own ? ' is-current' : '') + (picked ? ' is-picked' : '');
-      c.disabled = full;
+      var seats = +c.dataset.seats, grp = c.dataset.kind === 'group';
+      var off, cls, note;
+      if (state.multi) {
+        // 團體: whole tables — only an empty one, or one already the group's.
+        off = !own && left < seats;
+        cls = off ? 'full' : (grp ? 'grp' : 'fits');
+        note = own ? '目前 Now' : (off ? (left <= 0 ? '滿 Full' : '有人 Taken') : (grp ? '空 · 團體桌' : '空桌 Empty'));
+      } else if (grp && !own) {
+        off = true; cls = 'grp is-off'; note = '團體桌 Group';      // never for individuals
+      } else {
+        off = left <= 0 && !own;
+        cls = off ? 'full' : (left >= need || own ? 'fits' : 'some');
+        note = own ? '目前 Now' : (left > 0 ? '剩 ' + left + ' 位' : '滿 Full');
+      }
+      c.className = 'tp-cell ' + cls + (own ? ' is-current' : '') + (picked ? ' is-picked' : '');
+      c.disabled = off;
       c.setAttribute('aria-pressed', picked ? 'true' : 'false');
-      c.querySelector('small').textContent = own ? '目前 Now' : (left > 0 ? '剩 ' + left + ' 位' : '滿 Full')
-        + (c.dataset.kind === 'group' && !full ? ' · 團體' : '');
+      c.querySelector('small').textContent = note;
     });
   }
 

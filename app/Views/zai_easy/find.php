@@ -23,16 +23,18 @@ require __DIR__ . '/_top.php';
   <form method="POST" action="<?= url('/admin/zai/easy/pick') ?>" class="ez-people">
     <?= csrf_field() ?>
     <p class="ez-step"><span>1</span> 按名字選人（可選多位）<small>Tap each person who is here — nobody is ticked for you</small></p>
-    <?php foreach ($people as $a): $z = $a['zai']; ?>
-      <label class="ez-person<?= $z && $z['table_no'] ? ' is-seated' : '' ?>">
-        <input type="checkbox" name="ids[]" value="<?= (int) $a['id'] ?>">
+    <?php foreach ($people as $a): $z = $a['zai']; $seated = $z && $z['table_no']; ?>
+      <?php // Already has a table: cannot be ticked again (keeps table data straight) — only 換桌 Change table. ?>
+      <<?= $seated ? 'div' : 'label' ?> class="ez-person<?= $seated ? ' is-seated' : '' ?>">
+        <input type="checkbox" name="ids[]" value="<?= (int) $a['id'] ?>"<?= $seated ? ' disabled' : '' ?>>
         <span class="ez-tick" aria-hidden="true">✓</span>
         <span class="ez-pname"><b><?= h($a['name']) ?></b>
           <small class="ez-id"><b>IC <?= h($a['ic_no'] ?: '—') ?></b></small>
           <?php if (!empty($a['contact_no']) && $a['contact_no'] !== '—'): ?><small class="ez-id"><?= icon('phone') ?> <?= h($a['contact_no']) ?></small><?php endif; ?>
           <small><?= h($a['ref_code']) ?><?= $a['org_name'] ? ' · 團體 ' . h($a['org_name']) : '' ?></small>
-          <?php if ($z): ?><em class="<?= $z['status'] === 'confirmed' ? 'ok' : 'warn' ?>"><?= $z['status'] === 'confirmed' ? '已確認' : '待定' ?><?= $z['table_no'] ? ' · 已在第 ' . (int) $z['table_no'] . ' 桌' : '' ?></em><?php endif; ?></span>
-      </label>
+          <?php if ($z): ?><em class="<?= $z['status'] === 'confirmed' ? 'ok' : 'warn' ?>"><?= $z['status'] === 'confirmed' ? '已確認' : '待定' ?><?= $z['table_no'] ? ' · 已在第 ' . (int) $z['table_no'] . ' 桌' : '' ?></em><?php endif; ?>
+          <?php if ($seated): ?><a class="ez-change" href="<?= url('/admin/zai/easy/table') ?>?for=people&amp;ids=<?= (int) $a['id'] ?>&amp;change=1"><?= icon('refresh') ?> 換桌 <small>Change table</small></a><?php endif; ?></span>
+      </<?= $seated ? 'div' : 'label' ?>>
     <?php endforeach; ?>
     <p class="ez-step"><span>2</span> 然後按 <small>Then tap</small></p>
     <p class="ez-picked" data-picked aria-live="polite">還沒有選人 <small>No one ticked yet</small></p>

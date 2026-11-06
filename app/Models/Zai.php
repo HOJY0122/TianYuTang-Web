@@ -160,9 +160,11 @@ class Zai extends Model
               WHERE p.event_id = ? AND p.table_no IS NOT NULL ORDER BY a.id', [$eventId]) as $r) {
             $add((int) $r['table_no'], 'person', $r['name'] . ' · ' . $r['ref_code'], 1);
         }
+        // A 團體 group buys / reserves its tables WHOLE: each of its tables
+        // counts as full, however many of them come (no head count needed).
         foreach ($this->groups($eventId) as $g) {
-            foreach (self::spread($g, $tables) as $no => $n) {
-                $add($no, 'group', $g['name'], $n, ['id' => (int) $g['id'], 'arrived' => $g['status'] === 'arrived']);
+            foreach (self::tableList((string) ($g['tables'] ?? '')) as $no) {
+                $add($no, 'group', $g['name'], (int) ($tables[$no] ?? self::DEFAULT_SEATS), ['id' => (int) $g['id'], 'arrived' => $g['status'] === 'arrived', 'whole' => true]);
             }
         }
         foreach ($this->fetchAll("SELECT table_no, name, queue_no, people FROM zai_waiting WHERE event_id = ? AND status = 'seated' AND table_no IS NOT NULL", [$eventId]) as $r) {
@@ -170,6 +172,21 @@ class Zai extends Model
         }
         ksort($map);
         return $map;
+    }
+
+    /**
+     * Can this table be given to this 團體 group? Yes when it is already the
+     * group's, or nobody is at it / booked on it. A table with individuals or
+     * another group is not available (that would mix the table up).
+     */
+    public static function tableFreeForGroup(array $table, array $group): bool
+    {
+        foreach ($table['who'] as [$kind, , , $x]) {
+            if ($kind === 'group' && (int) ($x['id'] ?? 0) === (int) $group['id']) {
+                return true;
+            }
+        }
+        return $table['used'] === 0;
     }
 
     /** A group's people spread over its tables, filling each in turn: table_no => people. */
@@ -341,7 +358,7 @@ class Zai extends Model
 
     public function group(int $id): ?array
     {
-        return $this->fetchOne('SELECT * FROM zai_groups WHERE id = ?', [$id]);
+        return $this->fetchOne('SELECT z.*, g.ref_code FROM zai_groups z LEFT JOIN rsvp_groups g ON g.id = z.rsvp_group_id WHERE z.id = ?', [$id]);
     }
 
     /** Add the PM's list. Returns how many were added. */

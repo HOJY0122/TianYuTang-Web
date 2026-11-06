@@ -1553,3 +1553,17 @@ input[aria-invalid="true"]{border-color:#a3281f !important;background:#fff5f3}
 .zai-all-head strong .icon{width:18px;height:18px;vertical-align:-3px}
 .zai-all-head .mini-btn{margin-left:auto}
 #showAll.is-on{background:#9f211b;border-color:#9f211b;color:#fff}
+/* Easy ② — the group's details card */
+.ez-gcard{display:flex;flex-direction:column;gap:4px;padding:14px 16px;margin:4px 0 14px;border-radius:16px;background:#fff;border:3px solid #e3d3a8}
+.ez-gcard b{font-size:22px}.ez-gcard b .icon{width:20px;height:20px;vertical-align:-3px}
+.ez-gcard span{font-size:15px;color:#7a6a58}.ez-gcard .icon{width:14px;height:14px;vertical-align:-2px}
+.ez-gcard em.ok{color:#2f7d4a;font-style:normal;font-weight:800}
+.ez-tbl.grp.is-off{cursor:not-allowed;opacity:.85}
+.hall-pick .tp-cell.grp.is-off{cursor:not-allowed;opacity:.8}
+/* ① someone already seated: not tickable, only 換桌 */
+.ez-person.is-seated{cursor:default;background:#f7f3ea}
+.ez-person.is-seated .ez-tick{opacity:.35}
+.ez-change{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:8px 14px;border-radius:12px;border:2px solid #9f211b;color:#9f211b;
+  font-weight:900;font-size:16px;text-decoration:none;background:#fff;width:max-content}
+.ez-change .icon{width:16px;height:16px}.ez-change small{font-size:12px;font-weight:700}
+.ez-tbl.is-current{box-shadow:0 0 0 3px #fff,0 0 0 6px #2f7d4a;cursor:default}

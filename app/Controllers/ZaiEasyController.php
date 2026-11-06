@@ -114,6 +114,14 @@ class ZaiEasyController extends Controller
         if (!$ids) {
             $this->done('!', '沒有選人 No one ticked', '請先按名字選人。Tap the names first.', 'warn', ['/admin/zai/easy/find', '返回 Back']);
         }
+        // Someone who already has a table is not picked again here — that is
+        // what 換桌 Change table is for, one person at a time.
+        $status = (new Zai())->peopleStatus($ids);
+        $seated = array_filter($ids, static fn($id) => !empty($status[$id]['table_no']));
+        if ($seated) {
+            $this->done('!', '已有桌號 Already seated', "選了已經有桌號的人。要換桌請按該人的「換桌」。\nSomeone ticked already has a table — use their 換桌 Change table button.", 'warn',
+                ['/admin/zai/easy/find', '返回 Back']);
+        }
         if (($_POST['go'] ?? '') === 'table') {
             $this->redirect('/admin/zai/easy/table?for=people&ids=' . implode(',', $ids));
         }
@@ -162,7 +170,13 @@ class ZaiEasyController extends Controller
             $who = array_map([$this, 'attendeeName'], $ids);
             $need = count($ids);
         }
-        $this->screen('table', ['for' => $for, 'ids' => $ids, 'who' => $who, 'need' => $need,
+        // 換桌 Change table: one person who already has a table.
+        $current = null;
+        if ($for === 'people' && count($ids) === 1) {
+            $current = $zai->peopleStatus($ids)[$ids[0]]['table_no'] ?? null;
+            $current = $current !== null ? (int) $current : null;
+        }
+        $this->screen('table', ['for' => $for, 'ids' => $ids, 'who' => $who, 'need' => $need, 'current' => $current,
                                 'seating' => $zai->seating((int) $event['id'])]);
     }
 
@@ -181,6 +195,13 @@ class ZaiEasyController extends Controller
         // Full already (maybe filled from another phone since this screen was
         // opened): refuse, and go back to the tables to choose another.
         $now = $zai->seating($eventId)[$table] ?? null;
+        if ($now !== null && ($now['kind'] ?? 'open') === 'group') {
+            // A 團體 group's table is never for individuals.
+            $back = ($_POST['for'] ?? '') === 'wait'
+                ? '/admin/zai/easy/table?for=wait&id=' . (int) ($_POST['id'] ?? 0)
+                : '/admin/zai/easy/table?for=people&ids=' . implode(',', $this->ids(explode(',', (string) ($_POST['ids'] ?? ''))));
+            $this->done('!', '第 ' . $table . ' 桌是團體桌 Group table', "團體桌只給團體，請選另一張桌。\nGroup tables are for groups only — please choose another table.", 'warn', [$back, '選另一張桌 Choose another table']);
+        }
         if ($now !== null && $now['seats'] > 0 && $now['used'] >= $now['seats']) {
             $back = ($_POST['for'] ?? '') === 'wait'
                 ? '/admin/zai/easy/table?for=wait&id=' . (int) ($_POST['id'] ?? 0)
@@ -246,14 +267,13 @@ class ZaiEasyController extends Controller
             $this->redirect('/admin/zai/easy/groups');
         }
         $tables = array_slice(Zai::tableList(implode(',', array_map('strval', (array) ($_POST['tables'] ?? [])))), 0, 30);
-        // A table that is full (and not already this group's) cannot be chosen —
-        // it may have filled from another phone since the screen was opened.
+        // A group takes WHOLE tables: each must be empty or already this group's.
+        // Checked here too — another phone may have used it since the screen opened.
         $seatingNow = $zai->seating((int) $event['id']);
-        $own = Zai::spread($g, array_map(static fn($t) => $t['seats'], $seatingNow));
         foreach ($tables as $no) {
             $t = $seatingNow[$no] ?? null;
-            if ($t !== null && $t['seats'] > 0 && !isset($own[$no]) && $t['seats'] - $t['used'] <= 0) {
-                $this->done('!', '第 ' . $no . ' 桌已滿 Table ' . $no . ' is full', "請選另一張桌。\nPlease choose another table.", 'warn',
+            if ($t !== null && $t['seats'] > 0 && !Zai::tableFreeForGroup($t, $g)) {
+                $this->done('!', '第 ' . $no . ' 桌已有人 Table ' . $no . ' is taken', "團體要用整張空桌，請選另一張。\nA group needs a whole empty table — please choose another.", 'warn',
                     ['/admin/zai/easy/group?id=' . (int) $g['id'], '返回 Back']);
             }
         }
@@ -261,16 +281,20 @@ class ZaiEasyController extends Controller
             $this->done('!', '請選桌號 Choose a table', '請按一張或多張桌子。Tap one or more tables.', 'warn', ['/admin/zai/easy/group?id=' . (int) $g['id'], '返回 Back']);
         }
         $zai->saveGroup((int) $g['id'], [
-            'people'    => max(0, min(5000, (int) ($_POST['people'] ?? $g['people']))),
+            'people'    => (int) $g['people'],     // not asked: the group has the whole table(s)
             'tables'    => implode(', ', $tables),
             'cheque_no' => $g['cheque_no'],     // not asked in easy mode; kept as it is (admin 團體 page can set it)
             'notes'     => $g['notes'],
             'status'    => 'arrived',
             'by'        => $this->by(),
         ]);
-        // The cheque photo is taken by the staff on their own phone — nothing is
+        // Its tables become 團體桌 group tables, so no individual is seated there.
+        foreach ($tables as $no) {
+            $zai->setTableKind((int) $event['id'], $no, 'group');
+        }
+        // The cheque photo is taken by the photographer there — nothing is
         // uploaded here. The done screen only reminds them to take it.
-        $this->done('第 ' . implode('、', $tables) . ' 桌', $g['name'] . ' · ' . (int) ($_POST['people'] ?? $g['people']) . ' 人', '✓ 已到 Arrived',
+        $this->done('第 ' . implode('、', $tables) . ' 桌', $g['name'], '✓ 已到 Arrived',
             'ok', ['/admin/zai/easy/groups', '下一個團體 Next group'], true);
     }
 

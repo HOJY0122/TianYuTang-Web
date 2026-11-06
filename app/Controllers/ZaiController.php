@@ -190,9 +190,20 @@ class ZaiController extends Controller
         }
         $status = ($_POST['status'] ?? '') === 'pending' ? 'pending' : 'confirmed';
         $table = $this->tableNo($_POST['table_no'] ?? '');
+        $this->refuseGroupTable($zai, $eventId, $table, $back);
         $zai->setPerson($eventId, $id, $status, $table, $this->by());
         $this->warnIfFull($zai, $eventId, $table);
         $this->redirect($back);
+    }
+
+    /** A 團體 group's table is never for individuals or the waiting list: refuse and go back. */
+    private function refuseGroupTable(Zai $zai, int $eventId, ?int $table, string $back): void
+    {
+        if ($table !== null && (($zai->seating($eventId)[$table]['kind'] ?? 'open') === 'group')) {
+            $this->flash('error', '第 ' . $table . ' 桌是團體桌 Group table',
+                "團體桌只給團體，請選另一張桌。\nGroup tables are for groups only — please choose another table.");
+            $this->redirect($back);
+        }
     }
 
     /** Back to the 已登記 list as it was: the search words, or the "show all" page. */
@@ -219,6 +230,7 @@ class ZaiController extends Controller
         }
         $status = ($_POST['status'] ?? '') === 'pending' ? 'pending' : 'confirmed';
         $table = $this->tableNo($_POST['table_no'] ?? '');
+        $this->refuseGroupTable($zai, (int) $group['event_id'], $table, $this->registeredBack((int) $group['event_id']) . '#g' . (int) $group['id']);
         foreach ($rsvp->attendeesOf((int) $group['id']) as $a) {
             $zai->setPerson((int) $group['event_id'], (int) $a['id'], $status, $table, $this->by());
         }
@@ -238,6 +250,15 @@ class ZaiController extends Controller
         }
         $back = '/admin/zai/groups?event=' . (int) $g['event_id'] . '&q=' . urlencode((string) ($_POST['q'] ?? '')) . '#zg' . (int) $g['id'];
         $tables = implode(', ', Zai::tableList((string) ($_POST['tables'] ?? '')));
+        // A group takes WHOLE tables: each must be empty or already this group's.
+        $seatingNow = $zai->seating((int) $g['event_id']);
+        foreach (Zai::tableList($tables) as $no) {
+            if (isset($seatingNow[$no]) && $seatingNow[$no]['seats'] > 0 && !Zai::tableFreeForGroup($seatingNow[$no], $g)) {
+                $this->flash('error', '第 ' . $no . ' 桌已有人 Table ' . $no . ' is taken',
+                    "團體要用整張空桌，第 {$no} 桌已有其他人。請選另一張。\nA group needs a whole empty table — table {$no} already has others. Please choose another.");
+                $this->redirect($back);
+            }
+        }
         $zai->saveGroup((int) $g['id'], [
             'people'    => max(0, min(5000, (int) ($_POST['people'] ?? $g['people']))),
             'tables'    => $tables !== '' ? mb_substr($tables, 0, 120) : null,
@@ -247,7 +268,7 @@ class ZaiController extends Controller
             'by'        => $this->by(),
         ]);
         foreach (Zai::tableList($tables) as $no) {
-            $this->warnIfFull($zai, (int) $g['event_id'], $no);
+            $zai->setTableKind((int) $g['event_id'], $no, 'group');     // no individual is seated there
         }
         // Just checked in: remind everyone the cheque photo is due (the photographer
         // there takes it; nothing is uploaded). A table warning, if any, stays underneath.
@@ -386,6 +407,9 @@ class ZaiController extends Controller
         if ($status === 'seated' && $table === null) {
             $this->flash('error', '請選桌號 Choose a table', '安排入座前請先選擇桌號。Choose a table number first.');
             $this->redirect('/admin/zai/waiting?event=' . (int) $w['event_id'] . '#w' . (int) $w['id']);
+        }
+        if ($status === 'seated') {
+            $this->refuseGroupTable($zai, (int) $w['event_id'], $table, '/admin/zai/waiting?event=' . (int) $w['event_id'] . '#w' . (int) $w['id']);
         }
         $zai->updateWaiting((int) $w['id'], $status, $table);
         if ($status === 'seated') {

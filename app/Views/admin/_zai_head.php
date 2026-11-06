@@ -64,8 +64,8 @@ $tableSelect = static function (string $name, ?int $current, string $attrs = '',
     require BASE_PATH . '/app/Views/partials/zai_hall.php';
     ?>
     </div>
-    <p class="tpick-legend"><i class="lg-fits"></i> 夠位 <i class="lg-some"></i> 位不夠 <i class="lg-grp"></i> 團體桌 <i class="lg-full"></i> 滿（不能按）
-      <span class="en">Green = enough · Yellow = not enough · Purple = group table · Red = full</span></p>
+    <p class="tpick-legend"><i class="lg-fits"></i> 夠位 <i class="lg-some"></i> 位不夠 <i class="lg-grp"></i> 團體桌（個人不能坐） <i class="lg-full"></i> 滿 / 有人（不能按）
+      <span class="en">Green = enough · Yellow = not enough · Purple = group table (not for individuals) · Red = full / taken</span></p>
     <div class="tpick-foot">
       <button type="button" class="mini-btn ghost" data-tpick-none hidden>只確認，不選桌 <span class="en">Confirm without a table</span></button>
       <button type="button" class="mini-btn ghost" data-tpick-clear hidden>清除桌號 <span class="en">Clear</span></button>

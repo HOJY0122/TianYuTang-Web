@@ -6,7 +6,8 @@
  */
 require BASE_PATH . '/app/Views/layouts/admin_header.php';
 require BASE_PATH . '/app/Views/admin/_zai_head.php';
-$hidden = '<input type="hidden" name="event_id" value="' . (int) $event['id'] . '"><input type="hidden" name="q" value="' . h($q) . '">';
+$hidden = '<input type="hidden" name="event_id" value="' . (int) $event['id'] . '"><input type="hidden" name="q" value="' . h($q) . '">'
+        . ($all ? '<input type="hidden" name="all" value="1"><input type="hidden" name="page" value="' . (int) $page . '">' : '');
 ?>
 <div class="panel zai-search">
   <form method="GET" action="<?= url('/admin/zai/registered') ?>" class="lookup-form" data-live-search="#zaiResults">
@@ -14,11 +15,20 @@ $hidden = '<input type="hidden" name="event_id" value="' . (int) $event['id'] . 
     <input type="search" name="q" value="<?= h($q) ?>" autofocus autocomplete="off" spellcheck="false" inputmode="text"
            placeholder="身份證 / 姓名 / 電話 / 報名編號　IC, name, phone or reference" aria-label="搜尋 Search">
     <button class="mini-btn btn-lg" type="submit"><?= icon('search') ?> 查詢 Find</button>
+    <a class="mini-btn ghost btn-lg<?= $all ? ' is-on' : '' ?>" href="<?= url('/admin/zai/registered') . $evq ?>&amp;all=1" id="showAll"><?= icon('list') ?> 顯示全部 <span class="en">Show all</span></a>
   </form>
   <p class="help" style="margin:6px 0 0">打字就會自動找。身份證可輸入開頭幾位、完整號碼或最後 4 位。<span class="en">Results appear as you type — the start of an IC, the full number, or its last 4 digits.</span></p>
 </div>
 
 <div id="zaiResults" aria-live="polite">
+<?php if ($all): ?>
+  <div class="panel zai-all-head">
+    <strong><?= icon('list') ?> 全部已登記 <span class="en">All registrations</span></strong>
+    <span class="help">共 <?= number_format($total) ?> 筆（不含已取消）· <?= number_format($total) ?> registration<?= $total === 1 ? '' : 's' ?>, not counting cancelled<?= $pages > 1 ? ' · 第 ' . $page . ' / ' . $pages . ' 頁 page ' . $page . ' of ' . $pages : '' ?></span>
+    <a class="mini-btn ghost" href="<?= url('/admin/zai/registered') . $evq ?>">× 關閉 <span class="en">Close</span></a>
+  </div>
+  <?php if (!$groups): ?><div class="panel"><p class="empty" style="margin:0">還沒有網上登記。No online registrations yet.</p></div><?php endif; ?>
+<?php endif; ?>
 <?php if ($q !== '' && !$groups): ?>
   <div class="panel"><p class="empty" style="margin:0"><?= icon('search') ?> 找不到「<?= h($q) ?>」的網上登記。<span class="en">No online registration found.</span><br>
     <a href="<?= url('/admin/zai/waiting') . $evq ?>">沒有登記？加入候補名單 → <span class="en">Not registered? Add to the waiting list</span></a></p></div>
@@ -67,6 +77,7 @@ $hidden = '<input type="hidden" name="event_id" value="' . (int) $event['id'] . 
     <?php endif; ?>
   </div>
 <?php endforeach; ?>
+<?php if ($all) { $pagerBase = '/admin/zai/registered'; $pagerQuery = ['event' => (int) $event['id'], 'all' => 1]; require BASE_PATH . '/app/Views/partials/pager.php'; } ?>
 </div>
 <script src="<?= asset('js/live-search.js') ?>"></script>
 <?php require BASE_PATH . '/app/Views/layouts/admin_footer.php'; ?>

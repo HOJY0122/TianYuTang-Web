@@ -150,6 +150,7 @@ $router->post('/admin/posts/reorder', 'PostController@reorder');
 // Walk-in registration at the counter
 $router->get('/admin/walkin',       'WalkinController@index');
 $router->post('/admin/walkin/save', 'WalkinController@save');
+$router->get('/admin/walkin/ic-check', 'WalkinController@icCheck');
 
 // System administration (system_admin only — enforced in the controller)
 $router->get('/system',                'SystemController@index');
@@ -263,6 +264,7 @@ $router->post('/admin/zai/easy/group',        'ZaiEasyController@saveGroup');
 $router->get('/admin/zai/easy/wait',          'ZaiEasyController@wait');
 $router->post('/admin/zai/easy/wait',         'ZaiEasyController@addWait');
 $router->get('/admin/zai/easy/waitlist',      'ZaiEasyController@waitlist');
+$router->get('/admin/zai/easy/ic-check',      'ZaiEasyController@icCheck');
 $router->get('/admin/zai/easy/done',          'ZaiEasyController@doneScreen');
 $router->get('/admin/zai/registered',         'ZaiController@registered');
 $router->get('/admin/zai/map',                'ZaiController@map');

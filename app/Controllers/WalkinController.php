@@ -188,6 +188,25 @@ class WalkinController extends Controller
         $this->redirect("/admin/walkin?event={$eventId}");
     }
 
+    /**
+     * GET /admin/walkin/ic-check?ic= — for the form's live check:
+     * {"message": ""} when the IC is free, otherwise why it cannot be used.
+     */
+    public function icCheck(): void
+    {
+        $this->requireAdmin();
+        header('Content-Type: application/json');
+        header('Cache-Control: no-store');
+        $ic = Validate::icOrPassport(mb_substr((string) ($_GET['ic'] ?? ''), 0, 30));
+        $event = (new Event())->find((int) ($_GET['event'] ?? 0)) ?? (new Event())->active();
+        $reg = $ic === null ? null : (new Zai())->registeredIc((int) $event['id'], $ic);
+        echo json_encode(['message' => $reg === null ? '' :
+            "此身份證已經報名（{$reg['ref_code']} {$reg['name']}），不能再登記。如已到場，請用「現場報到」。\n"
+            . "This IC is already registered ({$reg['ref_code']} {$reg['name']}) — it cannot be registered again. If they are here, use Check-in."],
+            JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
     /** Errors and previously typed values, surviving one redirect. */
     private function takeOld(): array
     {

@@ -327,17 +327,17 @@ class ZaiController extends Controller
             $this->flash('error', '未加入 Not added', $problem);
             $this->redirect($back);
         }
-        // Already registered online? Send them to the registered list instead.
-        if (empty($_POST['force']) && ($reg = $zai->registeredIc((int) $event['id'], $ic)) !== null) {
-            $this->flash('info', '已經登記 Already registered',
-                "這個身份證已在網上登記：{$reg['name']}（{$reg['ref_code']}）。請到「已登記」確認入座。\n"
-                . "This IC is already registered online — {$reg['name']} ({$reg['ref_code']}). Confirm them under Registered.");
-            $this->redirect('/admin/zai/registered?event=' . (int) $event['id'] . '&q=' . urlencode($reg['ref_code']));
+        // IC already registered, or already on the waiting list: refused, and
+        // this page stays — no jump to another page.
+        try {
+            $no = $zai->addWaiting((int) $event['id'], [
+                'name' => $name, 'ic' => $ic, 'contact' => $this->str('contact', 30),
+                'people' => 1, 'notes' => $this->str('notes', 300),
+            ], $this->by());
+        } catch (\DomainException $e) {
+            $this->flash('error', '不能登記 Cannot register', $e->getMessage());
+            $this->redirect($back);
         }
-        $no = $zai->addWaiting((int) $event['id'], [
-            'name' => $name, 'ic' => $ic, 'contact' => $this->str('contact', 30),
-            'people' => 1, 'notes' => $this->str('notes', 300),
-        ], $this->by());
         $this->flash('success', '候補 #' . $no, "{$name} 已加入候補名單，號碼 #{$no}。\n{$name} is on the waiting list, number #{$no}.");
         $this->redirect($back);
     }

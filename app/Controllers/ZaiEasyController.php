@@ -281,15 +281,34 @@ class ZaiEasyController extends Controller
             $_SESSION['zai_wait_old'] = ['name' => $name, 'ic' => $ic, 'contact' => (string) $this->str('contact', 30)];
             $this->redirect('/admin/zai/easy/wait');
         }
-        if (($reg = $zai->registeredIc((int) $event['id'], $ic)) !== null) {
-            // Registered after all: go straight to their registration.
-            $this->redirect('/admin/zai/easy/find?q=' . urlencode($reg['ref_code']) . '&found=1');
+        // IC already registered, or already on the waiting list: say so and stay
+        // on this form (typed values kept) — never jump to another page.
+        try {
+            $no = $zai->addWaiting((int) $event['id'], [
+                'name' => $name, 'ic' => $ic, 'contact' => $this->str('contact', 30),
+                'people' => 1, 'notes' => null,
+            ], $this->by());
+        } catch (\DomainException $e) {
+            $_SESSION['zai_wait_error'] = $e->getMessage();
+            $_SESSION['zai_wait_old'] = ['name' => $name, 'ic' => $ic, 'contact' => (string) $this->str('contact', 30)];
+            $this->redirect('/admin/zai/easy/wait');
         }
-        $no = $zai->addWaiting((int) $event['id'], [
-            'name' => $name, 'ic' => $ic, 'contact' => $this->str('contact', 30),
-            'people' => 1, 'notes' => null,
-        ], $this->by());
         $this->done('#' . $no, '候補號碼 Waiting number', $name . "\n請到候補區等候，叫號後安排座位。\nPlease wait in the waiting area until called.", 'info');
+    }
+
+    /**
+     * GET /admin/zai/easy/ic-check?ic= — for the waiting form's live check:
+     * {"message": ""} when the IC can be added, otherwise why not.
+     */
+    public function icCheck(): void
+    {
+        $this->requireAdmin();
+        header('Content-Type: application/json');
+        header('Cache-Control: no-store');
+        $ic = \App\Core\Validate::icOrPassport(mb_substr((string) ($_GET['ic'] ?? ''), 0, 30));
+        $event = (new Event())->active();
+        echo json_encode(['message' => $ic === null ? '' : ((new Zai())->walkInTaken((int) $event['id'], $ic) ?? '')], JSON_UNESCAPED_UNICODE);
+        exit;
     }
 
     /** GET /admin/zai/easy/waitlist */

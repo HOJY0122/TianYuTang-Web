@@ -407,6 +407,11 @@ class Zai extends Model
         $this->db->beginTransaction();
         try {
             $next = (int) $this->scalar('SELECT COALESCE(MAX(queue_no), 0) + 1 FROM zai_waiting WHERE event_id = ? FOR UPDATE', [$eventId]);
+            // Checked again here, inside the lock: two staff phones adding the
+            // same IC at the same moment must not both get a number.
+            if (($taken = $this->walkInTaken($eventId, (string) $v['ic'])) !== null) {
+                throw new \DomainException($taken);
+            }
             $tidyIc = \App\Core\Validate::icOrPassport((string) $v['ic']) ?? trim((string) $v['ic']);
             [$icEnc, $icHash, $icLast4] = Rsvp::icColumns($tidyIc);
             $contact = $v['contact'] !== null && $v['contact'] !== '' ? (\App\Core\Validate::phone((string) $v['contact']) ?? $v['contact']) : $v['contact'];
@@ -465,6 +470,39 @@ class Zai extends Model
             $out[] = (string) ($x['l'] ?? '');
         }
         return array_values(array_filter($out, 'strlen'));
+    }
+
+    /**
+     * Can this IC be put on the waiting list? null when it can, otherwise the
+     * message for staff: the IC is already registered for the event, or is
+     * already on the waiting list (waiting or seated). The page stays where
+     * it is — staff are not sent anywhere else.
+     */
+    public function walkInTaken(int $eventId, string $ic): ?string
+    {
+        if (($reg = $this->registeredIc($eventId, $ic)) !== null) {
+            return "此身份證已經報名（{$reg['ref_code']} {$reg['name']}），不能再登記。\n"
+                 . "This IC is already registered ({$reg['ref_code']} {$reg['name']}) — it cannot be registered again.";
+        }
+        if (($w = $this->waitingByIc($eventId, $ic)) !== null) {
+            $state = $w['status'] === 'seated' ? '，已入座第 ' . (int) $w['table_no'] . ' 桌' : '';
+            $stateEn = $w['status'] === 'seated' ? ', seated at table ' . (int) $w['table_no'] : '';
+            return "此身份證已在候補名單（#{$w['queue_no']} {$w['name']}{$state}），不能再登記。\n"
+                 . "This IC is already on the waiting list (#{$w['queue_no']} {$w['name']}{$stateEn}) — it cannot be registered again.";
+        }
+        return null;
+    }
+
+    /** The waiting-list row (not "left") for this IC, or null. */
+    public function waitingByIc(int $eventId, string $ic): ?array
+    {
+        $norm = Rsvp::icNormal($ic);
+        if ($norm === '') {
+            return null;
+        }
+        return $this->fetchOne("SELECT queue_no, name, status, table_no FROM zai_waiting
+                                 WHERE event_id = ? AND ic_hash = ? AND status <> 'left' ORDER BY id LIMIT 1",
+            [$eventId, Crypto::blindIndex($norm)]);
     }
 
     /** Is this IC already registered online for the event? [group ref, name] or null. */

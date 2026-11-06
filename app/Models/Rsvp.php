@@ -342,6 +342,13 @@ class Rsvp extends Model
     // ------------------------------------------------------------------
 
     /** One registration group, or null. */
+    /** Record that staff sent (or did not send) this registration its check-in QR. */
+    public function setQrSent(int $groupId, bool $sent, string $by): void
+    {
+        $this->execute('UPDATE rsvp_groups SET qr_sent_at = ' . ($sent ? 'NOW()' : 'NULL') . ', qr_sent_by = ? WHERE id = ?',
+            [$sent ? $by : null, $groupId]);
+    }
+
     public function findGroup(int $groupId): ?array
     {
         return $this->fetchOne('SELECT * FROM rsvp_groups WHERE id = ?', [$groupId]);
@@ -378,7 +385,7 @@ class Rsvp extends Model
     {
         [$where, $params] = $this->groupFilterSql($eventId, $filters);
         return $this->fetchAll(
-            'SELECT g.id, g.ref_code, g.attendee_count, g.status, g.source, g.reg_type, g.org_name, g.recorded_by, g.created_at,
+            'SELECT g.id, g.ref_code, g.attendee_count, g.status, g.source, g.reg_type, g.org_name, g.recorded_by, g.created_at, g.qr_sent_at,
                     (SELECT name FROM rsvp_attendees WHERE group_id = g.id ORDER BY id LIMIT 1) AS lead_name,
                     (SELECT contact_no FROM rsvp_attendees WHERE group_id = g.id ORDER BY id LIMIT 1) AS lead_contact,
                     (SELECT COUNT(*) FROM rsvp_attendees WHERE group_id = g.id AND checked_in_at IS NOT NULL) AS arrived
@@ -419,6 +426,12 @@ class Rsvp extends Model
         if (in_array($filters['type'] ?? '', ['individual', 'organisation'], true)) {
             $where[]  = 'g.reg_type = ?';
             $params[] = $filters['type'];
+        }
+        // QR: who still needs their check-in QR (confirmed, not sent yet), or who has it.
+        if (($filters['qr'] ?? '') === 'unsent') {
+            $where[] = "g.status = 'confirmed' AND g.qr_sent_at IS NULL";
+        } elseif (($filters['qr'] ?? '') === 'sent') {
+            $where[] = 'g.qr_sent_at IS NOT NULL';
         }
         if (in_array($filters['source'] ?? '', ['online', 'walkin', 'whatsapp'], true)) {
             $where[]  = 'g.source = ?';

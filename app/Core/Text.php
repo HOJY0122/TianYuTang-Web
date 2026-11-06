@@ -99,9 +99,10 @@ class Text
 
         // --- Confirmation ---
         'success.rsvp_title'  => ['success', '報名成功', 'Registration complete'],
-        'success.rsvp_text'   => ['success', '請截圖或列印此頁，活動當日出示 QR Code 即可報到。', 'Please screenshot or print this page and show the QR code at the counter.', true],
+        'success.rsvp_text'   => ['success', '我們已收到您的報名，請記下報名編號。', 'We have received your registration — please note your reference number.', true],
+        'success.rsvp_qr'     => ['success', '工作人員確認報名後，會以 WhatsApp 把報到 QR Code 發送給您。活動當天出示即可報到。', 'Once our staff have checked your registration, they will send your check-in QR code by WhatsApp. Show it at the counter on the day.', true],
         'success.don_title'   => ['success', '感恩您的布施', 'Thank you for your donation'],
-        'success.don_text'    => ['success', '您的布施資料已收到，工作人員會盡快與您聯繫確認付款。活動當日可出示此 QR Code 到櫃台付款。', 'We have received your donation details. Our staff will contact you about payment — or show this QR code at the counter on the day.', true],
+        'success.don_text'    => ['success', '您的布施資料已收到，工作人員會盡快與您聯繫確認付款。', 'We have received your donation details. Our staff will contact you about payment.', true],
         'success.leave'       => ['success', '離開後本頁面將無法再次開啟，請先截圖保存。', 'This page cannot be opened again once you leave — please save a screenshot.', true],
 
         // --- Gallery ---
@@ -123,10 +124,10 @@ class Text
         'help.title'    => ['help', '使用說明', 'How to use this page'],
         'help.home'     => ['help', "・按「報名」為自己和家人登記參加，全部共用一個報名編號。\n・按「布施」認捐功德席或隨喜布施。\n・「如何前往」可用 Waze 或 Google 地圖導航到會場。\n・右上角的人形按鈕可放大字體。",
                                     "• Tap Register to sign up yourself and your family under one reference number.\n• Tap Donate to sponsor merit seats or give a freewill amount.\n• \"Getting there\" opens Waze or Google Maps to the venue.\n• The person button at the top makes the text bigger.", true],
-        'help.register' => ['help', "・先選人數，再填寫每位的姓名、身份證（或護照）及電話。\n・身份證只用於活動當日核對，資料依個人資料保護法令（PDPA）保管。\n・提交後請截圖保存報名編號與 QR Code。",
-                                    "• Choose how many people, then fill in each person's name, IC (or passport) and phone.\n• Your IC is only used to confirm who you are at check-in, and is protected under the PDPA.\n• After submitting, screenshot your reference number and QR code.", true],
-        'help.donate'   => ['help', "・可選功德席、隨喜，或兩者一起。\n・提交後工作人員會聯絡您安排付款。\n・活動當日帶著布施編號的 QR Code 到櫃台，可直接付款及取收據。",
-                                    "• Choose merit seats, a freewill amount, or both.\n• After you submit, our staff will contact you to arrange payment.\n• On the day, show your donation QR code at the counter to pay and collect your receipt.", true],
+        'help.register' => ['help', "・先選人數，再填寫每位的姓名、身份證（或護照）及電話。\n・身份證只用於活動當日核對，資料依個人資料保護法令（PDPA）保管。\n・提交後請記下報名編號；工作人員確認後會以 WhatsApp 發送報到 QR Code。",
+                                    "• Choose how many people, then fill in each person's name, IC (or passport) and phone.\n• Your IC is only used to confirm who you are at check-in, and is protected under the PDPA.\n• After submitting, note your reference number; staff will send your check-in QR code by WhatsApp once confirmed.", true],
+        'help.donate'   => ['help', "・可選功德席、隨喜，或兩者一起。\n・提交後工作人員會聯絡您安排付款。\n・活動當日也可以到櫃台報上布施編號，直接付款及取收據。",
+                                    "• Choose merit seats, a freewill amount, or both.\n• After you submit, our staff will contact you to arrange payment.\n• On the day you can also give your donation reference at the counter to pay and collect your receipt.", true],
         'help.gallery'  => ['help', "・點相片可放大，左右滑動看下一張。", "• Tap a photo to enlarge it; swipe to see the next one.", true],
         'help.other'    => ['help', "如有疑問，歡迎於活動當日親臨櫃台詢問。", 'If you have any questions, please visit our counter on the event day.', true],
 

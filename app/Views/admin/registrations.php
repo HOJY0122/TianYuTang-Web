@@ -38,8 +38,15 @@ $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confi
         <option value="organisation"<?= $filters['type'] === 'organisation' ? ' selected' : '' ?>>團體 Organisation</option>
       </select>
     </label>
+    <label class="field">報到 QR <span class="en">QR</span>
+      <select name="qr">
+        <option value="">全部 All</option>
+        <option value="unsent"<?= $filters['qr'] === 'unsent' ? ' selected' : '' ?>>已確認，未發送 Confirmed, not sent</option>
+        <option value="sent"<?= $filters['qr'] === 'sent' ? ' selected' : '' ?>>已發送 Sent</option>
+      </select>
+    </label>
     <button class="mini-btn btn-lg" type="submit"><?= icon('search') ?> 搜尋 Search</button>
-    <?php if ($filters['q'] !== '' || $filters['status'] !== '' || $filters['source'] !== '' || $filters['type'] !== ''): ?>
+    <?php if ($filters['q'] !== '' || $filters['status'] !== '' || $filters['source'] !== '' || $filters['type'] !== '' || $filters['qr'] !== ''): ?>
       <a class="mini-btn ghost btn-lg" href="<?= url('/admin/registrations') ?>?event=<?= $eid ?>">清除 Clear</a>
     <?php endif; ?>
     <span class="spacer"></span>
@@ -69,11 +76,13 @@ $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confi
           <?= h($g['lead_name']) ?><span class="sub-line"><?= h($g['lead_contact']) ?></span></td>
         <td data-label="人數 People"><?= (int) $g['attendee_count'] ?>
           <?= $g['source'] === 'walkin' ? '<span class="badge walkin">現場 Walk-in</span>' : ($g['source'] === 'whatsapp' ? '<span class="badge">WhatsApp</span>' : '') ?></td>
-        <td data-label="狀態 Status"><span class="badge <?= $g['status'] === 'confirmed' ? 'ok' : h($g['status']) ?>"><?= h($statusText[$g['status']]) ?></span></td>
+        <td data-label="狀態 Status"><span class="badge <?= $g['status'] === 'confirmed' ? 'ok' : h($g['status']) ?>"><?= h($statusText[$g['status']]) ?></span>
+          <?php if ($g['status'] !== 'cancelled'): ?><span class="sub-line"><?= $g['qr_sent_at'] ? '<span class="qr-state sent">' . icon('qr') . ' QR 已發送</span>' : '<span class="qr-state">' . icon('qr') . ' QR 未發送</span>' ?></span><?php endif; ?></td>
         <td data-label="報到 Arrived"><?= (int) $g['arrived'] ?> / <?= (int) $g['attendee_count'] ?></td>
         <td data-label="操作 Actions">
           <div class="actions-cell">
             <a class="mini-btn" href="<?= url('/admin/registrations/edit') ?>?id=<?= (int) $g['id'] ?>"><?= icon('pencil') ?> 編輯 Edit</a>
+            <?php if ($g['status'] !== 'cancelled'): ?><a class="mini-btn ghost" href="<?= url('/admin/registrations/qr') ?>?id=<?= (int) $g['id'] ?>"><?= icon('qr') ?> QR</a><?php endif; ?>
             <?php if ($g['status'] !== 'confirmed'): ?>
               <form method="POST" action="<?= url('/admin/registrations/status') ?>" style="margin:0">
                 <?= csrf_field() ?><input type="hidden" name="group_id" value="<?= (int) $g['id'] ?>">

@@ -1415,3 +1415,17 @@ body.ez{margin:0;background:#f7efdc;color:#2b1d14;font-family:"Noto Sans TC","Mi
 .zai-map-form .seg-toggle small{font-weight:600;opacity:.8;margin-left:4px}
 .ez-tbl.grp{border-color:#c7b6e3;background:#f4eefb;color:#5b3f86}
 .ez-step-sub{grid-column:1/-1;font-size:16px;margin:10px 0 0}
+
+/* ---------- 報到 QR Code: sent by staff after checking a registration ---------- */
+.qr-pass{display:block;width:100%;max-width:400px;height:auto;margin:0 auto;border-radius:14px;box-shadow:0 8px 22px rgba(67,39,18,.15)}
+.qr-send{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0 6px}
+.qr-send .primary{min-height:52px}
+.qr-sent-box{margin-top:16px;padding-top:14px;border-top:1px solid #eadcb5;display:flex;flex-direction:column;gap:8px}
+.qr-state{font-size:12px;font-weight:700;color:#8a5a12;display:inline-flex;align-items:center;gap:3px}
+.qr-state.sent{color:#2f5a33}
+.qr-state .ic{width:13px;height:13px}
+@media print{
+  body *{visibility:hidden}
+  .qr-pass,.qr-pass *{visibility:visible}
+  .qr-pass{position:absolute;left:0;top:0;width:100%;max-width:none;box-shadow:none}
+}

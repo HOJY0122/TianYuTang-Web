@@ -1,10 +1,12 @@
 <?php
-/** Easy mode ② — one group: how many people, which table(s), done → reminder to take the cheque photo. */
+/**
+ * Easy mode ② — one 團體 group: its details, then the table(s) it takes.
+ * A group buys / reserves whole tables, so no head count is asked: tick the
+ * table(s), done. Only empty tables (or the group's own) can be ticked.
+ */
 $title = $g['name']; $titleEn = '團體 Group';
 require __DIR__ . '/_top.php';
 $mine = App\Models\Zai::tableList((string) ($g['tables'] ?? ''));
-// Seats left at each table, not counting this group's own people already there.
-$ownSpread = App\Models\Zai::spread($g, array_map(static fn($t) => $t['seats'], $seating));
 ?>
 <?php if (($_GET['from'] ?? '') === 'find'): $who = mb_substr(trim((string) ($_GET['who'] ?? '')), 0, 100); $fq = mb_substr(trim((string) ($_GET['q'] ?? '')), 0, 40); ?>
   <div class="ez-msg ez-info"><b><?= $who !== '' ? '「' . h($who) . '」' : '這個人' ?>屬於這個團體 ✓</b>
@@ -14,55 +16,52 @@ $ownSpread = App\Models\Zai::spread($g, array_map(static fn($t) => $t['seats'], 
 <form method="POST" action="<?= url('/admin/zai/easy/group') ?>" class="ez-group">
   <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $g['id'] ?>">
 
-  <p class="ez-step"><span>1</span> 來了幾個人？<small>How many people came?</small></p>
-  <div class="ez-stepper">
-    <button type="button" class="ez-pm" data-step="-1" aria-label="減一 Minus one">−</button>
-    <input type="number" name="people" id="ezPeople" value="<?= (int) $g['people'] ?>" min="0" max="5000" inputmode="numeric">
-    <button type="button" class="ez-pm" data-step="1" aria-label="加一 Plus one">+</button>
+  <div class="ez-gcard">
+    <b><?= icon('users') ?> <?= h($g['name']) ?></b>
+    <span><?= !empty($g['ref_code']) ? h($g['ref_code']) : ($g['list_no'] ? '名單 #' . h($g['list_no']) : '團體 Group') ?>
+      <?= $g['contact'] ? ' · ' . icon('phone') . ' ' . h($g['contact']) : '' ?></span>
+    <span><?= $mine ? '已安排 Booked: 第 ' . h(implode('、', $mine)) . ' 桌' : '還沒有安排桌子 No table booked yet' ?>
+      <?= $g['status'] === 'arrived' ? ' · <em class="ok">✓ 已到 Arrived</em>' : '' ?></span>
   </div>
 
-  <p class="ez-step"><span>2</span> 按桌號（可按多張）<small>Tap the table(s)<?= $mine ? ' — 已預先安排的已選好 the booked ones are already ticked' : '' ?></small></p>
+  <p class="ez-step"><span>1</span> 按桌號（可按多張）<small>Tap the table(s) they take<?= $mine ? ' — 已預先安排的已選好 the booked ones are already ticked' : '' ?></small></p>
   <?php
-  // Drawn like the hall. Red = full: switched off so it cannot be ticked by
-  // accident — except this group's own booked table(s), which stay usable.
+  // Drawn like the hall. A group takes WHOLE tables: only an empty table, or
+  // one already booked for this group, can be ticked. A table with anyone
+  // else at it is red and switched off, so tables are never shared by mistake.
   $hallNos = array_keys(array_filter($seating, static fn($t) => $t['seats'] > 0));
   $hallClass = 'hall-easy ez-tables-multi';
-  $hallCell = static function (int $no) use ($seating, $mine, $ownSpread): string {
+  $hallCell = static function (int $no) use ($seating, $mine, $g): string {
       $t = $seating[$no];
       $self = in_array($no, $mine, true);
-      $left = $t['seats'] - $t['used'] + ($ownSpread[$no] ?? 0);
-      $full = $left <= 0 && !$self;
-      $cls = $full ? 'full' : ($left >= $t['seats'] ? 'fits' : ($left > 0 ? 'some' : 'full'));
-      return '<label class="ez-tbl ' . $cls . (($t['kind'] ?? 'open') === 'group' && !$self && !$full ? ' grp' : '') . '"' . ($full ? ' aria-disabled="true"' : '') . '>'
-          . '<input type="checkbox" name="tables[]" value="' . $no . '"' . ($self ? ' checked' : '') . ($full ? ' disabled' : '') . '>'
-          . '<b>' . $no . '</b><small>' . ($left > 0 ? '剩 ' . $left : '滿 Full') . ($self ? ' · 已安排' : (($t['kind'] ?? 'open') === 'group' ? ' · 團體桌' : '')) . '</small>'
-          . '</label>';
+      $free = App\Models\Zai::tableFreeForGroup($t, $g);
+      $isGrp = ($t['kind'] ?? 'open') === 'group';
+      $cls = !$free ? 'full' : ($self ? 'fits' : ($isGrp ? 'grp' : 'fits'));
+      $note = $self ? '已安排' : (!$free ? ($t['used'] >= $t['seats'] ? '滿 Full' : '有人 Taken') : ($isGrp ? '空 · 團體桌' : '空桌 Empty'));
+      return '<label class="ez-tbl ' . $cls . '"' . (!$free ? ' aria-disabled="true"' : '') . '>'
+          . '<input type="checkbox" name="tables[]" value="' . $no . '"' . ($self ? ' checked' : '') . (!$free ? ' disabled' : '') . '>'
+          . '<b>' . $no . '</b><small>' . $note . '</small></label>';
   };
   require BASE_PATH . '/app/Views/partials/zai_hall.php';
   ?>
   <p class="ez-hint" id="ezRoom"></p>
-  <p class="ez-hint ez-legend"><i class="lg-fits"></i> 空桌 <i class="lg-some"></i> 有人 <i class="lg-grp"></i> 團體桌 <i class="lg-full"></i> 滿（不能按）
-    <span class="en">Green = empty · Yellow = some taken · Purple = group table · Red = full (cannot be ticked)</span></p>
+  <p class="ez-hint ez-legend"><i class="lg-fits"></i> 空桌 <i class="lg-grp"></i> 空的團體桌 <i class="lg-full"></i> 已有人（不能按）
+    <span class="en">Green = empty · Purple = empty group table · Red = taken (cannot be ticked)</span></p>
 
 
-  <p class="ez-step"><span>3</span> 完成 <small>Finish</small></p>
+  <p class="ez-step"><span>2</span> 完成 <small>Finish</small></p>
   <button type="submit" class="ez-btn ez-ok">✓ 完成，已到 <small>Done — they are here</small></button>
 </form>
 <script>
 (function () {
-  var p = document.getElementById('ezPeople'), room = document.getElementById('ezRoom');
-  document.querySelectorAll('.ez-pm').forEach(function (b) {
-    b.addEventListener('click', function () { p.value = Math.max(0, (+p.value || 0) + +b.dataset.step); show(); });
-  });
+  // How many tables are ticked (the group takes them whole).
+  var room = document.getElementById('ezRoom');
   function show() {
-    var seats = 0, n = 0;
-    document.querySelectorAll('.ez-tables-multi input:checked').forEach(function (c) {
-      n++; seats += +(c.parentNode.querySelector('small').textContent.replace(/\D/g, '') || 0);
-    });
-    room.textContent = n ? '已選 ' + n + ' 張桌，空位 ' + seats + '，人數 ' + p.value + (seats < +p.value ? '　⚠ 位不夠 Not enough seats' : '　✓ 夠位 Enough') : '';
-    room.className = 'ez-hint' + (n && seats < +p.value ? ' ez-bad' : '');
+    var n = document.querySelectorAll('.ez-tables-multi input:checked').length;
+    room.textContent = n ? '已選 ' + n + ' 張桌 · ' + n + ' table' + (n > 1 ? 's' : '') + ' ticked' : '請按桌號 Tap a table';
+    room.className = 'ez-hint' + (n ? '' : ' ez-bad');
   }
-  document.querySelectorAll('.ez-tables-multi input, #ezPeople').forEach(function (i) { i.addEventListener('input', show); i.addEventListener('change', show); });
+  document.querySelectorAll('.ez-tables-multi input').forEach(function (i) { i.addEventListener('change', show); });
   show();
 })();
 </script>

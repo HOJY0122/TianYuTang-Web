@@ -29,7 +29,7 @@ Options -Indexes
 # (each private folder also carries its own "deny all" .htaccess).
 <IfModule mod_alias.c>
     RedirectMatch 404 (?i)/\.(git|env|svn|ht)
-    RedirectMatch 404 (?i)^/?(app|config|storage|migrations|bin)(/|$)
+    RedirectMatch 404 (?i)^/?(app|config|storage|migrations|bin|mobile|\.github)(/|$)
 </IfModule>
 <FilesMatch "(?i)(\.(sql|md|log|ini|sh|bak|swp|dist|lock|key)|^server\.php|^composer\.(json|lock))$">
     <IfModule mod_authz_core.c>

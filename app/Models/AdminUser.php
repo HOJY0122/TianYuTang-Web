@@ -50,6 +50,21 @@ class AdminUser extends Model
     }
 
     /**
+     * Does this stored hash still accept a published default password?
+     * Asks about the ACCOUNT, not about what was typed, so no trick in the
+     * typed text (a hidden NUL byte, extra characters) can hide a default.
+     */
+    public static function hashIsDefault(string $hash): bool
+    {
+        foreach (self::DEFAULT_PASSWORDS as $default) {
+            if (password_verify($default, $hash)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Check a username/password pair.
      *
      * Returns null for both "no such user" and "wrong password"; the login
@@ -62,23 +77,47 @@ class AdminUser extends Model
             [$username]
         );
 
+        // bcrypt stops reading at a NUL byte, so "secret\0anything" would
+        // pass as "secret". No real password contains one: refuse it.
+        if (str_contains($password, "\0")) {
+            $user = null;
+        }
+
         if ($user === null) {
             // Spend roughly the same time as a real check, so response
             // time does not reveal whether the username exists.
-            password_verify($password, '$2y$12$usesomesillystringforsalt0000000000000000000000000000000');
+            password_verify($password, '$2y$12$bVTBOjY2CYPZOe5urEQ.FuOVPzWYx4bkGb9ZbUAEPZkv.wC.0nG1a'); // a real cost-12 hash of random bytes
             return null;
         }
 
         if (!password_verify($password, $user['password_hash'])) {
             return null;
         }
-        // Stored with an older, weaker setting? Re-hash now while we have the password.
-        if (password_needs_rehash($user['password_hash'], PASSWORD_DEFAULT)) {
+        // The login page refuses accounts still on a published default.
+        $user['has_default_password'] = self::hashIsDefault($user['password_hash']);
+
+        // Stored with an older, weaker setting? Re-hash now while we have the
+        // password — but only to make it stronger, never weaker.
+        if (self::needsStrongerHash($user['password_hash'])) {
             $this->execute('UPDATE admin_users SET password_hash = ? WHERE id = ?', [password_hash($password, PASSWORD_DEFAULT), $user['id']]);
         }
 
         unset($user['password_hash']);
         return $user;
+    }
+
+    /** True when the hash uses another algorithm or a lower bcrypt cost than PASSWORD_DEFAULT would. */
+    private static function needsStrongerHash(string $hash): bool
+    {
+        if (!password_needs_rehash($hash, PASSWORD_DEFAULT)) {
+            return false;
+        }
+        $info = password_get_info($hash);
+        $want = password_get_info(password_hash('x', PASSWORD_DEFAULT));
+        if ($info['algo'] !== $want['algo']) {
+            return true;
+        }
+        return (int) ($info['options']['cost'] ?? 0) < (int) ($want['options']['cost'] ?? 0);
     }
 
     /** Role and session version, checked on every staff page (App\Core\Session). */
@@ -206,11 +245,16 @@ class AdminUser extends Model
         if (strlen($password) < 8) {
             $errors[] = '密碼至少需要 8 個字元。';
         }
-        if (strlen($password) > 200) {
-            $errors[] = '密碼過長。';
+        // bcrypt only reads the first 72 bytes; anything longer would be
+        // silently cut, so say so instead (72 bytes = 72 letters or 24 Chinese characters).
+        if (strlen($password) > 72) {
+            $errors[] = '密碼過長（最多 72 個英文字元或 24 個中文字）。';
         }
         if (self::isDefaultPassword($password)) {
             $errors[] = '不可使用系統預設密碼，請另設一組。';
+        }
+        if (str_contains($password, "\0")) {
+            $errors[] = '密碼含有不允許的字元。';
         }
         if ($password !== $confirm) {
             $errors[] = '兩次輸入的密碼不一致。';

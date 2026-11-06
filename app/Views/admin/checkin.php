@@ -27,7 +27,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
       <input type="hidden" name="event" value="<?= (int) $event['id'] ?>">
       <input type="text" name="ref" value="<?= h($ref) ?>" autofocus aria-label="報名編號 Reference"
              autocomplete="off" autocapitalize="characters" spellcheck="false"
-             placeholder="報名編號 Reference，例 e.g. RSVP-0007">
+             placeholder="報名編號 Reference，例 e.g. RSVP-0007" data-app-scan="qr" data-app-scan-submit>
       <button class="mini-btn btn-lg" type="submit">查詢 Find</button>
       <button class="mini-btn ghost btn-lg" type="button" data-scan><?= icon('camera') ?> 掃描 Scan QR</button>
     </form>

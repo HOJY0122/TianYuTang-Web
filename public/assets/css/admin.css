@@ -1449,3 +1449,5 @@ body.ez{margin:0;background:#f7efdc;color:#2b1d14;font-family:"Noto Sans TC","Mi
 .ez-pop-box h2{margin:8px 0 6px;font-size:28px;color:#9f211b}
 .ez-pop-box p{font-size:18px;margin:6px 0}.ez-pop-box p.en{font-size:15px;color:#7a6a58}
 .ez-pop-box .ez-btn{margin-top:14px}
+.ez-pname small.ez-id{color:#2b1d14;font-size:16px}
+.ez-pname small.ez-id .icon{width:14px;height:14px;vertical-align:-2px}

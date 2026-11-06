@@ -1,6 +1,6 @@
 <?php
 /** Easy mode ① — registered online: type the IC, tick the people, go on. */
-$title = '請輸入身份證號碼'; $titleEn = 'Type the IC number (or its last 4 digits)';
+$title = '請輸入身份證號碼'; $titleEn = 'Type the IC number — results show from the first digit';
 require __DIR__ . '/_top.php';
 ?>
 <form method="GET" action="<?= url('/admin/zai/easy/find') ?>" class="ez-search" data-live-search="#ezResults">
@@ -20,6 +20,7 @@ require __DIR__ . '/_top.php';
   </div>
 <?php elseif ($people): ?>
   <?php if (!empty($_GET['found'])): ?><div class="ez-msg ez-info"><b>這個身份證已經網上登記 ✓</b><p>This IC is already registered — confirm them here.</p></div><?php endif; ?>
+  <?php if (!empty($more)): ?><p class="ez-hint">只顯示前 <?= (int) $more ?> 筆，請多打幾個字。<span class="en">Showing the first <?= (int) $more ?> — keep typing to narrow it down.</span></p><?php endif; ?>
   <form method="POST" action="<?= url('/admin/zai/easy/pick') ?>" class="ez-people">
     <?= csrf_field() ?>
     <p class="ez-step"><span>1</span> 按名字選人（可選多位）<small>Tap each person who is here</small></p>
@@ -28,7 +29,9 @@ require __DIR__ . '/_top.php';
         <input type="checkbox" name="ids[]" value="<?= (int) $a['id'] ?>"<?= $z && $z['table_no'] ? '' : ' checked' ?>>
         <span class="ez-tick" aria-hidden="true">✓</span>
         <span class="ez-pname"><b><?= h($a['name']) ?></b>
-          <small><?= h(mask_ic($a['ic_no'] ?? '')) ?> · <?= h($a['ref_code']) ?><?= $a['org_name'] ? ' · 團體 ' . h($a['org_name']) : '' ?></small>
+          <small class="ez-id"><b>IC <?= h($a['ic_no'] ?: '—') ?></b></small>
+          <?php if (!empty($a['contact_no']) && $a['contact_no'] !== '—'): ?><small class="ez-id"><?= icon('phone') ?> <?= h($a['contact_no']) ?></small><?php endif; ?>
+          <small><?= h($a['ref_code']) ?><?= $a['org_name'] ? ' · 團體 ' . h($a['org_name']) : '' ?></small>
           <?php if ($z): ?><em class="<?= $z['status'] === 'confirmed' ? 'ok' : 'warn' ?>"><?= $z['status'] === 'confirmed' ? '已確認' : '待定' ?><?= $z['table_no'] ? ' · 已在第 ' . (int) $z['table_no'] . ' 桌' : '' ?></em><?php endif; ?></span>
       </label>
     <?php endforeach; ?>

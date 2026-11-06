@@ -14,12 +14,15 @@ require BASE_PATH . '/app/Views/layouts/header.php';
       <?= tb($isRsvp ? 'success.rsvp_text' : 'success.don_text') ?>
     </p>
 
-    <!-- The QR carries the reference code only — nothing personal. -->
-    <div class="qr-box">
-      <canvas id="qrCanvas" aria-label="QR Code"></canvas>
-      <div class="qr-ref"><?= h($refCode) ?></div>
-      <div class="qr-hint"><?= $isRsvp ? '報到編號 Check-in reference' : '布施編號 Donation reference' ?></div>
+    <!-- No QR here: staff check each registration first, then send the
+         check-in QR themselves (報名紀錄 → QR Code). Donations need none. -->
+    <div class="ref-box">
+      <div class="ref-label"><?= $isRsvp ? '報名編號 Reference' : '布施編號 Reference' ?></div>
+      <div class="ref-code"><?= h($refCode) ?></div>
     </div>
+    <?php if ($isRsvp): ?>
+      <p class="qr-later"><?= icon('phone') ?> <span><?= tb('success.rsvp_qr') ?></span></p>
+    <?php endif; ?>
 
     <?php if ($isRsvp): ?>
       <dl class="confirm-details">
@@ -70,22 +73,6 @@ require BASE_PATH . '/app/Views/layouts/header.php';
 </section>
 </main>
 
-<script src="<?= asset('js/qrcode.min.js') ?>"></script>
-<script>
-(function () {
-  var canvas = document.getElementById('qrCanvas');
-  if (!canvas || !window.TYTQRCode) return;
 
-  // Encode the reference code ONLY. A URL here would be a lookup anyone
-  // could walk through by incrementing the number.
-  window.TYTQRCode.toCanvas(canvas, <?= json_encode($refCode, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>, {
-    width: 220, margin: 2, errorCorrectionLevel: 'M',
-    color: { dark: '#241b16', light: '#ffffff' }
-  }).catch(function () {
-    // The code is printed beneath, so the visitor is never left with nothing.
-    canvas.style.display = 'none';
-  });
-})();
-</script>
 
 <?php require BASE_PATH . '/app/Views/layouts/footer.php'; ?>

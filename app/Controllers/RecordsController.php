@@ -28,7 +28,7 @@ class RecordsController extends Controller
     {
         $this->requireAdmin();
         [$event, $allEvents] = $this->pickEvent();
-        $filters = $this->filters(['status', 'source', 'type']);
+        $filters = $this->filters(['status', 'source', 'type', 'qr']);
         $page    = max(1, (int) ($_GET['page'] ?? 1));
         $rsvp    = new Rsvp();
         $total   = $rsvp->countGroups((int) $event['id'], $filters);
@@ -139,6 +139,67 @@ class RecordsController extends Controller
 
         $this->flash('success', '已儲存 Saved', "{$group['ref_code']} 已更新。{$group['ref_code']} has been updated.");
         $this->redirect('/admin/registrations/edit?id=' . $groupId);
+    }
+
+    /**
+     * GET /admin/registrations/qr?id= — the check-in QR for one
+     * registration, for staff to send after checking it (the public page
+     * no longer shows one). Download as a picture, share to WhatsApp,
+     * print, and mark it sent.
+     */
+    public function registrationQr(): void
+    {
+        $this->requireAdmin();
+        $rsvp  = new Rsvp();
+        $group = $rsvp->findGroup((int) ($_GET['id'] ?? 0));
+        if ($group === null) {
+            $this->redirect('/admin/registrations');
+        }
+        $people = $rsvp->attendeesOf((int) $group['id']);
+        $event  = (new \App\Models\Event())->find((int) $group['event_id']);
+        $this->view('admin/registration_qr', [
+            'pageTitle' => 'QR Code · ' . $group['ref_code'],
+            'nav'       => 'registrations',
+            'group'     => $group,
+            'people'    => $people,
+            'event'     => $event,
+            'phone'     => self::waPhone((string) ($people[0]['contact_no'] ?? '')),
+            'flash'     => $this->takeFlash(),
+        ]);
+    }
+
+    /** POST /admin/registrations/qr/sent — mark the QR sent (confirming the registration if needed), or not sent. */
+    public function registrationQrSent(): void
+    {
+        $this->requireAdmin();
+        $this->requireCsrf();
+        $rsvp  = new Rsvp();
+        $group = $rsvp->findGroup((int) ($_POST['group_id'] ?? 0));
+        if ($group === null) {
+            $this->redirect('/admin/registrations');
+        }
+        $sent = ($_POST['sent'] ?? '') === '1';
+        if (!empty($_POST['confirm']) && $group['status'] === 'pending') {
+            $rsvp->setStatus((int) $group['id'], 'confirmed');
+        }
+        $rsvp->setQrSent((int) $group['id'], $sent, mb_substr((string) ($_SESSION['admin_display'] ?? $_SESSION['admin_username'] ?? 'admin'), 0, 50));
+        $this->flash('success', $sent ? '已標記 QR 已發送' : '已改為未發送', $sent
+            ? "{$group['ref_code']} 的報到 QR Code 已記錄為已發送。\nMarked as sent."
+            : "{$group['ref_code']} 改回「未發送」。\nMarked as not sent.");
+        $this->redirect($this->returnPath('/admin/registrations/qr?id=' . (int) $group['id']));
+    }
+
+    /** "012-345 6789" → "60123456789" for a wa.me link (Malaysian numbers), or '' when unusable. */
+    public static function waPhone(string $raw): string
+    {
+        $d = preg_replace('/\D/', '', $raw);
+        if ($d === '') {
+            return '';
+        }
+        if (str_starts_with($d, '0')) {
+            $d = '6' . $d;
+        }
+        return strlen($d) >= 9 && strlen($d) <= 15 ? $d : '';
     }
 
     /** POST /admin/registrations/status — quick confirm / cancel from the list */

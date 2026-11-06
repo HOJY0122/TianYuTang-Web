@@ -131,6 +131,8 @@ $router->get('/admin/registrations',        'RecordsController@registrations');
 $router->get('/admin/registrations/edit',   'RecordsController@editRegistration');
 $router->post('/admin/registrations/save',  'RecordsController@saveRegistration');
 $router->post('/admin/registrations/status','RecordsController@registrationStatus');
+$router->get('/admin/registrations/qr',     'RecordsController@registrationQr');
+$router->post('/admin/registrations/qr/sent', 'RecordsController@registrationQrSent');
 $router->get('/admin/donations',            'RecordsController@donations');
 $router->get('/admin/donations/edit',       'RecordsController@editDonation');
 $router->post('/admin/donations/save',      'RecordsController@saveDonation');

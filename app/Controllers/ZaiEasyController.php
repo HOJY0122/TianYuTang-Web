@@ -38,10 +38,13 @@ class ZaiEasyController extends Controller
         $event = (new Event())->active();
         $q = mb_substr(trim((string) ($_GET['q'] ?? '')), 0, 40);
         $people = [];
+        $more = 0;
         if ($q !== '') {
             $rsvp = new Rsvp();
             $all = [];
-            foreach ($rsvp->searchGroups((int) $event['id'], ['q' => $q], 30) as $g) {
+            $groups = $rsvp->searchGroups((int) $event['id'], ['q' => $q], 30);
+            $more = count($groups) >= 30 ? 30 : 0;      // there may be more: ask for another letter
+            foreach ($groups as $g) {
                 if ($g['status'] === 'cancelled') {
                     continue;
                 }
@@ -55,7 +58,7 @@ class ZaiEasyController extends Controller
                 $people[] = $a;
             }
         }
-        $this->screen('find', ['q' => $q, 'people' => $people]);
+        $this->screen('find', ['q' => $q, 'people' => $people, 'more' => $more]);
     }
 
     /**

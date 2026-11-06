@@ -41,7 +41,7 @@ $hidden = '<input type="hidden" name="event_id" value="' . (int) $event['id'] . 
         <?= csrf_field() ?><?= $hidden ?><input type="hidden" name="attendee_id" value="<?= $aid ?>">
         <div class="zai-who">
           <strong><?= h($a['name']) ?></strong>
-          <span class="help"><?= h(mask_ic($a['ic_no'] ?? '')) ?><?= !empty($a['contact_no']) ? ' · ' . h($a['contact_no']) : '' ?></span>
+          <span class="help">IC <?= h($a['ic_no'] ?: '—') ?><?= !empty($a['contact_no']) ? ' · ' . h($a['contact_no']) : '' ?></span>
           <?php if ($st): ?>
             <span class="badge <?= $st['status'] === 'confirmed' ? 'ok' : 'pending' ?>"><?= $st['status'] === 'confirmed' ? '✓ 已確認' : '… 待定' ?>
               <?= $st['table_no'] ? ' · 第 ' . (int) $st['table_no'] . ' 桌' : '' ?></span>

@@ -342,7 +342,7 @@ class Rsvp extends Model
     // ------------------------------------------------------------------
 
     /**
-     * Registration ids whose attendees' IC starts with $prefix (2+ letters /
+     * Registration ids whose attendees' IC starts with $prefix (1+ letters /
      * digits, at least one digit). IC numbers are encrypted, so a database
      * LIKE cannot see them: the event's ICs are opened in memory, matched,
      * and only the matching ids leave this method. Kept per request, so
@@ -350,7 +350,7 @@ class Rsvp extends Model
      */
     private function groupsByIcPrefix(int $eventId, string $prefix): array
     {
-        if (strlen($prefix) < 2 || strlen($prefix) > 14 || !preg_match('/\d/', $prefix)) {
+        if ($prefix === '' || strlen($prefix) > 14 || !preg_match('/\d/', $prefix)) {
             return [];
         }
         static $cache = [];
@@ -449,10 +449,18 @@ class Rsvp extends Model
             $icNorm  = self::icNormal($q);
             // Typing the start of an IC ("10…", "7001…") finds everyone whose IC starts so.
             $byPrefix = $this->groupsByIcPrefix($eventId, $icNorm);
+            // A number ("6", "012", "0006") matches from the START: an IC or a phone
+            // that begins with it, or a reference number that begins with it —
+            // not every record that merely has that digit somewhere inside.
+            $isNumber = preg_match('/^[\d\s\-+]+$/', $q) === 1;
+            $digits   = preg_replace('/\D/', '', $q);
+            $refLike  = $isNumber ? '%-' . $digits . '%' : $like;
+            $phone    = $isNumber ? "REPLACE(REPLACE(a.contact_no, '-', ''), ' ', '') LIKE ?" : 'a.contact_no LIKE ?';
             $where[] = '(g.ref_code LIKE ? OR g.org_name LIKE ? OR EXISTS (SELECT 1 FROM rsvp_attendees a
-                          WHERE a.group_id = g.id AND (a.name LIKE ? OR a.contact_no LIKE ? OR a.ic_hash = ? OR a.ic_last4 = ?))'
+                          WHERE a.group_id = g.id AND (a.name LIKE ? OR ' . $phone . ' OR a.ic_hash = ? OR a.ic_last4 = ?))'
                      . ($byPrefix ? ' OR g.id IN (' . implode(',', array_fill(0, count($byPrefix), '?')) . ')' : '') . ')';
-            array_push($params, $like, $like, $like, $like, Crypto::blindIndex($icNorm), strlen($icNorm) === 4 ? $icNorm : '-', ...$byPrefix);
+            array_push($params, $refLike, $like, $like, $isNumber ? $digits . '%' : $like,
+                Crypto::blindIndex($icNorm), strlen($icNorm) === 4 ? $icNorm : '-', ...$byPrefix);
         }
         if (in_array($filters['status'] ?? '', ['pending', 'confirmed', 'cancelled'], true)) {
             $where[]  = 'g.status = ?';

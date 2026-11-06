@@ -2,7 +2,7 @@
  * Live search — results appear while you type; the Find button still works.
  *
  *   <form data-live-search="#results"> … <input name="q"> … </form>
- *     After a short pause in typing (and 2+ characters, or empty to clear)
+ *     After a short pause in typing (from the first letter or digit)
  *     the same page is fetched with the new words and only #results is
  *     swapped in. The server does the matching, so it can search inside
  *     encrypted IC numbers ("10" → every IC starting with 10). Older
@@ -15,7 +15,7 @@
  */
 (function () {
   'use strict';
-  var WAIT = 220;
+  var WAIT = 150;
 
   document.querySelectorAll('form[data-live-search]').forEach(function (form) {
     var input = form.querySelector('input[name="q"]');
@@ -26,7 +26,6 @@
     function run() {
       var q = input.value.trim();
       if (q === last) return;
-      if (/^[a-z0-9]$/i.test(q)) return;               // one letter or digit matches too much: wait for the next
       last = q;
       var mine = ++seq;
       var params = new URLSearchParams(new FormData(form));

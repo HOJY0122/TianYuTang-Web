@@ -11,6 +11,11 @@
  * A page can add its own rules on top (they run in turn, first message wins):
  *   TYTValidate.addExtra('ic', function (tidiedValue, input) { return '' or a message })
  *
+ * Staff forms can also ask the server whether an IC is already used:
+ *   <input data-validate="ic" data-exists-url="/admin/…/ic-check">
+ * The URL answers {"message": ""} (free) or the reason; the message shows
+ * under the field like any other problem. The server checks again on save.
+ *
  * The age rule ("66 and above", from Forms settings) is shared by the
  * register page, easy mode and the walk-in forms:
  *   TYTValidate.useAge({min, basis, who, other, on})
@@ -143,6 +148,28 @@
     var kind = input.getAttribute('data-validate'), ok = CHECK[kind] && CHECK[kind](input.value);
     return ok && EXTRA[kind] ? EXTRA[kind](ok, input) : '';
   }
+
+  // ---- "Is this IC already used?" asked of the server (staff forms) ----
+  var EXISTS = {}, ASKING = {};
+  addExtra('ic', function (value, input) {
+    var url = input.getAttribute('data-exists-url');
+    if (!url) return '';
+    var key = url + '|' + value;
+    if (EXISTS[key] !== undefined) return EXISTS[key];
+    if (!ASKING[key] && window.fetch) {
+      ASKING[key] = true;
+      fetch(url + (url.indexOf('?') < 0 ? '?' : '&') + 'ic=' + encodeURIComponent(value), { credentials: 'same-origin' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) {
+          if (!j) return;                         // offline / busy: the server checks on save anyway
+          EXISTS[key] = j.message || '';
+          if (input.isConnected && CHECK.ic(input.value) === value) check(input, false);
+        })
+        .catch(function () {})
+        .then(function () { ASKING[key] = false; });
+    }
+    return '';
+  });
 
   // ---- Age from a MyKad number (YYMMDD…) ----
   function useAge(AGE) {

@@ -31,7 +31,6 @@ require __DIR__ . '/_top.php';
     <a class="ez-btn ez-alt" href="<?= url('/admin/zai/easy/wait') ?>"><?= icon('hand') ?> 加入候補 Add to waiting list</a>
   </div>
 <?php elseif ($people): ?>
-  <?php if (!empty($_GET['found'])): ?><div class="ez-msg ez-info"><b>這個身份證已經網上登記 ✓</b><p>This IC is already registered — confirm them here.</p></div><?php endif; ?>
   <?php if (!empty($more)): ?><p class="ez-hint">只顯示前 <?= (int) $more ?> 筆，請多打幾個字。<span class="en">Showing the first <?= (int) $more ?> — keep typing to narrow it down.</span></p><?php endif; ?>
   <form method="POST" action="<?= url('/admin/zai/easy/pick') ?>" class="ez-people">
     <?= csrf_field() ?>

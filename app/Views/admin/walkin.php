@@ -176,7 +176,7 @@ function renderRows() {
       <div class="form-row">
         <div>
           <label>身份證號碼｜IC No. *</label>
-          <input name="attendee_ic[]" maxlength="30" placeholder="例如：651020-10-2020" required data-validate="ic" inputmode="numeric" autocomplete="off">
+          <input name="attendee_ic[]" maxlength="30" placeholder="例如：651020-10-2020" required data-validate="ic" data-exists-url="<?= h(url('/admin/walkin/ic-check') . '?event=' . (int) $event['id']) ?>" inputmode="numeric" autocomplete="off">
         </div>
         <div>
           <label>聯絡號碼｜Contact（選填）</label>

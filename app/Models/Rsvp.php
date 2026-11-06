@@ -462,6 +462,9 @@ class Rsvp extends Model
             array_push($params, $refLike, $like, $like, $isNumber ? $digits . '%' : $like,
                 Crypto::blindIndex($icNorm), strlen($icNorm) === 4 ? $icNorm : '-', ...$byPrefix);
         }
+        if (!empty($filters['active'])) {
+            $where[] = "g.status <> 'cancelled'";       // everyone still coming (施齋 "show all")
+        }
         if (in_array($filters['status'] ?? '', ['pending', 'confirmed', 'cancelled'], true)) {
             $where[]  = 'g.status = ?';
             $params[] = $filters['status'];

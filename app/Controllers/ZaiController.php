@@ -118,8 +118,17 @@ class ZaiController extends Controller
         $rsvp = new Rsvp();
         $groups = [];
         $status = [];
-        if ($q !== '') {
-            foreach ($rsvp->searchGroups((int) $event['id'], ['q' => $q], 20) as $g) {
+        // 顯示全部 Show all: every registration still coming, by reference, 20 a page.
+        $all = $q === '' && !empty($_GET['all']);
+        $per = 20;
+        $total = $all ? $rsvp->countGroups((int) $event['id'], ['active' => 1]) : 0;
+        $pages = max(1, (int) ceil($total / $per));
+        $page = $all ? max(1, min($pages, (int) ($_GET['page'] ?? 1))) : 1;
+        if ($q !== '' || $all) {
+            $found = $all
+                ? $rsvp->searchGroups((int) $event['id'], ['active' => 1, 'sort' => 'ref', 'dir' => 'asc'], $per, ($page - 1) * $per)
+                : $rsvp->searchGroups((int) $event['id'], ['q' => $q], 20);
+            foreach ($found as $g) {
                 if ($g['status'] === 'cancelled') {
                     continue;
                 }
@@ -132,7 +141,8 @@ class ZaiController extends Controller
             }
             $status = (new Zai())->peopleStatus($ids);
         }
-        $this->page('admin/zai_registered', 'registered', $event, ['q' => $q, 'groups' => $groups, 'status' => $status]);
+        $this->page('admin/zai_registered', 'registered', $event, ['q' => $q, 'groups' => $groups, 'status' => $status,
+            'all' => $all, 'total' => $total, 'page' => $page, 'pages' => $pages]);
     }
 
     /** GET /admin/zai/groups?q= */
@@ -170,7 +180,7 @@ class ZaiController extends Controller
         $zai = new Zai();
         $id = (int) ($_POST['attendee_id'] ?? 0);
         $eventId = $zai->attendeeEvent($id);
-        $back = '/admin/zai/registered?event=' . (int) $eventId . '&q=' . urlencode((string) ($_POST['q'] ?? '')) . '#p' . $id;
+        $back = $this->registeredBack((int) $eventId) . '#p' . $id;
         if ($eventId === null || $eventId !== (int) ($_POST['event_id'] ?? 0)) {
             $this->redirect('/admin/zai/registered');
         }
@@ -183,6 +193,17 @@ class ZaiController extends Controller
         $zai->setPerson($eventId, $id, $status, $table, $this->by());
         $this->warnIfFull($zai, $eventId, $table);
         $this->redirect($back);
+    }
+
+    /** Back to the 已登記 list as it was: the search words, or the "show all" page. */
+    private function registeredBack(int $eventId): string
+    {
+        $q = ['event' => $eventId, 'q' => (string) ($_POST['q'] ?? '')];
+        if (!empty($_POST['all'])) {
+            $q['all'] = 1;
+            $q['page'] = max(1, (int) ($_POST['page'] ?? 1));
+        }
+        return '/admin/zai/registered?' . http_build_query($q);
     }
 
     /** POST /admin/zai/person-group — everyone in one registration at once. */
@@ -202,7 +223,7 @@ class ZaiController extends Controller
             $zai->setPerson((int) $group['event_id'], (int) $a['id'], $status, $table, $this->by());
         }
         $this->warnIfFull($zai, (int) $group['event_id'], $table);
-        $this->redirect('/admin/zai/registered?event=' . (int) $group['event_id'] . '&q=' . urlencode((string) ($_POST['q'] ?? '')) . '#g' . (int) $group['id']);
+        $this->redirect($this->registeredBack((int) $group['event_id']) . '#g' . (int) $group['id']);
     }
 
     /** POST /admin/zai/group — a 團體 group: arrived, people, table(s), cheque no. */

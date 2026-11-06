@@ -3,11 +3,11 @@
 $title = '哪一個團體？'; $titleEn = 'Which group? Tap it';
 require __DIR__ . '/_top.php';
 ?>
-<form method="GET" action="<?= url('/admin/zai/easy/groups') ?>" class="ez-search">
+<form method="GET" action="<?= url('/admin/zai/easy/groups') ?>" class="ez-search" data-live-search="#ezList">
   <input type="search" name="q" value="<?= h($q) ?>" autocomplete="off" placeholder="團體名稱或電話 Group name or phone" aria-label="搜尋 Search">
   <button type="submit" class="ez-btn ez-go"><?= icon('search') ?> 找 Find</button>
 </form>
-<div class="ez-list">
+<div class="ez-list" id="ezList" aria-live="polite">
   <?php foreach ($groups as $g): $done = $g['status'] === 'arrived'; ?>
     <a class="ez-row<?= $done ? ' is-done' : '' ?>" href="<?= url('/admin/zai/easy/group') ?>?id=<?= (int) $g['id'] ?>">
       <span class="ez-row-main"><b><?= h($g['name']) ?></b>

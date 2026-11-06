@@ -387,10 +387,17 @@ class Zai extends Model
         try {
             $next = (int) $this->scalar('SELECT COALESCE(MAX(queue_no), 0) + 1 FROM zai_waiting WHERE event_id = ? FOR UPDATE', [$eventId]);
             $norm = Rsvp::icNormal((string) $v['ic']);
+            $extra = [];
+            foreach ($v['extra_ics'] ?? [] as $other) {
+                $o = Rsvp::icNormal((string) $other);
+                if ($o !== '' && $o !== $norm) {
+                    $extra[$o] = ['h' => Crypto::blindIndex($o), 'l' => substr($o, -4)];
+                }
+            }
             $this->execute(
-                'INSERT INTO zai_waiting (event_id, queue_no, name, ic_hash, ic_last4, contact, people, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                'INSERT INTO zai_waiting (event_id, queue_no, name, ic_hash, ic_last4, extra_ics, contact, people, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 [$eventId, $next, $v['name'], $norm !== '' ? Crypto::blindIndex($norm) : null, $norm !== '' ? substr($norm, -4) : null,
-                 $v['contact'], $v['people'], $v['notes'], $by]);
+                 $extra ? json_encode(array_values($extra)) : null, $v['contact'], $v['people'], $v['notes'], $by]);
             $this->db->commit();
             return $next;
         } catch (\Throwable $e) {
@@ -403,6 +410,27 @@ class Zai extends Model
     {
         $this->execute('UPDATE zai_waiting SET status = ?, table_no = ?, seated_at = IF(? = \'seated\', COALESCE(seated_at, NOW()), NULL) WHERE id = ?',
             [$status, $status === 'seated' ? $tableNo : null, $status, $id]);
+    }
+
+    /** Last 4 digits of every IC on a waiting row: the lead's first, then the others'. */
+    public static function waitingLast4(array $row): array
+    {
+        $out = $row['ic_last4'] ? [$row['ic_last4']] : [];
+        foreach (json_decode((string) ($row['extra_ics'] ?? ''), true) ?: [] as $x) {
+            $out[] = (string) ($x['l'] ?? '');
+        }
+        return array_values(array_filter($out, 'strlen'));
+    }
+
+    /** The first of these ICs that is already registered online, or null. */
+    public function registeredAny(int $eventId, array $ics): ?array
+    {
+        foreach ($ics as $ic) {
+            if (($reg = $this->registeredIc($eventId, (string) $ic)) !== null) {
+                return $reg;
+            }
+        }
+        return null;
     }
 
     /** Is this IC already registered online for the event? [group ref, name] or null. */

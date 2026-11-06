@@ -43,7 +43,7 @@ class ZaiEasyController extends Controller
         if ($q !== '') {
             $rsvp = new Rsvp();
             $all = [];
-            foreach ($rsvp->searchGroups((int) $event['id'], ['q' => $q], 10) as $g) {
+            foreach ($rsvp->searchGroups((int) $event['id'], ['q' => $q], 30) as $g) {
                 if ($g['status'] === 'cancelled') {
                     continue;
                 }
@@ -230,7 +230,9 @@ class ZaiEasyController extends Controller
     public function wait(): void
     {
         $this->requireAdmin();
-        $this->screen('wait', []);
+        $error = $_SESSION['zai_wait_error'] ?? null;
+        unset($_SESSION['zai_wait_error']);
+        $this->screen('wait', ['error' => $error]);
     }
 
     /** POST /admin/zai/easy/wait */
@@ -245,13 +247,22 @@ class ZaiEasyController extends Controller
             $this->redirect('/admin/zai/easy/wait');
         }
         $ic = $this->str('ic', 20) ?? '';
-        if ($ic !== '' && ($reg = $zai->registeredIc((int) $event['id'], $ic)) !== null) {
+        if (strlen(Rsvp::icNormal($ic)) < 6) {
+            // The lead's IC is required: it is how we spot someone who did register.
+            $_SESSION['zai_wait_error'] = '請輸入身份證號碼。Please type the IC number.';
+            $this->redirect('/admin/zai/easy/wait');
+        }
+        $people = max(1, min(50, (int) ($_POST['people'] ?? 1)));
+        // The others in the party: optional, one box each (never more than the party).
+        $extra = array_slice(array_filter(array_map(
+            static fn($v) => mb_substr(trim((string) $v), 0, 20), (array) ($_POST['ic_more'] ?? [])), 'strlen'), 0, $people - 1);
+        if (($reg = $zai->registeredAny((int) $event['id'], array_merge([$ic], $extra))) !== null) {
             // Registered after all: go straight to their registration.
             $this->redirect('/admin/zai/easy/find?q=' . urlencode($reg['ref_code']) . '&found=1');
         }
         $no = $zai->addWaiting((int) $event['id'], [
-            'name' => $name, 'ic' => $ic, 'contact' => $this->str('contact', 30),
-            'people' => max(1, min(50, (int) ($_POST['people'] ?? 1))), 'notes' => null,
+            'name' => $name, 'ic' => $ic, 'extra_ics' => $extra, 'contact' => $this->str('contact', 30),
+            'people' => $people, 'notes' => null,
         ], $this->by());
         $this->done('#' . $no, '候補號碼 Waiting number', $name . "\n請到候補區等候，叫號後安排座位。\nPlease wait in the waiting area until called.", 'info');
     }

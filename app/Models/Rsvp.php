@@ -341,7 +341,39 @@ class Rsvp extends Model
     // Admin records: search and edit
     // ------------------------------------------------------------------
 
-    /** One registration group, or null. */
+    /**
+     * Registration ids whose attendees' IC starts with $prefix (2+ letters /
+     * digits, at least one digit). IC numbers are encrypted, so a database
+     * LIKE cannot see them: the event's ICs are opened in memory, matched,
+     * and only the matching ids leave this method. Kept per request, so
+     * typing several letters does not decrypt the list several times.
+     */
+    private function groupsByIcPrefix(int $eventId, string $prefix): array
+    {
+        if (strlen($prefix) < 2 || strlen($prefix) > 14 || !preg_match('/\d/', $prefix)) {
+            return [];
+        }
+        static $cache = [];
+        if (!isset($cache[$eventId])) {
+            $cache[$eventId] = [];
+            foreach ($this->fetchAll(
+                "SELECT a.group_id, a.ic_no FROM rsvp_attendees a JOIN rsvp_groups g ON g.id = a.group_id
+                  WHERE g.event_id = ? AND a.ic_no IS NOT NULL AND a.ic_no <> ''", [$eventId]) as $r) {
+                $cache[$eventId][] = [(int) $r['group_id'], self::icNormal((string) Crypto::decrypt($r['ic_no']))];
+            }
+        }
+        $ids = [];
+        foreach ($cache[$eventId] as [$gid, $ic]) {
+            if ($ic !== '' && str_starts_with($ic, $prefix)) {
+                $ids[$gid] = $gid;
+                if (count($ids) >= 500) {
+                    break;
+                }
+            }
+        }
+        return array_values($ids);
+    }
+
     /** Record that staff sent (or did not send) this registration its check-in QR. */
     public function setQrSent(int $groupId, bool $sent, string $by): void
     {
@@ -415,9 +447,12 @@ class Rsvp extends Model
             // IC numbers are encrypted: found by their full number (keyed hash)
             // or by their last four digits, never by a LIKE on the column.
             $icNorm  = self::icNormal($q);
+            // Typing the start of an IC ("10…", "7001…") finds everyone whose IC starts so.
+            $byPrefix = $this->groupsByIcPrefix($eventId, $icNorm);
             $where[] = '(g.ref_code LIKE ? OR g.org_name LIKE ? OR EXISTS (SELECT 1 FROM rsvp_attendees a
-                          WHERE a.group_id = g.id AND (a.name LIKE ? OR a.contact_no LIKE ? OR a.ic_hash = ? OR a.ic_last4 = ?)))';
-            array_push($params, $like, $like, $like, $like, Crypto::blindIndex($icNorm), strlen($icNorm) === 4 ? $icNorm : '-');
+                          WHERE a.group_id = g.id AND (a.name LIKE ? OR a.contact_no LIKE ? OR a.ic_hash = ? OR a.ic_last4 = ?))'
+                     . ($byPrefix ? ' OR g.id IN (' . implode(',', array_fill(0, count($byPrefix), '?')) . ')' : '') . ')';
+            array_push($params, $like, $like, $like, $like, Crypto::blindIndex($icNorm), strlen($icNorm) === 4 ? $icNorm : '-', ...$byPrefix);
         }
         if (in_array($filters['status'] ?? '', ['pending', 'confirmed', 'cancelled'], true)) {
             $where[]  = 'g.status = ?';

@@ -46,7 +46,13 @@ $helpKey = in_array($activeNav, ['home', 'register', 'donate', 'gallery'], true)
 ?>
 <!DOCTYPE html>
 <?php $_htmlClass = array_merge($protectAreas, [($site['site_tone'] ?? 'calm') === 'festive' ? 'tone-festive' : 'tone-calm']); ?>
-<html lang="zh-Hant" data-base="<?= h(BASE_URL) ?>" data-live-quiet<?= $protectAreas ? ' data-protect' : '' ?> class="<?= h(implode(' ', $_htmlClass)) ?>"<?= trim((string) $site['photo_watermark']) !== '' ? ' data-wm="' . h($site['photo_watermark']) . '"' : '' ?>>
+<?php
+// The brush heading fonts (Yuji …) are Japanese and lack some Chinese characters
+// (您 …): js/head-font.js then draws that whole heading in WenKai instead.
+[$_headFamily] = (new App\Models\Setting())->headingFont();
+$_headPartial = str_starts_with($_headFamily, 'Yuji');
+?>
+<html lang="zh-Hant"<?= $_headPartial ? ' data-head-font="' . h($_headFamily) . '"' : '' ?> data-base="<?= h(BASE_URL) ?>" data-live-quiet<?= $protectAreas ? ' data-protect' : '' ?> class="<?= h(implode(' ', $_htmlClass)) ?>"<?= trim((string) $site['photo_watermark']) !== '' ? ' data-wm="' . h($site['photo_watermark']) . '"' : '' ?>>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -80,6 +86,9 @@ $_fontParams = array_unique(array_filter([$_hParam, 'LXGW+WenKai+TC:wght@400;700
      (js/simp-font.js), so one name is never drawn in two styles. */
   --simp-font:"Noto Sans","<?= h($_bPartner ?? $_bFamily) ?>","LXGW WenKai TC",sans-serif}
 .has-simp{font-family:var(--simp-font)!important}
+/* A heading with a character the brush font lacks (您 …) is drawn wholly in
+   WenKai, so it is never half brush, half Kai (js/head-font.js). */
+.head-whole{font-family:"Noto Sans","LXGW WenKai TC","BiauKai","DFKai-SB","標楷體",serif!important;font-weight:700!important}
 /* Body font and size chosen in System → Forms & fonts. */
 :root{--fs:<?= App\Core\FormRules::bodySize($site) / 100 ?>}
 </style>

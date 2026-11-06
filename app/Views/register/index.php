@@ -193,7 +193,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
       + '</div>'
       + '<div class="attendee-body">'
       +   '<label>姓名<span class="en">Full name</span></label>'
-      +   '<input name="attendee_name[]" required maxlength="100" autocomplete="off" value="' + esc(d.name) + '">'
+      +   '<input name="attendee_name[]" required maxlength="100" autocomplete="off" data-validate="name" value="' + esc(d.name) + '">'
       +   '<div class="row">'
       +     '<div><label>身份證 / 護照號碼<span class="en">IC / Passport No.</span></label>'
       +     '<input name="attendee_ic[]" required maxlength="30" data-validate="ic" autocomplete="off" placeholder="例 e.g. 651020-10-2020" value="' + esc(d.ic) + '">'
@@ -217,11 +217,69 @@ require BASE_PATH . '/app/Views/layouts/header.php';
       if (inp.dataset.validate && window.TYTValidate) {
         var good = window.TYTValidate[inp.dataset.validate](v);
         if (!good) return false;
-        if (inp.dataset.validate === 'ic' && ageProblem(good)) return false;
+        if (window.TYTValidate.extraProblem(inp)) return false;   // age, same IC / name twice, already registered
       }
       return true;
     });
   }
+  // ---- One person, one registration (the server checks again on submit) ----
+  // In this form: no IC and no name twice. For the event: an IC or name that
+  // is already registered (asked of the server; it only says yes or no).
+  var CHECK_URL = <?= json_encode(url('/rsvp/check')) ?>;
+  var KEY = { ic: function (v) { return v.replace(/[^A-Za-z0-9]/g, '').toUpperCase(); },
+              name: function (v) { return v.replace(/[\s\u3000]+/g, '').toLowerCase(); } };
+  var TAKEN = { ic: {}, name: {} }, ASKING = { ic: {}, name: {} };
+  function sameKind(kind) { return [].slice.call(form.querySelectorAll('[name="attendee_' + kind + '[]"]')); }
+  function twiceProblem(kind, value, input) {
+    var list = sameKind(kind), me = list.indexOf(input), key = KEY[kind](value);
+    for (var i = 0; i < me; i++) {
+      if (list[i].value.trim() && KEY[kind](list[i].value) === key) {
+        return kind === 'ic'
+          ? '與第 ' + (i + 1) + ' 位的身份證相同。每人須用自己的身份證。\nSame IC as person ' + (i + 1) + ' — each person needs their own IC.'
+          : '與第 ' + (i + 1) + ' 位的姓名相同。同一個人不可報名兩次。\nSame name as person ' + (i + 1) + ' — the same person cannot be registered twice.';
+      }
+    }
+    return '';
+  }
+  function takenProblem(kind, value, input) {
+    var key = KEY[kind](value);
+    if (kind === 'name' && key.length < 2) return '';
+    if (TAKEN[kind][key] === true) {
+      return kind === 'ic'
+        ? '此身份證已經報名，每人只可報名一次。如有疑問，請聯絡我們。\nThis IC is already registered — one registration per person. Please contact us if this is a mistake.'
+        : '這個姓名已經報名，每人只可報名一次。如是同名的另一位，請聯絡我們。\nThis name is already registered — one registration per person. If this is a different person with the same name, please contact us.';
+    }
+    if (TAKEN[kind][key] === undefined && !ASKING[kind][key] && window.fetch) {
+      ASKING[kind][key] = true;
+      fetch(CHECK_URL + '?' + kind + '=' + encodeURIComponent(value), { credentials: 'same-origin' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) {
+          if (!j) return;                       // busy / offline: the server checks on submit anyway
+          TAKEN[kind][key] = !!j[kind];
+          if (j[kind]) sameKind(kind).forEach(function (i) { if (i.value.trim() && KEY[kind](i.value) === key) window.TYTValidate.check(i, false); });
+          renumber();
+        })
+        .catch(function () {})
+        .then(function () { ASKING[kind][key] = false; });
+    }
+    return '';
+  }
+  if (window.TYTValidate) {
+    ['ic', 'name'].forEach(function (kind) {
+      window.TYTValidate.addExtra(kind, function (value, input) {
+        return twiceProblem(kind, value, input) || takenProblem(kind, value, input);
+      });
+    });
+    // Changing one person's IC / name can clear or cause a clash with another's.
+    form.addEventListener('input', function (e) {
+      var m = e.target.name && e.target.name.match(/^attendee_(ic|name)\[\]$/);
+      if (!m) return;
+      sameKind(m[1]).forEach(function (other) {
+        if (other !== e.target && other.dataset.touched && other.value.trim()) window.TYTValidate.check(other, false);
+      });
+    });
+  }
+
   function rows() { return [].slice.call(box.querySelectorAll('.attendee')); }
   function field(row, n) { return row.querySelector('[name="attendee_' + n + '[]"]'); }
 

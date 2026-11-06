@@ -391,7 +391,9 @@ class Zai extends Model
 
     public function waiting(int $eventId): array
     {
-        return $this->fetchAll("SELECT * FROM zai_waiting WHERE event_id = ? ORDER BY status = 'waiting' DESC, queue_no", [$eventId]);
+        // ic_no is kept encrypted (like registrations) and opened here for the
+        // staff lists; rows from before migration 040 only have the last 4.
+        return Rsvp::openIc($this->fetchAll("SELECT * FROM zai_waiting WHERE event_id = ? ORDER BY status = 'waiting' DESC, queue_no", [$eventId]));
     }
 
     public function waitingRow(int $id): ?array
@@ -405,6 +407,9 @@ class Zai extends Model
         $this->db->beginTransaction();
         try {
             $next = (int) $this->scalar('SELECT COALESCE(MAX(queue_no), 0) + 1 FROM zai_waiting WHERE event_id = ? FOR UPDATE', [$eventId]);
+            $tidyIc = \App\Core\Validate::icOrPassport((string) $v['ic']) ?? trim((string) $v['ic']);
+            [$icEnc, $icHash, $icLast4] = Rsvp::icColumns($tidyIc);
+            $contact = $v['contact'] !== null && $v['contact'] !== '' ? (\App\Core\Validate::phone((string) $v['contact']) ?? $v['contact']) : $v['contact'];
             $norm = Rsvp::icNormal((string) $v['ic']);
             $extra = [];
             foreach ($v['extra_ics'] ?? [] as $other) {
@@ -414,9 +419,9 @@ class Zai extends Model
                 }
             }
             $this->execute(
-                'INSERT INTO zai_waiting (event_id, queue_no, name, ic_hash, ic_last4, extra_ics, contact, people, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                [$eventId, $next, $v['name'], $norm !== '' ? Crypto::blindIndex($norm) : null, $norm !== '' ? substr($norm, -4) : null,
-                 $extra ? json_encode(array_values($extra)) : null, $v['contact'], $v['people'], $v['notes'], $by]);
+                'INSERT INTO zai_waiting (event_id, queue_no, name, ic_no, ic_hash, ic_last4, extra_ics, contact, people, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [$eventId, $next, $v['name'], $icEnc !== '' ? $icEnc : null, $icHash, $icLast4,
+                 $extra ? json_encode(array_values($extra)) : null, $contact, $v['people'], $v['notes'], $by]);
             $this->db->commit();
             return $next;
         } catch (\Throwable $e) {

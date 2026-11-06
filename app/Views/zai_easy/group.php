@@ -44,8 +44,6 @@ $ownSpread = App\Models\Zai::spread($g, array_map(static fn($t) => $t['seats'], 
   <p class="ez-hint ez-legend"><i class="lg-fits"></i> 空桌 <i class="lg-some"></i> 有人 <i class="lg-grp"></i> 團體桌 <i class="lg-full"></i> 滿（不能按）
     <span class="en">Green = empty · Yellow = some taken · Purple = group table · Red = full (cannot be ticked)</span></p>
 
-  <label class="ez-small">支票號碼（可不填）<span class="en">Cheque no. (optional)</span>
-    <input name="cheque_no" value="<?= h($g['cheque_no'] ?? '') ?>" maxlength="40" inputmode="numeric"></label>
 
   <p class="ez-step"><span>3</span> 完成 <small>Finish</small></p>
   <button type="submit" class="ez-btn ez-ok">✓ 完成，已到 <small>Done — they are here</small></button>

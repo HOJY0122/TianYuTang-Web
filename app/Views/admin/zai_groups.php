@@ -36,7 +36,10 @@ $arrived = count(array_filter($groups, static fn($g) => $g['status'] === 'arrive
     </div>
     <div class="zai-fields">
       <label>人數 <span class="en">People</span><input type="number" name="people" min="0" max="5000" value="<?= (int) $g['people'] ?>"></label>
-      <label>桌號 <span class="en">Table(s)</span><input name="tables" value="<?= h($g['tables'] ?? '') ?>" placeholder="例 e.g. 5, 6" inputmode="numeric"></label>
+      <label>桌號 <span class="en">Table(s)</span>
+        <span class="tpick-multi"><input name="tables" id="zt<?= $zid ?>" value="<?= h($g['tables'] ?? '') ?>" placeholder="例 e.g. 5, 6" inputmode="numeric">
+          <button type="button" class="mini-btn tpick-btn" data-tpick-multi data-target="#zt<?= $zid ?>" data-need="<?= max(1, (int) $g['people']) ?>"
+                  data-current="<?= h($g['tables'] ?? '') ?>" data-who="<?= h($g['name']) ?>"><?= icon('map') ?> 地圖選桌 <span class="en">Map</span></button></span></label>
       <label>支票號碼 <span class="en">Cheque no.</span><input name="cheque_no" value="<?= h($g['cheque_no'] ?? '') ?>" maxlength="40"></label>
       <label class="wide">備註 <span class="en">Notes</span><input name="notes" value="<?= h($g['notes'] ?? '') ?>" maxlength="500"></label>
     </div>

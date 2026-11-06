@@ -1468,3 +1468,41 @@ input[aria-invalid="true"]{border-color:#a3281f !important;background:#fff5f3}
 .ez-member .ez-member-tag{color:#9f211b;font-weight:900;font-size:14px}
 .ez-member .ez-member-tag .icon{width:15px;height:15px;vertical-align:-2px}
 .ez-back-search{display:inline-block;margin-top:8px;font-weight:800;color:#9f211b}
+
+/* ---------- 施齋 hall map (partials/zai_hall.php): rows, walkway, counter ---------- */
+.hall{display:flex;flex-direction:column;gap:10px}
+.hall-row{display:grid;grid-template-columns:repeat(var(--cols,4),minmax(0,1fr));gap:10px}
+.hall-admin .hall-row{grid-template-columns:repeat(var(--cols,4),minmax(132px,1fr));gap:12px}
+.hall-admin{min-width:calc(var(--cols,4) * 132px + (var(--cols,4) - 1) * 12px)}
+.hall-aisle{position:relative;height:30px;display:flex;align-items:center;justify-content:center}
+.hall-aisle::before{content:"";position:absolute;left:0;right:0;top:50%;border-top:2px dashed #d8c08a}
+.hall-aisle span{position:relative;padding:0 10px;background:var(--bg,#f7eedb);color:#9a8358;font-size:13px;font-weight:800;letter-spacing:.05em}
+.panel .hall-aisle span{background:#fff}
+.hall-counter-row{display:flex;margin:6px 0}
+.hall-counter-row.side-center{justify-content:center}.hall-counter-row.side-right{justify-content:flex-end}
+.hall-counter{display:inline-flex;align-items:center;gap:6px;padding:12px 26px;border:3px solid #2b1d14;border-radius:6px;background:#fff;
+  font-weight:900;font-size:20px;color:#2b1d14;min-width:40%;justify-content:center}
+.hall-counter .icon{width:18px;height:18px}
+.hall-counter .en{font-size:14px;color:#7a6a58;font-weight:700}
+/* easy screens: tables in the hall */
+.hall-easy .ez-tbl{min-height:86px;padding:6px 2px;width:100%;font:inherit}
+.hall-easy .ez-tbl b{font-size:30px}
+.hall-easy .ez-tbl small{font-size:13px;text-align:center;line-height:1.2}
+/* Full: red, and switched off */
+.ez-tbl.full{border-color:#d9534f;background:#fdecea;color:#a3281f;cursor:not-allowed}
+.ez-tbl.full b{color:#a3281f}
+.ez-tbl[disabled],.ez-tbl[aria-disabled="true"]{cursor:not-allowed;opacity:1}
+.ez-tbl[disabled]:active,.ez-tbl[aria-disabled="true"]:active{transform:none}
+.ez-legend i{display:inline-block;width:14px;height:14px;border-radius:4px;border:2px solid;vertical-align:-2px;margin:0 2px 0 8px}
+.ez-legend i:first-child{margin-left:0}
+.ez-legend .lg-fits{border-color:#a9cba0;background:#f2f8ee}.ez-legend .lg-some{border-color:#e3cf7d;background:#fff7dc}
+.ez-legend .lg-grp{border-color:#c7b6e3;background:#f4eefb}.ez-legend .lg-full{border-color:#d9534f;background:#fdecea}
+@media (max-width:420px){ .hall-easy .ez-tbl b{font-size:26px} .hall-easy .ez-tbl{min-height:78px} .hall-row{gap:8px} }
+.zai-map-cols{display:flex;flex-wrap:wrap;gap:8px 14px}
+/* Full = red everywhere (admin map too); over-full = darker red */
+.zai-map-legend .lg-full{background:#fdecea;border-color:#d9534f}
+.zai-map-legend .lg-over{background:#f6cfc9;border-color:#a3281f}
+.zai-cell.st-full{border-color:#d9534f;background:#fdecea}
+.zai-cell.st-over{border-color:#a3281f;background:#f6cfc9}
+.st-full .zc-bar i{background:#d9534f}.st-over .zc-bar i{background:#a3281f}
+.ez-tables-multi .ez-tbl:has(input:checked) b,.ez-tables-multi .ez-tbl:has(input:checked) small{color:#fff}

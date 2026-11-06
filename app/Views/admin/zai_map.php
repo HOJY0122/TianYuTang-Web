@@ -1,7 +1,8 @@
 <?php
 /**
- * 施齋 Day 3 — 平面圖 Table map: the tables in rows (4 per row by default),
- * like the hall. Each shows its type (團體桌 group / 散客桌 general), seats
+ * 施齋 Day 3 — 平面圖 Table map: the tables drawn like the hall (4 per row
+ * by default, a walkway every few rows, the 櫃台 counter) — see
+ * partials/zai_hall.php, shared with the easy screens. Each shows its type (團體桌 group / 散客桌 general), seats
  * used, and who sits or is booked there. Tap a table to change it:
  * make it a group table, pre-assign a group, or change its seats.
  */
@@ -26,7 +27,16 @@ foreach ($groups as $g) {
     <?= csrf_field() ?><input type="hidden" name="event_id" value="<?= (int) $event['id'] ?>">
     <label>每行 <span class="en">Per row</span>
       <select name="cols" onchange="this.form.submit()">
-        <?php for ($c = 2; $c <= 10; $c++): ?><option value="<?= $c ?>"<?= $c === $cols ? ' selected' : '' ?>><?= $c ?> 張 tables</option><?php endfor; ?>
+        <?php for ($c = 2; $c <= 10; $c++): ?><option value="<?= $c ?>"<?= $c === $hall['cols'] ? ' selected' : '' ?>><?= $c ?> 張 tables</option><?php endfor; ?>
+      </select></label>
+    <label>走道 <span class="en">Walkway</span>
+      <select name="aisle" onchange="this.form.submit()">
+        <option value="0"<?= $hall['aisle'] === 0 ? ' selected' : '' ?>>沒有 None</option>
+        <?php for ($c = 1; $c <= 10; $c++): ?><option value="<?= $c ?>"<?= $c === $hall['aisle'] ? ' selected' : '' ?>>每 <?= $c ?> 行 Every <?= $c ?> rows</option><?php endfor; ?>
+      </select></label>
+    <label>櫃台 <span class="en">Counter</span>
+      <select name="counter" onchange="this.form.submit()">
+        <?php foreach (App\Models\Zai::COUNTER_SPOTS as $k => $label): ?><option value="<?= $k ?>"<?= $k === $hall['counter'] ? ' selected' : '' ?>><?= h($label) ?></option><?php endforeach; ?>
       </select></label>
   </form>
   <p class="help" style="margin:6px 0 0">共 <?= count($tables) ?> 張桌，其中團體桌 <?= $groupTables ?> 張。按一張桌來設定。
@@ -86,20 +96,26 @@ foreach ($groups as $g) {
   <div class="panel"><p class="empty" style="margin:0">還沒有桌子。No tables yet.</p></div>
 <?php else: ?>
 <div class="panel zai-map-wrap">
-  <div class="zai-map" style="--cols:<?= (int) $cols ?>" id="liveZaiMap" data-live="zai_people zai_groups zai_waiting zai_tables">
-    <?php foreach ($tables as $no => $t):
+  <div id="liveZaiMap" data-live="zai_people zai_groups zai_waiting zai_tables">
+  <?php
+  $hallNos = array_keys($tables);
+  $hallClass = 'hall-admin';
+  $hallCell = static function (int $no) use ($tables, $edit, $evq): string {
+      $t = $tables[$no];
       $left = $t['seats'] - $t['used'];
       $state = $t['used'] === 0 ? 'empty' : ($left > 0 ? 'part' : ($left === 0 ? 'full' : 'over'));
       $names = array_map(static fn($w) => $w[1] . ($w[2] > 1 ? ' ×' . $w[2] : ''), $t['who']);
-      $pct = $t['seats'] ? min(100, round($t['used'] / $t['seats'] * 100)) : 0; ?>
-      <a class="zai-cell kind-<?= $t['kind'] ?> st-<?= $state ?><?= $t['reserved'] ? ' has-res' : '' ?><?= $edit === $no ? ' is-edit' : '' ?>"
-         href="<?= url('/admin/zai/map') . $evq ?>&amp;table=<?= (int) $no ?>#t<?= (int) $no ?>" title="第 <?= (int) $no ?> 桌">
-        <span class="zc-top"><b><?= (int) $no ?></b><em><?= $t['kind'] === 'group' ? '團體' : '散客' ?></em></span>
-        <span class="zc-bar"><i style="width:<?= $pct ?>%"></i></span>
-        <span class="zc-n"><?= (int) $t['used'] ?> / <?= (int) $t['seats'] ?><?= $t['reserved'] ? ' · 預留 ' . (int) $t['reserved'] : '' ?></span>
-        <span class="zc-who"><?= $names ? h(implode('、', array_slice($names, 0, 3))) . (count($names) > 3 ? ' 等 ' . count($names) : '') : '空 Empty' ?></span>
-      </a>
-    <?php endforeach; ?>
+      $pct = $t['seats'] ? min(100, round($t['used'] / $t['seats'] * 100)) : 0;
+      return '<a class="zai-cell kind-' . $t['kind'] . ' st-' . $state . ($t['reserved'] ? ' has-res' : '') . ($edit === $no ? ' is-edit' : '') . '"'
+          . ' href="' . url('/admin/zai/map') . $evq . '&amp;table=' . $no . '#t' . $no . '" title="第 ' . $no . ' 桌">'
+          . '<span class="zc-top"><b>' . $no . '</b><em>' . ($t['kind'] === 'group' ? '團體' : '散客') . '</em></span>'
+          . '<span class="zc-bar"><i style="width:' . $pct . '%"></i></span>'
+          . '<span class="zc-n">' . (int) $t['used'] . ' / ' . (int) $t['seats'] . ($t['reserved'] ? ' · 預留 ' . (int) $t['reserved'] : '') . '</span>'
+          . '<span class="zc-who">' . ($names ? h(implode('、', array_slice($names, 0, 3))) . (count($names) > 3 ? ' 等 ' . count($names) : '') : '空 Empty') . '</span>'
+          . '</a>';
+  };
+  require BASE_PATH . '/app/Views/partials/zai_hall.php';
+  ?>
   </div>
 </div>
 <?php endif; ?>

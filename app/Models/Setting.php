@@ -108,6 +108,8 @@ class Setting extends Model
         // system admin). Kept in storage/ (private), never in the code: the repository is public.
         'voucher_signature' => null,
         'zai_map_cols'      => '4',          // 施齋 Day 3 平面圖 Map: tables per row
+        'zai_map_aisle'     => '3',          // … a walkway after every N rows (0 = none)
+        'zai_map_counter'   => 'bottom-left',// … where the 櫃台 counter is drawn (see Zai::COUNTER_SPOTS)
     ];
 
     /**

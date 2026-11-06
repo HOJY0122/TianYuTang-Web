@@ -22,17 +22,27 @@ $ownSpread = App\Models\Zai::spread($g, array_map(static fn($t) => $t['seats'], 
   </div>
 
   <p class="ez-step"><span>2</span> 按桌號（可按多張）<small>Tap the table(s)<?= $mine ? ' — 已預先安排的已選好 the booked ones are already ticked' : '' ?></small></p>
-  <div class="ez-tables ez-tables-multi">
-    <?php foreach ($seating as $no => $t): if ($t['seats'] === 0) continue;
-      $self = in_array((int) $no, $mine, true);
-      $left = $t['seats'] - $t['used'] + ($ownSpread[$no] ?? 0); ?>
-      <label class="ez-tbl <?= $left >= $t['seats'] ? 'fits' : ($left > 0 ? 'some' : 'full') ?>">
-        <input type="checkbox" name="tables[]" value="<?= (int) $no ?>"<?= $self ? ' checked' : '' ?>>
-        <b><?= (int) $no ?></b><small><?= $left > 0 ? '剩 ' . $left : '滿 Full' ?><?= $self ? ' · 已安排' : (($t['kind'] ?? 'open') === 'group' ? ' · 團體桌' : '') ?></small>
-      </label>
-    <?php endforeach; ?>
-  </div>
+  <?php
+  // Drawn like the hall. Red = full: switched off so it cannot be ticked by
+  // accident — except this group's own booked table(s), which stay usable.
+  $hallNos = array_keys(array_filter($seating, static fn($t) => $t['seats'] > 0));
+  $hallClass = 'hall-easy ez-tables-multi';
+  $hallCell = static function (int $no) use ($seating, $mine, $ownSpread): string {
+      $t = $seating[$no];
+      $self = in_array($no, $mine, true);
+      $left = $t['seats'] - $t['used'] + ($ownSpread[$no] ?? 0);
+      $full = $left <= 0 && !$self;
+      $cls = $full ? 'full' : ($left >= $t['seats'] ? 'fits' : ($left > 0 ? 'some' : 'full'));
+      return '<label class="ez-tbl ' . $cls . (($t['kind'] ?? 'open') === 'group' && !$self && !$full ? ' grp' : '') . '"' . ($full ? ' aria-disabled="true"' : '') . '>'
+          . '<input type="checkbox" name="tables[]" value="' . $no . '"' . ($self ? ' checked' : '') . ($full ? ' disabled' : '') . '>'
+          . '<b>' . $no . '</b><small>' . ($left > 0 ? '剩 ' . $left : '滿 Full') . ($self ? ' · 已安排' : (($t['kind'] ?? 'open') === 'group' ? ' · 團體桌' : '')) . '</small>'
+          . '</label>';
+  };
+  require BASE_PATH . '/app/Views/partials/zai_hall.php';
+  ?>
   <p class="ez-hint" id="ezRoom"></p>
+  <p class="ez-hint ez-legend"><i class="lg-fits"></i> 空桌 <i class="lg-some"></i> 有人 <i class="lg-grp"></i> 團體桌 <i class="lg-full"></i> 滿（不能按）
+    <span class="en">Green = empty · Yellow = some taken · Purple = group table · Red = full (cannot be ticked)</span></p>
 
   <label class="ez-small">支票號碼（可不填）<span class="en">Cheque no. (optional)</span>
     <input name="cheque_no" value="<?= h($g['cheque_no'] ?? '') ?>" maxlength="40" inputmode="numeric"></label>

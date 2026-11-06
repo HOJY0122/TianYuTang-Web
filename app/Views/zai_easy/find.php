@@ -12,18 +12,22 @@ require __DIR__ . '/_top.php';
 
 <div id="ezResults" aria-live="polite">
 
-<?php foreach ($orgs ?? [] as $zid => $o): $done = $o['status'] === 'arrived'; ?>
-  <a class="ez-row ez-org-hit<?= $done ? ' is-done' : '' ?>" href="<?= url('/admin/zai/easy/group') ?>?id=<?= (int) $zid ?>">
-    <span class="ez-row-main"><small>這是團體報名 · Registered as a group</small>
-      <b><?= icon('users') ?> <?= h($o['name']) ?></b>
-      <small><?= h($o['ref_code']) ?> · <?= (int) $o['people'] ?> 人 · <?= h(implode('、', array_slice($o['members'], 0, 4))) ?><?= count($o['members']) > 4 ? ' …' : '' ?></small></span>
-    <span class="ez-row-state"><?= $done ? '✓ 已到<br>第 ' . h($o['tables'] ?? '') . ' 桌' : '去團體 →<br><small>Go to group</small>' ?></span>
+<?php foreach ($members ?? [] as $k => $m): $zg = $m['group']; $done = $zg['status'] === 'arrived';
+  // The group screen gets the search along, so staff see who they were looking for.
+  $go = url('/admin/zai/easy/group') . '?id=' . (int) $zg['id'] . '&from=find&q=' . rawurlencode($q) . '&who=' . rawurlencode((string) $m['name']); ?>
+  <a class="ez-row ez-member<?= $done ? ' is-done' : '' ?>" href="<?= h($go) ?>" data-group-go
+     data-who="<?= h($m['name']) ?>" data-group="<?= h($zg['name']) ?>" data-done="<?= $done ? h('已到，第 ' . ($zg['tables'] ?? '') . ' 桌') : '' ?>"<?= !empty($autoOpen) ? ' data-auto-open' : '' ?>>
+    <span class="ez-row-main"><small class="ez-member-tag"><?= icon('users') ?> 屬於團體 · Belongs to a group</small>
+      <b><?= h($m['name']) ?></b>
+      <small class="ez-id"><b>IC <?= h($m['ic_no'] ?: '—') ?></b></small>
+      <small>團體 <?= h($zg['name']) ?> · <?= h($m['ref_code']) ?></small></span>
+    <span class="ez-row-state"><?= $done ? '✓ 已到<br>第 ' . h($zg['tables'] ?? '') . ' 桌' : '團體 →<br><small>Group</small>' ?></span>
   </a>
 <?php endforeach; ?>
-<?php if ($q !== '' && !$people && empty($orgs)): ?>
+<?php if ($q !== '' && !$people && empty($members)): ?>
   <div class="ez-msg ez-warn">
     <b>找不到 Not found</b>
-    <p>請再看一次號碼。如果真的沒有登記，請排候補。<br><span class="en">Check the number again. If they really did not register, add them to the waiting list.</span></p>
+    <p>請再看一次號碼。如果真的沒有登記，請排候補。團體請用 ②「團體」。<br><span class="en">Check the number again. If they really did not register, add them to the waiting list. For a group, use ② Groups.</span></p>
     <a class="ez-btn ez-alt" href="<?= url('/admin/zai/easy/wait') ?>"><?= icon('hand') ?> 加入候補 Add to waiting list</a>
   </div>
 <?php elseif ($people): ?>
@@ -49,4 +53,28 @@ require __DIR__ . '/_top.php';
   </form>
 <?php endif; ?>
 </div>
+<script>
+// A group member found in ①: say so in a box, and offer to go to the group (with the search).
+(function () {
+  function ask(a) {
+    var msg = '「' + a.dataset.who + '」屬於團體「' + a.dataset.group + '」。\n團體請在 ②「團體」一起處理。'
+      + (a.dataset.done ? '\n（這個團體' + a.dataset.done + '）' : '')
+      + '\n\n' + a.dataset.who + ' belongs to the group “' + a.dataset.group + '”. Groups are handled together under ② Groups.';
+    if (!window.TYTDialog) { location.href = a.href; return; }
+    TYTDialog.confirm(msg, { title: '這是團體報名 Registered as a group', okText: '去團體 Go to group →', cancelText: '留在這裡 Stay' })
+      .then(function (yes) { if (yes) location.href = a.href; });
+  }
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('[data-group-go]');
+    if (!a) return;
+    e.preventDefault();
+    ask(a);
+  });
+  // After dialog.js (loaded at the bottom of the page) is ready.
+  document.addEventListener('DOMContentLoaded', function () {
+    var first = document.querySelector('[data-auto-open]');
+    if (first) ask(first);
+  });
+})();
+</script>
 <?php require __DIR__ . '/_bottom.php'; ?>

@@ -73,7 +73,6 @@ final class Access
     public const PRESETS = [
         'all'      => ['全部功能', 'Everything',           null],
         'day'      => ['活動當天', 'On the day',           ['checkin', 'walkin', 'counter', 'zai']],
-        'zai'      => ['只做施齋入座', 'Day 3 seating only', ['zai']],
         'checkin'  => ['只做報到', 'Check-in only',        ['checkin']],
         'records'  => ['報名與報到', 'Registrations',     ['registrations', 'checkin', 'walkin']],
         'finance'  => ['財務',     'Finance',              ['donations', 'counter', 'receipts', 'vouchers']],
@@ -104,9 +103,21 @@ final class Access
         return $keys === null ? null : json_encode(array_values($keys));
     }
 
+    /** A 施齋助理 Day 3 helper: the easy screens and nothing else. */
+    public static function isHelper(): bool
+    {
+        return ($_SESSION['admin_role'] ?? '') === 'helper';
+    }
+
+    /** Addresses a Day 3 helper may open (plus anything outside /admin, e.g. their password). */
+    private const HELPER_PATHS = ['/admin/zai/easy', '/admin/zai/cheque', '/admin/no-access'];
+
     /** May the signed-in person use this function? */
     public static function can(string $module): bool
     {
+        if (self::isHelper()) {
+            return false;                       // helpers use the easy screens only
+        }
         if (($_SESSION['admin_role'] ?? '') === 'system_admin') {
             return true;
         }
@@ -117,7 +128,8 @@ final class Access
     /** Is the signed-in admin limited at all? */
     public static function limited(): bool
     {
-        return ($_SESSION['admin_role'] ?? '') !== 'system_admin' && ($_SESSION['admin_perms'] ?? null) !== null;
+        return self::isHelper()
+            || (($_SESSION['admin_role'] ?? '') !== 'system_admin' && ($_SESSION['admin_perms'] ?? null) !== null);
     }
 
     /** May the signed-in person open this address? */
@@ -125,6 +137,14 @@ final class Access
     {
         if (!self::limited() || !str_starts_with($path, '/admin')) {
             return true;
+        }
+        if (self::isHelper()) {
+            foreach (self::HELPER_PATHS as $p) {
+                if ($path === $p || str_starts_with($path, $p . '/')) {
+                    return true;
+                }
+            }
+            return false;
         }
         // Longest matching start wins: /admin/receipts (receipt book) beats
         // /admin/receipt (the counter's printed receipt).
@@ -155,8 +175,8 @@ final class Access
         if (($_SESSION['admin_role'] ?? '') === 'system_admin') {
             return '/system';
         }
-        // A Day 3 helper (施齋入座 only) opens straight into the easy screens.
-        if (($_SESSION['admin_perms'] ?? null) === ['zai']) {
+        // A 施齋助理 Day 3 helper opens straight into the easy screens.
+        if (self::isHelper()) {
             return '/admin/zai/easy';
         }
         foreach (self::MODULES as $key => $m) {

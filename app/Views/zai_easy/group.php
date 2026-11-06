@@ -16,14 +16,14 @@ $ownSpread = App\Models\Zai::spread($g, array_map(static fn($t) => $t['seats'], 
     <button type="button" class="ez-pm" data-step="1" aria-label="加一 Plus one">+</button>
   </div>
 
-  <p class="ez-step"><span>2</span> 按桌號（可按多張）<small>Tap the table(s)</small></p>
+  <p class="ez-step"><span>2</span> 按桌號（可按多張）<small>Tap the table(s)<?= $mine ? ' — 已預先安排的已選好 the booked ones are already ticked' : '' ?></small></p>
   <div class="ez-tables ez-tables-multi">
     <?php foreach ($seating as $no => $t): if ($t['seats'] === 0) continue;
       $self = in_array((int) $no, $mine, true);
       $left = $t['seats'] - $t['used'] + ($ownSpread[$no] ?? 0); ?>
       <label class="ez-tbl <?= $left >= $t['seats'] ? 'fits' : ($left > 0 ? 'some' : 'full') ?>">
         <input type="checkbox" name="tables[]" value="<?= (int) $no ?>"<?= $self ? ' checked' : '' ?>>
-        <b><?= (int) $no ?></b><small><?= $left > 0 ? '剩 ' . $left : '滿 Full' ?></small>
+        <b><?= (int) $no ?></b><small><?= $left > 0 ? '剩 ' . $left : '滿 Full' ?><?= $self ? ' · 已安排' : (($t['kind'] ?? 'open') === 'group' ? ' · 團體桌' : '') ?></small>
       </label>
     <?php endforeach; ?>
   </div>

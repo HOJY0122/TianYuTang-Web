@@ -6,6 +6,7 @@
 $evq = '?event=' . (int) $event['id'];
 $zaiTabs = [
     'overview'   => ['chart',        '總覽',  'Overview',     '/admin/zai'],
+    'map'        => ['map',          '平面圖', 'Table map',    '/admin/zai/map'],
     'registered' => ['check-circle', '已登記', 'Registered',   '/admin/zai/registered'],
     'groups'     => ['users',        '團體',  'Groups',       '/admin/zai/groups'],
     'waiting'    => ['hourglass',    '候補',  'Waiting list', '/admin/zai/waiting'],
@@ -23,7 +24,7 @@ $tableSelect = static function (string $name, ?int $current, string $attrs = '')
         $sel = $current === (int) $no;
         $known = $known || $sel;
         $o .= '<option value="' . (int) $no . '"' . ($sel ? ' selected' : '') . '>第 ' . (int) $no . ' 桌 · '
-            . ($left > 0 ? '剩 ' . $left : ($left === 0 ? '滿 full' : '超 ' . -$left)) . '</option>';
+            . ($left > 0 ? '剩 ' . $left : ($left === 0 ? '滿 full' : '超 ' . -$left)) . (($t['kind'] ?? 'open') === 'group' ? ' · 團體桌' : '') . '</option>';
     }
     if ($current !== null && !$known) {
         $o .= '<option value="' . $current . '" selected>第 ' . $current . ' 桌</option>';

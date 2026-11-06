@@ -40,6 +40,67 @@ class ZaiController extends Controller
         ]);
     }
 
+    /**
+     * GET /admin/zai/map?table= — 平面圖: the tables in rows (4 per row by
+     * default), each with who sits or is booked there. Tap a table to make
+     * it a 團體桌 group table, pre-assign a group to it, or change its seats.
+     */
+    public function map(): void
+    {
+        $this->requireAdmin();
+        $event = $this->event();
+        $zai = new Zai();
+        $seating = $zai->seating((int) $event['id']);
+        $no = (int) ($_GET['table'] ?? 0);
+        $this->page('admin/zai_map', 'map', $event, [
+            'seating' => $seating,
+            'cols'    => max(2, min(10, (int) ((new \App\Models\Setting())->site()['zai_map_cols'] ?? 4))),
+            'edit'    => isset($seating[$no]) && $seating[$no]['seats'] > 0 ? $no : null,
+            'groups'  => $zai->groups((int) $event['id']),
+        ]);
+    }
+
+    /** POST /admin/zai/map/table — one table: kind, seats, pre-assigned groups. */
+    public function mapTable(): void
+    {
+        $this->requireAdmin();
+        $this->requireCsrf();
+        $event = (new Event())->find((int) ($_POST['event_id'] ?? 0));
+        $no = (int) ($_POST['table_no'] ?? 0);
+        $zai = new Zai();
+        if ($event === null || !isset($zai->tables((int) $event['id'])[$no])) {
+            $this->redirect('/admin/zai/map');
+        }
+        $eventId = (int) $event['id'];
+        $back = '/admin/zai/map?event=' . $eventId . '&table=' . $no . '#t' . $no;
+        if (isset($_POST['kind'])) {
+            $zai->setTableKind($eventId, $no, (string) $_POST['kind']);
+        }
+        if (isset($_POST['seats'])) {
+            $zai->setTableSeats($eventId, $no, (int) $_POST['seats']);
+        }
+        foreach (['add_group' => true, 'remove_group' => false] as $field => $add) {
+            $g = $zai->group((int) ($_POST[$field] ?? 0));
+            if ($g !== null && (int) $g['event_id'] === $eventId) {
+                $zai->groupTable((int) $g['id'], $no, $add);
+                if ($add) {
+                    $zai->setTableKind($eventId, $no, 'group');   // a table given to a group is a group table
+                    $this->warnIfFull($zai, $eventId, $no);
+                }
+            }
+        }
+        $this->redirect($back);
+    }
+
+    /** POST /admin/zai/map/cols — tables per row on the map. */
+    public function mapCols(): void
+    {
+        $this->requireAdmin();
+        $this->requireCsrf();
+        (new \App\Models\Setting())->set('zai_map_cols', (string) max(2, min(10, (int) ($_POST['cols'] ?? 4))));
+        $this->redirect('/admin/zai/map?event=' . (int) ($_POST['event_id'] ?? 0));
+    }
+
     /** GET /admin/zai/registered?q= */
     public function registered(): void
     {
@@ -341,7 +402,7 @@ class ZaiController extends Controller
     private function page(string $view, string $tab, array $event, array $data): void
     {
         $this->view($view, $data + [
-            'pageTitle' => '施齋 Day 3 · ' . ['overview' => '總覽 Overview', 'registered' => '已登記 Registered', 'groups' => '團體 Groups',
+            'pageTitle' => '施齋 Day 3 · ' . ['overview' => '總覽 Overview', 'map' => '平面圖 Table map', 'registered' => '已登記 Registered', 'groups' => '團體 Groups',
                                              'waiting' => '候補 Waiting list', 'tables' => '桌子 Tables'][$tab],
             'nav'       => 'zai',
             'tab'       => $tab,

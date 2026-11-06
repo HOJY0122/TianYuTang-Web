@@ -33,9 +33,10 @@
           <?php endif; ?></td>
         <td data-label="姓名 Name"><?= h($u['display_name'] ?? '—') ?></td>
         <?php $uPerms = App\Core\Access::decode($u['permissions'] ?? null); ?>
-        <td data-label="權限 Role"><?= $u['role'] === 'system_admin'
-            ? '<span class="badge walkin">系統管理員 System admin</span>' : '<span class="badge">管理員 Admin</span>' ?>
-          <?php if ($u['role'] !== 'system_admin'): ?>
+        <td data-label="權限 Role"><?= ['system_admin' => '<span class="badge walkin">系統管理員 System admin</span>',
+                                      'helper' => '<span class="badge helper">' . icon('chair') . ' 施齋助理 Day 3 helper</span>'][$u['role']] ?? '<span class="badge">管理員 Admin</span>' ?>
+          <?php if ($u['role'] === 'helper'): ?><span class="sub-line help">只有施齋入座簡易模式 Easy Day 3 screens only</span><?php endif; ?>
+          <?php if ($u['role'] === 'admin'): ?>
             <div class="access-chips">
               <?php if ($uPerms === null): ?><span class="access-chip all">全部功能 Everything</span>
               <?php elseif (!$uPerms): ?><span class="access-chip none">沒有功能 Nothing</span>
@@ -46,13 +47,17 @@
         <td data-label="操作 Actions">
           <div class="actions-cell" style="flex-wrap:wrap">
             <?php if (!$isLastSystem): ?>
-              <form method="POST" action="<?= url('/system/users/role') ?>" style="margin:0">
+              <form method="POST" action="<?= url('/system/users/role') ?>" class="role-form" style="margin:0">
                 <?= csrf_field() ?><input type="hidden" name="user_id" value="<?= (int) $u['id'] ?>">
-                <input type="hidden" name="role" value="<?= $u['role'] === 'system_admin' ? 'admin' : 'system_admin' ?>">
-                <button class="mini-btn ghost" type="submit"><?= $u['role'] === 'system_admin' ? '改為管理員 Make admin' : '升為系統管理員 Make system admin' ?></button>
+                <select name="role" aria-label="權限 Role">
+                  <?php foreach (App\Models\AdminUser::ROLES as $rk => [$rzh, $ren]): ?>
+                    <option value="<?= $rk ?>"<?= $u['role'] === $rk ? ' selected' : '' ?>><?= $rzh ?> <?= $ren ?></option>
+                  <?php endforeach; ?>
+                </select>
+                <button class="mini-btn ghost" type="submit">改權限 Change role</button>
               </form>
             <?php endif; ?>
-            <?php if ($u['role'] !== 'system_admin'): ?>
+            <?php if ($u['role'] === 'admin'): ?>
               <button class="mini-btn ghost" type="button" onclick="document.getElementById('ac<?= (int) $u['id'] ?>').classList.toggle('hidden')"><?= icon('settings') ?> 可用功能 Functions</button>
             <?php endif; ?>
             <button class="mini-btn ghost" type="button" onclick="document.getElementById('pw<?= (int) $u['id'] ?>').classList.toggle('hidden')"><?= icon('key') ?> 重設密碼 Reset password</button>
@@ -75,7 +80,7 @@
           </form>
         </td>
       </tr>
-      <?php if ($u['role'] !== 'system_admin'): ?>
+      <?php if ($u['role'] === 'admin'): ?>
       <tr class="access-row hidden" id="ac<?= (int) $u['id'] ?>"><td colspan="5">
                       <form method="POST" action="<?= url('/system/users/access') ?>" class="access-form">
               <?= csrf_field() ?><input type="hidden" name="user_id" value="<?= (int) $u['id'] ?>">
@@ -111,9 +116,12 @@
     </div>
     <label for="role">權限 <span class="en">Role *</span></label>
     <select id="role" name="role">
-      <option value="admin">管理員 Admin — 下面選擇可用功能 functions chosen below</option>
-      <option value="system_admin">系統管理員 System admin — 全部功能及網站設定 everything + site settings</option>
+      <?php foreach (App\Models\AdminUser::ROLES as $rk => [$rzh, $ren, $rwhat]): ?>
+        <option value="<?= $rk ?>"><?= $rzh ?> <?= $ren ?> — <?= $rwhat ?></option>
+      <?php endforeach; ?>
     </select>
+    <p class="help" id="helperNote" hidden><?= icon('chair') ?> 施齋助理登入後直接進入「誰來了？」大按鈕畫面，看不到其他頁面和金額。
+      <span class="en">A Day 3 helper signs in straight to the big-button "Who is here?" screens and cannot see any other page or money.</span></p>
     <div id="newAccess">
       <label>可使用的功能 <span class="en">Functions this admin can use</span></label>
       <p class="help" style="margin-top:0">只勾選他需要的。例如當天幫忙的委員只需「現場報到」；不勾「儀表板」就看不到總金額。
@@ -124,10 +132,12 @@
   </form>
 </div>
 <div class="panel guide">
-  <h2 style="margin-top:0"><?= icon('users') ?> 兩種權限 <span class="en">The two roles</span></h2>
+  <h2 style="margin-top:0"><?= icon('users') ?> 三種權限 <span class="en">The three roles</span></h2>
   <ul>
     <li><strong>管理員 Admin</strong>：可選擇開放哪些功能（報名、布施、報到、現場登記、消息、相簿、收據、活動資料、儀表板）。
       <span class="en">You choose which functions each admin can use (registrations, donations, check-in, counter, news, photos, receipts, event details, dashboard).</span></li>
+    <li><strong>施齋助理 Day 3 helper</strong>：只有施齋入座的簡易模式（大按鈕、一步一步），給活動當天幫忙安排座位的人。
+      <span class="en">Only the Day 3 seating easy screens (big buttons, one step at a time) — for the people seating guests on the day.</span></li>
     <li><strong>系統管理員 System admin</strong>：以上全部，加上網站設定、網站文字、帳號與 QR 產生器。
       <span class="en">Everything above, plus site settings, wording, accounts and the QR generator.</span></li>
   </ul>
@@ -161,8 +171,8 @@
     count(p);
   });
   // A system admin always has everything: no picker for that role.
-  var role = document.getElementById('role'), box = document.getElementById('newAccess');
-  function sync() { box.hidden = role.value === 'system_admin'; }
+  var role = document.getElementById('role'), box = document.getElementById('newAccess'), note = document.getElementById('helperNote');
+  function sync() { box.hidden = role.value !== 'admin'; note.hidden = role.value !== 'helper'; }
   role.addEventListener('change', sync); sync();
 })();
 </script>

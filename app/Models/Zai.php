@@ -61,6 +61,33 @@ class Zai extends Model
         }
     }
 
+    /** table_no => 'open' (散客桌) | 'group' (團體桌). */
+    public function tableKinds(int $eventId): array
+    {
+        $out = [];
+        foreach ($this->fetchAll('SELECT table_no, kind FROM zai_tables WHERE event_id = ?', [$eventId]) as $r) {
+            $out[(int) $r['table_no']] = $r['kind'];
+        }
+        return $out;
+    }
+
+    public function setTableKind(int $eventId, int $tableNo, string $kind): void
+    {
+        $this->execute('UPDATE zai_tables SET kind = ? WHERE event_id = ? AND table_no = ?', [$kind === 'group' ? 'group' : 'open', $eventId, $tableNo]);
+    }
+
+    /** Pre-assign (or take away) one table for a 團體 group; its other tables stay. */
+    public function groupTable(int $groupId, int $tableNo, bool $add): void
+    {
+        $g = $this->group($groupId);
+        if ($g === null) {
+            return;
+        }
+        $list = self::tableList((string) ($g['tables'] ?? ''));
+        $list = $add ? array_values(array_unique(array_merge($list, [$tableNo]))) : array_values(array_diff($list, [$tableNo]));
+        $this->execute('UPDATE zai_groups SET tables = ? WHERE id = ?', [$list ? implode(', ', $list) : null, $groupId]);
+    }
+
     public function setTableSeats(int $eventId, int $tableNo, int $seats): void
     {
         $this->execute('UPDATE zai_tables SET seats = ? WHERE event_id = ? AND table_no = ?', [max(1, min(50, $seats)), $eventId, $tableNo]);
@@ -73,14 +100,19 @@ class Zai extends Model
     public function seating(int $eventId): array
     {
         $tables = $this->tables($eventId);
+        $kinds = $this->tableKinds($eventId);
         $map = [];
         foreach ($tables as $no => $seats) {
-            $map[$no] = ['seats' => $seats, 'used' => 0, 'who' => []];
+            $map[$no] = ['seats' => $seats, 'used' => 0, 'who' => [], 'kind' => $kinds[$no] ?? 'open', 'reserved' => 0];
         }
-        $add = static function (int $no, string $kind, string $label, int $n) use (&$map): void {
-            $map[$no] ??= ['seats' => 0, 'used' => 0, 'who' => []];
+        // who: [kind, label, people, extra] — extra for a group: its id and whether it has arrived.
+        $add = static function (int $no, string $kind, string $label, int $n, array $extra = []) use (&$map): void {
+            $map[$no] ??= ['seats' => 0, 'used' => 0, 'who' => [], 'kind' => 'open', 'reserved' => 0];
             $map[$no]['used'] += $n;
-            $map[$no]['who'][] = [$kind, $label, $n];
+            $map[$no]['who'][] = [$kind, $label, $n, $extra];
+            if ($kind === 'group' && empty($extra['arrived'])) {
+                $map[$no]['reserved'] += $n;          // pre-assigned, not here yet
+            }
         };
         foreach ($this->fetchAll(
             'SELECT p.table_no, a.name, g.ref_code FROM zai_people p
@@ -90,7 +122,7 @@ class Zai extends Model
         }
         foreach ($this->groups($eventId) as $g) {
             foreach (self::spread($g, $tables) as $no => $n) {
-                $add($no, 'group', $g['name'], $n);
+                $add($no, 'group', $g['name'], $n, ['id' => (int) $g['id'], 'arrived' => $g['status'] === 'arrived']);
             }
         }
         foreach ($this->fetchAll("SELECT table_no, name, queue_no, people FROM zai_waiting WHERE event_id = ? AND status = 'seated' AND table_no IS NOT NULL", [$eventId]) as $r) {

@@ -9,15 +9,16 @@ require BASE_PATH . '/app/Views/admin/_zai_head.php';
 $hidden = '<input type="hidden" name="event_id" value="' . (int) $event['id'] . '"><input type="hidden" name="q" value="' . h($q) . '">';
 ?>
 <div class="panel zai-search">
-  <form method="GET" action="<?= url('/admin/zai/registered') ?>" class="lookup-form">
+  <form method="GET" action="<?= url('/admin/zai/registered') ?>" class="lookup-form" data-live-search="#zaiResults">
     <input type="hidden" name="event" value="<?= (int) $event['id'] ?>">
     <input type="search" name="q" value="<?= h($q) ?>" autofocus autocomplete="off" spellcheck="false" inputmode="text"
            placeholder="身份證 / 姓名 / 電話 / 報名編號　IC, name, phone or reference" aria-label="搜尋 Search">
     <button class="mini-btn btn-lg" type="submit"><?= icon('search') ?> 查詢 Find</button>
   </form>
-  <p class="help" style="margin:6px 0 0">身份證可輸入完整號碼，或最後 4 位。<span class="en">Type the full IC number, or just its last 4 digits.</span></p>
+  <p class="help" style="margin:6px 0 0">打字就會自動找。身份證可輸入開頭幾位、完整號碼或最後 4 位。<span class="en">Results appear as you type — the start of an IC, the full number, or its last 4 digits.</span></p>
 </div>
 
+<div id="zaiResults" aria-live="polite">
 <?php if ($q !== '' && !$groups): ?>
   <div class="panel"><p class="empty" style="margin:0"><?= icon('search') ?> 找不到「<?= h($q) ?>」的網上登記。<span class="en">No online registration found.</span><br>
     <a href="<?= url('/admin/zai/waiting') . $evq ?>">沒有登記？加入候補名單 → <span class="en">Not registered? Add to the waiting list</span></a></p></div>
@@ -66,4 +67,6 @@ $hidden = '<input type="hidden" name="event_id" value="' . (int) $event['id'] . 
     <?php endif; ?>
   </div>
 <?php endforeach; ?>
+</div>
+<script src="<?= asset('js/live-search.js') ?>"></script>
 <?php require BASE_PATH . '/app/Views/layouts/admin_footer.php'; ?>

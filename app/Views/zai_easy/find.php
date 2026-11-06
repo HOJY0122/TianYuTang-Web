@@ -3,12 +3,14 @@
 $title = '請輸入身份證號碼'; $titleEn = 'Type the IC number (or its last 4 digits)';
 require __DIR__ . '/_top.php';
 ?>
-<form method="GET" action="<?= url('/admin/zai/easy/find') ?>" class="ez-search">
+<form method="GET" action="<?= url('/admin/zai/easy/find') ?>" class="ez-search" data-live-search="#ezResults">
   <input type="search" name="q" value="<?= h($q) ?>" inputmode="numeric" autocomplete="off" autofocus
          placeholder="例 700101-14-5678 或 5678" aria-label="身份證號碼 IC number">
   <button type="submit" class="ez-btn ez-go"><?= icon('search') ?> 找 Find</button>
 </form>
-<p class="ez-hint">也可以輸入姓名或電話。<span class="en">A name or phone number works too.</span></p>
+<p class="ez-hint">打字就會自動找，不用按「找」。也可以輸入姓名或電話。<span class="en">Results appear as you type. A name or phone number works too.</span></p>
+
+<div id="ezResults" aria-live="polite">
 
 <?php if ($q !== '' && !$people): ?>
   <div class="ez-msg ez-warn">
@@ -35,4 +37,5 @@ require __DIR__ . '/_top.php';
     <button type="submit" name="go" value="pending" class="ez-btn ez-alt">… 待定，等一下 <small>Pending — not yet</small></button>
   </form>
 <?php endif; ?>
+</div>
 <?php require __DIR__ . '/_bottom.php'; ?>

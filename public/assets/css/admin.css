@@ -1429,3 +1429,15 @@ body.ez{margin:0;background:#f7efdc;color:#2b1d14;font-family:"Noto Sans TC","Mi
   .qr-pass,.qr-pass *{visibility:visible}
   .qr-pass{position:absolute;left:0;top:0;width:100%;max-width:none;box-shadow:none}
 }
+
+/* Live search: results dim while the next ones load; hidden rows/boxes stay hidden. */
+.is-searching{opacity:.55;transition:opacity .15s}
+.ez-form label[hidden],[data-filter-row][hidden]{display:none}
+.ez-req{color:#a3361f;font-size:14px}
+.ez-more-ic{border-left:4px solid #e3d3a8;padding-left:12px;margin-top:10px}
+
+/* Live search: results dim while the next ones load; hidden rows/boxes stay hidden. */
+.is-searching{opacity:.55;transition:opacity .15s}
+.ez-form label[hidden],[data-filter-row][hidden]{display:none}
+.ez-req{color:#a3361f;font-size:14px}
+.ez-more-ic{border-left:4px solid #e3d3a8;padding-left:12px;margin-top:10px}

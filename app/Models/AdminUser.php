@@ -32,7 +32,8 @@ class AdminUser extends Model
      * Passwords that ship with the source code, so anyone can read them:
      *   schema.sql     admin    / tianyutang2026
      *   migration 006  sysadmin / tianyutang-sys2026
-     * Logging in with one only unlocks the change-password page, and no
+     * They never open a web session (AdminController::login): the operator
+     * sets the first password with php bin/set-password.php, and no
      * account may be given one again.
      */
     public const DEFAULT_PASSWORDS = ['tianyutang2026', 'tianyutang-sys2026'];

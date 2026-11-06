@@ -92,17 +92,23 @@ class AdminController extends Controller
 
         $attempts->clear($name);
 
+        // Still on a password published with the source code? It never
+        // opens a session: anyone can read it, so whoever tried it first
+        // would get to choose the "new" password and keep the account.
+        // The server operator sets the first password from the shell.
+        if (AdminUser::isDefaultPassword($password)) {
+            $_SESSION['login_error'] = [
+                'message'  => "此帳號仍是系統預設密碼，不能登入。請伺服器管理員執行 php bin/set-password.php " . $name . " 設定新密碼。"
+                    . "\nThis account still has the default password and cannot sign in. The server operator must set a new one with: php bin/set-password.php " . $name,
+                'username' => $username,
+            ];
+            $this->redirect('/admin/login');
+        }
+
         // Fresh session id and form token on sign-in — blocks session
         // fixation — plus the facts every later page checks (Session::guard).
         \App\Core\Session::signIn($user);
         (new AdminUser())->recordLogin((int) $user['id']);
-
-        // Still on a password published with the source code? Then this
-        // login unlocks exactly one page: the one that replaces it.
-        if (AdminUser::isDefaultPassword($password)) {
-            $_SESSION['must_change_password'] = true;
-            $this->redirect('/account/password');
-        }
 
         // Each role lands in its own area. Sending a system admin to the
         // event dashboard would only bounce them straight back out.

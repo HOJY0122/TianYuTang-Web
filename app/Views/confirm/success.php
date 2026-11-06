@@ -22,7 +22,7 @@ require BASE_PATH . '/app/Views/layouts/header.php';
       <div class="ref-code"><?= h($refCode) ?></div>
     </div>
     <?php if ($isRsvp): ?>
-      <div class="confirm-remark"><b>備註！<span class="en">Remarks!</span></b>
+      <div class="confirm-remark"><b>備註<span class="en">Remarks</span></b>
         <p><?= icon('id-card') ?> <span><?= tb('success.rsvp_note') ?></span></p></div>
     <?php endif; ?>
 

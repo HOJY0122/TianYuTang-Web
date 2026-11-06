@@ -16,7 +16,7 @@ use RuntimeException;
  *   /admin/zai/registered 已登記 search an IC (or name / phone / ref) → confirm or
  *                         pending → table
  *   /admin/zai/groups     團體 organisation registrations + the PM's list:
- *                         arrived → table(s) → photo of the cheque
+ *                         arrived → table(s) → reminder: cheque photo on the staff phone
  *   /admin/zai/waiting    候補 people who came without registering; onsite
  *                         staff seat them later
  *   /admin/zai/tables     設定 how many tables, seats at each
@@ -197,14 +197,10 @@ class ZaiController extends Controller
         $this->redirect('/admin/zai/registered?event=' . (int) $group['event_id'] . '&q=' . urlencode((string) ($_POST['q'] ?? '')) . '#g' . (int) $group['id']);
     }
 
-    /** POST /admin/zai/group — a 團體 group: arrived, people, table(s), cheque. */
+    /** POST /admin/zai/group — a 團體 group: arrived, people, table(s), cheque no. */
     public function saveGroup(): void
     {
         $this->requireAdmin();
-        if (empty($_POST) && ($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
-            $this->flash('error', '相片太大 Photo too large', '相片超過伺服器限制。The photo is over the server limit.');
-            $this->redirect('/admin/zai/groups');
-        }
         $this->requireCsrf();
         $zai = new Zai();
         $g = $zai->group((int) ($_POST['id'] ?? 0));
@@ -221,22 +217,20 @@ class ZaiController extends Controller
             'status'    => ($_POST['status'] ?? '') === 'arrived' ? 'arrived' : 'expected',
             'by'        => $this->by(),
         ]);
-        $uploader = new ImageUploader('zai', true);
-        if (ImageUploader::wasProvided($_FILES['cheque'] ?? null)) {
-            try {
-                $path = $uploader->store($_FILES['cheque'], 2000);
-                $zai->setCheque((int) $g['id'], $path);
-                $uploader->delete($g['cheque_path']);
-            } catch (RuntimeException $e) {
-                $this->flash('error', '支票相片 Cheque photo', $e->getMessage());
-                $this->redirect($back);
-            }
-        } elseif (!empty($_POST['remove_cheque']) && $g['cheque_path']) {
-            $zai->setCheque((int) $g['id'], null);
-            $uploader->delete($g['cheque_path']);
-        }
         foreach (Zai::tableList($tables) as $no) {
             $this->warnIfFull($zai, (int) $g['event_id'], $no);
+        }
+        // Just checked in: remind the staff to take the cheque photo on their phone
+        // (nothing is uploaded here). A table warning, if any, is kept underneath.
+        if (($_POST['status'] ?? '') === 'arrived' && $g['status'] !== 'arrived') {
+            $prev = isset($_SESSION['flash']) ? $_SESSION['flash']['title'] . "\n" . $_SESSION['flash']['message'] : '';
+            $this->flash('info', '📷 請拍支票照片 Take the cheque photo',
+                "「{$g['name']}」已到。請團體代表拿著支票，用你的手機拍照（不用上傳）。
+"
+                . "{$g['name']} has arrived — take a photo of the representative with the cheque on your phone (no upload)."
+                . ($prev !== '' ? "
+
+" . $prev : ''));
         }
         $this->redirect($back);
     }
@@ -330,9 +324,14 @@ class ZaiController extends Controller
             $this->redirect($back);
         }
         $zai = new Zai();
-        $ic = $this->str('ic', 20) ?? '';
+        // Walk-in: one person, one IC (required), same age rule as online.
+        $ic = $this->str('ic', 30) ?? '';
+        if (($problem = Zai::walkInIcProblem($ic, $event)) !== null) {
+            $this->flash('error', '未加入 Not added', $problem);
+            $this->redirect($back);
+        }
         // Already registered online? Send them to the registered list instead.
-        if ($ic !== '' && empty($_POST['force']) && ($reg = $zai->registeredIc((int) $event['id'], $ic)) !== null) {
+        if (empty($_POST['force']) && ($reg = $zai->registeredIc((int) $event['id'], $ic)) !== null) {
             $this->flash('info', '已經登記 Already registered',
                 "這個身份證已在網上登記：{$reg['name']}（{$reg['ref_code']}）。請到「已登記」確認入座。\n"
                 . "This IC is already registered online — {$reg['name']} ({$reg['ref_code']}). Confirm them under Registered.");
@@ -340,7 +339,7 @@ class ZaiController extends Controller
         }
         $no = $zai->addWaiting((int) $event['id'], [
             'name' => $name, 'ic' => $ic, 'contact' => $this->str('contact', 30),
-            'people' => max(1, min(50, (int) ($_POST['people'] ?? 1))), 'notes' => $this->str('notes', 300),
+            'people' => 1, 'notes' => $this->str('notes', 300),
         ], $this->by());
         $this->flash('success', '候補 #' . $no, "{$name} 已加入候補名單，號碼 #{$no}。\n{$name} is on the waiting list, number #{$no}.");
         $this->redirect($back);

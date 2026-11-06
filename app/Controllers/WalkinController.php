@@ -2,8 +2,11 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\FormRules;
+use App\Core\Validate;
 use App\Models\Event;
 use App\Models\Rsvp;
+use App\Models\Zai;
 use Exception;
 
 /**
@@ -77,9 +80,14 @@ class WalkinController extends Controller
         $errors    = [];
         $attendees = [];
 
-        $limit = min(self::MAX_PER_ENTRY, max(1, (int) $event['max_attendees']));
-        if (count($names) > $limit) {
-            $errors[] = "一次最多登記 {$limit} 位。人數較多請分兩次登記。";
+        // 來源: someone at the counter now, or a WhatsApp booking typed in ahead.
+        $source = ($_POST['source'] ?? '') === 'whatsapp' ? 'whatsapp' : 'walkin';
+        // A walk-in is one person, one IC, individual. Only a WhatsApp booking may hold several.
+        $limit = $source === 'walkin' ? 1 : min(self::MAX_PER_ENTRY, max(1, (int) $event['max_attendees']));
+        if (count(array_filter($names, static fn($v) => is_string($v) && trim($v) !== '')) > $limit) {
+            $errors[] = $source === 'walkin'
+                ? '現場報名一次只登記 1 位（1 人 1 身份證）。Walk-in: one person at a time, one IC each.'
+                : "一次最多登記 {$limit} 位。人數較多請分兩次登記。";
         }
 
         foreach ($names as $i => $rawName) {
@@ -105,14 +113,14 @@ class WalkinController extends Controller
                 $errors[] = "第 {$position} 位：請填寫姓名。";
                 continue;
             }
-            // IC and contact are optional at the counter, unlike online.
-            // An elderly visitor may not have their IC on them and will
-            // not recite a phone number to a queue — refusing to record
-            // their attendance over that would be worse than useless.
-            if (mb_strlen($ic) > 30) {
-                $errors[] = "第 {$position} 位：身份證號碼過長。";
+            // IC required and checked the same way as the online form, so the
+            // age rule can be applied; the phone stays optional at the counter.
+            $icOk = Validate::icOrPassport($ic);
+            if ($icOk === null) {
+                $errors[] = "第 {$position} 位：" . ($ic === '' ? '請填寫身份證號碼。IC number is required.' : Validate::IC_MESSAGE);
                 continue;
             }
+            $ic = $icOk;
             if (mb_strlen($contact) > 30) {
                 $errors[] = "第 {$position} 位：聯絡號碼過長。";
                 continue;
@@ -120,13 +128,29 @@ class WalkinController extends Controller
 
             $attendees[] = [
                 'name'    => $name,
-                'ic'      => $ic !== '' ? $ic : '—',
+                'ic'      => $ic,
                 'contact' => $contact !== '' ? $contact : '—',
             ];
         }
 
         if (!$attendees && !$errors) {
             $errors[] = '請至少填寫一位參加者的姓名。';
+        }
+
+        if ($attendees && !$errors) {
+            // Same age rule as the online registration (e.g. 66 and above).
+            $rule = FormRules::ageRule();
+            if ($rule !== null && ($problem = FormRules::groupAgeProblem(array_column($attendees, 'ic'), $rule, $event)) !== null) {
+                $errors[] = $problem;
+            }
+            // Already registered online? They check in instead of registering twice.
+            $zai = new Zai();
+            foreach ($attendees as $n => $a) {
+                if (($reg = $zai->registeredIc($eventId, $a['ic'])) !== null) {
+                    $errors[] = '第 ' . ($n + 1) . " 位已在網上報名：{$reg['name']}（{$reg['ref_code']}），請用「現場報到」。"
+                              . "Already registered online ({$reg['ref_code']}) — use Check-in instead.";
+                }
+            }
         }
 
         if ($errors) {
@@ -137,12 +161,11 @@ class WalkinController extends Controller
                 => array_map(static fn($v) => is_string($v) ? $v : '', $list);
             $_SESSION['walkin_old']    = [
                 'names' => $textOnly($names), 'ics' => $textOnly($ics), 'contacts' => $textOnly($contacts),
+                'source' => $source,
             ];
             $this->redirect("/admin/walkin?event={$eventId}");
         }
 
-        // 來源: someone at the counter now, or a WhatsApp booking typed in ahead.
-        $source = ($_POST['source'] ?? '') === 'whatsapp' ? 'whatsapp' : 'walkin';
         try {
             $refCode = (new Rsvp())->createWalkIn(
                 $eventId,

@@ -1,0 +1,16 @@
+{
+  "name": "tianyutang-staff",
+  "private": true,
+  "version": "1.0.0",
+  "description": "天玉堂 staff app: the staff pages of the website plus a camera scanner for IC numbers and QR codes",
+  "scripts": {
+    "sync": "cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.6.0",
+    "@capacitor/core": "8.6.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.6.0"
+  }
+}

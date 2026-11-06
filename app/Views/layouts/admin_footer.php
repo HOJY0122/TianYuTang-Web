@@ -76,5 +76,6 @@ document.addEventListener('live:swap', function (e) { tytWrapTables(e.detail); }
 <script src="<?= asset('js/uat.js') ?>"></script>
 <script src="<?= asset('js/image-editor.js') ?>"></script>
 <script src="<?= asset('js/trad-check.js') ?>"></script>
+<script src="<?= asset('js/app-scan.js') ?>"></script>
 </body>
 </html>

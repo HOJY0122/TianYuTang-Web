@@ -134,7 +134,7 @@ Registration, donation and receipt lists sort by clicking a column heading.
 | Personal data | IC / passport numbers encrypted in the database (AES-256-GCM) with a keyed hash for lookups; masked on the check-in screen |
 | Secrets | AI service keys encrypted in the database, never sent back to the browser |
 | Files | Receipt photos, bank slips and scans live in `storage/` (outside the web folder) and are shown only to signed-in staff, looked up by record id — never by a path; uploads are re-encoded (no hidden code, no GPS/EXIF), randomly named, and cannot run as scripts |
-| Folders | `app/`, `config/`, `storage/`, `migrations/`, `bin/`, `.git`, `*.sql`, `*.md` are refused even if the whole project folder is served and mod_rewrite is off |
+| Folders | `app/`, `config/`, `storage/`, `migrations/`, `bin/`, `mobile/`, `.github/`, `.git`, `*.sql`, `*.md` are refused even if the whole project folder is served and mod_rewrite is off |
 | Browser | Content-Security-Policy (scripts, connections and form posts only to this site), X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy (camera only for the QR scanner), HSTS on HTTPS; admin pages are never cached |
 | Errors | Visitors see a plain message; details go only to the server's error log |
 

@@ -1574,3 +1574,4 @@ input[aria-invalid="true"]{border-color:#a3281f !important;background:#fff5f3}
 .app-scan-btn:disabled{opacity:.6}
 .in-app [data-scan]{display:none!important}
 label > .app-scan-btn{margin-top:8px;width:100%}
+.app-change-site{display:block;margin:18px auto 0;background:none;border:0;color:#7a6a5a;text-decoration:underline;font-size:14px;cursor:pointer}

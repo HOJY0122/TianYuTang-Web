@@ -62,6 +62,7 @@ $titleEn = t('login.title', 'en', $names);
     <?php $backZh = t('login.back'); $backEn = t('login.back', 'en'); ?>
     <?php if ($backZh !== '' || $backEn !== ''): ?><a class="back" href="<?= url('/') ?>"><?= h(trim($backZh . ' ' . $backEn)) ?></a><?php endif; ?>
   </div>
+<script src="<?= asset('js/app-scan.js') ?>"></script>
 <script>
 document.querySelectorAll('[data-toggle-password]').forEach(function (btn) {
   btn.addEventListener('click', function () {

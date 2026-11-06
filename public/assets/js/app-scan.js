@@ -22,6 +22,20 @@
 
   document.documentElement.classList.add('in-app');
 
+  // Sign-in page: let staff point the app at another address (live ↔ test).
+  var setup = cap.Plugins.TytSetup;
+  var card = document.querySelector('body.login .login-card');
+  if (setup && card) {
+    var change = document.createElement('button');
+    change.type = 'button';
+    change.className = 'app-change-site';
+    change.textContent = '更換網站 Change site';
+    change.addEventListener('click', function () {
+      if (window.confirm('更換這個 App 連接的網站？\nChange the website this app opens?')) setup.resetSite();
+    });
+    card.appendChild(change);
+  }
+
   /** A registration / donation reference inside a scanned QR, else the text itself. */
   function refFrom(text) {
     var m = String(text).toUpperCase().match(/[A-Z0-9]*-?(?:RSVP|DON)-\d+/);

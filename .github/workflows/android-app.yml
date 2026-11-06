@@ -1,31 +1,19 @@
 # Builds the 天玉堂 Staff Android app (mobile/) into an installable APK.
-#
-#   Actions → "Android staff app" → Run workflow → enter the site address
-#   (e.g. https://www.tianyutang.org). When it finishes, download
-#   "tianyutang-staff-apk" at the bottom of the run page.
-#
-# Pushes and pull requests that touch mobile/ also build it, as a check.
-# Optional signing (so a new APK installs over the old one): add the
-# repository secrets described in mobile/README.md.
+# Manual only: Actions → "Android staff app" → Run workflow, then download
+# "tianyutang-staff-apk" from the run page. The APK asks for the site
+# address on first launch, so one build serves every site.
+# (The usual way is Android Studio — see mobile/README.md.)
 name: Android staff app
 
 on:
   workflow_dispatch:
-    inputs:
-      site_url:
-        description: "Site address the app opens (https://…)"
-        required: true
-  push:
-    paths: ["mobile/**", ".github/workflows/android-app.yml"]
-  pull_request:
-    paths: ["mobile/**", ".github/workflows/android-app.yml"]
 
 permissions:
   contents: read
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     defaults:
       run:
@@ -44,20 +32,6 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: mobile/package-lock.json
-
-      - name: Site address
-        env:
-          INPUT_URL: ${{ inputs.site_url }}
-          VAR_URL: ${{ vars.TYT_SITE_URL }}
-        run: |
-          url="${INPUT_URL:-$VAR_URL}"
-          url="${url:-https://tianyutang.example}"
-          case "$url" in
-            https://*|http://*) ;;
-            *) echo "::error::Site address must start with https:// (or http:// for local testing)"; exit 1 ;;
-          esac
-          echo "TYT_SITE_URL=${url%/}" >> "$GITHUB_ENV"
-          echo "Building for ${url%/}"
 
       - name: Install and sync
         run: |

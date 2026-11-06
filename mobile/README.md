@@ -26,54 +26,79 @@ Where the 📷 掃描 Scan button appears (only inside the app):
 NFC: MyKad's chip is a **contact** chip (read by a card reader), not NFC, so
 phones cannot read it by tapping. Camera reading is the way.
 
-## Get the APK (no Android Studio needed)
+## One APK for every site
 
-1. GitHub → **Actions** → **Android staff app** → **Run workflow**.
-2. Enter the site address, e.g. `https://www.tianyutang.org` → Run.
-3. When it is green (≈5–8 min), open the run and download
-   **tianyutang-staff-apk** (a zip with `tianyutang-staff.apk`).
-4. Send the APK to staff phones (WhatsApp / Google Drive). On the phone: open
-   it → allow "Install unknown apps" for that app once → Install.
+The first time the app opens it asks for the **website address** and keeps
+it. So the same APK works for testing and for the live site:
 
-Tip: set a repository **variable** `TYT_SITE_URL` (Settings → Secrets and
-variables → Actions → Variables) and every automatic build uses it.
+- Live site: `https://www.your-domain.org` (must be HTTPS).
+- Testing on the same Wi-Fi: `http://192.168.x.x:8000` (plain http is only
+  accepted for local-network addresses).
+- To switch later: on the sign-in page tap **更換網站 Change site**.
 
-The site must be on **HTTPS** (Cloudflare gives it free). For testing on the
-local network only, `http://192.168.x.x:8000` also works.
+## Build the APK with Android Studio (Windows)
 
-### Same signing key every time (recommended before the event)
+One-time installs: **Android Studio** (includes the Android SDK and Java) and
+**Node.js 22 LTS**.
 
-Without a key, each build is signed with a throw-away key, so a new APK will
-not install over the old one (uninstall first). To keep one key:
-
-```bash
-keytool -genkeypair -v -keystore tyt.jks -alias tyt -keyalg RSA -keysize 2048 -validity 10000
-base64 -w0 tyt.jks > tyt.jks.b64
-```
-
-Add repository **secrets**: `TYT_KEYSTORE_BASE64` (contents of `tyt.jks.b64`),
-`TYT_KEYSTORE_PASSWORD`, `TYT_KEY_ALIAS` (`tyt`), `TYT_KEY_PASSWORD`.
-Keep `tyt.jks` safe and **never commit it** (git ignores `*.jks`).
-
-## Build locally (developers)
-
-Needs Node 22, JDK 21 and the Android SDK (Android Studio).
-
-```bash
-cd mobile
+```powershell
+git clone https://github.com/HOJY0122/TianYuTang-Web.git   # or: git pull
+cd TianYuTang-Web\mobile
 npm ci
-TYT_SITE_URL=https://www.tianyutang.org npx cap sync android
-cd android && ./gradlew assembleDebug     # → app/build/outputs/apk/debug/app-debug.apk
+npx cap sync android
 ```
+
+Then in Android Studio: **Open** → `TianYuTang-Web\mobile\android` → wait for
+Gradle sync → **Build → Build App Bundle(s) / APK(s) → Build APK(s)** →
+**locate** → `app-debug.apk`.
+Or plug in a phone (USB debugging on) and press ▶ **Run**.
+
+After pulling new code, run `npx cap sync android` again before building.
+
+Give the APK to staff (WhatsApp / Google Drive). On the phone: open it →
+allow "Install unknown apps" once → Install.
+
+### Testing against your PC (same Wi-Fi)
+
+```powershell
+cd TianYuTang-Web
+php -S 0.0.0.0:8000 -t public server.php
+ipconfig            # your PC's address, e.g. 192.168.1.20
+```
+
+In the app's setup screen enter `http://192.168.1.20:8000`. (Windows Firewall
+may ask to allow PHP — allow it on private networks.)
+
+### Same signing key every time (before handing out to staff)
+
+A debug APK from another PC will not install over the old one. For the real
+hand-out, make one key and keep it safe (**never commit it** — git ignores
+`*.jks`):
+
+```powershell
+keytool -genkeypair -v -keystore tyt.jks -alias tyt -keyalg RSA -keysize 2048 -validity 10000
+```
+
+Android Studio: **Build → Generate Signed App Bundle / APK → APK** → choose
+`tyt.jks` → release. Use the same key for every later version.
+
+## GitHub Actions (optional)
+
+`.github/workflows/android-app.yml` can build the APK on GitHub instead
+(Actions → Android staff app → Run workflow) once the account's Actions are
+available. Optional secrets for a fixed key: `TYT_KEYSTORE_BASE64`
+(`base64 -w0 tyt.jks`), `TYT_KEYSTORE_PASSWORD`, `TYT_KEY_ALIAS`, `TYT_KEY_PASSWORD`.
 
 ## How it fits together
 
-- `capacitor.config.ts` — which site the app opens (`TYT_SITE_URL`), starting
-  at `/admin/login`. Only that site gets the native bridge; other links open
-  in the phone's browser.
-- `android/app/src/main/java/org/tianyutang/staff/ScanActivity.java` — the
-  camera screen (CameraX + ML Kit text and QR) with the manual box.
-- `.../TytScanPlugin.java` — `Capacitor.Plugins.TytScan.scan({mode})` for the page.
-- Website side: `public/assets/js/app-scan.js` adds the buttons when it runs
-  inside the app (`data-app-scan="ic|qr|any"`, `data-app-scan-submit`); in a
-  normal browser it does nothing.
+- `MainActivity.java` — no address saved → built-in setup screen
+  (`www/index.html`); saved → opens `<site>/admin/login`. Only that site gets
+  the native bridge; other links open in the phone's browser.
+- `SiteAddress.java` — checks and keeps the address (`https://`, or `http://`
+  for 192.168.x.x / 10.x.x.x / 172.16–31.x.x only).
+- `ScanActivity.java` — the camera screen (CameraX + ML Kit text and QR) with
+  the manual box. `TytScanPlugin.java` — `Capacitor.Plugins.TytScan.scan({mode})`.
+- `TytSetupPlugin.java` — `setSite` / `resetSite` / `getSite`.
+- Website side: `public/assets/js/app-scan.js` adds the buttons (and the
+  "Change site" link) when it runs inside the app; in a normal browser it does
+  nothing.

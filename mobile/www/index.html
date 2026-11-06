@@ -1,7 +1,71 @@
 <!doctype html>
-<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>天玉堂 Staff</title></head>
-<body style="font-family:sans-serif;padding:24px;text-align:center">
-<p>正在連線… Connecting…</p>
-<p style="color:#777">如果一直停在這裡，請檢查網絡。<br>If this stays, check the internet connection.</p>
-</body></html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>天玉堂 Staff</title>
+<style>
+  :root { --red: #9f211b; --gold: #d8bf79; --cream: #fbf3e2; --ink: #2b1d14; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: var(--cream); color: var(--ink);
+         font-family: "Noto Sans TC", system-ui, sans-serif; display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
+  .card { width: 100%; max-width: 420px; background: #fff; border: 1px solid var(--gold); border-radius: 18px; padding: 24px 20px; box-shadow: 0 6px 24px rgba(0,0,0,.08); }
+  h1 { margin: 0 0 4px; color: var(--red); font-size: 24px; }
+  .en { color: #7a6a5a; font-size: 14px; }
+  label { display: block; margin: 20px 0 6px; font-weight: 700; }
+  input { width: 100%; font-size: 18px; padding: 14px; border: 2px solid var(--gold); border-radius: 12px; }
+  input:focus { outline: none; border-color: var(--red); }
+  button { width: 100%; margin-top: 14px; min-height: 52px; font-size: 18px; font-weight: 700; color: #fff; background: var(--red); border: 0; border-radius: 12px; }
+  button:disabled { opacity: .6; }
+  .err { color: var(--red); margin-top: 10px; min-height: 1.2em; white-space: pre-line; }
+  .tip { margin-top: 18px; font-size: 14px; color: #6b5b4b; line-height: 1.6; }
+  code { background: #f4ead2; padding: 1px 5px; border-radius: 5px; }
+</style>
+</head>
+<body>
+<form class="card" id="f" novalidate>
+  <h1>天玉堂 工作人員</h1>
+  <div class="en">Staff app — first-time setup</div>
+
+  <label for="url">網站地址 <span class="en">Website address</span></label>
+  <input id="url" type="url" inputmode="url" autocomplete="url" autocapitalize="off" spellcheck="false"
+         placeholder="https://www.tianyutang.org" required>
+  <button id="go" type="submit">儲存並開啟 Save &amp; open</button>
+  <div class="err" id="err" role="alert"></div>
+
+  <div class="tip">
+    只需設定一次，之後打開 App 會直接到登入頁。<br>
+    <span class="en">Set once — afterwards the app opens straight at the sign-in page.</span><br><br>
+    正式網站必須是 <code>https://</code>。測試時（同一 Wi-Fi）可用 <code>http://192.168.x.x:8000</code>。<br>
+    <span class="en">The live site must be https://. For testing on the same Wi-Fi, http://192.168.x.x:8000 also works.</span><br><br>
+    要更換網址：在登入頁按「更換網站 Change site」。<br>
+    <span class="en">To change it later: tap "Change site" on the sign-in page.</span>
+  </div>
+</form>
+<script>
+(function () {
+  'use strict';
+  var f = document.getElementById('f'), input = document.getElementById('url'),
+      go = document.getElementById('go'), err = document.getElementById('err');
+  var setup = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.TytSetup;
+  if (!setup) {
+    err.textContent = '請在 天玉堂 Staff App 內開啟。\nPlease open this inside the 天玉堂 Staff app.';
+    go.disabled = true;
+    return;
+  }
+  f.addEventListener('submit', function (e) {
+    e.preventDefault();
+    err.textContent = '';
+    var v = input.value.trim();
+    if (!v) { input.focus(); return; }
+    go.disabled = true;
+    setup.setSite({ url: v }).catch(function (x) {
+      go.disabled = false;
+      err.textContent = (x && x.message) || '網址不正確。Address not accepted.';
+    });
+  });
+  input.focus();
+})();
+</script>
+</body>
+</html>

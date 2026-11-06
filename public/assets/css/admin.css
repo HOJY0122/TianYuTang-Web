@@ -1454,3 +1454,12 @@ body.ez{margin:0;background:#f7efdc;color:#2b1d14;font-family:"Noto Sans TC","Mi
 .ez-org-hit{border-color:#d8a93a;background:#fff6e0;margin-top:12px}
 .ez-org-hit .ez-row-main>small:first-child{color:#9f211b;font-weight:900;font-size:14px}
 .ez-org-hit .ez-row-main b .icon{width:20px;height:20px;vertical-align:-3px}
+
+/* Live IC / phone checks (js/validate.js), as on the public form. */
+.field-error{margin:6px 0 0;color:#a3281f;font-size:14px;font-weight:700;white-space:pre-line;line-height:1.4}
+.field-error:empty,.age-tag:empty{display:none}
+.age-tag{margin:6px 0 0;font-size:14px;font-weight:700;color:#7a6a58}
+.age-tag.ok{color:#2f7d4a}.age-tag.low{display:none}
+input[aria-invalid="true"]{border-color:#a3281f !important;background:#fff5f3}
+.ez-form .field-error,.ez-form .age-tag{font-size:16px}
+.ez-pop-box h2 .en{display:block;font-size:17px;color:#7a6a58;font-weight:700}

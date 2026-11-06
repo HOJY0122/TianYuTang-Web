@@ -161,52 +161,12 @@ require BASE_PATH . '/app/Views/layouts/header.php';
   }
   function max() { return MAX_BY[type()] || 1; }
 
-  // ---- Age from a MyKad number (YYMMDD…), mirroring App\Core\FormRules ----
-  function born(ic) {
-    var d = String(ic).replace(/[\s-]/g, '');
-    if (!/^\d{12}$/.test(d)) return null;
-    var on = new Date(AGE.on + 'T00:00:00');
-    var y = 2000 + +d.slice(0, 2);
-    if (y > on.getFullYear()) y -= 100;
-    var b = new Date(y, +d.slice(2, 4) - 1, +d.slice(4, 6));
-    return b.getMonth() === +d.slice(2, 4) - 1 ? b : null;
-  }
-  function ageOf(b) {
-    var on = new Date(AGE.on + 'T00:00:00');
-    var a = on.getFullYear() - b.getFullYear();
-    if (AGE.basis === 'event' && (on.getMonth() < b.getMonth() || (on.getMonth() === b.getMonth() && on.getDate() < b.getDate()))) a--;
-    return a;
-  }
-  function ageTag(input) {
-    var tag = input.parentNode.querySelector('.age-tag');
-    if (!AGE || !tag) return;
-    var b = born(input.value);
-    if (!b) { tag.textContent = ''; tag.className = 'age-tag'; return; }
-    var a = ageOf(b), ok = a >= AGE.min;
-    tag.className = 'age-tag ' + (ok ? 'ok' : 'low');
-    tag.textContent = (ok ? '✓ ' : '') + b.getFullYear() + ' 年出生 · ' + a + ' 歲 — Born ' + b.getFullYear() + ', age ' + a;
-  }
-  /** '' when this IC meets the age rule, otherwise the message. */
-  function ageProblem(value) {
-    if (!AGE) return '';
-    var b = born(value);
-    if (!b) {
-      return AGE.other === 'block'
-        ? '本活動只接受大馬身份證號碼（用來核對 ' + AGE.min + ' 歲或以上）。\nOnly Malaysian IC numbers are accepted (to check the age of ' + AGE.min + ' and above).'
-        : '';
-    }
-    var a = ageOf(b);
-    if (AGE.who === 'all' && a < AGE.min) {
-      return '本活動只限 ' + AGE.min + ' 歲或以上，此身份證為 ' + a + ' 歲。\nThis event is for ages ' + AGE.min + ' and above — this IC shows age ' + a + '.';
-    }
-    return '';
-  }
-  if (AGE && window.TYTValidate) {
-    window.TYTValidate.extra.ic = function (value, input) {
-      setTimeout(function () { ageTag(input); }, 0);
-      return ageProblem(value);
-    };
-  }
+  // ---- Age from a MyKad number: shared with easy mode / walk-in (js/validate.js) ----
+  var AGEF = AGE && window.TYTValidate ? window.TYTValidate.useAge(AGE) : null;
+  function born(ic) { return AGEF ? AGEF.born(ic) : null; }
+  function ageOf(b) { return AGEF.ageOf(b); }
+  function ageTag(input) { if (AGEF) AGEF.tag(input); }
+  function ageProblem(value) { return AGEF ? AGEF.problem(value) : ''; }
 
   // 1 → 一, 12 → 十二: Chinese numerals suit the brush heading font; the
   // digit itself goes in the round badge, in the plain font.

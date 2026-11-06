@@ -176,11 +176,11 @@ function renderRows() {
       <div class="form-row">
         <div>
           <label>身份證號碼｜IC No. *</label>
-          <input name="attendee_ic[]" maxlength="30" placeholder="例如：651020-10-2020" required>
+          <input name="attendee_ic[]" maxlength="30" placeholder="例如：651020-10-2020" required data-validate="ic" inputmode="numeric" autocomplete="off">
         </div>
         <div>
           <label>聯絡號碼｜Contact（選填）</label>
-          <input name="attendee_contact[]" maxlength="30" inputmode="tel" placeholder="例如：012 345 6789">
+          <input name="attendee_contact[]" maxlength="30" inputmode="tel" placeholder="例如：012 345 6789" data-validate="phone" autocomplete="off">
         </div>
       </div>`;
     // Set through .value rather than the HTML, so a name containing a
@@ -206,4 +206,5 @@ document.querySelectorAll('.walkin-source input').forEach(function (r) {
   });
 });
 </script>
+<?php require BASE_PATH . '/app/Views/partials/ic_validate.php'; ?>
 <?php require BASE_PATH . '/app/Views/layouts/admin_footer.php'; ?>

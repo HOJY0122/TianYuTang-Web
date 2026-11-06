@@ -116,6 +116,13 @@ final class FormRules
         ];
     }
 
+    /** The age rule for the browser (js/validate.js useAge), or null when it is off. */
+    public static function ageForBrowser(array $event, ?array $site = null): ?array
+    {
+        $rule = self::ageRule($site);
+        return $rule === null ? null : $rule + ['on' => self::ageDate($event)->format('Y-m-d')];
+    }
+
     /** The date ages are counted on: the event's first day, or today if it has none. */
     public static function ageDate(array $event): \DateTimeImmutable
     {

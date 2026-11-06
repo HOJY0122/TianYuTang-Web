@@ -98,11 +98,11 @@ class Text
         'donate.counter'      => ['donate', '歡迎於活動當日親臨櫃台布施。', 'You are welcome to give at the counter on the day.'],
 
         // --- Confirmation ---
-        'success.rsvp_title'  => ['success', '報名成功', 'Registration complete'],
-        'success.rsvp_text'   => ['success', '我們已收到您的報名，請記下報名編號。', 'We have received your registration — please note your reference number.', true],
-        'success.rsvp_qr'     => ['success', '工作人員確認報名後，會以 WhatsApp 把報到 QR Code 發送給您。活動當天出示即可報到。', 'Once our staff have checked your registration, they will send your check-in QR code by WhatsApp. Show it at the counter on the day.', true],
-        'success.don_title'   => ['success', '感恩您的布施', 'Thank you for your donation'],
-        'success.don_text'    => ['success', '您的布施資料已收到，工作人員會盡快與您聯繫確認付款。', 'We have received your donation details. Our staff will contact you about payment.', true],
+        'success.rsvp_title'  => ['success', '🙏 感謝您的報名！', 'Thank you for your registration!'],
+        'success.rsvp_text'   => ['success', "您的 RSVP 已成功提交。\n期待與您共襄盛舉，共沾福澤！", "Your RSVP has been successfully submitted.\nWe look forward to welcoming you to the event!", true],
+        'success.rsvp_note'   => ['success', '活動當日登記時，請出示您的身份證（IC）以供工作人員核對報名資料。', 'On the event day, please present your IC at the registration counter for verification of your registration details.', true],
+        'success.don_title'   => ['success', '🙏 感謝您的發心與支持！', 'Thank you for your kind generosity and support.'],
+        'success.don_text'    => ['success', "您的布施資料已成功提交。\n願福澤廣被，平安吉祥。\n\n我們的志工將會盡快與您聯絡。", "Your donation details have been successfully submitted.\nWishing your family peace, wisdom and abundant blessings.\n\nOur volunteers will contact you as soon as possible.", true],
         'success.leave'       => ['success', '離開後本頁面將無法再次開啟，請先截圖保存。', 'This page cannot be opened again once you leave — please save a screenshot.', true],
 
         // --- Gallery ---

@@ -38,14 +38,25 @@ class ZaiEasyController extends Controller
         $event = (new Event())->active();
         $q = mb_substr(trim((string) ($_GET['q'] ?? '')), 0, 40);
         $people = [];
+        $orgs = [];
         $more = 0;
         if ($q !== '') {
             $rsvp = new Rsvp();
             $all = [];
             $groups = $rsvp->searchGroups((int) $event['id'], ['q' => $q], 30);
             $more = count($groups) >= 30 ? 30 : 0;      // there may be more: ask for another letter
+            // People who registered as part of a 團體 group are seated with their
+            // group (option ②), not one by one: show a button to that group instead.
+            $zaiGroups = (new Zai())->groupsForRsvp((int) $event['id'], array_column(array_filter($groups,
+                static fn($g) => $g['reg_type'] === 'organisation' && $g['status'] !== 'cancelled'), 'id'));
             foreach ($groups as $g) {
                 if ($g['status'] === 'cancelled') {
+                    continue;
+                }
+                if (isset($zaiGroups[(int) $g['id']])) {
+                    $z = $zaiGroups[(int) $g['id']];
+                    $orgs[(int) $z['id']] = $z + ['ref_code' => $g['ref_code'],
+                        'members' => array_column($rsvp->attendeesOf((int) $g['id']), 'name')];
                     continue;
                 }
                 foreach ($rsvp->attendeesOf((int) $g['id']) as $a) {
@@ -58,7 +69,11 @@ class ZaiEasyController extends Controller
                 $people[] = $a;
             }
         }
-        $this->screen('find', ['q' => $q, 'people' => $people, 'more' => $more]);
+        // Find pressed and the only match is one group: go straight there.
+        if (count($orgs) === 1 && !$people && empty($_SERVER['HTTP_X_LIVE_SEARCH'])) {
+            $this->redirect('/admin/zai/easy/group?id=' . (int) array_key_first($orgs) . '&from=find');
+        }
+        $this->screen('find', ['q' => $q, 'people' => $people, 'orgs' => $orgs, 'more' => $more]);
     }
 
     /**

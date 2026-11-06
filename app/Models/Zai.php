@@ -280,6 +280,25 @@ class Zai extends Model
         }
     }
 
+    /**
+     * The 施齋 group rows for these online organisation registrations
+     * (rsvp_group_id => row), creating any that are missing first.
+     */
+    public function groupsForRsvp(int $eventId, array $rsvpGroupIds): array
+    {
+        if (!$rsvpGroupIds) {
+            return [];
+        }
+        $this->syncOrganisations($eventId);
+        $ids = array_values(array_unique(array_map('intval', $rsvpGroupIds)));
+        $out = [];
+        foreach ($this->fetchAll('SELECT * FROM zai_groups WHERE event_id = ? AND rsvp_group_id IN (' . implode(',', array_fill(0, count($ids), '?')) . ')',
+            array_merge([$eventId], $ids)) as $r) {
+            $out[(int) $r['rsvp_group_id']] = $r;
+        }
+        return $out;
+    }
+
     public function group(int $id): ?array
     {
         return $this->fetchOne('SELECT * FROM zai_groups WHERE id = ?', [$id]);

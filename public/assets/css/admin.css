@@ -1451,3 +1451,6 @@ body.ez{margin:0;background:#f7efdc;color:#2b1d14;font-family:"Noto Sans TC","Mi
 .ez-pop-box .ez-btn{margin-top:14px}
 .ez-pname small.ez-id{color:#2b1d14;font-size:16px}
 .ez-pname small.ez-id .icon{width:14px;height:14px;vertical-align:-2px}
+.ez-org-hit{border-color:#d8a93a;background:#fff6e0;margin-top:12px}
+.ez-org-hit .ez-row-main>small:first-child{color:#9f211b;font-weight:900;font-size:14px}
+.ez-org-hit .ez-row-main b .icon{width:20px;height:20px;vertical-align:-3px}

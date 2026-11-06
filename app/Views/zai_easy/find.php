@@ -12,7 +12,15 @@ require __DIR__ . '/_top.php';
 
 <div id="ezResults" aria-live="polite">
 
-<?php if ($q !== '' && !$people): ?>
+<?php foreach ($orgs ?? [] as $zid => $o): $done = $o['status'] === 'arrived'; ?>
+  <a class="ez-row ez-org-hit<?= $done ? ' is-done' : '' ?>" href="<?= url('/admin/zai/easy/group') ?>?id=<?= (int) $zid ?>">
+    <span class="ez-row-main"><small>這是團體報名 · Registered as a group</small>
+      <b><?= icon('users') ?> <?= h($o['name']) ?></b>
+      <small><?= h($o['ref_code']) ?> · <?= (int) $o['people'] ?> 人 · <?= h(implode('、', array_slice($o['members'], 0, 4))) ?><?= count($o['members']) > 4 ? ' …' : '' ?></small></span>
+    <span class="ez-row-state"><?= $done ? '✓ 已到<br>第 ' . h($o['tables'] ?? '') . ' 桌' : '去團體 →<br><small>Go to group</small>' ?></span>
+  </a>
+<?php endforeach; ?>
+<?php if ($q !== '' && !$people && empty($orgs)): ?>
   <div class="ez-msg ez-warn">
     <b>找不到 Not found</b>
     <p>請再看一次號碼。如果真的沒有登記，請排候補。<br><span class="en">Check the number again. If they really did not register, add them to the waiting list.</span></p>

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>天玉堂 Staff</title>
+<style>
+  :root { --red: #9f211b; --gold: #d8bf79; --cream: #fbf3e2; --ink: #2b1d14; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: var(--cream); color: var(--ink);
+         font-family: "Noto Sans TC", system-ui, sans-serif; display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
+  .card { width: 100%; max-width: 420px; background: #fff; border: 1px solid var(--gold); border-radius: 18px; padding: 24px 20px; }
+  h1 { margin: 0 0 4px; color: var(--red); font-size: 22px; }
+  .en { color: #7a6a5a; font-size: 14px; }
+  .site { margin: 14px 0; padding: 10px 12px; background: #f4ead2; border-radius: 10px; word-break: break-all; font-family: monospace; }
+  button { width: 100%; margin-top: 12px; min-height: 52px; font-size: 18px; font-weight: 700; border-radius: 12px; border: 0; }
+  .retry { color: #fff; background: var(--red); }
+  .change { color: var(--red); background: #fff8e1; border: 1px solid var(--gold); }
+  ul { padding-left: 20px; line-height: 1.7; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>連不上網站</h1>
+  <div class="en">Cannot reach the website</div>
+  <div class="site" id="site">…</div>
+  <ul>
+    <li>手機有連上網絡／同一個 Wi-Fi 嗎？<span class="en">Is the phone online / on the same Wi-Fi?</span></li>
+    <li>測試用的電腦伺服器有開著嗎？<span class="en">Is the test server on the PC running?</span></li>
+    <li>網址打對了嗎？<span class="en">Is the address right?</span></li>
+  </ul>
+  <button class="retry" id="retry">再試一次 Retry</button>
+  <button class="change" id="change">更換網站 Change site</button>
+</div>
+<script>
+(function () {
+  'use strict';
+  var setup = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.TytSetup;
+  var start = null;
+  if (setup) {
+    setup.getSite().then(function (r) {
+      document.getElementById('site').textContent = (r && r.url) || '—';
+      if (r && r.url) start = r.url + '/admin/login';
+    });
+  }
+  document.getElementById('retry').addEventListener('click', function () {
+    if (start) location.href = start; else location.reload();
+  });
+  document.getElementById('change').addEventListener('click', function () {
+    if (setup) setup.resetSite();
+  });
+})();
+</script>
+</body>
+</html>

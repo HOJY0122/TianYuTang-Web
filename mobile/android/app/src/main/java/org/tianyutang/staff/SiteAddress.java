@@ -53,12 +53,19 @@ final class SiteAddress {
         if (typed == null) return null;
         String s = typed.trim();
         if (s.isEmpty() || s.length() > 300) return null;
-        if (!s.contains("://")) s = "https://" + s;
+        // Forgive "http:192.168.0.5:8000" / "https:/x" (missing slashes) and spaces.
+        s = s.replace(" ", "").replaceFirst("(?i)^(https?):/*", "$1://");
+        if (!s.contains("://")) {
+            // "192.168.1.20:8000" typed without http:// is a PC on this Wi-Fi
+            // (plain http); anything else is assumed to be the HTTPS site.
+            String hostPart = s.split("[/:]", 2)[0];
+            s = (isLocalNetwork(hostPart) ? "http://" : "https://") + s;
+        }
         Uri u = Uri.parse(s);
         String scheme = u.getScheme() == null ? "" : u.getScheme().toLowerCase(Locale.ROOT);
         String host = u.getHost() == null ? "" : u.getHost().toLowerCase(Locale.ROOT);
         if (host.isEmpty() || u.getUserInfo() != null || u.getQuery() != null || u.getFragment() != null) return null;
-        if (!host.matches("[a-z0-9.-]+")) return null;
+        if (!host.matches("[a-z0-9.-]+") || !host.contains(".")) return null;
         if ("http".equals(scheme)) {
             if (!isLocalNetwork(host)) return null;
         } else if (!"https".equals(scheme)) {

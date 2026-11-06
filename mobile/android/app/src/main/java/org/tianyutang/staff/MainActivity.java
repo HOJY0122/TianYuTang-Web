@@ -22,6 +22,8 @@ public class MainActivity extends BridgeActivity {
                     .setServerUrl(SiteAddress.origin(site))
                     .setStartPath(SiteAddress.path(site) + "/admin/login")
                     .setAllowMixedContent(false)
+                    // Site unreachable → built-in page with Retry / Change site
+                    .setErrorPath("error.html")
                     .setWebContentsDebuggingEnabled((getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0)
                     .create();
         }

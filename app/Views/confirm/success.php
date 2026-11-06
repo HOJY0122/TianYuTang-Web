@@ -22,8 +22,13 @@ require BASE_PATH . '/app/Views/layouts/header.php';
       <div class="ref-code"><?= h($refCode) ?></div>
     </div>
     <?php if ($isRsvp): ?>
-      <div class="confirm-remark"><b>備註<span class="en">Remarks</span></b>
-        <p><?= icon('id-card') ?> <span><?= tb('success.rsvp_note') ?></span></p></div>
+      <!-- Each heading with its own language: 備註 starts the Chinese line, Remarks the English one. -->
+      <div class="confirm-remark">
+        <p class="cr-zh"><?= icon('id-card') ?> <span><b>備註：</b><?= h(t('success.rsvp_note', 'zh')) ?></span></p>
+        <?php if (($remarkEn = t('success.rsvp_note', 'en')) !== ''): ?>
+          <p class="cr-en"><b>Remarks:</b> <?= h($remarkEn) ?></p>
+        <?php endif; ?>
+      </div>
     <?php endif; ?>
 
     <?php if ($isRsvp): ?>

@@ -38,15 +38,17 @@ class ZaiEasyController extends Controller
         $event = (new Event())->active();
         $q = mb_substr(trim((string) ($_GET['q'] ?? '')), 0, 40);
         $people = [];
-        $orgs = [];
+        $members = [];      // people found who belong to a 團體 group
         $more = 0;
         if ($q !== '') {
             $rsvp = new Rsvp();
             $all = [];
             $groups = $rsvp->searchGroups((int) $event['id'], ['q' => $q], 30);
             $more = count($groups) >= 30 ? 30 : 0;      // there may be more: ask for another letter
-            // People who registered as part of a 團體 group are seated with their
-            // group (option ②), not one by one: show a button to that group instead.
+            // ① is for people. A 團體 group is never listed here as a group (its
+            // name or reference matching is not enough): only a member whose own
+            // name / IC / phone matches shows, as a person who "belongs to group X"
+            // — tapping them offers to go to that group (option ②).
             $zaiGroups = (new Zai())->groupsForRsvp((int) $event['id'], array_column(array_filter($groups,
                 static fn($g) => $g['reg_type'] === 'organisation' && $g['status'] !== 'cancelled'), 'id'));
             foreach ($groups as $g) {
@@ -55,8 +57,11 @@ class ZaiEasyController extends Controller
                 }
                 if (isset($zaiGroups[(int) $g['id']])) {
                     $z = $zaiGroups[(int) $g['id']];
-                    $orgs[(int) $z['id']] = $z + ['ref_code' => $g['ref_code'],
-                        'members' => array_column($rsvp->attendeesOf((int) $g['id']), 'name')];
+                    foreach ($rsvp->attendeesOf((int) $g['id']) as $a) {
+                        if (self::personMatches($a, $q)) {
+                            $members[] = $a + ['group' => $z, 'ref_code' => $g['ref_code']];
+                        }
+                    }
                     continue;
                 }
                 foreach ($rsvp->attendeesOf((int) $g['id']) as $a) {
@@ -69,11 +74,32 @@ class ZaiEasyController extends Controller
                 $people[] = $a;
             }
         }
-        // Find pressed and the only match is one group: go straight there.
-        if (count($orgs) === 1 && !$people && empty($_SERVER['HTTP_X_LIVE_SEARCH'])) {
-            $this->redirect('/admin/zai/easy/group?id=' . (int) array_key_first($orgs) . '&from=find');
+        $this->screen('find', ['q' => $q, 'people' => $people, 'members' => $members, 'more' => $more,
+            // Find pressed (not live typing) and the only match is one group member:
+            // open the "belongs to a group" box at once.
+            'autoOpen' => count($members) === 1 && !$people && empty($_SERVER['HTTP_X_LIVE_SEARCH'])]);
+    }
+
+    /**
+     * Does this person (not their group) match what was typed? Mirrors the
+     * search: name anywhere (case / spaces ignored); a number from the START
+     * of the IC or phone; the IC's last 4 digits; the whole IC.
+     */
+    private static function personMatches(array $a, string $q): bool
+    {
+        $name = Rsvp::nameKey((string) $a['name']);
+        $key  = Rsvp::nameKey($q);
+        if ($key !== '' && mb_strpos($name, $key) !== false) {
+            return true;
         }
-        $this->screen('find', ['q' => $q, 'people' => $people, 'orgs' => $orgs, 'more' => $more]);
+        $ic = Rsvp::icNormal((string) ($a['ic_no'] ?? ''));
+        $qi = Rsvp::icNormal($q);
+        if ($qi !== '' && preg_match('/\d/', $qi) && $ic !== '' && (str_starts_with($ic, $qi) || (strlen($qi) === 4 && str_ends_with($ic, $qi)))) {
+            return true;
+        }
+        $digits = preg_replace('/\D/', '', $q);
+        $phone  = preg_replace('/\D/', '', (string) ($a['contact_no'] ?? ''));
+        return preg_match('/^[\d\s\-+]+$/', $q) === 1 && $digits !== '' && $phone !== '' && str_starts_with($phone, $digits);
     }
 
     /**

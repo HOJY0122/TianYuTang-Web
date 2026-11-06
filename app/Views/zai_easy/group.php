@@ -6,8 +6,10 @@ $mine = App\Models\Zai::tableList((string) ($g['tables'] ?? ''));
 // Seats left at each table, not counting this group's own people already there.
 $ownSpread = App\Models\Zai::spread($g, array_map(static fn($t) => $t['seats'], $seating));
 ?>
-<?php if (($_GET['from'] ?? '') === 'find'): ?>
-  <div class="ez-msg ez-info"><b>這個人是團體報名 ✓</b><p>請在這裡跟整個團體一起處理。<br><span class="en">This person registered as part of a group — handle the whole group here.</span></p></div>
+<?php if (($_GET['from'] ?? '') === 'find'): $who = mb_substr(trim((string) ($_GET['who'] ?? '')), 0, 100); $fq = mb_substr(trim((string) ($_GET['q'] ?? '')), 0, 40); ?>
+  <div class="ez-msg ez-info"><b><?= $who !== '' ? '「' . h($who) . '」' : '這個人' ?>屬於這個團體 ✓</b>
+    <p>請在這裡跟整個團體一起處理。<br><span class="en"><?= $who !== '' ? h($who) : 'This person' ?> belongs to this group — handle the whole group here.</span></p>
+    <?php if ($fq !== ''): ?><a class="ez-back-search" href="<?= url('/admin/zai/easy/find') ?>?q=<?= urlencode($fq) ?>">← 回到搜尋「<?= h($fq) ?>」 <span class="en">Back to the search</span></a><?php endif; ?></div>
 <?php endif; ?>
 <form method="POST" action="<?= url('/admin/zai/easy/group') ?>" class="ez-group">
   <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $g['id'] ?>">

@@ -267,6 +267,12 @@ class ZaiEasyController extends Controller
             $this->redirect('/admin/zai/easy/groups');
         }
         $tables = array_slice(Zai::tableList(implode(',', array_map('strval', (array) ($_POST['tables'] ?? [])))), 0, 30);
+        // Already booked and not opened with 換桌: keep its tables whatever was sent
+        // (the screen locks them; this stops a crafted or stale form changing them).
+        $booked = Zai::tableList((string) ($g['tables'] ?? ''));
+        if ($booked && empty($_POST['change'])) {
+            $tables = $booked;
+        }
         // A group takes WHOLE tables: each must be empty or already this group's.
         // Checked here too — another phone may have used it since the screen opened.
         $seatingNow = $zai->seating((int) $event['id']);

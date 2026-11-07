@@ -147,8 +147,8 @@ class WalkinController extends Controller
             $zai = new Zai();
             foreach ($attendees as $n => $a) {
                 if (($reg = $zai->registeredIc($eventId, $a['ic'])) !== null) {
-                    $errors[] = '第 ' . ($n + 1) . " 位已在網上報名：{$reg['name']}（{$reg['ref_code']}），請用「現場報到」。"
-                              . "Already registered online ({$reg['ref_code']}) — use Check-in instead.";
+                    $errors[] = '第 ' . ($n + 1) . " 位已在網上報名：{$reg['name']}（{$reg['ref_code']}），不用再登記，施齋當天在「施齋入座」確認。"
+                              . "Already registered online ({$reg['ref_code']}) — no need to register again; confirm them in 施齋入座 on Day 3.";
                 }
             }
         }
@@ -183,8 +183,8 @@ class WalkinController extends Controller
         $count = count($attendees);
         $who = "{$refCode}　{$attendees[0]['name']}" . ($count > 1 ? " 等 {$count} 位" : '');
         $source === 'whatsapp'
-            ? $this->flash('success', '已登記 WhatsApp 預約', $who . "　已登記（當天到場再報到）。\nWhatsApp booking saved — they check in on the day.")
-            : $this->flash('success', '已登記並報到', $who . '　已登記並完成報到。');
+            ? $this->flash('success', '已登記 WhatsApp 預約', $who . "　已登記。施齋當天在「施齋入座」確認入座。\nWhatsApp booking saved — confirm and seat them in 施齋入座 on Day 3.")
+            : $this->flash('success', '已登記', $who . "　已登記。施齋當天在「施齋入座」確認入座。\nRegistered — confirm and seat them in 施齋入座 on Day 3.");
         $this->redirect("/admin/walkin?event={$eventId}");
     }
 
@@ -201,8 +201,8 @@ class WalkinController extends Controller
         $event = (new Event())->find((int) ($_GET['event'] ?? 0)) ?? (new Event())->active();
         $reg = $ic === null ? null : (new Zai())->registeredIc((int) $event['id'], $ic);
         echo json_encode(['message' => $reg === null ? '' :
-            "此身份證已經報名（{$reg['ref_code']} {$reg['name']}），不能再登記。如已到場，請用「現場報到」。\n"
-            . "This IC is already registered ({$reg['ref_code']} {$reg['name']}) — it cannot be registered again. If they are here, use Check-in."],
+            "此身份證已經報名（{$reg['ref_code']} {$reg['name']}），不能再登記。施齋當天在「施齋入座」確認即可。\n"
+            . "This IC is already registered ({$reg['ref_code']} {$reg['name']}) — it cannot be registered again. Confirm them in 施齋入座 on Day 3."],
             JSON_UNESCAPED_UNICODE);
         exit;
     }

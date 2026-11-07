@@ -100,19 +100,13 @@ class Rsvp extends Model
 
             foreach ($attendees as $a) {
                 $this->execute(
-                    'INSERT INTO rsvp_attendees (group_id, name, ic_no, ic_hash, ic_last4, contact_no, checked_in_at)
-                     VALUES (?, ?, ?, ?, ?, ?, ' . ($source === 'walkin' ? 'NOW()' : 'NULL') . ')',
+                    // Registering only: walk-ins sign up on Day 1–2 for the Day 3
+                    // meal (after online registration closed). They arrive when
+                    // 施齋入座 confirms them, like any online registration.
+                    'INSERT INTO rsvp_attendees (group_id, name, ic_no, ic_hash, ic_last4, contact_no)
+                     VALUES (?, ?, ?, ?, ?, ?)',
                     array_merge([$groupId, $a['name']], self::icColumns($a['ic']), [$a['contact']])
                 );
-                // Someone registering at the desk is here: Day 3 (where
-                // "arrived" is decided) has them confirmed, not yet seated.
-                if ($source === 'walkin') {
-                    $this->execute(
-                        "INSERT INTO zai_people (attendee_id, event_id, status, table_no, updated_by)
-                         VALUES (?, ?, 'confirmed', NULL, ?)",
-                        [(int) $this->db->lastInsertId(), $eventId, $recordedBy]
-                    );
-                }
             }
 
             $this->db->commit();

@@ -46,10 +46,9 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     <?php endif; ?>
 
     <p class="help" style="margin-top:14px">
-      登記當天才到場、沒有事先在網站報名的善信。
-      儲存後會<strong>直接確認並完成報到</strong>，不必再到報到頁掃描，
-      人數會立刻計入現場統計。<br>
-      <span class="en">For people who arrive on the day without registering online. Saving confirms and checks them in at once — no scan needed.</span>
+      為沒有在網上報名的善信登記施齋（例如第一、二天來登記，網上報名已截止）。
+      儲存後成為一筆報名紀錄；<strong>施齋當天在「施齋入座」確認入座</strong>，才算到場。<br>
+      <span class="en">Register people for the Day 3 meal who did not sign up online (e.g. they come on Day 1 or 2, after online registration closed). It becomes a registration; on Day 3 they are confirmed and seated in 施齋入座, like everyone else.</span>
     </p>
 
     <?php if (count($allEvents) > 1): ?>
@@ -74,7 +73,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
         <label class="seg-on"><input type="radio" name="source" value="walkin"<?= $oldSource === 'walkin' ? ' checked' : '' ?>><span><?= icon('walk') ?> 現場 Walk-in</span></label>
         <label class="seg-on"><input type="radio" name="source" value="whatsapp"<?= $oldSource === 'whatsapp' ? ' checked' : '' ?>><span><?= icon('phone') ?> WhatsApp 預約</span></label>
       </div>
-      <p class="help" id="sourceHelp">現場：1 人 1 身份證，登記並立即報到。WhatsApp：只登記，當天到場再報到。<span class="en">Walk-in: one person, one IC — registered and checked in. WhatsApp: registered only — they check in on the day.</span></p>
+      <p class="help" id="sourceHelp">現場：1 人 1 身份證，當面登記。WhatsApp：電話／WhatsApp 預約。施齋當天都在「施齋入座」確認。<span class="en">Walk-in: one person, one IC, registered in person. WhatsApp: a phone / WhatsApp booking. Both are confirmed in 施齋入座 on Day 3.</span></p>
 
       <div id="rowCountBox"<?= $oldSource === 'walkin' ? ' hidden' : '' ?>>
       <label for="rowCount">人數｜Number of People</label>
@@ -88,7 +87,7 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
       <div id="walkinRows"></div>
 
       <div class="form-actions">
-        <button class="primary" type="submit" id="walkinSubmit"><?= icon('walk') ?> <span data-for="walkin"<?= $oldSource === 'walkin' ? '' : ' hidden' ?>>登記並報到 <span class="en">Register &amp; check in</span></span><span data-for="whatsapp"<?= $oldSource === 'whatsapp' ? '' : ' hidden' ?>>登記 WhatsApp 預約 <span class="en">Save booking</span></span></button>
+        <button class="primary" type="submit" id="walkinSubmit"><?= icon('walk') ?> <span data-for="walkin"<?= $oldSource === 'walkin' ? '' : ' hidden' ?>>登記 <span class="en">Register</span></span><span data-for="whatsapp"<?= $oldSource === 'whatsapp' ? '' : ' hidden' ?>>登記 WhatsApp 預約 <span class="en">Save booking</span></span></button>
       </div>
     </form>
   </div>
@@ -136,11 +135,11 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     <summary><span><?= icon('compass') ?> 現場報名 <span class="en">Walk-in tips</span></span><span class="guide-toggle" aria-hidden="true">顯示 Show ▾</span></summary>
 
     <ul>
-      <li>適用於當天才到、沒有網上報名的善信。<span class="en">For people who did not register online.</span></li>
-      <li>儲存後即自動報到，不必再掃描。<span class="en">Saving also checks them in — no scan needed.</span></li>
+      <li>適用於沒有網上報名的善信（例如第一、二天到場登記）。<span class="en">For people who did not register online (e.g. on Day 1 or 2).</span></li>
+      <li>施齋當天在「施齋入座」搜尋身份證，確認並安排桌號。<span class="en">On Day 3, find them by IC in 施齋入座 to confirm and seat them.</span></li>
       <li>現場報名 1 人 1 身份證（必填），年齡規定與網上報名相同。<span class="en">Walk-in: one person, one IC (required); same age rule as online registration.</span></li>
       <li>電話可留空。<span class="en">The phone number is optional.</span></li>
-      <li>已在網上報名？請用「現場報到」。<span class="en">Registered online? Use Check-in instead.</span></li>
+      <li>已在網上報名？不用再登記，施齋當天在「施齋入座」確認即可。<span class="en">Registered online? No need to register again — confirm them in 施齋入座 on Day 3.</span></li>
     </ul>
   </details>
   </div>

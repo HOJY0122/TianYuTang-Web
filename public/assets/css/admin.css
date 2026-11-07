@@ -1575,3 +1575,60 @@ input[aria-invalid="true"]{border-color:#a3281f !important;background:#fff5f3}
 .in-app [data-scan]{display:none!important}
 label > .app-scan-btn{margin-top:8px;width:100%}
 .app-change-site{display:block;margin:18px auto 0;background:none;border:0;color:#7a6a5a;text-decoration:underline;font-size:14px;cursor:pointer}
+
+/* ---------- 施齋 Day 3 overview: reserved / arrived / seats ---------- */
+.zov-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:14px}
+@media (max-width:1000px){ .zov-cards{grid-template-columns:1fr} }
+.zov-card{background:var(--card,#fffaf0);border:1px solid #eadcb5;border-radius:16px;padding:18px 20px;box-shadow:0 6px 18px rgba(67,39,18,.07)}
+.zov-head{display:flex;align-items:center;gap:8px;font-weight:800;color:#9f211b;font-size:16px}
+.zov-head .en{font-weight:600;color:#7a6a58;font-size:13px}
+.zov-head svg{width:20px;height:20px}
+.zov-big{font-size:44px;font-weight:900;line-height:1.1;margin:8px 0 10px;color:#2b1d14;font-variant-numeric:tabular-nums}
+.zov-big small{font-size:15px;font-weight:700;color:#7a6a58;margin-left:8px}
+.zov-stack{display:flex;height:12px;border-radius:99px;overflow:hidden;background:#f1e7cf;gap:2px}
+.zov-stack i{display:block;min-width:6px}
+.zov-bar{height:12px;border-radius:99px;background:#f1e7cf;overflow:hidden}
+.zov-bar i{display:block;height:100%;border-radius:99px;background:#3f7a45}
+.zov-bar.seats i{background:#b58a35}
+.zov-bar.is-over i{background:#c0392b}
+.zov-legend{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:6px}
+.zov-legend li{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700}
+.zov-legend li .en{font-weight:500;color:#7a6a58;font-size:12px}
+.zov-legend li b{margin-left:auto;font-size:16px;font-variant-numeric:tabular-nums}
+.zov-legend li b small{font-weight:600;color:#7a6a58}
+.zov-legend .dot{width:12px;height:12px;border-radius:4px;flex:none}
+.s-online{background:#9f211b}.s-whatsapp{background:#2e8b57}.s-walkin{background:#5b7fb5}.s-groups{background:#d4a017}.s-waiting{background:#8e6bb8}
+.zov-note{margin:10px 0 0;font-size:12px;color:#7a6a58;line-height:1.5}
+.zov-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.zov-chip{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid #eadcb5;border-radius:999px;background:#fffdf6;font-size:13px;font-weight:700;color:#2b1d14;text-decoration:none}
+.zov-chip svg{width:16px;height:16px}
+.zov-chip .en{font-weight:500;color:#7a6a58}
+.zov-chip b{font-size:15px}
+.zov-chip.warn{border-color:#e7b84b;background:#fff4d6}
+.zov-chip:hover{border-color:#9f211b}
+.zov-alert{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;margin-bottom:16px;border-radius:14px;background:#fdebe8;border:1px solid #e3a39c;color:#7b1e16}
+.zov-alert svg{width:22px;height:22px;flex:none;margin-top:2px}
+.zov-alert a{display:inline-block;margin:6px 6px 4px 0;padding:4px 10px;border-radius:999px;background:#fff;border:1px solid #e3a39c;color:#9f211b;font-weight:800;text-decoration:none}
+.zov-alert small{color:#8a4a42}
+.zov-tables-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px}
+.zov-tables-head h2{margin-bottom:6px}
+.zov-key{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:12px;font-size:12px;font-weight:700}
+.zov-key li{display:flex;align-items:center;gap:5px}
+.zov-key .en{font-weight:500;color:#7a6a58}
+.zov-key .k{width:14px;height:14px;border-radius:4px;border:2px solid}
+.zov-key .k.free{background:#f2f8ee;border-color:#cfe0c6}.zov-key .k.full{background:#fff7dc;border-color:#e7cf7d}
+.zov-key .k.over{background:#fdebe8;border-color:#e3a39c}.zov-key .k.grp{background:#fff;border-color:#8e6bb8;border-style:dashed}
+.zov-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px}
+.zov-grid .zai-table summary{position:relative;gap:4px;padding:12px 10px 10px}
+.zov-grid .zai-table summary b{font-size:26px}
+.zov-grid .zai-table.is-group{box-shadow:inset 0 0 0 2px #8e6bb8;}
+.zov-grid .zai-table summary em{position:absolute;top:6px;right:8px;font-style:normal;font-size:10px;font-weight:800;color:#fff;background:#8e6bb8;border-radius:6px;padding:1px 5px}
+.zov-fill{display:block;width:100%;height:6px;border-radius:99px;background:rgba(0,0,0,.08);overflow:hidden;margin-top:2px}
+.zov-fill i{display:block;height:100%;background:#3f7a45;border-radius:99px}
+.zai-table.is-full .zov-fill i{background:#b58a35}
+.zai-table.is-over .zov-fill i{background:#c0392b}
+@media (max-width:600px){
+  .zov-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .zov-grid .zai-table summary b{font-size:20px}
+  .zov-big{font-size:38px}
+}

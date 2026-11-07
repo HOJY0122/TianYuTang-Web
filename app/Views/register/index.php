@@ -284,16 +284,16 @@ require BASE_PATH . '/app/Views/layouts/header.php';
   function field(row, n) { return row.querySelector('[name="attendee_' + n + '[]"]'); }
 
   function renumber() {
-    var list = rows(), M = max(), org = type() === 'organisation';
+    var list = rows(), M = max();
     var firstTel = list[0] ? field(list[0], 'contact').value.trim() : '';
     list.forEach(function (row, i) {
       var lead = i === 0;
       row.querySelector('.num-pill').textContent = i + 1;
       var name = field(row, 'name').value.trim();
-      row.querySelector('.att-name').textContent = name || ('第' + zhNum(i + 1) + '位' + (lead ? (org ? '（團體聯絡人）' : '（聯絡人）') : ''));
+      row.querySelector('.att-name').textContent = name || ('第' + zhNum(i + 1) + '位');
       if (window.TYTSimp) row.querySelector('.att-name').classList.toggle('has-simp', TYTSimp.hasSimp(name || ''));
       var sub = [];
-      if (!name) sub.push('Person ' + (i + 1) + (lead ? (org ? ' (group contact)' : ' (main contact)') : ''));
+      if (!name) sub.push('Person ' + (i + 1));
       if (field(row, 'ic').value.trim()) sub.push(maskIc(field(row, 'ic').value));
       if (field(row, 'contact').value.trim()) sub.push(field(row, 'contact').value.trim());
       row.querySelector('.att-sub').textContent = sub.join(' · ');

@@ -18,5 +18,7 @@
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:background">@drawable/splash</item>
+        <!-- Android 12+ launch screen: the app icon on the temple cream colour -->
+        <item name="windowSplashScreenBackground">#FBF3E2</item>
     </style>
 </resources>

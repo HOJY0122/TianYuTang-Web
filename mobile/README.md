@@ -102,3 +102,16 @@ available. Optional secrets for a fixed key: `TYT_KEYSTORE_BASE64`
 - Website side: `public/assets/js/app-scan.js` adds the buttons (and the
   "Change site" link) when it runs inside the app; in a normal browser it does
   nothing.
+
+## App icon and splash screen
+
+Made from `assets/logo.png` (the temple logo, transparent background):
+
+```bash
+pip install pillow
+python mobile/tools/make-icons.py mobile/assets/logo.png mobile/android/app/src/main/res mobile/assets/icon-1024.png
+```
+
+To use a new logo, replace `assets/logo.png`, run the line above, rebuild.
+Android 12+ shows the icon on the cream launch colour set in
+`res/values/styles.xml` (`windowSplashScreenBackground`).

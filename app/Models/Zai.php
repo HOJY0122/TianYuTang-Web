@@ -274,11 +274,26 @@ class Zai extends Model
             'INSERT INTO zai_people (attendee_id, event_id, status, table_no, updated_by) VALUES (?, ?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE status = VALUES(status), table_no = VALUES(table_no), updated_by = VALUES(updated_by)',
             [$attendeeId, $eventId, $status, $tableNo, $by]);
+        $this->mirrorArrival($attendeeId, $status === 'confirmed');
     }
 
     public function clearPerson(int $attendeeId): void
     {
         $this->execute('DELETE FROM zai_people WHERE attendee_id = ?', [$attendeeId]);
+        $this->mirrorArrival($attendeeId, false);
+    }
+
+    /**
+     * Day 3 is where "arrived" is decided (registration is only for the
+     * Day 3 meal). rsvp_attendees.checked_in_at is kept as its mirror so the
+     * dashboard, export, print list and registration page show the same
+     * thing: confirmed (✓ 確認) = arrived; pending (待定) or cleared = not yet.
+     */
+    private function mirrorArrival(int $attendeeId, bool $arrived): void
+    {
+        $this->execute(
+            'UPDATE rsvp_attendees SET checked_in_at = ' . ($arrived ? 'COALESCE(checked_in_at, NOW())' : 'NULL') . ' WHERE id = ?',
+            [$attendeeId]);
     }
 
     /** The attendee's event (so a crafted POST cannot seat someone from another event). */
@@ -379,6 +394,12 @@ class Zai extends Model
                     arrived_by = IF(? = \'arrived\', COALESCE(arrived_by, ?), NULL)
               WHERE id = ?',
             [$v['people'], $v['tables'], $v['cheque_no'], $v['notes'], $v['status'], $v['status'], $v['status'], $v['by'], $id]);
+        // An online 團體 registration: its members arrive with the group.
+        $this->execute(
+            "UPDATE rsvp_attendees a JOIN zai_groups z ON z.rsvp_group_id = a.group_id
+                SET a.checked_in_at = IF(z.status = 'arrived', COALESCE(a.checked_in_at, z.arrived_at, NOW()), NULL)
+              WHERE z.id = ?",
+            [$id]);
     }
 
     public function setCheque(int $id, ?string $path): void

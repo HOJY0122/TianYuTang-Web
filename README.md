@@ -77,8 +77,14 @@ Adding a migration: create the next numbered file in `migrations/`
 - **Donation QR at the counter** — a donor shows the QR from their donation
   confirmation; *現場布施 Counter donation* scans or looks it up, shows the
   amount, and *確認收款* marks it paid with the time and the staff name.
-  A donation QR scanned at check-in (or a registration QR at the counter)
-  opens the right page automatically.
+  A registration QR scanned at the counter opens that registration in
+  *施齋入座 Day 3* instead.
+- **Arriving = Day 3** — registration is only for the Day 3 meal, so
+  *施齋入座* is the one place people are marked as arrived (✓ 確認 = arrived,
+  待定 = not yet; a 團體 group's members arrive with the group). The
+  dashboard, export, print list and registration page all follow it. The
+  old 現場報到 Check-in page was folded into it (migration 042); its address
+  and QR links now open Day 3.
 
 ## Receipts (收據紀錄)
 
@@ -131,7 +137,7 @@ Registration, donation and receipt lists sort by clicking a column heading.
 | Sessions | Own cookie `TYTSESS`, HttpOnly, SameSite=Lax, Secure on HTTPS, never in URLs, made-up ids refused; new id at sign-in and every 15 min; signed out after **60 min idle** or **12 h**; a cookie used from a different browser ends the session; changing a password or role, or deleting an account, signs that person out everywhere (`session_version`) |
 | Forms | Every POST needs the session's CSRF token; public forms have a hidden bot trap and a limit of 10 submissions per address per 10 minutes |
 | Redirects | Only to paths on this site (`/admin/…`); full addresses (QR posters) come from `SITE_URL` or a checked Host header |
-| Personal data | IC / passport numbers encrypted in the database (AES-256-GCM) with a keyed hash for lookups; masked on the check-in screen |
+| Personal data | IC / passport numbers encrypted in the database (AES-256-GCM) with a keyed hash for lookups; masked on staff screens |
 | Secrets | AI service keys encrypted in the database, never sent back to the browser |
 | Files | Receipt photos, bank slips and scans live in `storage/` (outside the web folder) and are shown only to signed-in staff, looked up by record id — never by a path; uploads are re-encoded (no hidden code, no GPS/EXIF), randomly named, and cannot run as scripts |
 | Folders | `app/`, `config/`, `storage/`, `migrations/`, `bin/`, `mobile/`, `.github/`, `.git`, `*.sql`, `*.md` are refused even if the whole project folder is served and mod_rewrite is off |

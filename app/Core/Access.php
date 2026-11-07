@@ -26,7 +26,6 @@ final class Access
         'event'         => ['calendar',     '活動資料', 'Event details',    '活動管理 Event',      '/admin/event/edit'],
         'posts'         => ['newspaper',    '最新消息', 'News',             '活動管理 Event',      '/admin/posts'],
         'photos'        => ['camera',       '相簿',     'Photos',           '活動管理 Event',      '/admin/photos'],
-        'checkin'       => ['check-circle', '現場報到', 'Check-in',         '活動當天 On the day', '/admin/checkin'],
         'walkin'        => ['walk',         '現場報名', 'Walk-in register', '活動當天 On the day', '/admin/walkin'],
         'counter'       => ['cash',         '現場布施', 'Counter donation', '活動當天 On the day', '/admin/counter'],
         'zai'           => ['chair',        '施齋入座', 'Day 3 meal seating', '活動當天 On the day', '/admin/zai'],
@@ -59,7 +58,7 @@ final class Access
         '/admin/qr'               => ['event'],
         '/admin/posts'            => ['posts'],
         '/admin/photos'           => ['photos'],
-        '/admin/checkin'          => ['checkin'],
+        '/admin/checkin'          => ['zai'],         // old address, forwards to Day 3
         '/admin/walkin'           => ['walkin'],
         '/admin/counter'          => ['counter'],
         '/admin/zai'              => ['zai'],
@@ -72,13 +71,13 @@ final class Access
     /** Ready-made choices for the account form. */
     public const PRESETS = [
         'all'      => ['全部功能', 'Everything',           null],
-        'day'      => ['活動當天', 'On the day',           ['checkin', 'walkin', 'counter', 'zai']],
-        'checkin'  => ['只做報到', 'Check-in only',        ['checkin']],
-        'records'  => ['報名與報到', 'Registrations',     ['registrations', 'checkin', 'walkin']],
+        'day'      => ['活動當天', 'On the day',           ['walkin', 'counter', 'zai']],
+        'zai'      => ['只做施齋入座', 'Day 3 seating only', ['zai']],
+        'records'  => ['報名與入座', 'Registrations',     ['registrations', 'walkin', 'zai']],
         'finance'  => ['財務',     'Finance',              ['donations', 'counter', 'receipts', 'vouchers']],
         'content'  => ['網站內容', 'News & photos',        ['posts', 'photos', 'event']],
-        'manager'  => ['活動負責', 'Event manager',        ['control', 'event', 'registrations', 'donations', 'checkin', 'walkin', 'counter', 'zai']],
-        'nomoney'  => ['不看金額', 'No money',             ['registrations', 'event', 'posts', 'photos', 'checkin', 'walkin']],
+        'manager'  => ['活動負責', 'Event manager',        ['control', 'event', 'registrations', 'donations', 'walkin', 'counter', 'zai']],
+        'nomoney'  => ['不看金額', 'No money',             ['registrations', 'event', 'posts', 'photos', 'walkin', 'zai']],
     ];
 
     /** Chosen keys from a form (unknown ones dropped), or null for "everything". */
@@ -95,6 +94,10 @@ final class Access
             return null;
         }
         $list = json_decode($json, true);
+        // 'checkin' (現場報到) became part of 施齋入座 Day 3 (migration 042).
+        if (is_array($list)) {
+            $list = array_map(static fn($k) => $k === 'checkin' ? 'zai' : $k, $list);
+        }
         return is_array($list) ? array_values(array_intersect(array_keys(self::MODULES), $list)) : [];
     }
 

@@ -55,7 +55,7 @@ $statusText = ['pending' => '待確認 Pending', 'confirmed' => '已確認 Confi
 
   <div class="form-actions">
     <button class="primary" type="submit"><?= icon('save') ?> 儲存 Save changes</button>
-    <a class="mini-btn ghost" href="<?= url('/admin/checkin') ?>?event=<?= (int) $group['event_id'] ?>&amp;ref=<?= urlencode($group['ref_code']) ?>"><?= icon('check-circle') ?> 報到頁 Check-in</a>
+    <a class="mini-btn ghost" href="<?= url('/admin/zai/registered') ?>?q=<?= urlencode($group['ref_code']) ?>"><?= icon('check-circle') ?> 施齋入座 Day 3</a>
     <a class="mini-btn ghost" href="<?= url('/admin/registrations/qr') ?>?id=<?= (int) $group['id'] ?>"><?= icon('qr') ?> 報到 QR Code<?= !empty($group['qr_sent_at']) ? ' ✓' : '' ?></a>
   </div>
 </form>

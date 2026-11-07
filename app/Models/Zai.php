@@ -226,7 +226,22 @@ class Zai extends Model
         $w = $this->fetchOne("SELECT COALESCE(SUM(status = 'waiting'), 0) AS waiting, COALESCE(SUM(CASE WHEN status = 'waiting' THEN people ELSE 0 END), 0) AS waiting_people
                                 FROM zai_waiting WHERE event_id = ?", [$eventId]);
         return ['seats' => $seats, 'used' => $used, 'tables_free' => $free] + $p + ['groups' => $g['n'], 'groups_arrived' => $g['arrived']] + $w
-            + ['reserved' => $this->reserved($eventId)];
+            + ['reserved' => $this->reserved($eventId), 'arrived' => $this->arrivedPeople($eventId)];
+    }
+
+    /**
+     * People actually here, counted the same way as 預約 (people, not seats):
+     * individuals confirmed (✓ 確認), members of 團體 groups that arrived, and
+     * waiting-list people who were seated.
+     */
+    public function arrivedPeople(int $eventId): array
+    {
+        $people = (int) $this->scalar(
+            "SELECT COUNT(*) FROM zai_people z JOIN rsvp_attendees a ON a.id = z.attendee_id JOIN rsvp_groups g ON g.id = a.group_id
+              WHERE z.event_id = ? AND z.status = 'confirmed' AND g.status <> 'cancelled' AND g.reg_type = 'individual'", [$eventId]);
+        $groups = (int) $this->scalar("SELECT COALESCE(SUM(people), 0) FROM zai_groups WHERE event_id = ? AND status = 'arrived'", [$eventId]);
+        $waiting = (int) $this->scalar("SELECT COALESCE(SUM(people), 0) FROM zai_waiting WHERE event_id = ? AND status = 'seated'", [$eventId]);
+        return ['people' => $people, 'groups' => $groups, 'waiting' => $waiting, 'total' => $people + $groups + $waiting];
     }
 
     /**

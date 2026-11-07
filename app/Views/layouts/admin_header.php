@@ -29,7 +29,6 @@ $menu = [
         ['photos',        'camera', '相簿',     'Photos',        '/admin/photos'],
     ],
     '活動當天 On the day' => [
-        ['checkin', 'check-circle', '現場報到', 'Check-in',          '/admin/checkin'],
         ['walkin',  'walk', '現場報名', 'Walk-in register',  '/admin/walkin'],
         ['counter', 'cash', '現場布施', 'Counter donation',  '/admin/counter'],
         ['zai',     'chair', '施齋入座', 'Day 3 meal seating', '/admin/zai'],

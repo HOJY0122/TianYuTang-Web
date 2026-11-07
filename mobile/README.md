@@ -1,6 +1,6 @@
 # 天玉堂 Staff — Android app
 
-The staff pages of the website (easy mode, check-in, counter, walk-in…) in a
+The staff pages of the website (Day 3 easy mode and seating, counter, walk-in…) in a
 phone app, plus a **native camera scanner**:
 
 - **IC number** — point the camera at the front of a MyKad; the 12-digit
@@ -20,7 +20,7 @@ Where the 📷 掃描 Scan button appears (only inside the app):
 |---|---|---|
 | 施齋 easy mode ① Find | IC or QR | searches |
 | Waiting list / walk-in IC boxes | IC | fills the box (live IC check runs) |
-| 現場報到 Check-in | QR | opens the registration |
+| 施齋入座 Day 3 registered list | IC or QR | searches |
 | 現場布施 Counter | QR | opens the donation |
 
 NFC: MyKad's chip is a **contact** chip (read by a card reader), not NFC, so

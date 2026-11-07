@@ -13,7 +13,8 @@ $hidden = '<input type="hidden" name="event_id" value="' . (int) $event['id'] . 
   <form method="GET" action="<?= url('/admin/zai/registered') ?>" class="lookup-form" data-live-search="#zaiResults">
     <input type="hidden" name="event" value="<?= (int) $event['id'] ?>">
     <input type="search" name="q" value="<?= h($q) ?>" autofocus autocomplete="off" spellcheck="false" inputmode="text"
-           placeholder="身份證 / 姓名 / 電話 / 報名編號　IC, name, phone or reference" aria-label="搜尋 Search">
+           placeholder="身份證 / 姓名 / 電話 / 報名編號　IC, name, phone or reference" aria-label="搜尋 Search"
+           data-app-scan="any" data-app-scan-submit>
     <button class="mini-btn btn-lg" type="submit"><?= icon('search') ?> 查詢 Find</button>
     <a class="mini-btn ghost btn-lg<?= $all ? ' is-on' : '' ?>" href="<?= url('/admin/zai/registered') . $evq ?>&amp;all=1" id="showAll"><?= icon('list') ?> 顯示全部 <span class="en">Show all</span></a>
   </form>

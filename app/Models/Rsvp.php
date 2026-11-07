@@ -104,6 +104,15 @@ class Rsvp extends Model
                      VALUES (?, ?, ?, ?, ?, ?, ' . ($source === 'walkin' ? 'NOW()' : 'NULL') . ')',
                     array_merge([$groupId, $a['name']], self::icColumns($a['ic']), [$a['contact']])
                 );
+                // Someone registering at the desk is here: Day 3 (where
+                // "arrived" is decided) has them confirmed, not yet seated.
+                if ($source === 'walkin') {
+                    $this->execute(
+                        "INSERT INTO zai_people (attendee_id, event_id, status, table_no, updated_by)
+                         VALUES (?, ?, 'confirmed', NULL, ?)",
+                        [(int) $this->db->lastInsertId(), $eventId, $recordedBy]
+                    );
+                }
             }
 
             $this->db->commit();

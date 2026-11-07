@@ -202,9 +202,8 @@ $router->post('/admin/counter/receive', 'CounterController@receive');
 $router->get('/admin/receipt',      'CounterController@receipt');
 
 // On-site check-in
+// Old 現場報到 address: forwards to Day 3 (arriving is recorded there).
 $router->get('/admin/checkin',         'CheckinController@index');
-$router->post('/admin/checkin/person', 'CheckinController@person');
-$router->post('/admin/checkin/group',  'CheckinController@group');
 
 // Printable sheets for the counter
 $router->get('/admin/print/attendees', 'PrintController@attendees');

@@ -23,95 +23,9 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
 
   <div class="page-grid counter-grid">
   <div class="page-col">
-  <!-- ---------- ① Online pledge: donor shows their donation QR ---------- -->
-  <div class="panel">
-    <h2 style="margin-top:0">① 線上布施付款 <span class="en">Paying an online pledge</span></h2>
-    <p class="help" style="margin-top:0">布施者出示「布施編號」QR Code（提交後的頁面或截圖），掃描或輸入編號，核對金額後按「確認收款」。<br>
-      <span class="en">The donor shows the donation QR from their confirmation page. Scan it or type the reference, check the amount, then confirm.</span></p>
-    <form method="GET" action="<?= url('/admin/counter') ?>" class="lookup-form">
-      <input type="hidden" name="event" value="<?= (int) $event['id'] ?>">
-      <input type="text" name="ref" value="<?= h($ref) ?>" aria-label="布施編號 Donation reference"
-             autocomplete="off" autocapitalize="characters" spellcheck="false"
-             placeholder="布施編號 Reference，例 e.g. DON-0012" data-app-scan="qr" data-app-scan-submit>
-      <button class="mini-btn btn-lg" type="submit">查詢 Find</button>
-      <button class="mini-btn ghost btn-lg" type="button" data-scan><?= icon('camera') ?> 掃描 Scan QR</button>
-    </form>
-    <div id="scanPanel" class="scan-panel" hidden>
-      <video playsinline muted></video>
-      <canvas class="hidden"></canvas>
-      <div class="scan-row">
-        <span data-scan-status class="help"></span>
-        <button class="mini-btn ghost" type="button" data-scan-stop>停止 Stop</button>
-      </div>
-    </div>
-
-    <div id="liveLookup" data-live="donations">
-    <?php if ($ref !== '' && !$found): ?>
-      <div class="result-miss" style="margin-top:14px;padding:14px;border-radius:12px">
-        <strong>查無此編號 Not found：<?= h($ref) ?></strong>
-        <p class="help" style="margin:.3rem 0 0">請確認編號，或該布施是否屬於其他年度。Check the number, or whether it belongs to another year.
-          也可在下方「② 現場布施」直接登記。You can also record it below as a new counter donation.</p>
-      </div>
-    <?php elseif ($found): ?>
-      <?php $paid = $found['status'] === 'paid'; ?>
-      <div class="pledge-card<?= $paid ? ' is-paid' : '' ?>">
-        <div class="pledge-head">
-          <div>
-            <div class="pledge-ref"><?= h($found['ref_code']) ?></div>
-            <div class="pledge-name"><?= h($found['name']) ?> <span class="help"><?= icon('phone') ?> <?= h($found['contact_no']) ?></span></div>
-          </div>
-          <span class="pledge-status"><?= $paid ? '已付款 Paid' : '待付款 Pending' ?></span>
-        </div>
-        <dl class="pledge-lines">
-          <div><dt>布施方式 Method</dt><dd><?= h(App\Models\Donation::describe($found)) ?></dd></div>
-          <div><dt>應收金額 Amount due</dt><dd class="pledge-amount"><?= rm((float) $found['amount']) ?></dd></div>
-          <div><dt>提交時間 Submitted</dt><dd><?= h(date('d/m/Y H:i', strtotime($found['created_at']))) ?></dd></div>
-          <?php if ($paid && !empty($found['paid_at'])): ?>
-            <div><dt>收款 Received</dt><dd><?= h(date('d/m/Y H:i', strtotime($found['paid_at']))) ?><?= !empty($found['paid_by']) ? ' · ' . h($found['paid_by']) : '' ?></dd></div>
-          <?php endif; ?>
-          <?php if (!empty($found['notes'])): ?><div><dt>備註 Notes</dt><dd><?= h($found['notes']) ?></dd></div><?php endif; ?>
-        </dl>
-        <?php if (!$paid): ?>
-          <form method="POST" action="<?= url('/admin/counter/receive') ?>" enctype="multipart/form-data" class="pledge-form">
-            <?= csrf_field() ?>
-            <input type="hidden" name="donation_id" value="<?= (int) $found['id'] ?>">
-            <input type="hidden" name="event_id" value="<?= (int) $event['id'] ?>">
-            <div class="form-row">
-              <div><label for="rNotes">收據號碼 / 備註 <span class="en">Receipt no. / note (optional)</span></label>
-                <input id="rNotes" name="notes" maxlength="100" placeholder="例 e.g. 收據簿 #042 / 現金 Cash"></div>
-              <div><label for="rPhoto">收據相片 <span class="en">Receipt photo (optional)</span></label>
-                <input id="rPhoto" name="receipt" type="file" accept="image/jpeg,image/png,image/gif,image/webp" capture="environment"
-                       data-aspects="original,3:4,4:3" data-max-width="1600"></div>
-            </div>
-            <button class="big-btn" type="submit"
-                    data-confirm="確認已收到 <?= h(rm((float) $found['amount'])) ?>？&#10;Confirm <?= h(rm((float) $found['amount'])) ?> received?">
-              <?= icon('cash') ?> 確認收款 <?= rm((float) $found['amount']) ?> <span class="en">Confirm payment</span></button>
-          </form>
-        <?php elseif (!empty($found['receipt_path'])): ?>
-          <a class="receipt-link" href="<?= url('/admin/receipt?id=' . (int) $found['id']) ?>" target="_blank"><?= icon('file') ?> 查看收據 View receipt</a>
-        <?php endif; ?>
-      </div>
-    <?php endif; ?>
-    </div>
-  </div>
-
-  <details class="panel guide">
-    <summary><span><?= icon('compass') ?> 用哪一個？ <span class="en">Which one do I use?</span></span><span class="guide-toggle" aria-hidden="true">顯示 Show ▾</span></summary>
-
-    <ul>
-      <li><strong>① 線上布施付款</strong>：善信已在網上登記布施，現在來付款 → 掃描他的布施 QR。
-        <span class="en">They pledged online and are paying now → scan their donation QR.</span></li>
-      <li><strong>② 現場布施</strong>：當場布施、之前沒有登記 → 在右邊填寫。
-        <span class="en">Giving on the spot with no online pledge → fill in the form on the right.</span></li>
-      <li>記得拍下紙本收據，日後可核對。<span class="en">Photograph the paper receipt so amounts can be checked later.</span></li>
-      <li>掃到報名 QR 會自動轉到「現場報到」。<span class="en">A registration QR opens Check-in automatically.</span></li>
-    </ul>
-  </details>
-  </div>
-  <div class="page-col">
   <!-- ---------- Entry form ---------- -->
   <div class="panel form-panel">
-    <h2 style="margin-top:0">② 現場布施 <span class="en">New counter donation (walk-up, cash in hand)</span></h2>
+    <h2 style="margin-top:0">現場布施 <span class="en">New counter donation (walk-up, cash in hand)</span></h2>
     <p class="help" style="margin-top:0"><?= h($event['year']) ?> · <?= h($event['name']) ?></p>
 
     <?php if (!empty($old['errors'])): ?>
@@ -202,11 +116,18 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
       </div>
     </form>
   </div>
-
-  </div>
   </div>
 
   <!-- ---------- Recently recorded ---------- -->
+  <div class="page-col">
+  <details class="panel guide" open>
+    <summary><span><?= icon('compass') ?> 提示 <span class="en">Tips</span></span><span class="guide-toggle" aria-hidden="true">收起 Hide ▴</span></summary>
+    <ul>
+      <li>這裡只登記<strong>當場收到</strong>的布施，儲存即為「已付」。<span class="en">Only money received here and now; it is saved as paid.</span></li>
+      <li>網上布施的善信來付款？到 <a href="<?= url('/admin/donations') ?>">布施紀錄 Donations</a> 搜尋編號（例 DON-0012），按「已付」。<span class="en">Paying an online pledge? Find its reference in Donations and mark it paid.</span></li>
+      <li>記得拍下紙本收據，日後可核對。<span class="en">Photograph the paper receipt so amounts can be checked later.</span></li>
+    </ul>
+  </details>
   <div id="liveRecent" data-live="donations events">
   <?php if ($recent): ?>
     <div class="panel">
@@ -240,16 +161,12 @@ require BASE_PATH . '/app/Views/layouts/admin_header.php';
     </div>
   <?php endif; ?>
   </div>
+  </div>
+  </div>
 
 </div>
 
-<script src="<?= asset('js/jsqr.min.js') ?>"></script>
-<script src="<?= asset('js/scanner.js') ?>"></script>
 <script>
-TYTScanner({
-  form: document.querySelector('.lookup-form'), here: 'don', eventId: <?= (int) $event['id'] ?>,
-  urls: { rsvp: <?= json_encode(url('/admin/checkin')) ?>, don: <?= json_encode(url('/admin/counter')) ?> }
-});
 const SEAT_PRICE = <?= (float) $seatPrice ?>;
 
 // Counter donation: stepper, quick buttons and the live total (display

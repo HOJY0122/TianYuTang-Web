@@ -74,11 +74,13 @@ Adding a migration: create the next numbered file in `migrations/`
   *日期文字 Date line* in Event details to use your own words (e.g. the lunar date).
 - **Uploading pictures** — after choosing a file, an editor opens: drag to
   move, zoom, pick a crop shape, rotate. You see the result before saving.
-- **Donation QR at the counter** — a donor shows the QR from their donation
-  confirmation; *現場布施 Counter donation* scans or looks it up, shows the
-  amount, and *確認收款* marks it paid with the time and the staff name.
-  A registration QR scanned at the counter opens that registration in
-  *施齋入座 Day 3* instead.
+- **Online pledges** — a donor who pledged online and pays in person: find
+  the reference (DON-…) in *布施紀錄 Donations* and mark it paid.
+  *現場布施 Counter donation* is only for money given on the spot (saved as
+  paid). Old counter / check-in links with a reference open the right page.
+- **Walk-in register** — *現場報名* registers people for the Day 3 meal who
+  did not sign up online (e.g. on Day 1 or 2). It is a registration like
+  any other; they arrive when 施齋入座 confirms them on Day 3.
 - **Arriving = Day 3** — registration is only for the Day 3 meal, so
   *施齋入座* is the one place people are marked as arrived (✓ 確認 = arrived,
   待定 = not yet; a 團體 group's members arrive with the group). The

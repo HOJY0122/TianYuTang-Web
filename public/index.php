@@ -198,7 +198,6 @@ $router->post('/account/password',     'SystemController@changeOwnPassword');
 // Counter (cash) donations
 $router->get('/admin/counter',      'CounterController@index');
 $router->post('/admin/counter/save','CounterController@save');
-$router->post('/admin/counter/receive', 'CounterController@receive');
 $router->get('/admin/receipt',      'CounterController@receipt');
 
 // On-site check-in

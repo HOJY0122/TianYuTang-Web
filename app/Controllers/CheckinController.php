@@ -10,7 +10,7 @@ use App\Core\Controller;
  * place: 施齋入座 (✓ 確認 = arrived; rsvp_attendees.checked_in_at follows it,
  * see Zai::setPerson). Old bookmarks and the check-in QR flow still work:
  *   ?ref=RSVP-0007  → that registration in Day 3
- *   ?ref=…DON-0012  → the counter (a donation QR)
+ *   ?ref=…DON-0012  → that pledge in 布施紀錄 Donations (a donation QR)
  */
 class CheckinController extends Controller
 {
@@ -20,10 +20,9 @@ class CheckinController extends Controller
         $this->requireAdmin();
         $ref = strtoupper(trim((string) ($_GET['ref'] ?? '')));
         $ref = preg_match('/^[A-Z0-9-]{1,40}$/', $ref) ? $ref : '';
-        $event = (int) ($_GET['event'] ?? 0);
 
         if ($ref !== '' && preg_match('/(^|-)DON-\d+$/', $ref)) {
-            $this->redirect('/admin/counter?' . http_build_query(array_filter(['event' => $event ?: null, 'ref' => $ref])));
+            $this->redirect('/admin/donations?q=' . urlencode($ref));
         }
         $this->redirect('/admin/zai/registered' . ($ref !== '' ? '?q=' . urlencode($ref) : ''));
     }

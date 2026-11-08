@@ -64,8 +64,11 @@ $locked = $mine && empty($_GET['change']);
   ?>
   <p class="ez-hint" id="ezRoom"></p>
   <?php if (!$locked): ?>
-  <p class="ez-hint ez-legend"><i class="lg-fits"></i> 空桌 <i class="lg-grp"></i> 空的團體桌 <i class="lg-full"></i> 已有人（不能按）
-    <span class="en">Green = empty · Purple = empty group table · Red = taken (cannot be ticked)</span></p>
+  <div class="ez-legend" aria-label="顏色說明 Colour key">
+    <span><i class="lg-fits"></i>空桌 <small>Empty</small></span>
+    <span><i class="lg-grp"></i>空的團體桌 <small>Empty group table</small></span>
+    <span><i class="lg-full"></i>已有人 <small>Taken</small></span>
+  </div>
   <?php endif; ?>
 
 

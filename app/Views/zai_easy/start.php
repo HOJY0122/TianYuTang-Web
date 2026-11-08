@@ -18,5 +18,23 @@ require __DIR__ . '/_top.php';
     <span class="ez-txt"><b>候補名單</b><small>Waiting list · 安排座位</small></span>
     <?php if ((int) $totals['waiting']): ?><span class="ez-count"><?= (int) $totals['waiting'] ?></span><?php endif; ?></a>
 </div>
-<p class="ez-foot">已入座 <b><?= (int) $totals['used'] ?></b> / <?= (int) $totals['seats'] ?> 座位 seats</p>
+<?php
+// How the day stands, updated by itself (live.js): people here, seats taken.
+$ezPct = static fn(int $a, int $b): int => $b > 0 ? (int) min(100, round($a / $b * 100)) : 0;
+$ezArr = (int) ($totals['arrived']['total'] ?? 0); $ezRes = (int) ($totals['reserved']['total'] ?? 0);
+$ezUsed = (int) $totals['used']; $ezSeats = (int) $totals['seats'];
+?>
+<div class="ez-stats" id="liveEzStats" data-live="zai_people zai_groups zai_waiting zai_tables rsvp_groups rsvp_attendees">
+  <div class="ez-stat">
+    <span class="ez-stat-k"><?= icon('check-circle') ?> 已到 <small>Here</small></span>
+    <span class="ez-stat-v"><b><?= $ezArr ?></b> / <?= $ezRes ?> 人</span>
+    <span class="ez-stat-bar"><i style="width:<?= $ezPct($ezArr, $ezRes) ?>%"></i></span>
+  </div>
+  <div class="ez-stat<?= $ezSeats > 0 && $ezUsed >= $ezSeats ? ' is-full' : '' ?>">
+    <span class="ez-stat-k"><?= icon('chair') ?> 座位 <small>Seats</small></span>
+    <span class="ez-stat-v"><b><?= $ezUsed ?></b> / <?= $ezSeats ?></span>
+    <span class="ez-stat-bar seats"><i style="width:<?= $ezPct($ezUsed, $ezSeats) ?>%"></i></span>
+    <span class="ez-stat-sub">有空位的桌 <b><?= (int) $totals['tables_free'] ?></b> 張 <small>tables with room</small></span>
+  </div>
+</div>
 <?php require __DIR__ . '/_bottom.php'; ?>

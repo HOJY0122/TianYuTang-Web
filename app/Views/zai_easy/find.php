@@ -50,12 +50,12 @@ require __DIR__ . '/_top.php';
   // The group screen gets the search along, so staff see who they were looking for.
   $go = url('/admin/zai/easy/group') . '?id=' . (int) $zg['id'] . '&from=find&q=' . rawurlencode($q) . '&who=' . rawurlencode((string) $m['name']); ?>
   <a class="ez-row ez-member<?= $done ? ' is-done' : '' ?>" href="<?= h($go) ?>" data-group-go
-     data-who="<?= h($m['name']) ?>" data-group="<?= h($zg['name']) ?>" data-done="<?= $done ? h('已到，第 ' . ($zg['tables'] ?? '') . ' 桌') : '' ?>"<?= !empty($autoOpen) ? ' data-auto-open' : '' ?>>
+     data-who="<?= h($m['name']) ?>" data-group="<?= h($zg['name']) ?>" data-done="<?= $done ? h(trim((string) ($zg['tables'] ?? '')) !== '' ? '已到，第 ' . $zg['tables'] . ' 桌' : '已到') : '' ?>"<?= !empty($autoOpen) ? ' data-auto-open' : '' ?>>
     <span class="ez-row-main"><small class="ez-member-tag"><?= icon('users') ?> 屬於團體 · Belongs to a group</small>
       <b><?= h($m['name']) ?></b>
       <small class="ez-id"><b>IC <?= h($m['ic_no'] ?: '—') ?></b></small>
       <small>團體 <?= h($zg['name']) ?> · <?= h($m['ref_code']) ?></small></span>
-    <span class="ez-row-state"><?= $done ? '✓ 已到<br>第 ' . h($zg['tables'] ?? '') . ' 桌' : '團體 →<br><small>Group</small>' ?></span>
+    <span class="ez-row-state"><?= $done ? '✓ 已到' . (trim((string) ($zg['tables'] ?? '')) !== '' ? '<br>第 ' . h($zg['tables']) . ' 桌' : '') : '團體 →<br><small>Group</small>' ?></span>
   </a>
 <?php endforeach; ?>
 <?php endif; ?>

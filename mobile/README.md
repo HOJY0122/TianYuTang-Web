@@ -23,6 +23,13 @@ Where the 📷 掃描 Scan button appears (only inside the app):
 | 施齋入座 Day 3 registered list | IC or QR | searches |
 | 現場布施 Counter | QR | opens the donation |
 
+Also in the app (version 1.1):
+
+- **Back button** goes back a page, like a browser. On the first page it says
+  「再按一次返回鍵離開」 instead of closing the app at once.
+- **Screen stays on** while 施齋 easy mode is open (it can be left on the
+  counter); on other pages the phone sleeps as usual.
+
 NFC: MyKad's chip is a **contact** chip (read by a card reader), not NFC, so
 phones cannot read it by tapping. Camera reading is the way.
 

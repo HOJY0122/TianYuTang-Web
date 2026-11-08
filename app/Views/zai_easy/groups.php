@@ -12,7 +12,7 @@ require __DIR__ . '/_top.php';
     <a class="ez-row<?= $done ? ' is-done' : '' ?>" href="<?= url('/admin/zai/easy/group') ?>?id=<?= (int) $g['id'] ?>">
       <span class="ez-row-main"><b><?= h($g['name']) ?></b>
         <small><?= (int) $g['people'] ?> 人<?= $g['contact'] ? ' · ' . h($g['contact']) : '' ?></small></span>
-      <span class="ez-row-state"><?= $done ? '✓ 已到<br>第 ' . h($g['tables'] ?? '') . ' 桌' : '未到 →' ?></span>
+      <span class="ez-row-state"><?= $done ? '✓ 已到' . (trim((string) ($g['tables'] ?? '')) !== '' ? '<br>第 ' . h($g['tables']) . ' 桌' : '') : '未到 →' ?></span>
     </a>
   <?php endforeach; ?>
   <?php if (!$groups): ?><div class="ez-msg ez-warn"><b>找不到團體 No group found</b><p>請問負責人。Ask the supervisor.</p></div><?php endif; ?>

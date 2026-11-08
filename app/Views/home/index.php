@@ -126,26 +126,26 @@ if (!$bannerSlides && $siteHeroBanner) {
       <div>
         <h3 class="loc-title"><?= icon('car') ?> <?= tb('home.directions') ?></h3>
         <p class="loc-hint"><?= tb('home.directions_text') ?></p>
-        <?php if (($wazeUrl !== '') xor ($mapsUrl !== '')): ?>
-          <?php // Only one way to navigate: one clear tile, not a long stretched bar. ?>
-          <?php $isWaze = $wazeUrl !== ''; ?>
-          <a class="nav-tile<?= $isWaze ? ' is-waze' : ' is-maps' ?>" href="<?= h($isWaze ? $wazeUrl : $mapsUrl) ?>" target="_blank" rel="noopener">
-            <span class="nav-tile-ic"><?= icon($isWaze ? 'waze' : 'gmaps') ?></span>
-            <span class="nav-tile-text">
-              <strong><?= h($isWaze ? t('home.waze') : t('home.maps') . ' ' . t('home.maps', 'en')) ?></strong>
-              <small>一按即開始導航，帶您到壇 <span class="en">Tap for directions to the temple</span></small>
-            </span>
-            <span class="nav-tile-go" aria-hidden="true"><?= icon('arrow-right') ?></span>
-          </a>
-        <?php else: ?>
-        <div class="map-buttons">
-          <?php if ($wazeUrl !== ''): ?>
-            <a class="btn waze" href="<?= h($wazeUrl) ?>" target="_blank" rel="noopener"><span class="brand-ic"><?= icon('waze') ?></span> <?= h(t('home.waze')) ?></a>
-          <?php endif; ?>
-          <?php if ($mapsUrl !== ''): ?>
-            <a class="btn ghost" href="<?= h($mapsUrl) ?>" target="_blank" rel="noopener"><span class="brand-ic"><?= icon('gmaps') ?></span> <?= h(t('home.maps') . ' ' . t('home.maps', 'en')) ?></a>
-          <?php endif; ?>
-        </div>
+        <?php
+        // Each way to navigate is one tile: the app's icon, its name, a short
+        // line and a round arrow. Two links → two tiles side by side (stacked on a phone).
+        $navLinks = [];
+        if ($wazeUrl !== '') { $navLinks[] = ['waze', $wazeUrl, 'waze', t('home.waze')]; }
+        if ($mapsUrl !== '') { $navLinks[] = ['maps', $mapsUrl, 'gmaps', t('home.maps')]; }
+        ?>
+        <?php if ($navLinks): ?>
+          <div class="nav-tiles<?= count($navLinks) > 1 ? ' is-two' : '' ?>">
+            <?php foreach ($navLinks as [$nk, $nUrl, $nIcon, $nName]): ?>
+              <a class="nav-tile is-<?= $nk ?>" href="<?= h($nUrl) ?>" target="_blank" rel="noopener">
+                <span class="nav-tile-ic"><?= icon($nIcon) ?></span>
+                <span class="nav-tile-text">
+                  <strong><?= h($nName) ?></strong>
+                  <small><span class="nt-tap">一按即導航，</span>前往活動地點 <span class="en">Directions to the venue</span></small>
+                </span>
+                <span class="nav-tile-go" aria-hidden="true"><?= icon('arrow-right') ?></span>
+              </a>
+            <?php endforeach; ?>
+          </div>
         <?php endif; ?>
       </div>
       <?php if ($qrCodes): ?>

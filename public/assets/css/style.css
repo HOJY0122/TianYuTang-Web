@@ -1046,3 +1046,28 @@ html.hc .section-title::before,html.hc .section-title::after,html.hc .welcome h1
 }
 html.hc .album-strip figure.is-video .v-play .ic{background:#000;border-color:#fff}
 html.hc .album-strip figure.is-video .v-len,html.hc .g-vchip{background:#000}
+
+/* ---------- 如何前往: only one navigation link → one tidy tile ---------- */
+.nav-tile{--acc:#1fb8ec;--acc-soft:#e3f7fe;display:flex;align-items:center;gap:1rem;margin-top:1.1rem;padding:1rem 1.1rem;
+  border-radius:16px;background:linear-gradient(135deg,#fff,var(--acc-soft));border:2px solid var(--acc);color:var(--dark);text-decoration:none;
+  box-shadow:0 6px 18px rgba(31,183,234,.18);transition:transform .15s ease,box-shadow .15s ease}
+.nav-tile.is-maps{--acc:#2f6fdc;--acc-soft:#eaf1fd;box-shadow:0 6px 18px rgba(47,111,220,.16)}
+.nav-tile:hover,.nav-tile:focus-visible{transform:translateY(-2px);box-shadow:0 10px 26px rgba(31,183,234,.3)}
+.nav-tile:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.nav-tile:active{transform:translateY(0)}
+.nav-tile-ic{flex:none;display:grid;place-items:center;width:3.6rem;height:3.6rem;border-radius:22%;
+  background:linear-gradient(180deg,#4ad6ff,#1fb8ec);border:3px solid #fff;box-shadow:0 4px 12px rgba(7,49,74,.25)}
+.nav-tile.is-maps .nav-tile-ic{background:#fff;border-color:#dfe8f7}
+.nav-tile-ic .ic{width:2.2rem;height:2.2rem;stroke-width:1.5}
+.nav-tile-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:.15rem}
+.nav-tile-text strong{font-size:1.25rem;line-height:1.3;color:#07314a}
+.nav-tile.is-maps .nav-tile-text strong{color:#16325f}
+.nav-tile-text small{color:var(--muted);font-size:.88rem;line-height:1.45}
+.nav-tile-text small .en{display:block;font-size:.95em}
+.nav-tile-go{flex:none;display:grid;place-items:center;width:2.8rem;height:2.8rem;border-radius:50%;background:var(--acc);color:#fff;
+  box-shadow:0 4px 10px rgba(7,49,74,.2);transition:transform .15s ease}
+.nav-tile-go .ic{width:1.3rem;height:1.3rem;stroke-width:2.4}
+.nav-tile:hover .nav-tile-go{transform:translateX(3px)}
+@media (max-width:420px){ .nav-tile{gap:.75rem;padding:.85rem} .nav-tile-ic{width:3rem;height:3rem} .nav-tile-ic .ic{width:1.8rem;height:1.8rem} .nav-tile-text strong{font-size:1.1rem} }
+html.hc .nav-tile{background:#fff;border-color:#000;box-shadow:none}
+html.hc .nav-tile-go{background:#000}

@@ -85,6 +85,11 @@ final class Uat
         $test = $events->find((int) $setting->get('uat_event_id', '0'));
         if ($test === null || empty($test['is_test'])) {
             $test = $events->find($events->createTestCopy((int) $real['id']));
+        } else {
+            // Reused: refresh its details from the real event first, so links
+            // and texts added since (e.g. Waze / Google Maps) show here too.
+            $events->refreshTestCopy((int) $test['id'], (int) $real['id']);
+            $test = $events->find((int) $test['id']);
         }
 
         $events->setActive((int) $test['id']);

@@ -112,6 +112,34 @@ class Event extends Model
     }
 
     /**
+     * Bring a reused test copy up to date with its real event: every detail
+     * (location, Waze / Google Maps links and QR codes, welcome text, notes,
+     * prices…) is copied again, so the test site shows what the real one
+     * will. The name keeps 【測試】 and the submission windows stay open.
+     * Column names come from EDITABLE (code), never from a request.
+     */
+    public function refreshTestCopy(int $testId, int $sourceId): void
+    {
+        $test = $this->find($testId);
+        $source = $this->find($sourceId);
+        if ($test === null || $source === null || empty($test['is_test']) || !empty($source['is_test'])) {
+            return;
+        }
+        $windows = ['rsvp_opens_at', 'rsvp_closes_at', 'donation_opens_at', 'donation_closes_at'];
+        $sets = [];
+        $params = [];
+        foreach (self::EDITABLE as $column) {
+            if (in_array($column, $windows, true)) {
+                continue;
+            }
+            $sets[] = $column . ' = ?';
+            $params[] = $column === 'name' ? '【測試】' . $source['name'] : $source[$column];
+        }
+        $params[] = $testId;
+        $this->execute('UPDATE events SET ' . implode(', ', $sets) . ' WHERE id = ? AND is_test = TRUE', $params);
+    }
+
+    /**
      * Delete a test event and everything recorded against it.
      *
      * Refuses to touch a real event: the foreign keys already block

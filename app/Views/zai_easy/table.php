@@ -45,6 +45,10 @@ require __DIR__ . '/_top.php';
   require BASE_PATH . '/app/Views/partials/zai_hall.php';
   ?>
 </form>
-<p class="ez-hint ez-legend"><i class="lg-fits"></i> 夠位 <i class="lg-some"></i> 位不夠 <i class="lg-grp"></i> 團體桌（不能坐） <i class="lg-full"></i> 滿（不能按）<br>
-  <span class="en">Green = enough seats · Yellow = not enough · Purple = group table (not for individuals) · Red = full (cannot be pressed)</span></p>
+<div class="ez-legend" aria-label="顏色說明 Colour key">
+  <span><i class="lg-fits"></i>夠位 <small>Enough</small></span>
+  <span><i class="lg-some"></i>位不夠 <small>Not enough</small></span>
+  <span><i class="lg-grp"></i>團體桌 <small>Group only</small></span>
+  <span><i class="lg-full"></i>滿 <small>Full</small></span>
+</div>
 <?php require __DIR__ . '/_bottom.php'; ?>

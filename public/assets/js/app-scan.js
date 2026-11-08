@@ -24,6 +24,12 @@
 
   // Sign-in page: let staff point the app at another address (live ↔ test).
   var setup = cap.Plugins.TytSetup;
+  // Easy mode at the counter: the screen stays on (off again on other
+  // pages). Older apps without keepAwake simply skip this.
+  if (setup && typeof setup.keepAwake === 'function') {
+    var p = setup.keepAwake({ on: /\/admin\/zai\/easy(\/|$)/.test(location.pathname) });
+    if (p && p.catch) p.catch(function () {});
+  }
   var card = document.querySelector('body.login .login-card');
   if (setup && card) {
     var change = document.createElement('button');

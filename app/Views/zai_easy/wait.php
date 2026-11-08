@@ -14,7 +14,7 @@ $old = $old ?? [];
 <form method="POST" action="<?= url('/admin/zai/easy/wait') ?>" class="ez-form">
   <?= csrf_field() ?>
   <label>姓名 <span class="en">Name</span><input name="name" required maxlength="100" autocomplete="off" value="<?= h($old['name'] ?? '') ?>"<?= empty($old) ? ' autofocus' : '' ?>></label>
-  <label>身份證 <b class="ez-req">*必填</b> <span class="en">IC (required)</span>
+  <label><span>身份證 <b class="ez-req">必填 Required</b></span> <span class="en">IC</span>
     <input name="ic" required maxlength="30" inputmode="numeric" autocomplete="off" data-validate="ic" data-exists-url="<?= h(url('/admin/zai/easy/ic-check')) ?>" placeholder="例 650101-10-1234" value="<?= h($old['ic'] ?? '') ?>"<?= empty($old) ? '' : ' autofocus' ?>></label>
   <label>電話 <span class="en">Phone</span><input name="contact" maxlength="30" inputmode="tel" autocomplete="off" data-validate="phone" value="<?= h($old['contact'] ?? '') ?>"></label>
   <button type="submit" class="ez-btn ez-ok">✓ 給候補號碼 <small>Give a waiting number</small></button>

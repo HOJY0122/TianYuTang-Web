@@ -1876,3 +1876,31 @@ a.vspace:hover,a.vspace:focus-visible{border-color:var(--gold);box-shadow:0 4px 
   border-radius:12px;background:#fff6e6;border:1px solid #efcf8f;color:#7a4a05;font-size:.9rem;line-height:1.5}
 .vs-leftover .en{display:block;opacity:.85}
 .cat-tabs a.is-on .en{color:inherit;opacity:.9}
+
+/* ---------- Easy mode polish ---------- */
+/* Titles use the page's sans font (the brush font is not loaded here). */
+.ez-q{font-family:inherit;letter-spacing:.01em}
+.ez-q small{font-family:inherit}
+/* Home: people here + seats, live */
+.ez-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+.ez-stat{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:16px;background:#fffdf7;border:2px solid #ead9ad}
+.ez-stat-k{font-size:15px;font-weight:800;color:#5a4a3a;display:flex;align-items:center;gap:6px}
+.ez-stat-k small{font-weight:600;color:#8a7a68}
+.ez-stat-k .ic{width:18px;height:18px;color:#2f6b3a}
+.ez-stat-v{font-size:16px;color:#7a6a58;font-variant-numeric:tabular-nums}
+.ez-stat-v b{font-size:28px;font-weight:900;color:#2b1d14;line-height:1}
+.ez-stat-bar{display:block;height:10px;border-radius:999px;background:#efe4c6;overflow:hidden}
+.ez-stat-bar i{display:block;height:100%;border-radius:inherit;background:#2f6b3a;transition:width .4s ease}
+.ez-stat-bar.seats i{background:#9f211b}
+.ez-stat.is-full{border-color:#e7a9a3;background:#fff4f2}
+.ez-stat-sub{font-size:13px;color:#7a6a58}
+.ez-stat-sub small{color:#9a8a78}
+@media (max-width:360px){ .ez-stats{grid-template-columns:1fr} }
+/* Colour keys: chips in one tidy row */
+div.ez-legend{display:flex;flex-wrap:wrap;gap:6px 8px;margin:14px 0 4px}
+div.ez-legend>span{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;background:#fffdf7;border:1px solid #ead9ad;
+  font-size:14px;font-weight:700;color:#4a3a2a;white-space:nowrap}
+div.ez-legend>span small{font-weight:500;color:#8a7a68;font-size:12px}
+div.ez-legend i{margin:0!important}
+/* Required tag beside the label */
+.ez-req{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:#fdecea;border:1px solid #efb7b0;font-size:12px;font-weight:800;vertical-align:2px}

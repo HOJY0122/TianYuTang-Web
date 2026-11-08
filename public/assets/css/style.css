@@ -1115,3 +1115,5 @@ html.hc .nav-tile-go{background:#000}
   .nav-tiles .nav-tile-go .ic{width:1.1rem;height:1.1rem}
 }
 @media (min-width:601px){ .nav-tiles.is-two .nt-tap{display:none} }
+/* 如何前往: the QR cards sit level with the middle of the left side (title stays at the top) */
+@media (min-width:761px){ .location-card .qr-pair{align-self:center} }

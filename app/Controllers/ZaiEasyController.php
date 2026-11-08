@@ -363,6 +363,24 @@ class ZaiEasyController extends Controller
     }
 
     /** GET /admin/zai/easy/waitlist */
+    /** GET /admin/zai/easy/roll?tab=todo|here — 名單: who is here, who is not yet (tap to confirm). */
+    public function roll(): void
+    {
+        $this->requireAdmin();
+        $event = (new Event())->active();
+        $tab = ($_GET['tab'] ?? '') === 'here' ? 'here' : 'todo';
+        $this->screen('roll', ['tab' => $tab] + (new Zai())->rollCall((int) $event['id']));
+    }
+
+    /** GET /admin/zai/easy/tables — 桌子: every table, seats used, tap for who sits there. */
+    public function tablesView(): void
+    {
+        $this->requireAdmin();
+        $event = (new Event())->active();
+        $zai = new Zai();
+        $this->screen('tables', ['seating' => $zai->seating((int) $event['id']), 'totals' => $zai->totals((int) $event['id'])]);
+    }
+
     public function waitlist(): void
     {
         $this->requireAdmin();

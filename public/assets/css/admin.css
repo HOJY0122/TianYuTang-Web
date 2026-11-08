@@ -1904,3 +1904,48 @@ div.ez-legend>span small{font-weight:500;color:#8a7a68;font-size:12px}
 div.ez-legend i{margin:0!important}
 /* Required tag beside the label */
 .ez-req{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:#fdecea;border:1px solid #efb7b0;font-size:12px;font-weight:800;vertical-align:2px}
+/* Easy mode: tappable stat cards → 名單 / 桌子 */
+a.ez-stat{text-decoration:none;color:inherit;cursor:pointer;transition:transform .1s ease,border-color .15s,box-shadow .15s;-webkit-tap-highlight-color:transparent}
+a.ez-stat:hover{border-color:#c9a64e;box-shadow:0 4px 14px rgba(120,80,20,.12)}
+a.ez-stat:active{transform:scale(.98)}
+.ez-stat-go{margin-left:auto;width:18px!important;height:18px!important;color:#9f211b!important}
+/* 名單: tabs and section headings */
+.ez-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 12px}
+.ez-tabs a{display:flex;align-items:center;justify-content:center;gap:6px;min-height:58px;border-radius:14px;border:3px solid #e2cf98;background:#fffdf7;
+  font-size:20px;font-weight:900;color:#5a4a3a;text-decoration:none}
+.ez-tabs a small{font-size:13px;font-weight:600;color:#8a7a68}
+.ez-tabs a b{min-width:30px;padding:2px 8px;border-radius:999px;background:#efe4c6;font-size:16px;text-align:center}
+.ez-tabs a.is-on{border-color:#9f211b;background:#9f211b;color:#fff}
+.ez-tabs a.is-on small{color:#ffe7c2}
+.ez-tabs a.is-on b{background:#fff;color:#9f211b}
+.ez-sec{display:flex;align-items:center;gap:6px;margin:14px 2px 2px;font-size:16px;font-weight:900;color:#5a4a3a}
+.ez-sec small{font-weight:600;color:#8a7a68}
+.ez-sec .ic{width:18px;height:18px}
+.ez-row-main em.warn{font-style:normal;font-weight:800;color:#a8650a}
+/* 桌子: one row per table, tap to see who */
+.ez-tview-list{display:flex;flex-direction:column;gap:8px}
+.ez-tview{border-radius:16px;border:3px solid #a9cba0;background:#f2f8ee}
+.ez-tview.is-full{border-color:#d9a19c;background:#fdf1ef}
+.ez-tview.is-over{border-color:#d9534f;background:#fdecea}
+.ez-tview.is-group{border-color:#c7b6e3;background:#f6f1fc}
+.ez-tview summary{display:flex;align-items:center;gap:12px;padding:10px 12px;cursor:pointer;list-style:none;min-height:64px}
+.ez-tview summary::-webkit-details-marker{display:none}
+.ez-tno{flex:none;display:grid;place-items:center;width:48px;height:48px;border-radius:12px;background:#fff;border:2px solid currentColor;
+  font-size:24px;font-weight:900;color:#2f6b3a}
+.ez-tview.is-full .ez-tno,.ez-tview.is-over .ez-tno{color:#a3281f}
+.ez-tview.is-group .ez-tno{color:#5b3f8f}
+.ez-tmid{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.ez-tline{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:16px;color:#5a4a3a}
+.ez-tline b{font-size:22px;color:#2b1d14}
+.ez-ttag{font-style:normal;font-size:13px;font-weight:800;padding:1px 8px;border-radius:999px;background:#fff;border:1px solid currentColor}
+.ez-ttag.free{color:#2f6b3a}.ez-ttag.full{color:#a3281f}.ez-ttag.over{color:#fff;background:#c0392b;border-color:#c0392b}.ez-ttag.grp{color:#5b3f8f}
+.ez-tbar{display:block;height:8px;border-radius:999px;background:rgba(0,0,0,.07);overflow:hidden}
+.ez-tbar i{display:block;height:100%;background:#2f6b3a;border-radius:inherit}
+.ez-tview.is-full .ez-tbar i,.ez-tview.is-over .ez-tbar i{background:#c0392b}
+.ez-tview.is-group .ez-tbar i{background:#7a5bb5}
+.ez-tchev{flex:none;width:22px;height:22px;color:#7a6a58;transition:transform .2s}
+.ez-tview[open] .ez-tchev{transform:rotate(180deg)}
+.ez-tview ul{list-style:none;margin:0;padding:4px 14px 12px 72px;display:flex;flex-direction:column;gap:6px;font-size:17px}
+.ez-tview li b{color:#7a6a58}
+.ez-tempty{color:#8a7a68}
+@media (max-width:380px){ .ez-tview ul{padding-left:14px} }

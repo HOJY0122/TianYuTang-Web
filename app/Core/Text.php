@@ -45,7 +45,7 @@ class Text
         'nav.register' => ['nav', '報名', 'Register'],
         'nav.donate'   => ['nav', '布施', 'Donate'],
         'nav.gallery'  => ['nav', '相簿', 'Gallery'],
-        'nav.about'    => ['nav', '關於我們', 'About'],
+        'nav.about'    => ['nav', '關於本壇', 'About'],
 
         // --- Home page ---
         'home.welcome'        => ['home', '誠邀十方善信共襄盛舉，同結善緣，共種福田。', 'All are warmly welcome to join us in this celebration.', true],

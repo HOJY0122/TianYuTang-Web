@@ -116,9 +116,12 @@ unset($_mGroup, $_mItems, $_mItem);
       <span><strong><?= h($site['site_name']) ?></strong><small><?= $isSystem ? '系統管理員 System admin' : '管理員 Admin' ?></small></span>
     </a>
   </div>
-  <button type="button" class="side-find" data-goto-open data-label="快速前往 Go to a page (Ctrl K)">
-    <span class="ico"><?= icon('search') ?></span><span class="side-find-text">快速前往<small>Go to a page</small></span><kbd>Ctrl K</kbd>
-  </button>
+  <div class="side-tools">
+    <button type="button" class="side-find" data-goto-open data-label="快速前往 Go to a page (Ctrl K)">
+      <span class="ico"><?= icon('search') ?></span><span class="side-find-text">快速前往<small>Go to a page</small></span><kbd>Ctrl K</kbd>
+    </button>
+    <button type="button" class="side-rail-btn" id="sideRailBtn" aria-pressed="false" aria-label="收起選單 Collapse menu" data-label="收起選單 Collapse menu · ["><?= icon('sidebar') ?></button>
+  </div>
   <nav id="sideNav">
     <?php
     // Loop variables are prefixed: this file shares scope with the page
@@ -166,9 +169,6 @@ unset($_mGroup, $_mItems, $_mItem);
       <?= csrf_field() ?>
       <button type="submit" class="side-link logout-link" data-label="登出 Log out"><span class="ico"><?= icon('log-out') ?></span><span class="side-text">登出<small>Log out</small></span></button>
     </form>
-    <button type="button" class="side-link side-rail-btn" id="sideRailBtn" aria-pressed="false" data-label="展開選單 Expand menu">
-      <span class="ico"><?= icon('sidebar') ?></span><span class="side-text">收起選單<small>Collapse menu</small></span>
-    </button>
   </div>
 </aside>
 <div class="side-backdrop" id="sideBackdrop"></div>

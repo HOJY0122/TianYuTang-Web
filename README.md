@@ -154,7 +154,7 @@ Registration, donation and receipt lists sort by clicking a column heading.
 4. **Back up `storage/keys/app.key` with every database backup.** It decrypts the IC numbers and AI keys; without it they cannot be read. Never commit it (it is git-ignored) and never share it.
 5. Keep `DEBUG_MODE` false.
    Upload limits (20 MB a picture, 64 MB a request) are set in `public/.user.ini` (PHP-FPM) and `public/.htaccess` (Apache). Bulk uploads send pictures one at a time, so 50, 100 or more go up in one go whatever the host's limits.
-   Album videos (up to 200 MB each) go up in small pieces, so they pass the same limits. They are kept in `storage/videos/` (outside the web folder, played only through signed addresses) — include that folder in your backups, and keep an eye on disk space.
+   Album videos (up to 200 MB each by default — a system admin can change it, and the total space, on 相簿 → 影片空間) go up in small pieces, so they pass the same limits. They are kept in `storage/videos/` (outside the web folder, played only through signed addresses) — include that folder in your backups, and keep an eye on disk space.
 6. Never put API keys in `config.php` — paste them into Site settings → ⑤ AI (stored encrypted). If a key was ever committed, **delete or regenerate it at the provider**: blanking it in a later commit leaves it readable in git history.
 
 ### Nginx (it ignores .htaccess)

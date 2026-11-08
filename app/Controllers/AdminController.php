@@ -645,6 +645,14 @@ class AdminController extends Controller
         $u   = VideoUploader::usage();
         $mb  = (int) round((float) ($_POST['quota_gb'] ?? 0) * 1024);
         $max = intdiv($u['max'], 1 << 20);
+        $per = (int) ($_POST['max_mb'] ?? 0);
+        if ($per < VideoUploader::MIN_MAX_MB || $per > min(VideoUploader::TOP_MAX_MB, $mb)) {
+            $top = min(VideoUploader::TOP_MAX_MB, max($mb, VideoUploader::MIN_MAX_MB));
+            $this->flash('error', '單段影片上限不對 Per-video limit not allowed',
+                sprintf("單段影片上限要在 %d 至 %d MB 之間（不可大過總空間）。\nThe per-video limit must be between %d and %d MB (and not above the whole space).",
+                    VideoUploader::MIN_MAX_MB, $top, VideoUploader::MIN_MAX_MB, $top));
+            $this->redirect('/admin/photos/videos');
+        }
         if ($mb < VideoUploader::MIN_QUOTA_MB || $mb > $max) {
             $this->flash('error', '上限不對 Limit not allowed',
                 sprintf("上限要在 %s 至 %s 之間（伺服器的空間）。\nThe limit must be between %s and %s (the server's space).",
@@ -653,7 +661,9 @@ class AdminController extends Controller
             $this->redirect('/admin/photos/videos');
         }
         (new \App\Models\Setting())->set('video_quota_mb', (string) $mb);
-        $this->flash('success', '已更新 Saved', '影片空間上限：' . VideoUploader::size($mb << 20) . '　Video space limit: ' . VideoUploader::size($mb << 20));
+        (new \App\Models\Setting())->set('video_max_mb', (string) $per);
+        $this->flash('success', '已更新 Saved', '影片空間：' . VideoUploader::size($mb << 20) . '，單段影片最大 ' . VideoUploader::size($per << 20)
+            . '。Video space ' . VideoUploader::size($mb << 20) . ', each video up to ' . VideoUploader::size($per << 20) . '.');
         $this->redirect('/admin/photos/videos');
     }
 

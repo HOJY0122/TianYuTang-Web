@@ -245,6 +245,23 @@ class Zai extends Model
     }
 
     /**
+     * 名單 Who is here / not yet (easy mode, from the 已到 card): every
+     * registered person (individuals) with their Day 3 status and table,
+     * every 團體 group, and the waiting list (not those who left).
+     */
+    public function rollCall(int $eventId): array
+    {
+        $people = $this->fetchAll(
+            "SELECT a.id, a.name, a.ic_last4, a.contact_no, g.ref_code, z.status AS zstatus, z.table_no
+               FROM rsvp_attendees a JOIN rsvp_groups g ON g.id = a.group_id
+               LEFT JOIN zai_people z ON z.attendee_id = a.id
+              WHERE g.event_id = ? AND g.status <> 'cancelled' AND g.reg_type = 'individual'
+              ORDER BY a.name, a.id", [$eventId]);
+        $waiting = array_values(array_filter($this->waiting($eventId), static fn($w) => $w['status'] !== 'left'));
+        return ['people' => $people, 'groups' => $this->groups($eventId), 'waiting' => $waiting];
+    }
+
+    /**
      * 預約總人數 Total people reservation, by where it came from:
      * QR website, WhatsApp (keyed in), registered at the counter, 團體
      * groups (organisation registrations + the PM's list), and the

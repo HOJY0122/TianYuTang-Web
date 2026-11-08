@@ -25,16 +25,17 @@ $ezArr = (int) ($totals['arrived']['total'] ?? 0); $ezRes = (int) ($totals['rese
 $ezUsed = (int) $totals['used']; $ezSeats = (int) $totals['seats'];
 ?>
 <div class="ez-stats" id="liveEzStats" data-live="zai_people zai_groups zai_waiting zai_tables rsvp_groups rsvp_attendees">
-  <div class="ez-stat">
-    <span class="ez-stat-k"><?= icon('check-circle') ?> 已到 <small>Here</small></span>
+  <a class="ez-stat" href="<?= url('/admin/zai/easy/roll') ?>">
+    <span class="ez-stat-k"><?= icon('check-circle') ?> 已到 <small>Here</small><?= icon('chevron-right', 'ez-stat-go') ?></span>
     <span class="ez-stat-v"><b><?= $ezArr ?></b> / <?= $ezRes ?> 人</span>
     <span class="ez-stat-bar"><i style="width:<?= $ezPct($ezArr, $ezRes) ?>%"></i></span>
-  </div>
-  <div class="ez-stat<?= $ezSeats > 0 && $ezUsed >= $ezSeats ? ' is-full' : '' ?>">
-    <span class="ez-stat-k"><?= icon('chair') ?> 座位 <small>Seats</small></span>
+    <span class="ez-stat-sub">未到 <b><?= max(0, $ezRes - $ezArr) ?></b> 人 · 按這裡確認 <small>tap to confirm</small></span>
+  </a>
+  <a class="ez-stat<?= $ezSeats > 0 && $ezUsed >= $ezSeats ? ' is-full' : '' ?>" href="<?= url('/admin/zai/easy/tables') ?>">
+    <span class="ez-stat-k"><?= icon('chair') ?> 座位 <small>Seats</small><?= icon('chevron-right', 'ez-stat-go') ?></span>
     <span class="ez-stat-v"><b><?= $ezUsed ?></b> / <?= $ezSeats ?></span>
     <span class="ez-stat-bar seats"><i style="width:<?= $ezPct($ezUsed, $ezSeats) ?>%"></i></span>
     <span class="ez-stat-sub">有空位的桌 <b><?= (int) $totals['tables_free'] ?></b> 張 <small>tables with room</small></span>
-  </div>
+  </a>
 </div>
 <?php require __DIR__ . '/_bottom.php'; ?>

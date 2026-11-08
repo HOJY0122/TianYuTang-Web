@@ -263,6 +263,8 @@ $router->post('/admin/zai/easy/group',        'ZaiEasyController@saveGroup');
 $router->get('/admin/zai/easy/wait',          'ZaiEasyController@wait');
 $router->post('/admin/zai/easy/wait',         'ZaiEasyController@addWait');
 $router->get('/admin/zai/easy/waitlist',      'ZaiEasyController@waitlist');
+$router->get('/admin/zai/easy/roll',          'ZaiEasyController@roll');
+$router->get('/admin/zai/easy/tables',        'ZaiEasyController@tablesView');
 $router->get('/admin/zai/easy/ic-check',      'ZaiEasyController@icCheck');
 $router->get('/admin/zai/easy/done',          'ZaiEasyController@doneScreen');
 $router->get('/admin/zai/registered',         'ZaiController@registered');

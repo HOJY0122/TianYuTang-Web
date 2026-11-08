@@ -22,8 +22,9 @@
   function syncRail() {
     var on = root.classList.contains('side-rail');
     railBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
-    railBtn.dataset.label = on ? '展開選單 Expand menu' : '收起選單 Collapse menu';
-    railBtn.querySelector('.side-text').innerHTML = on ? '展開選單<small>Expand menu</small>' : '收起選單<small>Collapse menu</small>';
+    railBtn.dataset.label = on ? '展開選單 Expand menu · [' : '收起選單 Collapse menu · [';
+    railBtn.setAttribute('aria-label', on ? '展開選單 Expand menu' : '收起選單 Collapse menu');
+    railBtn.title = window.innerWidth > 1000 && !on ? '收起選單 Collapse menu · [' : '';
   }
   function toggleRail() {
     root.classList.add('side-anim');

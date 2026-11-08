@@ -131,6 +131,109 @@ final class Media
         return $out;
     }
 
+    /** Signed address of an album video ("videos/<name>.mp4") for <video src>. */
+    public static function videoUrl(string $path): string
+    {
+        $exp = (intdiv(time(), self::WINDOW) + 2) * self::WINDOW;
+        return BASE_URL . '/media/video?f=' . rawurlencode($path) . '&e=' . $exp
+             . '&s=' . substr(Crypto::sign($path . '|' . $exp, 'media-video'), 0, 32);
+    }
+
+    /**
+     * GET /media/video — never returns. Same rules as photos (signed,
+     * expiring, only inside our pages: Sec-Fetch-Dest "video"), plus
+     * byte ranges, so the player can start at once and jump anywhere
+     * without downloading the whole file first.
+     */
+    public static function serveVideo(): void
+    {
+        $path = is_string($_GET['f'] ?? null) ? $_GET['f'] : '';
+        $exp  = (int) ($_GET['e'] ?? 0);
+        $sig  = is_string($_GET['s'] ?? null) ? $_GET['s'] : '';
+        $file = VideoUploader::file($path);
+
+        $ok = $file !== null
+            && $exp >= time() && $exp <= time() + 3 * self::WINDOW
+            && hash_equals(substr(Crypto::sign($path . '|' . $exp, 'media-video'), 0, 32), $sig);
+
+        $dest = (string) ($_SERVER['HTTP_SEC_FETCH_DEST'] ?? '');
+        $site = (string) ($_SERVER['HTTP_SEC_FETCH_SITE'] ?? '');
+        $ref  = (string) ($_SERVER['HTTP_REFERER'] ?? '');
+        if ($ok && $dest !== '' && (!in_array($dest, ['video', 'audio'], true) || !in_array($site, ['same-origin', 'same-site'], true))) {
+            $ok = false;
+        }
+        if ($ok && $dest === '' && $ref !== '' && parse_url($ref, PHP_URL_HOST) !== parse_url('http://' . site_host(), PHP_URL_HOST)) {
+            $ok = false;
+        }
+        if (!$ok || !is_file($file)) {
+            http_response_code(403);
+            header('Content-Type: text/plain; charset=utf-8');
+            header('Cache-Control: no-store');
+            echo "此影片只能在網站內觀看。\nThis video can only be watched on the website.";
+            exit;
+        }
+
+        $size = (int) filesize($file);
+        $etag = '"' . substr(md5($path . filemtime($file) . $size), 0, 16) . '"';
+        header('Content-Type: ' . (str_ends_with($file, '.webm') ? 'video/webm' : 'video/mp4'));
+        header('Content-Disposition: inline; filename="video"');
+        header('Accept-Ranges: bytes');
+        header('Cache-Control: private, max-age=3600');
+        header('ETag: ' . $etag);
+        header('X-Robots-Tag: noindex');
+        header('Cross-Origin-Resource-Policy: same-origin');
+
+        $start = 0;
+        $end   = $size - 1;
+        $range = (string) ($_SERVER['HTTP_RANGE'] ?? '');
+        if ($range !== '' && (($_SERVER['HTTP_IF_RANGE'] ?? $etag) === $etag)) {
+            if (!preg_match('/^bytes=(\d*)-(\d*)$/', trim($range), $m) || ($m[1] === '' && $m[2] === '')) {
+                http_response_code(416);
+                header('Content-Range: bytes */' . $size);
+                exit;
+            }
+            if ($m[1] === '') {                          // "bytes=-500": the last 500
+                $start = max(0, $size - (int) $m[2]);
+            } else {
+                $start = (int) $m[1];
+                $end   = $m[2] === '' ? $size - 1 : min((int) $m[2], $size - 1);
+            }
+            if ($start > $end || $start >= $size) {
+                http_response_code(416);
+                header('Content-Range: bytes */' . $size);
+                exit;
+            }
+            http_response_code(206);
+            header('Content-Range: bytes ' . $start . '-' . $end . '/' . $size);
+        } elseif (($_SERVER['HTTP_IF_NONE_MATCH'] ?? '') === $etag) {
+            http_response_code(304);
+            exit;
+        }
+        header('Content-Length: ' . ($end - $start + 1));
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'HEAD') {
+            exit;
+        }
+
+        @set_time_limit(0);
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        $fh = fopen($file, 'rb');
+        fseek($fh, $start);
+        $left = $end - $start + 1;
+        while ($left > 0 && !feof($fh) && !connection_aborted()) {
+            $buf = fread($fh, (int) min(1 << 20, $left));
+            if ($buf === false || $buf === '') {
+                break;
+            }
+            echo $buf;
+            flush();
+            $left -= strlen($buf);
+        }
+        fclose($fh);
+        exit;
+    }
+
     /** GET /media — never returns. */
     public static function serve(): void
     {

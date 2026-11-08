@@ -1013,3 +1013,36 @@ html.hc .section-title::before,html.hc .section-title::after,html.hc .welcome h1
   .location-card .qr-pair{display:none;grid-auto-flow:row;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));justify-items:center}
   .location-card.show-qr .qr-pair{display:grid}
 }
+
+/* ---------- Album videos: a play button and the length on the cover; played in the viewer ---------- */
+.album-strip figure.is-video{position:relative;cursor:pointer}
+.album-strip figure.is-video .v-play{position:absolute;left:50%;top:0;aspect-ratio:4/3;width:100%;transform:translateX(-50%);
+  display:grid;place-items:center;pointer-events:none;z-index:3;
+  background:radial-gradient(circle at center,rgba(36,27,22,.28) 0,rgba(36,27,22,0) 62%)}
+.album-strip figure.is-video .v-play .ic{width:3.6rem;height:3.6rem;padding:1rem 0.9rem 1rem 1.15rem;box-sizing:border-box;border-radius:50%;
+  background:rgba(159,33,27,.9);color:#fff8df;fill:currentColor;stroke:none;border:2px solid var(--gold-soft);
+  box-shadow:0 6px 18px rgba(0,0,0,.35),0 0 0 6px rgba(255,243,194,.25);transition:transform .2s ease,background-color .2s}
+.album-strip figure.is-video:hover .v-play .ic,.album-strip figure.is-video:focus-visible .v-play .ic{transform:scale(1.08);background:#b3291f}
+.album-strip figure.is-video .v-len{position:absolute;right:.5rem;top:.5rem;z-index:3;pointer-events:none;
+  padding:.15rem .5rem;border-radius:999px;background:rgba(36,27,22,.78);color:#fff8df;font:700 .75rem/1.4 var(--sans);
+  font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.album-strip figure.is-video .v-len::before{content:"";display:inline-block;width:.45rem;height:.45rem;margin-right:.35rem;border-radius:50%;
+  background:#e2493f;vertical-align:.08em}
+@media (max-width:600px){ .album-strip figure.is-video .v-play .ic{width:2.9rem;height:2.9rem;padding:.8rem .7rem .8rem .95rem} }
+/* Gallery cards: "▶ 3 段影片" on the cover */
+.g-cover{position:relative}
+.g-vchip{position:absolute;left:.55rem;bottom:.55rem;display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .6rem;border-radius:999px;
+  background:rgba(36,27,22,.8);color:#fff8df;font:700 .75rem/1.4 var(--sans);box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.g-vchip .ic{width:.8rem;height:.8rem;fill:currentColor;stroke:none}
+.g-vchip .en{display:inline;font-weight:500;opacity:.85}
+/* The viewer */
+.lb-video{display:block;max-width:min(100%,1400px);max-height:calc(100vh - 11rem);max-height:calc(100dvh - 11rem);
+  width:auto;height:auto;min-width:min(78vw,640px);aspect-ratio:auto;border-radius:10px;background:#000;box-shadow:0 20px 70px #0008;
+  outline:2px solid rgba(243,223,156,.35);outline-offset:-1px}
+.lb-video[hidden],.lb-zoom[hidden]{display:none}
+.lightbox.is-video .lb-zoombar,.lightbox.is-video .lb-hint{visibility:hidden}
+@media (max-width:760px),(hover:none){
+  .lb-video{min-width:0;width:100%;max-height:calc(100vh - 13rem);max-height:calc(100dvh - 13rem)}
+}
+html.hc .album-strip figure.is-video .v-play .ic{background:#000;border-color:#fff}
+html.hc .album-strip figure.is-video .v-len,html.hc .g-vchip{background:#000}

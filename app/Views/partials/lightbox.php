@@ -18,6 +18,9 @@
  *    together on a canvas by js/photos.js; others use a normal image.
  *  - A transparent shield lies over the photo, so a long press or right
  *    click never reaches the picture itself, and carries the watermark.
+ *  - Videos (figure[data-video]) play in the same viewer with the
+ *    browser's own controls; zoom is off for them, swiping still moves
+ *    on (except on the control bar), and the video stops when you leave.
  */
 ?>
 <div id="lightbox" class="lightbox hidden" role="dialog" aria-modal="true" aria-label="相片檢視 Photo viewer">
@@ -38,6 +41,7 @@
         <canvas id="lbCanvas" role="img" hidden></canvas>
         <div class="lb-shield" aria-hidden="true"></div>
       </div>
+      <video id="lbVideo" class="lb-video" controls playsinline preload="metadata" controlslist="nodownload" hidden></video>
     </div>
     <button class="lb-next lb-side" aria-label="下一張 Next"><?= icon('chevron-right') ?></button>
   </div>
@@ -84,6 +88,17 @@
   var cap    = document.getElementById('lbCaption');
   var count  = document.getElementById('lbCount');
   var level  = document.getElementById('lbZoomLevel');
+  var video  = document.getElementById('lbVideo');
+  function isVideo() { return !!(set[current] && set[current].video); }
+  function stopVideo() {
+    if (video.hidden) return;
+    video.pause();
+    video.removeAttribute('src');
+    video.removeAttribute('poster');
+    video.load();                          // stop downloading the rest
+    video.hidden = true;
+  }
+  video.addEventListener('contextmenu', function (e) { e.preventDefault(); });
   var set = [], current = 0, lastFocus = null, cache = {};
   var MAX = 5;
   var z = { s: 1, x: 0, y: 0 };
@@ -113,6 +128,7 @@
   }
   /** Zoom to scale s, keeping the point (px, py) on screen where it is. */
   function zoomTo(s, px, py, animate) {
+    if (isVideo()) return;
     s = Math.min(MAX, Math.max(1, s));
     var r = stage.getBoundingClientRect();
     var cx = (px === undefined ? r.left + r.width / 2 : px) - (r.left + r.width / 2);
@@ -129,7 +145,17 @@
     current = (i + set.length) % set.length;
     var it = set[current];
     resetZoom();
-    if (it.seed && window.TYTPhoto) {
+    stopVideo();
+    box.classList.toggle('is-video', !!it.video);
+    zoomEl.hidden = !!it.video;
+    if (it.video) {
+      video.setAttribute('aria-label', it.caption || '影片 Video');
+      if (it.poster) video.poster = it.poster;
+      video.src = it.video;
+      video.hidden = false;
+      var p = video.play();                // a tap opened it: browsers allow sound
+      if (p && p.catch) p.catch(function () {});
+    } else if (it.seed && window.TYTPhoto) {
       img.hidden = true; img.removeAttribute('src');
       canvas.hidden = false;
       canvas.setAttribute('aria-label', it.caption || '活動留影');
@@ -150,7 +176,7 @@
       void stage.offsetWidth;
       stage.classList.add(dir > 0 ? 'in-right' : 'in-left');
     }
-    if (!it.seed) { preload(current + 1); preload(current - 1); }
+    if (!it.seed && !it.video) { preload(current + 1); preload(current - 1); }
     if (box.classList.contains('hidden')) {
       lastFocus = document.activeElement;
       box.classList.remove('hidden');
@@ -161,6 +187,7 @@
   function go(step) { if (set.length > 1) show(current + step, step); }
   function close() {
     box.classList.add('hidden');
+    stopVideo();
     document.body.style.overflow = '';
     img.removeAttribute('src');
     canvas.width = canvas.height = 0;      // drop the drawn photo
@@ -172,7 +199,9 @@
       if (strip.classList.contains('news-strip')) return;      // news pictures: see the click handler below
       strip.setAttribute('data-lb', '');
       var figures = Array.prototype.slice.call(strip.querySelectorAll('figure[data-full]'));
-      var items = figures.map(function (f) { return { full: f.dataset.full, seed: f.dataset.seed, caption: f.dataset.caption }; });
+      var items = figures.map(function (f) {
+        return { full: f.dataset.full, seed: f.dataset.seed, caption: f.dataset.caption, video: f.dataset.video, poster: f.dataset.poster };
+      });
       figures.forEach(function (f, i) {
         f.tabIndex = 0;
         f.setAttribute('role', 'button');
@@ -204,6 +233,7 @@
   document.addEventListener('keydown', function (e) {
     if (box.classList.contains('hidden')) return;
     if (e.key === 'Escape') close();
+    if (e.target === video && /^Arrow/.test(e.key)) return;   // the player's own seek keys
     if (e.key === 'ArrowLeft' && z.s === 1) go(-1);
     if (e.key === 'ArrowRight' && z.s === 1) go(1);
     if (e.key === '+' || e.key === '=') zoomTo(z.s * 1.5, undefined, undefined, true);
@@ -213,6 +243,7 @@
 
   // Mouse: wheel zooms around the pointer; double click toggles; drag pans when zoomed.
   stage.addEventListener('wheel', function (e) {
+    if (isVideo()) return;
     e.preventDefault();
     zoomTo(z.s * (e.deltaY < 0 ? 1.2 : 1 / 1.2), e.clientX, e.clientY, false);
   }, { passive: false });
@@ -231,6 +262,17 @@
   var t0 = null, pinch = null, lastTap = 0, sx = 0, sy = 0, dx = 0, dy = 0, horiz = null, st = 0;
   function dist(a, b) { return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); }
   stage.addEventListener('touchstart', function (e) {
+    if (isVideo()) {
+      // The control bar (bottom of the video) is for the player: seeking
+      // there must not swipe to the next item. No pinch or double tap.
+      var vr = video.getBoundingClientRect(), y = e.touches[0].clientY;
+      if (e.touches.length !== 1 || y > vr.bottom - Math.max(64, vr.height * 0.25)) { t0 = null; pinch = null; return; }
+      var q = e.touches[0];
+      t0 = { x: q.clientX, y: q.clientY };
+      sx = q.clientX; sy = q.clientY; dx = dy = 0; horiz = null; st = Date.now();
+      stage.style.transition = 'none';
+      return;
+    }
     if (e.touches.length === 2) {
       pinch = { d: dist(e.touches[0], e.touches[1]), s: z.s,
                 cx: (e.touches[0].clientX + e.touches[1].clientX) / 2, cy: (e.touches[0].clientY + e.touches[1].clientY) / 2 };

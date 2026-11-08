@@ -10,6 +10,9 @@ $galleryUrl = url('/gallery');
 $countText  = static fn(string $key, int $n): string => trim(t($key, 'zh', ['n' => $n]) . ' · ' . t($key, 'en', ['n' => $n]), ' ·');
 $albumName  = static fn(array $a): array => (int) $a['cat_id'] === 0
     ? [t('gallery.others'), t('gallery.others', 'en')] : [(string) $a['name_zh'], (string) ($a['name_en'] ?? '')];
+// A small "▶ 3 影片" mark on a cover when the year / album has videos.
+$videoChip  = static fn(int $n): string => $n > 0
+    ? '<span class="g-vchip">' . icon('play') . ' ' . $n . ' 段影片<span class="en"> video' . ($n > 1 ? 's' : '') . '</span></span>' : '';
 ?>
 
 <main id="main">
@@ -47,7 +50,7 @@ $albumName  = static fn(array $a): array => (int) $a['cat_id'] === 0
       <div class="g-grid">
         <?php foreach ($years as $y): ?>
           <a class="g-card" href="<?= $galleryUrl ?>?year=<?= h(urlencode((string) $y['year'])) ?>">
-            <span class="g-cover"><?php if ($y['cover']): ?><?= photo_img($y['cover']['thumb_path'], 'albums', ['alt' => '', 'loading' => 'lazy']) ?><?php endif; ?></span>
+            <span class="g-cover"><?php if ($y['cover']): ?><?= photo_img($y['cover']['thumb_path'], 'albums', ['alt' => '', 'loading' => 'lazy']) ?><?php endif; ?><?= $videoChip((int) $y['video_count']) ?></span>
             <span class="g-text">
               <strong class="g-year"><?= h($y['year']) ?><?php if (!empty($y['year_label'])): ?> <small><?= h($y['year_label']) ?></small><?php endif; ?></strong>
               <span class="g-count"><?= h($countText('gallery.albums', (int) $y['album_count'])) ?> · <?= h($countText('gallery.count', (int) $y['photo_count'])) ?></span>
@@ -61,7 +64,7 @@ $albumName  = static fn(array $a): array => (int) $a['cat_id'] === 0
       <div class="g-grid">
         <?php foreach ($albums as $a): [$_az, $_ae] = $albumName($a); ?>
           <a class="g-card" href="<?= $galleryUrl ?>?year=<?= h(urlencode($year)) ?>&amp;cat=<?= (int) $a['cat_id'] ?>">
-            <span class="g-cover"><?php if ($a['cover']): ?><?= photo_img($a['cover']['thumb_path'], 'albums', ['alt' => '', 'loading' => 'lazy']) ?><?php endif; ?></span>
+            <span class="g-cover"><?php if ($a['cover']): ?><?= photo_img($a['cover']['thumb_path'], 'albums', ['alt' => '', 'loading' => 'lazy']) ?><?php endif; ?><?= $videoChip((int) $a['video_count']) ?></span>
             <span class="g-text">
               <strong class="g-name"><?= h($_az) ?></strong>
               <?php if ($_ae !== ''): ?><span class="en"><?= h($_ae) ?></span><?php endif; ?>
@@ -76,10 +79,7 @@ $albumName  = static fn(array $a): array => (int) $a['cat_id'] === 0
       <div class="album album-open">
         <div class="album-strip album-grid" aria-label="<?= h($year . ' ' . $albumName($album)[0]) ?>">
           <?php foreach ($photos as $photo): ?>
-            <figure <?= photo_full_attrs($photo['file_path'], 'albums') ?> data-caption="<?= h($photo['caption'] ?? '') ?>">
-              <?= photo_img($photo['thumb_path'], 'albums', ['alt' => $photo['caption'] ?: ($year . ' ' . $albumName($album)[0]), 'loading' => 'lazy']) ?>
-              <?php if (!empty($photo['caption'])): ?><figcaption><?= h($photo['caption']) ?></figcaption><?php endif; ?>
-            </figure>
+            <?= album_figure($photo, 'albums', $year . ' ' . $albumName($album)[0]) ?>
           <?php endforeach; ?>
         </div>
       </div>

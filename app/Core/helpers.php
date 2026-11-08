@@ -75,6 +75,43 @@ function photo_full_attrs(string $path, string $area): string
         : 'data-full="' . h(App\Core\Media::url($path)) . '"';
 }
 
+/** "1:05" / "1:02:05" for a video's length in seconds ('' if unknown). */
+function video_length(?int $seconds): string
+{
+    if (!$seconds) {
+        return '';
+    }
+    return $seconds >= 3600
+        ? sprintf('%d:%02d:%02d', intdiv($seconds, 3600), intdiv($seconds % 3600, 60), $seconds % 60)
+        : sprintf('%d:%02d', intdiv($seconds, 60), $seconds % 60);
+}
+
+/**
+ * One album tile (a photo or a video) for an album strip — the shared
+ * lightbox (partials/lightbox.php) opens it. A video tile shows its cover
+ * with a play button and its length, and carries the signed video address.
+ */
+function album_figure(array $photo, string $area, string $alt): string
+{
+    $caption = (string) ($photo['caption'] ?? '');
+    $video   = (string) ($photo['video_path'] ?? '');
+    $attrs   = photo_full_attrs($photo['file_path'], $area) . ' data-caption="' . h($caption) . '"';
+    if ($video !== '') {
+        $attrs .= ' class="is-video" data-video="' . h(App\Core\Media::videoUrl($video)) . '"'
+                . ' data-poster="' . h(App\Core\Media::url($photo['file_path'])) . '"';
+    }
+    $out = '<figure ' . $attrs . '>' . photo_img($photo['thumb_path'], $area, ['alt' => $caption !== '' ? $caption : $alt, 'loading' => 'lazy']);
+    if ($video !== '') {
+        $len = video_length(isset($photo['duration_sec']) ? (int) $photo['duration_sec'] : null);
+        $out .= '<span class="v-play">' . icon('play') . '<span class="sr-only">影片 Video</span></span>'
+              . ($len !== '' ? '<span class="v-len">' . h($len) . '</span>' : '');
+    }
+    if ($caption !== '') {
+        $out .= '<figcaption>' . h($caption) . '</figcaption>';
+    }
+    return $out . '</figure>';
+}
+
 /** Current CSRF token, generated once per session. */
 function csrf_token(): string
 {

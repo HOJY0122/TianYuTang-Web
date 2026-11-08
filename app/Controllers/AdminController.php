@@ -3,6 +3,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Core\ImageUploader;
+use App\Core\VideoUploader;
 use App\Models\AdminUser;
 use App\Models\Donation;
 use App\Models\Event;
@@ -519,6 +520,92 @@ class AdminController extends Controller
         $this->json(['ok' => true, 'thumb' => media_url($stored['thumb']), 'full' => media_url($stored['path'])]);
     }
 
+    // ------------------------------------------------------------------
+    // Album videos — sent in pieces (App\Core\VideoUploader), JSON only.
+    // ------------------------------------------------------------------
+
+    /** POST /admin/photos/video/start {event_id, size} → {ok, id, chunk} */
+    public function videoStart(): void
+    {
+        $this->requireAdmin();
+        $this->requireCsrf();
+        if ((new Event())->find((int) ($_POST['event_id'] ?? 0)) === null) {
+            $this->json(['ok' => false, 'error' => '找不到活動 Event not found'], 404);
+        }
+        try {
+            $id = (new VideoUploader())->start((int) ($_POST['size'] ?? 0));
+        } catch (RuntimeException $e) {
+            $this->json(['ok' => false, 'error' => $e->getMessage()], 422);
+        }
+        $this->json(['ok' => true, 'id' => $id, 'chunk' => VideoUploader::chunkSize()]);
+    }
+
+    /** POST /admin/photos/video/chunk {id, offset, chunk} → {ok, received} */
+    public function videoChunk(): void
+    {
+        $this->requireAdmin();
+        if (empty($_POST) && empty($_FILES) && ($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
+            $this->json(['ok' => false, 'error' => '伺服器拒收這一段（上傳限制太小）。The server refused the piece (upload limit).'], 413);
+        }
+        $this->requireCsrf();
+        session_write_close();            // only reads the session from here on
+        try {
+            $got = (new VideoUploader())->append((string) ($_POST['id'] ?? ''), (int) ($_POST['offset'] ?? -1), $_FILES['chunk'] ?? []);
+        } catch (RuntimeException $e) {
+            $this->json(['ok' => false, 'error' => $e->getMessage()], 422);
+        }
+        $this->json(['ok' => true, 'received' => $got]);
+    }
+
+    /**
+     * POST /admin/photos/video/finish {id, event_id, category_id, caption,
+     * duration, poster} → {ok, photo_id}. The poster is a frame the browser
+     * took from the video; it is stored like any album photo.
+     */
+    public function videoFinish(): void
+    {
+        $this->requireAdmin();
+        $this->requireCsrf();
+        $eventId = (int) ($_POST['event_id'] ?? 0);
+        if ((new Event())->find($eventId) === null) {
+            $this->json(['ok' => false, 'error' => '找不到活動 Event not found'], 404);
+        }
+        $categoryId = (int) ($_POST['category_id'] ?? 0);
+        if ($categoryId && (new \App\Models\PhotoCategory())->find($categoryId) === null) {
+            $categoryId = 0;
+        }
+        $caption = trim(mb_substr((string) ($_POST['caption'] ?? ''), 0, 255));
+        $seconds = (int) round((float) ($_POST['duration'] ?? 0));
+        $seconds = $seconds > 0 ? min($seconds, 65535) : null;
+
+        $videos = new VideoUploader();
+        $images = new ImageUploader('photos');
+        $id = (string) ($_POST['id'] ?? '');
+        try {
+            $poster = $images->storeWithThumbnail($_FILES['poster'] ?? []);
+        } catch (RuntimeException $e) {
+            $this->json(['ok' => false, 'error' => '封面：' . $e->getMessage()], 422);
+        }
+        try {
+            $video = $videos->finish($id);
+        } catch (RuntimeException $e) {
+            $images->delete($poster['path']);
+            $images->delete($poster['thumb']);
+            $this->json(['ok' => false, 'error' => $e->getMessage()], 422);
+        }
+        $photoId = (new Photo())->createVideo($eventId, $poster['path'], $poster['thumb'], $video, $seconds, $caption !== '' ? $caption : null, $categoryId ?: null);
+        $this->json(['ok' => true, 'photo_id' => $photoId]);
+    }
+
+    /** POST /admin/photos/video/abort {id} — the person cancelled. */
+    public function videoAbort(): void
+    {
+        $this->requireAdmin();
+        $this->requireCsrf();
+        (new VideoUploader())->abort((string) ($_POST['id'] ?? ''));
+        $this->json(['ok' => true]);
+    }
+
     public function deletePhoto(): void
     {
         $this->requireAdmin();
@@ -541,8 +628,9 @@ class AdminController extends Controller
         $photoModel->delete($id);
         $uploader->delete($photo['file_path']);
         $uploader->delete($photo['thumb_path']);
+        (new VideoUploader())->delete($photo['video_path'] ?? null);
 
-        $this->flash('success', '已刪除', '相片已從相簿移除。');
+        $this->flash('success', '已刪除', !empty($photo['video_path']) ? '影片已從相簿移除。The video was removed.' : '相片已從相簿移除。');
         $this->redirect("/admin/photos?event={$eventId}");
     }
 
@@ -608,6 +696,7 @@ class AdminController extends Controller
         foreach ((new Photo())->forEvent($id) as $photo) {
             $photoUploader->delete($photo['file_path']);
             $photoUploader->delete($photo['thumb_path']);
+            (new VideoUploader())->delete($photo['video_path'] ?? null);
         }
 
         $eventModel->deleteTestEvent($id);

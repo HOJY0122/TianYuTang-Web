@@ -942,3 +942,17 @@ html.tone-calm .help-btn:hover,html.tone-calm .help-btn[aria-expanded="true"]{ba
   .g-name{font-size:1.1rem}
   .album-strip.album-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem}
 }
+
+/* ---------- Temple touches: 祥雲 beside section titles, gold divider under the
+   event title, gold accent on info cards, 回紋 band on the footer. Pure CSS
+   images; hidden in high-contrast mode. ---------- */
+.section-title h2::before,.section-title h2::after{content:"";display:inline-block;width:2.3em;height:1em;vertical-align:.1em;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 28' fill='none' stroke='%23b58a35' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M4 22h40c4 0 7-2.6 7-6s-3-6-6.6-6c-.8-4.4-4.6-7.6-9.2-7.6-4 0-7.4 2.4-8.8 5.8-1-.8-2.3-1.2-3.6-1.2-3.4 0-6.2 2.7-6.2 6'/%3E%3Cpath d='M16.6 13c-1.7 0-3 1.3-3 2.9s1.3 2.9 3 2.9 2.4-1.1 2.4-2.3'/%3E%3Cpath d='M38 10.2c1.6-.6 3.3.2 3.9 1.8s-.2 3.2-1.8 3.8'/%3E%3Cpath d='M48 22h12'/%3E%3C/svg%3E") center/contain no-repeat;opacity:.9}
+.section-title h2::before{margin-right:.45em}
+.section-title h2::after{margin-left:.45em;transform:scaleX(-1)}
+.welcome h1::after{content:"";display:block;width:min(240px,64%);height:14px;margin:.7rem auto .3rem;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 14' fill='none' stroke='%23b58a35' stroke-width='1.4'%3E%3Cpath d='M4 7h92M144 7h92'/%3E%3Cpath d='M120 1.5 126 7l-6 5.5L114 7z' fill='%23b58a35'/%3E%3Cpath d='M104 7l5-3.5 5 3.5-5 3.5zM126 7l5-3.5 5 3.5-5 3.5z'/%3E%3Ccircle cx='98' cy='7' r='1.6' fill='%23b58a35'/%3E%3Ccircle cx='142' cy='7' r='1.6' fill='%23b58a35'/%3E%3C/svg%3E") center/contain no-repeat}
+.info-card{border-top:3px solid var(--gold)}
+.site-footer{position:relative}
+.site-footer::before{content:"";position:absolute;left:0;right:0;top:0;height:12px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 12' fill='none' stroke='%23e8c76a' stroke-width='1.4' stroke-opacity='.55'%3E%3Cpath d='M0 11h4V3h12v6h-6V6'/%3E%3Cpath d='M16 9v2h8'/%3E%3C/svg%3E") left center/24px 12px repeat-x}
+@media (max-width:640px){ .section-title h2::before,.section-title h2::after{width:1.6em} }
+html.hc .section-title h2::before,html.hc .section-title h2::after,html.hc .welcome h1::after,html.hc .site-footer::before{display:none}

@@ -84,7 +84,7 @@ if (!$bannerSlides && $siteHeroBanner) {
       <span><?= h($rsvpWindow['open'] ? t('home.cta_register', 'en') : ($rsvpWindow['reason'] === 'not_yet' ? t('home.opening_soon') . ' ' . t('home.opening_soon', 'en') : t('home.closed') . ' ' . t('home.closed', 'en'))) ?></span>
     </a>
     <a class="cta" href="<?= url('/donate') ?>">
-      <span class="icon"><?= icon('donate') ?></span>
+      <span class="icon"><?= icon('lotus') ?></span>
       <strong><?= h(t('home.cta_donate')) ?></strong>
       <span><?= h($donationWindow['open'] ? t('home.cta_donate', 'en') : ($donationWindow['reason'] === 'not_yet' ? t('home.opening_soon') . ' ' . t('home.opening_soon', 'en') : t('home.closed') . ' ' . t('home.closed', 'en'))) ?></span>
     </a>
@@ -108,7 +108,7 @@ if (!$bannerSlides && $siteHeroBanner) {
       <?php if ($dateEn !== ''): ?><p class="help"><?= h($dateEn) ?></p><?php endif; ?>
     </div>
     <div class="card info-card">
-      <h3><?= icon('map-pin') ?> <?= tb('home.venue') ?></h3>
+      <h3><?= icon('temple') ?> <?= tb('home.venue') ?></h3>
       <p><?= h($event['location']) ?></p>
     </div>
     <div class="card info-card">

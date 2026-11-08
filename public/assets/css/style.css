@@ -985,3 +985,12 @@ html.tone-calm .help-btn:hover,html.tone-calm .help-btn[aria-expanded="true"]{ba
   .section-title{column-gap:.45rem}
 }
 html.hc .section-title::before,html.hc .section-title::after,html.hc .welcome h1::after,html.hc .site-footer::before,html.hc .site-footer::after{display:none}
+/* English title on its own line under the Chinese (all screen sizes); the
+   clouds stay centred beside the two-line title. */
+.section-title h2 .en{display:block;margin:.3rem 0 0;vertical-align:0}
+/* Keep the clouds level with the Chinese line (not the middle of both lines). */
+.section-title::before,.section-title::after{align-self:flex-start;
+  margin-top:calc((clamp(1.7rem,4.2vw,2.3rem) * 1.3 - clamp(1rem,2.6vw,1.55rem)) / 2)}
+@media (max-width:640px){
+  .section-title::before,.section-title::after{margin-top:calc((1.6rem * 1.3 - clamp(1rem,2.6vw,1.55rem)) / 2)}
+}

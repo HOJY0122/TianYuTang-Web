@@ -21,6 +21,12 @@
  *  - Videos (figure[data-video]) play in the same viewer with the
  *    browser's own controls; zoom is off for them, swiping still moves
  *    on (except on the control bar), and the video stops when you leave.
+ *    No download in the player's menu. When albums are protected the
+ *    video arrives ENCRYPTED (Media::videoUrl(…, true)): it is fetched,
+ *    decrypted here piece by piece (AES-CTR, data-vk / data-vi) and
+ *    played from memory (blob:), with a loading ring meanwhile.
+ *  - Vertical (phone) videos get a tall player, horizontal ones a wide
+ *    one — no big black bars either side.
  */
 ?>
 <div id="lightbox" class="lightbox hidden" role="dialog" aria-modal="true" aria-label="相片檢視 Photo viewer">
@@ -41,7 +47,11 @@
         <canvas id="lbCanvas" role="img" hidden></canvas>
         <div class="lb-shield" aria-hidden="true"></div>
       </div>
-      <video id="lbVideo" class="lb-video" controls playsinline preload="metadata" controlslist="nodownload" hidden></video>
+      <video id="lbVideo" class="lb-video" controls playsinline preload="metadata" controlslist="nodownload" disableremoteplayback hidden></video>
+      <div class="lb-vload" id="lbVload" hidden>
+        <span class="lb-vring" aria-hidden="true"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="20"/><circle class="lb-vring-on" cx="24" cy="24" r="20"/></svg><b id="lbVpct">0%</b></span>
+        <span class="lb-vload-text">載入影片 <span class="en">Loading video</span></span>
+      </div>
     </div>
     <button class="lb-next lb-side" aria-label="下一張 Next"><?= icon('chevron-right') ?></button>
   </div>
@@ -89,8 +99,97 @@
   var count  = document.getElementById('lbCount');
   var level  = document.getElementById('lbZoomLevel');
   var video  = document.getElementById('lbVideo');
+  var vload  = document.getElementById('lbVload');
+  var vpct   = document.getElementById('lbVpct');
+  var vring  = vload.querySelector('.lb-vring-on');
+  var vjob = null, blobs = [];          // the loading video; decrypted videos kept (last 2) for going back
   function isVideo() { return !!(set[current] && set[current].video); }
+  function shape(w, h) {
+    var tall = w > 0 && h > w;
+    box.classList.toggle('v-tall', tall);
+    video.style.aspectRatio = w > 0 && h > 0 ? w + ' / ' + h : '';
+  }
+  video.addEventListener('loadedmetadata', function () { if (video.videoWidth) shape(video.videoWidth, video.videoHeight); });
+  function hex(s) { var a = new Uint8Array(s.length / 2); for (var i = 0; i < a.length; i++) a[i] = parseInt(s.substr(i * 2, 2), 16); return a; }
+  /** Fetch the encrypted copy and decrypt it in 4 MB pieces (AES-CTR: piece at byte n uses counter prefix ‖ n/16) → Promise<Blob>. */
+  function decrypt(it, progress, signal) {
+    var iv = hex(it.vi);
+    function counter(at) {
+      var c = new Uint8Array(16), dv = new DataView(c.buffer), n = at / 16;
+      c.set(iv, 0);
+      dv.setUint32(8, Math.floor(n / 4294967296)); dv.setUint32(12, n >>> 0);
+      return c;
+    }
+    return crypto.subtle.importKey('raw', hex(it.vk), 'AES-CTR', false, ['decrypt']).then(function (key) {
+      return fetch(it.video, { credentials: 'same-origin', signal: signal }).then(function (r) {
+        if (!r.ok || !r.body) throw new Error('HTTP ' + r.status);
+        var total = +r.headers.get('Content-Length') || 0, reader = r.body.getReader();
+        var SEG = 4 << 20, pending = [], have = 0, got = 0, offset = 0, parts = [], chain = Promise.resolve();
+        function take(len) {
+          var buf = new Uint8Array(len), p = 0;
+          while (p < len) {
+            var head = pending[0], n = Math.min(head.length, len - p);
+            buf.set(head.subarray(0, n), p); p += n;
+            if (n === head.length) pending.shift(); else pending[0] = head.subarray(n);
+          }
+          have -= len;
+          var at = offset; offset += len;
+          chain = chain.then(function () {
+            return crypto.subtle.decrypt({ name: 'AES-CTR', counter: counter(at), length: 64 }, key, buf);
+          }).then(function (plain) { parts.push(plain); });
+        }
+        function pump() {
+          return reader.read().then(function (x) {
+            if (x.done) { if (have) take(have); return chain; }
+            pending.push(x.value); have += x.value.length; got += x.value.length;
+            if (total) progress(got / total);
+            while (have >= SEG) take(SEG);
+            return pump();
+          });
+        }
+        return pump().then(function () { return new Blob(parts, { type: it.vt || 'video/mp4' }); });
+      });
+    });
+  }
+  function ring(f) {
+    vpct.textContent = Math.floor(f * 100) + '%';
+    vring.style.strokeDashoffset = String(125.7 * (1 - f));
+  }
+  function playEncrypted(it) {
+    var kept = blobs.filter(function (b) { return b.key === it.video; })[0];
+    if (kept) { video.src = kept.url; video.play().catch(function () {}); return; }
+    if (!window.crypto || !crypto.subtle || !window.ReadableStream) {
+      vload.hidden = false;
+      vload.classList.add('is-error');
+      vload.querySelector('.lb-vload-text').innerHTML = '此瀏覽器未能播放受保護的影片，請更新瀏覽器。<span class="en">This browser cannot play protected videos — please update it.</span>';
+      return;
+    }
+    var job = { ctl: window.AbortController ? new AbortController() : null };
+    vjob = job;
+    ring(0);
+    vload.hidden = false;
+    decrypt(it, function (f) { if (vjob === job) ring(f); }, job.ctl && job.ctl.signal).then(function (blob) {
+      var url = URL.createObjectURL(blob);
+      blobs.push({ key: it.video, url: url });
+      while (blobs.length > 2) URL.revokeObjectURL(blobs.shift().url);
+      if (vjob !== job) return;
+      vjob = null;
+      vload.hidden = true;
+      video.src = url;
+      var p = video.play();
+      if (p && p.catch) p.catch(function () {});
+    }).catch(function (e) {
+      if (vjob !== job) return;
+      vjob = null;
+      vload.classList.add('is-error');
+      vload.querySelector('.lb-vload-text').innerHTML = '影片未能載入，請稍後再試。<span class="en">The video could not load — please try again.</span>';
+    });
+  }
   function stopVideo() {
+    if (vjob) { if (vjob.ctl) vjob.ctl.abort(); vjob = null; }
+    vload.hidden = true;
+    vload.classList.remove('is-error');
+    vload.querySelector('.lb-vload-text').innerHTML = '載入影片 <span class="en">Loading video</span>';
     if (video.hidden) return;
     video.pause();
     video.removeAttribute('src');
@@ -150,11 +249,16 @@
     zoomEl.hidden = !!it.video;
     if (it.video) {
       video.setAttribute('aria-label', it.caption || '影片 Video');
+      shape(+it.w || 0, +it.h || 0);
       if (it.poster) video.poster = it.poster;
-      video.src = it.video;
       video.hidden = false;
-      var p = video.play();                // a tap opened it: browsers allow sound
-      if (p && p.catch) p.catch(function () {});
+      if (it.vk) {
+        playEncrypted(it);
+      } else {
+        video.src = it.video;
+        var p = video.play();              // a tap opened it: browsers allow sound
+        if (p && p.catch) p.catch(function () {});
+      }
     } else if (it.seed && window.TYTPhoto) {
       img.hidden = true; img.removeAttribute('src');
       canvas.hidden = false;
@@ -200,7 +304,8 @@
       strip.setAttribute('data-lb', '');
       var figures = Array.prototype.slice.call(strip.querySelectorAll('figure[data-full]'));
       var items = figures.map(function (f) {
-        return { full: f.dataset.full, seed: f.dataset.seed, caption: f.dataset.caption, video: f.dataset.video, poster: f.dataset.poster };
+        return { full: f.dataset.full, seed: f.dataset.seed, caption: f.dataset.caption, video: f.dataset.video, poster: f.dataset.poster,
+                 vk: f.dataset.vk, vi: f.dataset.vi, vt: f.dataset.vt, w: f.dataset.w, h: f.dataset.h };
       });
       figures.forEach(function (f, i) {
         f.tabIndex = 0;

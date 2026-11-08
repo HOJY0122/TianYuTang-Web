@@ -131,12 +131,65 @@ final class Media
         return $out;
     }
 
-    /** Signed address of an album video ("videos/<name>.mp4") for <video src>. */
-    public static function videoUrl(string $path): string
+    /**
+     * Signed address of an album video ("videos/<name>.mp4").
+     * $encrypted: the ENCRYPTED copy (AES-128-CTR, videoKey()) that the
+     * page's script (lightbox) downloads with fetch, decrypts in memory
+     * and plays from a blob: — DevTools → Network or a download tool only
+     * ever gets scrambled bytes. Otherwise the plain file for <video src>.
+     */
+    public static function videoUrl(string $path, bool $encrypted = false): string
     {
         $exp = (intdiv(time(), self::WINDOW) + 2) * self::WINDOW;
-        return BASE_URL . '/media/video?f=' . rawurlencode($path) . '&e=' . $exp
-             . '&s=' . substr(Crypto::sign($path . '|' . $exp, 'media-video'), 0, 32);
+        $x   = $encrypted ? '1' : '0';
+        return BASE_URL . '/media/video?f=' . rawurlencode($path) . '&e=' . $exp . ($encrypted ? '&x=1' : '')
+             . '&s=' . substr(Crypto::sign($path . '|' . $exp . ($encrypted ? '|1' : ''), 'media-video'), 0, 32);
+    }
+
+    /** Key and counter start of a video's encrypted copy: [16-byte key, 8-byte counter prefix]. */
+    public static function videoKey(string $path): array
+    {
+        $raw = hash_hmac('sha256', $path, Crypto::sign('video-key-v1', 'media-video'), true);
+        return [substr($raw, 0, 16), substr($raw, 16, 8)];
+    }
+
+    /** Remove a video's encrypted copy (when the video is deleted). */
+    public static function dropVideoCache(string $path, string $file): void
+    {
+        if (is_file($file)) {
+            @unlink(BASE_PATH . '/storage/cache/media/' . sha1($path . '|' . filemtime($file) . '|v1') . '.vid');
+        }
+    }
+
+    /** The encrypted copy of a video (made once, kept in storage/cache/media), or null. */
+    private static function encryptedVideo(string $path, string $file): ?string
+    {
+        $dir = BASE_PATH . '/storage/cache/media';
+        $out = $dir . '/' . sha1($path . '|' . filemtime($file) . '|v1') . '.vid';
+        if (is_file($out)) {
+            return $out;
+        }
+        if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) {
+            return null;
+        }
+        [$key, $prefix] = self::videoKey($path);
+        $tmp = $out . '.' . bin2hex(random_bytes(4));
+        $in  = fopen($file, 'rb');
+        $wr  = fopen($tmp, 'wb');
+        if (!$in || !$wr) {
+            return null;
+        }
+        $offset = 0;
+        // CTR: block n uses counter = prefix ‖ n (64-bit, big-endian), so
+        // each 1 MB piece is encrypted on its own and memory stays small.
+        while (($buf = fread($in, 1 << 20)) !== false && $buf !== '') {
+            fwrite($wr, (string) openssl_encrypt($buf, 'aes-128-ctr', $key, OPENSSL_RAW_DATA, $prefix . pack('J', intdiv($offset, 16))));
+            $offset += strlen($buf);
+        }
+        fclose($in);
+        fclose($wr);
+        rename($tmp, $out);
+        return $out;
     }
 
     /**
@@ -150,16 +203,19 @@ final class Media
         $path = is_string($_GET['f'] ?? null) ? $_GET['f'] : '';
         $exp  = (int) ($_GET['e'] ?? 0);
         $sig  = is_string($_GET['s'] ?? null) ? $_GET['s'] : '';
+        $enc  = ($_GET['x'] ?? '') === '1';
         $file = VideoUploader::file($path);
 
         $ok = $file !== null
             && $exp >= time() && $exp <= time() + 3 * self::WINDOW
-            && hash_equals(substr(Crypto::sign($path . '|' . $exp, 'media-video'), 0, 32), $sig);
+            && hash_equals(substr(Crypto::sign($path . '|' . $exp . ($enc ? '|1' : ''), 'media-video'), 0, 32), $sig);
 
+        // Plain copy: only as a <video> in our pages. Encrypted copy: only
+        // fetched by our pages' script (Sec-Fetch-Dest "empty").
         $dest = (string) ($_SERVER['HTTP_SEC_FETCH_DEST'] ?? '');
         $site = (string) ($_SERVER['HTTP_SEC_FETCH_SITE'] ?? '');
         $ref  = (string) ($_SERVER['HTTP_REFERER'] ?? '');
-        if ($ok && $dest !== '' && (!in_array($dest, ['video', 'audio'], true) || !in_array($site, ['same-origin', 'same-site'], true))) {
+        if ($ok && $dest !== '' && (!in_array($dest, $enc ? ['empty'] : ['video', 'audio'], true) || !in_array($site, ['same-origin', 'same-site'], true))) {
             $ok = false;
         }
         if ($ok && $dest === '' && $ref !== '' && parse_url($ref, PHP_URL_HOST) !== parse_url('http://' . site_host(), PHP_URL_HOST)) {
@@ -172,11 +228,18 @@ final class Media
             echo "此影片只能在網站內觀看。\nThis video can only be watched on the website.";
             exit;
         }
+        if ($enc) {
+            $file = self::encryptedVideo($path, $file);
+            if ($file === null) {
+                http_response_code(503);
+                exit;
+            }
+        }
 
         $size = (int) filesize($file);
         $etag = '"' . substr(md5($path . filemtime($file) . $size), 0, 16) . '"';
-        header('Content-Type: ' . (str_ends_with($file, '.webm') ? 'video/webm' : 'video/mp4'));
-        header('Content-Disposition: inline; filename="video"');
+        header('Content-Type: ' . ($enc ? 'application/octet-stream' : (str_ends_with($file, '.webm') ? 'video/webm' : 'video/mp4')));
+        header('Content-Disposition: inline; filename="' . ($enc ? 'data' : 'video') . '"');
         header('Accept-Ranges: bytes');
         header('Cache-Control: private, max-age=3600');
         header('ETag: ' . $etag);

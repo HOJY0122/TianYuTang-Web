@@ -96,7 +96,7 @@ $photoCount = count($photos) - $videoCount;
 
       <div class="vid-card" id="videoCard" hidden>
         <div class="vid-preview">
-          <video id="videoPreview" controls playsinline muted preload="metadata"></video>
+          <video id="videoPreview" controls playsinline muted preload="metadata" controlslist="nodownload" disablepictureinpicture></video>
         </div>
         <div class="vid-side">
           <div class="vid-file">
@@ -208,7 +208,7 @@ $photoCount = count($photos) - $videoCount;
           <div class="admin-photo<?= $isVid ? ' is-video' : '' ?>" data-id="<?= (int) $photo['id'] ?>">
             <div class="drag-area" data-drag-handle title="拖曳排序 Drag to reorder">
               <img src="<?= h(media_url($photo['thumb_path'])) ?>" alt="<?= $isVid ? '影片 Video' : '相片 Photo' ?> <?= $i + 1 ?>" draggable="false">
-              <?php if ($isVid): ?><span class="adm-vbadge"><?= icon('play') ?> 影片<?= ($len = video_length((int) $photo['duration_sec'])) !== '' ? ' · ' . h($len) : '' ?></span><?php endif; ?>
+              <?php if ($isVid): ?><span class="adm-vbadge"><?= icon('play') ?> 影片<?= ($len = video_length((int) $photo['duration_sec'])) !== '' ? ' · ' . h($len) : '' ?><?= (int) $photo['video_h'] > (int) $photo['video_w'] ? ' · 直式' : ((int) $photo['video_w'] ? ' · 橫式' : '') ?></span><?php endif; ?>
               <span class="drag-badge" aria-hidden="true">⠿ <b data-position><?= $i + 1 ?></b></span>
             </div>
 

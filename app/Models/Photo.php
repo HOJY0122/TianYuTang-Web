@@ -31,10 +31,10 @@ class Photo extends Model
     }
 
     /** Add a video (its cover picture + the stored video), at the end of the order. */
-    public function createVideo(int $eventId, string $poster, string $thumb, string $video, ?int $seconds, ?string $caption = null, ?int $categoryId = null): int
+    public function createVideo(int $eventId, string $poster, string $thumb, string $video, ?int $seconds, ?string $caption = null, ?int $categoryId = null, ?int $w = null, ?int $h = null): int
     {
         $id = $this->create($eventId, $poster, $thumb, $caption, $categoryId);
-        $this->execute('UPDATE event_photos SET video_path = ?, duration_sec = ? WHERE id = ?', [$video, $seconds, $id]);
+        $this->execute('UPDATE event_photos SET video_path = ?, duration_sec = ?, video_w = ?, video_h = ? WHERE id = ?', [$video, $seconds, $w, $h, $id]);
         return $id;
     }
 

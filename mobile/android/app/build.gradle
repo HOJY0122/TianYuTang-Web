@@ -9,7 +9,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         // -PtytVersionCode=N on the command line raises it for a new release (default 1)
         versionCode = Integer.parseInt(String.valueOf(project.findProperty('tytVersionCode') ?: '1'))
-        versionName "1.1"
+        versionName "1.2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

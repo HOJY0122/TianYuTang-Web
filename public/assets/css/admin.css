@@ -1705,3 +1705,110 @@ label > .app-scan-btn{margin-top:8px;width:100%}
 .vid-modal.is-portrait .vid-modal-box video{width:auto;height:70vh;max-height:70vh;margin:0 auto}
 .vid-modal.is-portrait .vid-modal-box .help{max-width:24rem}
 @media (max-width:860px){ .vid-card.is-portrait{grid-template-columns:1fr} .vid-card.is-portrait .vid-preview video{height:min(420px,60vh)} }
+
+/* =====================================================================
+   Admin menu: folding sections, narrow icon rail, 快速前往 (Ctrl K)
+   ===================================================================== */
+.side-top{display:flex;align-items:center;border-bottom:1px solid #4a3528}
+.side-top .side-brand{flex:1;min-width:0;border-bottom:0}
+.side-brand span{min-width:0}
+.side-brand strong,.side-brand small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.side-mark{display:grid;place-items:center;width:42px;height:42px;flex:none;border-radius:10px;background:var(--red);color:#ffe7a8;
+  font-family:var(--kai);font-size:22px;box-shadow:inset 0 0 0 2px rgba(255,231,168,.35)}
+/* 快速前往 in the menu */
+.side-find{display:flex;align-items:center;gap:10px;margin:12px 10px 2px;padding:8px 10px;border-radius:10px;cursor:pointer;
+  border:1px solid #4a3528;background:rgba(255,255,255,.04);color:#e9d6ad;font-weight:700;font-size:13.5px;text-align:left;line-height:1.2}
+.side-find:hover{background:var(--side-2);border-color:#6b4e3a}
+.side-find .ico{width:24px;text-align:center;flex:none;opacity:.85}
+.side-find-text{flex:1;min-width:0}
+.side-find-text small{display:block;font-size:11px;font-weight:500;opacity:.6}
+.side-find kbd,.top-find kbd,.goto kbd{font:700 10.5px/1 var(--sans);padding:3px 6px;border-radius:5px;white-space:nowrap}
+.side-find kbd{background:#3b2a21;border:1px solid #5a4232;color:#d9c39a}
+/* Sections that fold */
+.side-sec{margin-top:6px}
+.side-group{display:flex;align-items:center;gap:6px;width:100%;margin:8px 0 4px;padding:6px 8px;border:0;background:none;cursor:pointer;
+  color:#f5e7c4;font:700 11px/1.2 var(--sans);letter-spacing:.08em;text-transform:uppercase;opacity:.62;border-radius:8px;text-align:left}
+.side-group:hover{opacity:1;background:rgba(255,255,255,.04)}
+.side-group>span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.side-group small{font-size:inherit;font-weight:600;opacity:.85}
+.side-group .chev{width:14px;height:14px;transition:transform .2s ease}
+.side-count{display:none;min-width:18px;padding:1px 6px;border-radius:999px;background:#3b2a21;font-size:10.5px;text-align:center;letter-spacing:0}
+.side-sec.is-shut .side-group .chev{transform:rotate(-90deg)}
+.side-sec.is-shut .side-count{display:inline-block}
+.side-items{display:grid;grid-template-rows:1fr;transition:grid-template-rows .2s ease}
+.side-items>div{overflow:hidden;min-height:0}
+.side-sec.is-shut .side-items{grid-template-rows:0fr}
+.side-sec.is-shut .side-items>div{visibility:hidden}
+.side-link{position:relative}
+.side-link.active::before{content:"";position:absolute;left:-10px;top:8px;bottom:8px;width:4px;border-radius:0 4px 4px 0;background:#f3df9c}
+.side-text{min-width:0}
+.side-rail-btn{margin-top:4px;opacity:.75}
+.side-rail-btn:hover{opacity:1}
+.side-rail-btn .ic{transition:transform .2s ease}
+/* Top bar: section name over the page title, 快速前往 button */
+.top-title{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar-admin .crumb{font-size:11.5px;font-weight:700;color:var(--muted);letter-spacing:.06em;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-admin .crumb::after{content:" ›";opacity:.6}
+.top-find{display:inline-flex;align-items:center;gap:8px;padding:7px 10px 7px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);
+  color:var(--muted);font-weight:700;font-size:13px;cursor:pointer;flex:none;line-height:1.1}
+.top-find:hover{border-color:var(--gold);color:var(--dark)}
+.top-find small{font-weight:500;opacity:.8}
+.top-find kbd{background:#f3e7c4;border:1px solid #e1cc8e;color:#6b5c50}
+@media (max-width:1280px){ .top-find-text{display:none} .top-find{padding:9px 10px} }
+@media (max-width:1000px){
+  .top-find{width:44px;height:44px;justify-content:center;padding:0}
+  .top-find kbd{display:none}
+  .side-find kbd{display:none}
+}
+.side-tip{position:fixed;z-index:80;padding:6px 10px;border-radius:8px;background:#1b120d;color:#ffe7a8;font-size:13px;font-weight:700;
+  white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.35);pointer-events:none}
+.side-tip::before{content:"";position:absolute;left:-5px;top:50%;margin-top:-5px;border:5px solid transparent;border-left:0;border-right-color:#1b120d}
+.side-tip[hidden]{display:none}
+
+/* ---------- Narrow icon rail (computer only) ---------- */
+@media (min-width:1001px){
+  html.side-anim .side{transition:width .22s ease}
+  html.side-anim .main{transition:margin-left .22s ease}
+  html.side-rail .side{width:76px;overflow-x:hidden}
+  html.side-rail .main{margin-left:76px}
+  html.side-rail .side-brand{justify-content:center;padding:16px 0}
+  html.side-rail .side-brand>span,html.side-rail .side-text,html.side-rail .side-find-text,html.side-rail .side-find kbd,
+  html.side-rail .side-group>span,html.side-rail .side-group .chev,html.side-rail .side-count{display:none!important}
+  html.side-rail .side nav{padding:4px 10px}
+  html.side-rail .side-link,html.side-rail .side-find{justify-content:center;padding:11px 0;gap:0}
+  html.side-rail .side-find{margin:12px 12px 2px}
+  html.side-rail .side-link .ico,html.side-rail .side-find .ico{width:auto}
+  html.side-rail .side-link .ic,html.side-rail .side-find .ic{width:20px;height:20px}
+  /* section headings become a thin line; every icon shows */
+  html.side-rail .side-group{height:1px;margin:10px 8px;padding:0;background:#4a3528;pointer-events:none;opacity:1}
+  html.side-rail .side-items{grid-template-rows:1fr}
+  html.side-rail .side-items>div{visibility:visible}
+  html.side-rail .side-rail-btn .ic{transform:scaleX(-1)}
+}
+
+/* ---------- 快速前往 Go to a page ---------- */
+.goto{position:fixed;inset:0;z-index:1200;display:flex;justify-content:center;align-items:flex-start;padding:12vh 16px 16px;
+  background:rgba(27,18,13,.55);backdrop-filter:blur(2px)}
+.goto[hidden]{display:none}
+.goto-box{width:min(620px,100%);max-height:72vh;display:flex;flex-direction:column;background:#fffdf7;border-radius:16px;overflow:hidden;
+  border:1px solid var(--line);box-shadow:0 24px 70px rgba(0,0,0,.35);animation:gotoIn .14s ease}
+@keyframes gotoIn{from{transform:translateY(-8px);opacity:0}}
+.goto-search{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #efe1b8}
+.goto-search .ic{width:20px;height:20px;color:var(--gold);flex:none}
+.goto-search input{flex:1;min-width:0;border:0;outline:0;background:none;font-size:17px;padding:4px 0}
+.goto-search input::-webkit-search-cancel-button{display:none}
+.goto kbd{background:#f3e7c4;border:1px solid #e1cc8e;color:#6b5c50}
+.goto-list{list-style:none;margin:0;padding:6px;overflow-y:auto}
+.goto-list li[data-i]{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:10px;cursor:pointer}
+.goto-list li.is-sel{background:#fbefd0}
+.goto-list li.is-sel .goto-ic{background:var(--red);color:#fff}
+.goto-ic{display:grid;place-items:center;width:34px;height:34px;flex:none;border-radius:9px;background:#f3e7c4;color:var(--red)}
+.goto-ic .ic{width:18px;height:18px}
+.goto-name{flex:1;min-width:0;font-weight:800;color:var(--dark)}
+.goto-name small{font-weight:500;color:var(--muted);margin-left:4px}
+.goto-group{font-size:11.5px;color:var(--muted);white-space:nowrap}
+.goto-here{font-size:11px;font-weight:800;color:var(--green);background:#e5f3e5;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.goto-none{padding:22px;text-align:center;color:var(--muted)}
+.goto-help{display:flex;gap:16px;flex-wrap:wrap;padding:9px 16px;border-top:1px solid #efe1b8;background:#fbf4e1;font-size:12px;color:var(--muted)}
+.goto-help kbd{margin-right:3px}
+@media (max-width:600px){ .goto{padding-top:8vh} .goto-help{display:none} .goto-group{display:none} }

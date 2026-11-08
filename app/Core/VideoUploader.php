@@ -25,7 +25,10 @@ use RuntimeException;
  */
 final class VideoUploader
 {
-    public const MAX_BYTES = 200 * 1024 * 1024;   // 200 MB — a few minutes of phone video
+    // Largest single video: 影片空間 → 單段影片上限 (system admins), in MB.
+    public const DEFAULT_MAX_MB = 200;            // a few minutes of phone video
+    public const MIN_MAX_MB     = 20;
+    public const TOP_MAX_MB     = 2048;           // 2 GB: phones must still play it
     private const CHUNK    = 4 * 1024 * 1024;     // 4 MB a piece, or less if the host allows less (chunkSize)
     private const KEEP_FREE = 512 * 1024 * 1024;  // never fill the disk: leave 512 MB
 
@@ -116,6 +119,19 @@ final class VideoUploader
         return ['files' => $out, 'bytes' => $bytes];
     }
 
+    /** Largest single video allowed, in MB (never more than the whole space). */
+    public static function maxMb(): int
+    {
+        $v = (int) ((new \App\Models\Setting())->get('video_max_mb') ?? 0);
+        $v = $v >= self::MIN_MAX_MB ? min($v, self::TOP_MAX_MB) : self::DEFAULT_MAX_MB;
+        return min($v, self::quotaMb());
+    }
+
+    public static function maxBytes(): int
+    {
+        return self::maxMb() << 20;
+    }
+
     /** The limit set, in MB. */
     public static function quotaMb(): int
     {
@@ -129,8 +145,9 @@ final class VideoUploader
         if ($size <= 0) {
             throw new RuntimeException('影片是空的。The video is empty.');
         }
-        if ($size > self::MAX_BYTES) {
-            throw new RuntimeException('影片超過 200MB，請剪短或壓縮後再上傳。Video over 200 MB — trim or compress it first.');
+        if ($size > self::maxBytes()) {
+            $lim = self::size(self::maxBytes());
+            throw new RuntimeException("影片超過 {$lim}，請剪短或壓縮後再上傳。Video over {$lim} — trim or compress it first.");
         }
         $u = self::usage();
         if ($u['used'] + $size > $u['quota']) {

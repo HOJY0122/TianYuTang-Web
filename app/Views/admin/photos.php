@@ -83,7 +83,7 @@ $photoCount = count($photos) - $videoCount;
     <?php $spaceLink = true; require BASE_PATH . '/app/Views/admin/_video_space.php'; ?>
     <form id="videoUpload" class="vid-form" data-start="<?= url('/admin/photos/video/start') ?>" data-chunk="<?= url('/admin/photos/video/chunk') ?>"
           data-finish="<?= url('/admin/photos/video/finish') ?>" data-abort="<?= url('/admin/photos/video/abort') ?>"
-          data-max="<?= App\Core\VideoUploader::MAX_BYTES ?>" onsubmit="return false">
+          data-max="<?= App\Core\VideoUploader::maxBytes() ?>" onsubmit="return false">
       <?= csrf_field() ?>
       <input type="hidden" name="event_id" value="<?= (int) $event['id'] ?>">
 
@@ -91,7 +91,7 @@ $photoCount = count($photos) - $videoCount;
         <span class="vid-drop-icon" aria-hidden="true"><?= icon('play') ?></span>
         <strong>選擇影片，或把影片拖到這裡</strong>
         <span class="en">Choose a video, or drop it here</span>
-        <span class="vid-drop-help">MP4 · MOV · WebM　·　200MB 以內 <span class="en">up to 200 MB</span>　·　建議 3 分鐘內 <span class="en">best under 3 min</span></span>
+        <span class="vid-drop-help">MP4 · MOV · WebM　·　<?= h(App\Core\VideoUploader::size(App\Core\VideoUploader::maxBytes())) ?> 以內 <span class="en">up to <?= h(App\Core\VideoUploader::size(App\Core\VideoUploader::maxBytes())) ?></span>　·　建議 3 分鐘內 <span class="en">best under 3 min</span></span>
         <input type="file" id="videoFile" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.m4v,.webm" class="sr-only" data-plain>
       </label>
 

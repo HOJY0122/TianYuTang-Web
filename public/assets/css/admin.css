@@ -1949,3 +1949,7 @@ a.ez-stat:active{transform:scale(.98)}
 .ez-tview li b{color:#7a6a58}
 .ez-tempty{color:#8a7a68}
 @media (max-width:380px){ .ez-tview ul{padding-left:14px} }
+.vs-quota-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:4px 24px;margin-bottom:6px}
+.vs-bigwarn{margin:6px 0 0;padding:8px 10px;border-radius:10px;background:#fff1e0;border:1px solid #f0b46a;color:#7a3b00;font-size:.86rem;line-height:1.5}
+.vs-bigwarn[hidden]{display:none}
+.vs-bigwarn .en{display:block;opacity:.85}

@@ -41,14 +41,29 @@ $minGb = App\Core\VideoUploader::MIN_QUOTA_MB / 1024;
     <?php if ($isSystem): ?>
       <form method="POST" action="<?= url('/admin/photos/videos/quota') ?>" class="vs-quota">
         <?= csrf_field() ?>
-        <label for="quotaGb">影片空間上限 <span class="en">Video space limit</span></label>
-        <div class="vs-quota-row">
-          <input type="number" id="quotaGb" name="quota_gb" min="<?= h((string) $minGb) ?>" max="<?= h((string) max($minGb, $maxGb)) ?>" step="0.5"
-                 value="<?= h(rtrim(rtrim(number_format($use['quota'] / (1 << 30), 2, '.', ''), '0'), '.')) ?>" inputmode="decimal" required>
-          <span class="vs-unit">GB</span>
-          <button class="primary" type="submit"><?= icon('save') ?> 儲存 <span class="en">Save</span></button>
+        <div class="vs-quota-grid">
+          <div>
+            <label for="quotaGb">影片空間上限 <span class="en">Video space (all videos)</span></label>
+            <div class="vs-quota-row">
+              <input type="number" id="quotaGb" name="quota_gb" min="<?= h((string) $minGb) ?>" max="<?= h((string) max($minGb, $maxGb)) ?>" step="0.5"
+                     value="<?= h(rtrim(rtrim(number_format($use['quota'] / (1 << 30), 2, '.', ''), '0'), '.')) ?>" inputmode="decimal" required>
+              <span class="vs-unit">GB</span>
+            </div>
+            <p class="help">可設 <?= h((string) $minGb) ?> – <?= h((string) max($minGb, $maxGb)) ?> GB（依伺服器剩餘空間）。<span class="en">Allowed: <?= h((string) $minGb) ?> – <?= h((string) max($minGb, $maxGb)) ?> GB, from the server's free space.</span></p>
+          </div>
+          <div>
+            <label for="maxMb">單段影片上限 <span class="en">Largest single video</span></label>
+            <div class="vs-quota-row">
+              <input type="number" id="maxMb" name="max_mb" min="<?= App\Core\VideoUploader::MIN_MAX_MB ?>" max="<?= App\Core\VideoUploader::TOP_MAX_MB ?>" step="10"
+                     value="<?= App\Core\VideoUploader::maxMb() ?>" inputmode="numeric" required>
+              <span class="vs-unit">MB</span>
+            </div>
+            <p class="help">可設 <?= App\Core\VideoUploader::MIN_MAX_MB ?> – <?= App\Core\VideoUploader::TOP_MAX_MB ?> MB。建議 300MB 以內：相簿受保護時，手機要先下載整段影片才播放。
+              <span class="en">Allowed: <?= App\Core\VideoUploader::MIN_MAX_MB ?> – <?= App\Core\VideoUploader::TOP_MAX_MB ?> MB. Best under 300 MB: when albums are protected, phones download the whole video before it plays.</span></p>
+            <p class="vs-bigwarn" id="maxMbWarn" hidden><?= icon('alert') ?> 超過 500MB：訪客用手機數據觀看會很慢，舊手機可能播放不了。<span class="en">Over 500 MB: slow on mobile data, and older phones may not manage to play it.</span></p>
+          </div>
         </div>
-        <p class="help">可設 <?= h((string) $minGb) ?> – <?= h((string) max($minGb, $maxGb)) ?> GB（依伺服器剩餘空間）。<span class="en">Allowed: <?= h((string) $minGb) ?> – <?= h((string) max($minGb, $maxGb)) ?> GB, from the server's free space.</span></p>
+        <button class="primary" type="submit"><?= icon('save') ?> 儲存 <span class="en">Save</span></button>
       </form>
     <?php else: ?>
       <p class="help" style="margin-top:12px">上限由系統管理員設定。<span class="en">A system admin sets the limit.</span></p>
@@ -97,4 +112,14 @@ $minGb = App\Core\VideoUploader::MIN_QUOTA_MB / 1024;
     <?php endif; ?>
   </div>
 </div>
+<script>
+// A gentle warning beside the per-video limit when it is set very high.
+(function () {
+  var box = document.getElementById('maxMb'), warn = document.getElementById('maxMbWarn');
+  if (!box || !warn) return;
+  function check() { warn.hidden = !(+box.value > 500); }
+  box.addEventListener('input', check);
+  check();
+})();
+</script>
 <?php require BASE_PATH . '/app/Views/layouts/admin_footer.php'; ?>

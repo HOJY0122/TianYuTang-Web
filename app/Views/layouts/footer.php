@@ -48,6 +48,24 @@ $fm = static fn(string $k): string => isset($fHideM[$k]) ? ' f-hide-m' : '';
 <script src="<?= asset('js/dialog.js') ?>"></script>
 <script src="<?= asset('js/live.js') ?>"></script>
 <script src="<?= asset('js/uat.js') ?>"></script>
+<script>
+// The round help button is fixed to the screen's bottom-right corner. While
+// the footer is on screen it rides just above it, so it never covers the
+// footer's frame or text.
+(function () {
+  var fab = document.querySelector('.help-fab');
+  if (!fab) return;
+  function place() {
+    var f = document.getElementById('liveFooter');
+    var over = f ? window.innerHeight - f.getBoundingClientRect().top : 0;
+    fab.style.bottom = over > 0 ? (over + 12) + 'px' : '';
+  }
+  window.addEventListener('scroll', place, { passive: true });
+  window.addEventListener('resize', place);
+  document.addEventListener('live:swap', place);
+  place();
+})();
+</script>
 <?php if (($activeNav ?? "") === "home"): ?><script src="<?= asset("js/banner.js") ?>"></script><?php endif; ?>
 <?php if (!empty($protectAreas)): ?><script src="<?= asset('js/protect.js') ?>"></script><?php endif; ?>
 </body>

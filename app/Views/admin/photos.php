@@ -17,6 +17,8 @@ $catSelect = static function (string $name, ?int $current, string $attrs = '') u
     return '<select name="' . $name . '" ' . $attrs . '>' . $o . '</select>';
 };
 $evq = '?event=' . (int) $event['id'];
+$videoCount = count(array_filter($photos, static fn($p) => !empty($p['video_path'])));
+$photoCount = count($photos) - $videoCount;
 ?>
 <div class="wrap">
 
@@ -29,7 +31,7 @@ $evq = '?event=' . (int) $event['id'];
   <div class="panel eventbar">
     <div>
       <h2 style="margin:0 0 4px"><?= h($event['year']) ?> · <?= h($event['name']) ?></h2>
-      <div class="help">目前相簿共 <?= count($photos) ?> 張相片 · <?= count($photos) ?> photo<?= count($photos) === 1 ? '' : 's' ?></div>
+      <div class="help">目前相簿共 <?= $photoCount ?> 張相片<?= $videoCount ? '、' . $videoCount . ' 段影片' : '' ?> · <?= $photoCount ?> photo<?= $photoCount === 1 ? '' : 's' ?><?= $videoCount ? ', ' . $videoCount . ' video' . ($videoCount === 1 ? '' : 's') : '' ?></div>
     </div>
     <div class="eventbar-actions">
       <?php if (count($allEvents) > 1): ?>
@@ -72,6 +74,77 @@ $evq = '?event=' . (int) $event['id'];
         <span class="help" id="photoPicked" aria-live="polite"></span>
       </div>
       <div class="bulk-panel" id="photoProgress" hidden aria-live="polite"></div>
+    </form>
+  </div>
+
+  <!-- ---------- Upload a video ---------- -->
+  <div class="panel vid-panel">
+    <h2><?= icon('play') ?> 上傳影片 <span class="en">Upload a video</span></h2>
+    <form id="videoUpload" class="vid-form" data-start="<?= url('/admin/photos/video/start') ?>" data-chunk="<?= url('/admin/photos/video/chunk') ?>"
+          data-finish="<?= url('/admin/photos/video/finish') ?>" data-abort="<?= url('/admin/photos/video/abort') ?>"
+          data-max="<?= App\Core\VideoUploader::MAX_BYTES ?>" onsubmit="return false">
+      <?= csrf_field() ?>
+      <input type="hidden" name="event_id" value="<?= (int) $event['id'] ?>">
+
+      <label class="vid-drop" for="videoFile" id="videoDrop">
+        <span class="vid-drop-icon" aria-hidden="true"><?= icon('play') ?></span>
+        <strong>選擇影片，或把影片拖到這裡</strong>
+        <span class="en">Choose a video, or drop it here</span>
+        <span class="vid-drop-help">MP4 · MOV · WebM　·　200MB 以內 <span class="en">up to 200 MB</span>　·　建議 3 分鐘內 <span class="en">best under 3 min</span></span>
+        <input type="file" id="videoFile" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.m4v,.webm" class="sr-only" data-plain>
+      </label>
+
+      <div class="vid-card" id="videoCard" hidden>
+        <div class="vid-preview">
+          <video id="videoPreview" controls playsinline muted preload="metadata"></video>
+        </div>
+        <div class="vid-side">
+          <div class="vid-file">
+            <strong id="videoName"></strong>
+            <span class="help" id="videoMeta"></span>
+          </div>
+          <div class="vid-warn" id="videoWarn" role="alert" hidden></div>
+
+          <div class="vid-cover">
+            <canvas id="videoCover" width="160" height="90" aria-label="封面 Cover"></canvas>
+            <div>
+              <span class="vid-label">封面 <span class="en">Cover picture</span></span>
+              <p class="help" style="margin:.2rem 0 .5rem">播放或拖動影片到想要的畫面，再按下面的按鈕。<span class="en">Play or drag the video to the frame you like, then press the button.</span></p>
+              <button type="button" class="mini-btn ghost" id="videoGrab"><?= icon('camera') ?> 用目前畫面 <span class="en">Use this frame</span></button>
+            </div>
+          </div>
+
+          <div class="vid-fields">
+            <div>
+              <label for="videoCat">相簿類別 <span class="en">Album category</span></label>
+              <?= $catSelect('category_id', $cat ?? (int) ($categories[0]['id'] ?? 0), 'id="videoCat"') ?>
+            </div>
+            <div>
+              <label for="videoCaption">影片說明 <span class="en">Caption (optional)</span></label>
+              <input type="text" id="videoCaption" name="caption" maxlength="255" placeholder="例 e.g. 2026 施齋花絮">
+            </div>
+          </div>
+
+          <div class="vid-progress" id="videoProgress" hidden>
+            <div class="vid-bar"><i id="videoBar"></i></div>
+            <div class="vid-progress-text"><b id="videoPct">0%</b> <span id="videoSpeed" class="help"></span></div>
+          </div>
+
+          <div class="form-actions vid-actions">
+            <button class="primary" type="button" id="videoSend"><?= icon('upload') ?> 上傳影片 <span class="en">Upload</span></button>
+            <button class="mini-btn ghost" type="button" id="videoCancel"><?= icon('x') ?> 取消 <span class="en">Cancel</span></button>
+          </div>
+        </div>
+      </div>
+
+      <details class="vid-tips">
+        <summary><?= icon('lightbulb') ?> 拍攝及格式提示 <span class="en">Tips for phone videos</span></summary>
+        <ul>
+          <li>iPhone：設定 → 相機 → 格式 → 選「<strong>最相容</strong>」，影片才可在所有手機和電腦播放。<span class="en">iPhone: Settings → Camera → Formats → <strong>Most Compatible</strong>, so every phone and computer can play it.</span></li>
+          <li>影片太大？用手機相簿的「編輯」剪短，或用 1080p 拍攝。<span class="en">Too big? Trim it in the phone's Photos app, or record at 1080p.</span></li>
+          <li>上傳中請不要關閉此頁；網絡斷了會自動重試。<span class="en">Keep this page open while it uploads; a dropped connection is retried.</span></li>
+        </ul>
+      </details>
     </form>
   </div>
 
@@ -122,7 +195,7 @@ $evq = '?event=' . (int) $event['id'];
     </nav>
 
     <?php if (!$photos): ?>
-      <p class="help">尚未上傳任何相片。No photos yet.</p>
+      <p class="help">尚未上傳任何相片或影片。No photos or videos yet.</p>
     <?php else: ?>
       <p class="help" style="margin-bottom:16px">
         <?= icon('hand') ?> <strong>按住相片拖到新位置</strong>，放開即自動儲存。排列順序即為前台顯示順序。也可用 ↑ ↓ 按鈕。說明文字可留空。<br>
@@ -131,9 +204,11 @@ $evq = '?event=' . (int) $event['id'];
 
       <div class="admin-photo-grid" id="livePhotoGrid" data-live="event_photos" data-sortable="<?= url('/admin/photos/reorder') ?>" data-extra='<?= h(json_encode(['event_id' => (int) $event['id']])) ?>'>
         <?php foreach ($photos as $i => $photo): ?>
-          <div class="admin-photo" data-id="<?= (int) $photo['id'] ?>">
+          <?php $isVid = !empty($photo['video_path']); ?>
+          <div class="admin-photo<?= $isVid ? ' is-video' : '' ?>" data-id="<?= (int) $photo['id'] ?>">
             <div class="drag-area" data-drag-handle title="拖曳排序 Drag to reorder">
-              <img src="<?= h(media_url($photo['thumb_path'])) ?>" alt="相片 Photo <?= $i + 1 ?>" draggable="false">
+              <img src="<?= h(media_url($photo['thumb_path'])) ?>" alt="<?= $isVid ? '影片 Video' : '相片 Photo' ?> <?= $i + 1 ?>" draggable="false">
+              <?php if ($isVid): ?><span class="adm-vbadge"><?= icon('play') ?> 影片<?= ($len = video_length((int) $photo['duration_sec'])) !== '' ? ' · ' . h($len) : '' ?></span><?php endif; ?>
               <span class="drag-badge" aria-hidden="true">⠿ <b data-position><?= $i + 1 ?></b></span>
             </div>
 
@@ -152,8 +227,13 @@ $evq = '?event=' . (int) $event['id'];
             </form>
 
             <div class="admin-photo-actions">
+              <?php if ($isVid): ?>
+              <button class="mini-btn ghost" type="button" data-video-cover="<?= (int) $photo['id'] ?>" data-video="<?= h(App\Core\Media::videoUrl($photo['video_path'])) ?>"
+                      title="播放 / 換封面 Play / change cover"><?= icon('play') ?> <span class="hide-sm">播放 Play</span></button>
+              <?php else: ?>
               <button class="mini-btn ghost" type="button" data-edit-photo="<?= (int) $photo['id'] ?>" data-src="<?= h(media_url($photo['file_path'])) ?>"
                       title="裁切 / 旋轉 Crop / rotate">✎ <span class="hide-sm">編輯 Edit</span></button>
+              <?php endif; ?>
               <form method="POST" action="<?= url('/admin/photos/move') ?>" style="margin:0">
                 <?= csrf_field() ?>
                 <input type="hidden" name="photo_id" value="<?= (int) $photo['id'] ?>">
@@ -169,7 +249,7 @@ $evq = '?event=' . (int) $event['id'];
               </form>
 
               <form method="POST" action="<?= url('/admin/photos/delete') ?>" style="margin:0"
-                    data-confirm="確定要刪除這張相片嗎？此操作無法復原。&#10;Delete this photo? This cannot be undone." data-danger>
+                    data-confirm="<?= $isVid ? '確定要刪除這段影片嗎？此操作無法復原。&#10;Delete this video? This cannot be undone.' : '確定要刪除這張相片嗎？此操作無法復原。&#10;Delete this photo? This cannot be undone.' ?>" data-danger>
                 <?= csrf_field() ?>
                 <input type="hidden" name="photo_id" value="<?= (int) $photo['id'] ?>">
                 <button class="mini-btn danger" type="submit" title="刪除 Delete"><?= icon('trash') ?></button>
@@ -212,6 +292,7 @@ document.addEventListener('click', function (e) {
 });
 </script>
 <script src="<?= asset('js/bulk-upload.js') ?>"></script>
+<script src="<?= asset('js/video-upload.js') ?>" data-replace="<?= url('/admin/photos/replace') ?>"></script>
 <script>
 (function () {
   var form = document.getElementById('photoUpload'), input = document.getElementById('photoFiles'),

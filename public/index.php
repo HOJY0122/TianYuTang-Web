@@ -76,7 +76,8 @@ set_exception_handler(static function (Throwable $e): void {
 
 // Photos (signed addresses, App\Core\Media): answered before any session
 // starts — no cookie, no session lock while a page loads many pictures.
-if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === BASE_URL . '/media') {
+$_mediaPath = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+if ($_mediaPath === BASE_URL . '/media' || $_mediaPath === BASE_URL . '/media/video') {
     // Asleep: photos only for signed-in staff (a quick read-only look at the session).
     if (App\Core\Sleep::isOn()) {
         App\Core\Session::start();
@@ -88,7 +89,7 @@ if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === BASE_URL . '/medi
             exit;
         }
     }
-    App\Core\Media::serve();
+    $_mediaPath === BASE_URL . '/media' ? App\Core\Media::serve() : App\Core\Media::serveVideo();
 }
 
 App\Core\Session::start();   // cookie settings and time limits: see app/Core/Session.php
@@ -295,6 +296,10 @@ $router->post('/admin/photos/move',    'AdminController@movePhoto');
 $router->post('/admin/photos/reorder', 'AdminController@reorderPhotos');
 $router->post('/admin/photos/delete',  'AdminController@deletePhoto');
 $router->post('/admin/photos/replace', 'AdminController@replacePhoto');
+$router->post('/admin/photos/video/start',  'AdminController@videoStart');
+$router->post('/admin/photos/video/chunk',  'AdminController@videoChunk');
+$router->post('/admin/photos/video/finish', 'AdminController@videoFinish');
+$router->post('/admin/photos/video/abort',  'AdminController@videoAbort');
 
 // ---------- 6. Go ----------
 // Sleep mode (System → 休眠模式): visitors get the one "see you next year"

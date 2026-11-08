@@ -30,6 +30,14 @@ class Photo extends Model
         return (int) $this->db->lastInsertId();
     }
 
+    /** Add a video (its cover picture + the stored video), at the end of the order. */
+    public function createVideo(int $eventId, string $poster, string $thumb, string $video, ?int $seconds, ?string $caption = null, ?int $categoryId = null): int
+    {
+        $id = $this->create($eventId, $poster, $thumb, $caption, $categoryId);
+        $this->execute('UPDATE event_photos SET video_path = ?, duration_sec = ? WHERE id = ?', [$video, $seconds, $id]);
+        return $id;
+    }
+
     /**
      * All photos for one event, in display order. $category: null = every
      * photo, 0 = uncategorised ("其他 Others"), N = that category.
@@ -75,6 +83,7 @@ class Photo extends Model
     {
         $rows = $this->fetchAll(
             'SELECT e.year, MAX(e.year_label) AS year_label, COUNT(p.id) AS photo_count,
+                    COUNT(p.video_path) AS video_count,
                     COUNT(DISTINCT COALESCE(p.category_id, 0)) AS album_count
                FROM event_photos p
                JOIN events e ON e.id = p.event_id AND e.is_test = FALSE
@@ -93,7 +102,8 @@ class Photo extends Model
     {
         $rows = $this->fetchAll(
             'SELECT COALESCE(p.category_id, 0) AS cat_id, MAX(c.name_zh) AS name_zh, MAX(c.name_en) AS name_en,
-                    COALESCE(MAX(c.sort_order), 999999) AS ord, COUNT(p.id) AS photo_count
+                    COALESCE(MAX(c.sort_order), 999999) AS ord, COUNT(p.id) AS photo_count,
+                    COUNT(p.video_path) AS video_count
                FROM event_photos p
                JOIN events e ON e.id = p.event_id AND e.is_test = FALSE
                LEFT JOIN photo_categories c ON c.id = p.category_id
@@ -225,7 +235,7 @@ class Photo extends Model
     public function eventsWithPhotos(): array
     {
         return $this->fetchAll(
-            "SELECT e.id, e.name, e.year, e.year_label, COUNT(p.id) AS photo_count
+            "SELECT e.id, e.name, e.year, e.year_label, COUNT(p.id) AS photo_count, COUNT(p.video_path) AS video_count
              FROM events e
              JOIN event_photos p ON p.event_id = e.id
              WHERE e.is_test = FALSE

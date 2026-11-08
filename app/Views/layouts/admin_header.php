@@ -69,6 +69,16 @@ if ($isSystem) {
         ['sleep',  'pause', '休眠模式', 'Sleep mode', '/system/sleep'],
     ];
 }
+// The section of the page being shown (for the top bar: "活動管理 › …").
+$_mHere = '';
+foreach ($menu as $_mGroup => $_mItems) {
+    foreach ($_mItems as $_mItem) {
+        if ($_mItem[0] === $nav) {
+            $_mHere = $_mGroup;
+        }
+    }
+}
+unset($_mGroup, $_mItems, $_mItem);
 ?>
 <!DOCTYPE html>
 <html lang="zh-Hant" data-base="<?= h(BASE_URL) ?>" data-staff>
@@ -86,37 +96,79 @@ if ($isSystem) {
 <?php endif; ?>
 <meta name="robots" content="noindex">
 <script src="<?= asset('js/fit-screen.js') ?>"></script>
+<script>
+// Sidebar as a narrow icon rail? Decided before the page draws, so it
+// never jumps: the person's own choice, else narrow on mid-size laptops.
+(function () {
+  try {
+    var v = localStorage.getItem('tyt-side-rail'), w = window.innerWidth;
+    if (v === '1' || (v === null && w > 1000 && w < 1280)) document.documentElement.classList.add('side-rail');
+  } catch (e) {}
+})();
+</script>
 </head>
 <body class="admin-app">
 
 <aside class="side" id="sideMenu" aria-label="管理選單 Admin menu">
-  <a class="side-brand" id="liveSideBrand" data-live="settings" href="<?= url(App\Core\Access::home()) ?>">
-    <?php if ($adminLogo): ?><img src="<?= h($versioned($adminLogo)) ?>" alt=""><?php endif; ?>
-    <span><strong><?= h($site['site_name']) ?></strong><small><?= $isSystem ? '系統管理員 System admin' : '管理員 Admin' ?></small></span>
-  </a>
-  <nav>
+  <div class="side-top">
+    <a class="side-brand" id="liveSideBrand" data-live="settings" href="<?= url(App\Core\Access::home()) ?>">
+      <?php if ($adminLogo): ?><img src="<?= h($versioned($adminLogo)) ?>" alt=""><?php else: ?><b class="side-mark" aria-hidden="true"><?= h(mb_substr($site['site_name'], 0, 1)) ?></b><?php endif; ?>
+      <span><strong><?= h($site['site_name']) ?></strong><small><?= $isSystem ? '系統管理員 System admin' : '管理員 Admin' ?></small></span>
+    </a>
+  </div>
+  <button type="button" class="side-find" data-goto-open data-label="快速前往 Go to a page (Ctrl K)">
+    <span class="ico"><?= icon('search') ?></span><span class="side-find-text">快速前往<small>Go to a page</small></span><kbd>Ctrl K</kbd>
+  </button>
+  <nav id="sideNav">
     <?php
     // Loop variables are prefixed: this file shares scope with the page
     // that includes it, and a plain $group or $key would overwrite the
     // page's own data (a registration's $group, for one).
-    foreach ($menu as $_mGroup => $_mItems): ?>
-      <div class="side-group"><?= h($_mGroup) ?></div>
-      <?php foreach ($_mItems as [$_mKey, $_mIcon, $_mZh, $_mEn, $_mHref]): ?>
-        <a class="side-link<?= $nav === $_mKey ? ' active' : '' ?>" href="<?= url($_mHref) ?>"<?= $nav === $_mKey ? ' aria-current="page"' : '' ?>>
-          <span class="ico"><?= icon($_mIcon) ?></span><span><?= h($_mZh) ?><small><?= h($_mEn) ?></small></span>
-        </a>
-      <?php endforeach; ?>
-    <?php endforeach; unset($_mGroup, $_mItems, $_mKey, $_mIcon, $_mZh, $_mEn, $_mHref); ?>
+    // Each section folds up (remembered in this browser); the one holding
+    // the current page always stays open.
+    foreach ($menu as $_mGroup => $_mItems):
+      [$_mGz, $_mGe] = array_pad(explode(' ', $_mGroup, 2), 2, '');
+      $_mSec = strtolower(preg_replace('/[^A-Za-z]+/', '-', $_mGe ?: $_mGz));
+      $_mHas = $_mGroup === $_mHere; ?>
+      <section class="side-sec<?= $_mHas ? ' has-active' : '' ?>" data-sec="<?= h($_mSec) ?>">
+        <button type="button" class="side-group" aria-expanded="true">
+          <span><?= h($_mGz) ?> <small><?= h($_mGe) ?></small></span><b class="side-count"><?= count($_mItems) ?></b><?= icon('chevron-down', 'chev') ?>
+        </button>
+        <div class="side-items"><div>
+          <?php foreach ($_mItems as [$_mKey, $_mIcon, $_mZh, $_mEn, $_mHref]): ?>
+            <a class="side-link<?= $nav === $_mKey ? ' active' : '' ?>" href="<?= url($_mHref) ?>"<?= $nav === $_mKey ? ' aria-current="page"' : '' ?> data-label="<?= h($_mZh . ' ' . $_mEn) ?>" data-group="<?= h($_mGz) ?>">
+              <span class="ico"><?= icon($_mIcon) ?></span><span class="side-text"><?= h($_mZh) ?><small><?= h($_mEn) ?></small></span>
+            </a>
+          <?php endforeach; ?>
+        </div></div>
+      </section>
+    <?php endforeach; unset($_mGroup, $_mItems, $_mKey, $_mIcon, $_mZh, $_mEn, $_mHref, $_mGz, $_mGe, $_mSec, $_mHas); ?>
   </nav>
+  <script>
+  // Folded sections, before the menu is drawn (no flicker).
+  (function () {
+    var shut = [];
+    try { shut = JSON.parse(localStorage.getItem('tyt-side-shut') || '[]'); } catch (e) {}
+    document.querySelectorAll('#sideNav .side-sec').forEach(function (s) {
+      if (shut.indexOf(s.dataset.sec) >= 0 && !s.classList.contains('has-active')) {
+        s.classList.add('is-shut');
+        s.querySelector('.side-group').setAttribute('aria-expanded', 'false');
+      }
+    });
+  })();
+  </script>
   <div class="side-foot">
-    <a class="side-link<?= $nav === 'password' ? ' active' : '' ?>" href="<?= url('/account/password') ?>">
-      <span class="ico"><?= icon('key') ?></span><span>我的密碼<small>My password</small></span></a>
-    <a class="side-link" href="<?= url('/') ?>" target="_blank" rel="noopener">
-      <span class="ico"><?= icon('globe') ?></span><span>查看網站<small>View site</small></span></a>
+    <a class="side-link<?= $nav === 'password' ? ' active' : '' ?>" href="<?= url('/account/password') ?>" data-label="我的密碼 My password">
+      <span class="ico"><?= icon('key') ?></span><span class="side-text">我的密碼<small>My password</small></span></a>
+    <a class="side-link" href="<?= url('/') ?>" target="_blank" rel="noopener" data-label="查看網站 View site">
+      <span class="ico"><?= icon('globe') ?></span><span class="side-text">查看網站<small>View site</small></span></a>
     <form method="POST" action="<?= url('/admin/logout') ?>">
       <?= csrf_field() ?>
-      <button type="submit" class="side-link logout-link"><span class="ico"><?= icon('log-out') ?></span><span>登出<small>Log out</small></span></button>
+      <button type="submit" class="side-link logout-link" data-label="登出 Log out"><span class="ico"><?= icon('log-out') ?></span><span class="side-text">登出<small>Log out</small></span></button>
     </form>
+    <button type="button" class="side-link side-rail-btn" id="sideRailBtn" aria-pressed="false" data-label="展開選單 Expand menu">
+      <span class="ico"><?= icon('sidebar') ?></span><span class="side-text">收起選單<small>Collapse menu</small></span>
+    </button>
   </div>
 </aside>
 <div class="side-backdrop" id="sideBackdrop"></div>
@@ -125,7 +177,11 @@ if ($isSystem) {
   <?php require BASE_PATH . '/app/Views/partials/uat_banner.php'; ?>
   <header class="topbar-admin">
     <button type="button" class="menu-btn" id="menuBtn" aria-controls="sideMenu" aria-expanded="false"><?= icon('menu') ?><span class="sr-only"> 選單 Menu</span></button>
-    <h1><?= h($pageTitle ?? '管理 Admin') ?></h1>
+    <div class="top-title">
+      <?php if ($_mHere !== ''): ?><span class="crumb"><?= h($_mHere) ?></span><?php endif; ?>
+      <h1><?= h($pageTitle ?? '管理 Admin') ?></h1>
+    </div>
+    <button type="button" class="top-find" data-goto-open title="快速前往 Go to a page (Ctrl K)"><?= icon('search') ?><span class="top-find-text">快速前往 <small>Go to…</small></span><kbd>Ctrl K</kbd></button>
     <span class="who"><?= icon('user') ?> <?= h($_SESSION['admin_display'] ?? ($_SESSION['admin_username'] ?? '')) ?></span>
   </header>
   <div class="content">

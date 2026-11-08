@@ -70,6 +70,7 @@ tytWrapTables(document);
 // Tables that arrive with a realtime update (js/live.js) get the same box.
 document.addEventListener('live:swap', function (e) { tytWrapTables(e.detail); });
 </script>
+<script src="<?= asset('js/admin-nav.js') ?>"></script>
 <script src="<?= asset('js/dialog.js') ?>"></script>
 <script src="<?= asset('js/live.js') ?>"></script>
 <script src="<?= asset('js/amounts.js') ?>"></script>

@@ -125,13 +125,6 @@ if (!$bannerSlides && $siteHeroBanner) {
     <div class="card location-card">
       <div>
         <h3 class="loc-title"><?= icon('car') ?> <?= tb('home.directions') ?></h3>
-        <?php if (trim((string) $event['location']) !== ''): ?>
-          <div class="loc-addr">
-            <?= icon('temple') ?>
-            <span><?= h($event['location']) ?></span>
-            <button type="button" class="loc-copy" data-copy="<?= h($event['location']) ?>"><?= icon('clipboard') ?> <span data-copy-label>複製地址 <small>Copy</small></span></button>
-          </div>
-        <?php endif; ?>
         <p class="loc-hint"><?= tb('home.directions_text') ?></p>
         <div class="map-buttons">
           <?php if ($wazeUrl !== ''): ?>
@@ -299,15 +292,7 @@ if (!$bannerSlides && $siteHeroBanner) {
 
 <script>
 (function () {
-  // 複製地址: copy the venue address (for Grab, WhatsApp…).
   document.addEventListener('click', function (e) {
-    var b = e.target.closest('.loc-copy');
-    if (b) {
-      var label = b.querySelector('[data-copy-label]'), old = label.innerHTML;
-      var done = function () { label.innerHTML = '已複製 <small>Copied</small>'; setTimeout(function () { label.innerHTML = old; }, 1800); };
-      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(b.dataset.copy).then(done, function () {});
-      else { var t = document.createElement('textarea'); t.value = b.dataset.copy; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); done(); } catch (x) {} t.remove(); }
-    }
     var q = e.target.closest('.qr-toggle');
     if (q) {
       var card = q.closest('.location-card'), on = !card.classList.contains('show-qr');

@@ -277,6 +277,8 @@ class AdminController extends Controller
             'cat'        => $cat,
             'photos'     => $photoModel->forEvent((int) $event['id'], $cat),
             'flash'     => $this->takeFlash(),
+            'videoUse'  => VideoUploader::usage(),
+            'isSystem'  => $this->isSystemAdmin(),
             'maxFiles'  => (int) ini_get('max_file_uploads'),
             'postMax'   => ini_get('post_max_size'),
         ]);
@@ -600,6 +602,94 @@ class AdminController extends Controller
         }
         $photoId = (new Photo())->createVideo($eventId, $poster['path'], $poster['thumb'], $video, $seconds, $caption !== '' ? $caption : null, $categoryId ?: null, $w, $h);
         $this->json(['ok' => true, 'photo_id' => $photoId]);
+    }
+
+    /**
+     * GET /admin/photos/videos — 影片空間 Video storage: the space bar, the
+     * limit (system admins can change it) and every video with its size,
+     * biggest first if asked, to free space.
+     */
+    public function videoStorage(): void
+    {
+        $this->requireAdmin();
+        $rows = (new Photo())->allVideos();
+        foreach ($rows as &$r) {
+            $f = VideoUploader::file($r['video_path']);
+            $r['bytes'] = $f !== null && is_file($f) ? (int) filesize($f) : 0;
+        }
+        unset($r);
+        $sort = ($_GET['sort'] ?? '') === 'size' ? 'size' : 'new';
+        if ($sort === 'size') {
+            usort($rows, static fn($a, $b) => $b['bytes'] <=> $a['bytes']);
+        }
+        $all = (new Photo())->allVideos();
+        $this->view('admin/video_storage', [
+            'leftover' => VideoUploader::leftovers(array_column($all, 'video_path')),
+            'videos'   => $rows,
+            'use'      => VideoUploader::usage(),
+            'sort'     => $sort,
+            'isSystem' => $this->isSystemAdmin(),
+            'flash'    => $this->takeFlash(),
+        ]);
+    }
+
+    /** POST /admin/photos/videos/quota {quota_gb} — system admins only. */
+    public function videoQuota(): void
+    {
+        $this->requireAdmin();
+        $this->requireCsrf();
+        if (!$this->isSystemAdmin()) {
+            $this->flash('error', '沒有權限 Not allowed', '只有系統管理員可以更改影片空間上限。Only a system admin can change the limit.');
+            $this->redirect('/admin/photos/videos');
+        }
+        $u   = VideoUploader::usage();
+        $mb  = (int) round((float) ($_POST['quota_gb'] ?? 0) * 1024);
+        $max = intdiv($u['max'], 1 << 20);
+        if ($mb < VideoUploader::MIN_QUOTA_MB || $mb > $max) {
+            $this->flash('error', '上限不對 Limit not allowed',
+                sprintf("上限要在 %s 至 %s 之間（伺服器的空間）。\nThe limit must be between %s and %s (the server's space).",
+                    VideoUploader::size(VideoUploader::MIN_QUOTA_MB << 20), VideoUploader::size($max << 20),
+                    VideoUploader::size(VideoUploader::MIN_QUOTA_MB << 20), VideoUploader::size($max << 20)));
+            $this->redirect('/admin/photos/videos');
+        }
+        (new \App\Models\Setting())->set('video_quota_mb', (string) $mb);
+        $this->flash('success', '已更新 Saved', '影片空間上限：' . VideoUploader::size($mb << 20) . '　Video space limit: ' . VideoUploader::size($mb << 20));
+        $this->redirect('/admin/photos/videos');
+    }
+
+    /** POST /admin/photos/videos/clean — system admins: remove files no album item uses. */
+    public function videoClean(): void
+    {
+        $this->requireAdmin();
+        $this->requireCsrf();
+        if ($this->isSystemAdmin()) {
+            $left = VideoUploader::leftovers(array_column((new Photo())->allVideos(), 'video_path'));
+            foreach ($left['files'] as $f) {
+                @unlink($f);
+            }
+            $this->flash('success', '已清理 Cleaned', '已移除 ' . count($left['files']) . ' 個用不著的檔案，釋出 ' . VideoUploader::size($left['bytes'])
+                . '。Removed ' . count($left['files']) . ' unused files, freeing ' . VideoUploader::size($left['bytes']) . '.');
+        }
+        $this->redirect('/admin/photos/videos');
+    }
+
+    /** POST /admin/photos/videos/delete {photo_id} — delete a video from 影片空間, back to the list. */
+    public function videoDelete(): void
+    {
+        $this->requireAdmin();
+        $this->requireCsrf();
+        $model = new Photo();
+        $row = $model->find((int) ($_POST['photo_id'] ?? 0));
+        if ($row !== null && !empty($row['video_path'])) {
+            $model->delete((int) $row['id']);
+            $img = new ImageUploader('photos');
+            $img->delete($row['file_path']);
+            $img->delete($row['thumb_path']);
+            (new VideoUploader())->delete($row['video_path']);
+            $this->flash('success', '已刪除 Deleted', '影片已刪除，空間已釋出。The video was deleted and its space freed.');
+        }
+        $back = ($_POST['sort'] ?? '') === 'size' ? '/admin/photos/videos?sort=size' : '/admin/photos/videos';
+        $this->redirect($back);
     }
 
     /** POST /admin/photos/video/abort {id} — the person cancelled. */

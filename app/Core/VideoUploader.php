@@ -56,6 +56,73 @@ final class VideoUploader
         $this->tmpDir = BASE_PATH . '/storage/tmp/video-parts';
     }
 
+    /** Default space for album videos (Album → 影片空間). */
+    public const DEFAULT_QUOTA_MB = 5120;          // 5 GB
+    public const MIN_QUOTA_MB     = 512;
+    private const DISK_RESERVE    = 1024 * 1024 * 1024;   // always leave 1 GB of disk free
+
+    /**
+     * How the video space stands:
+     *   used   bytes of all album videos      count  how many
+     *   cache  bytes of their encrypted copies (protected albums keep one
+     *          per video, the same size — made when first watched)
+     *   quota  the limit set (bytes)          free   free disk space now
+     *   max    the largest limit this server can take: everything the
+     *          videos use now plus the free disk, less 1 GB, halved —
+     *          room for each video AND its encrypted copy.
+     */
+    public static function usage(): array
+    {
+        $used = 0; $count = 0; $cache = 0;
+        foreach (glob(BASE_PATH . '/storage/videos/*.{mp4,webm}', GLOB_BRACE) ?: [] as $f) {
+            $used += (int) @filesize($f);
+            $count++;
+        }
+        foreach (glob(BASE_PATH . '/storage/cache/media/*.vid') ?: [] as $f) {
+            $cache += (int) @filesize($f);
+        }
+        $dir  = is_dir(BASE_PATH . '/storage/videos') ? BASE_PATH . '/storage/videos' : BASE_PATH . '/storage';
+        $free = (int) (@disk_free_space($dir) ?: 0);
+        $max  = max(self::MIN_QUOTA_MB << 20, intdiv(max(0, $used + $cache + $free - self::DISK_RESERVE), 2));
+        $quota = self::quotaMb() << 20;
+        return ['used' => $used, 'count' => $count, 'cache' => $cache, 'quota' => $quota, 'free' => $free,
+                'max' => $max, 'left' => max(0, $quota - $used)];
+    }
+
+    /**
+     * Files no album item uses any more: videos left without a row (an
+     * interrupted delete, a database restored from an older backup) and
+     * encrypted copies of videos that are gone. Ones touched in the last
+     * hour are left alone (an upload may be finishing).
+     * @return array{files: string[], bytes: int}
+     */
+    public static function leftovers(array $usedPaths): array
+    {
+        $keep = []; $copies = [];
+        foreach ($usedPaths as $p) {
+            $f = self::file($p);
+            if ($f !== null && is_file($f)) {
+                $keep[realpath($f)] = true;
+                $copies[sha1($p . '|' . filemtime($f) . '|v1') . '.vid'] = true;
+            }
+        }
+        $out = []; $bytes = 0; $old = time() - 3600;
+        foreach (glob(BASE_PATH . '/storage/videos/*.{mp4,webm}', GLOB_BRACE) ?: [] as $f) {
+            if (!isset($keep[realpath($f)]) && @filemtime($f) < $old) { $out[] = $f; $bytes += (int) filesize($f); }
+        }
+        foreach (glob(BASE_PATH . '/storage/cache/media/*.vid') ?: [] as $f) {
+            if (!isset($copies[basename($f)]) && @filemtime($f) < $old) { $out[] = $f; $bytes += (int) filesize($f); }
+        }
+        return ['files' => $out, 'bytes' => $bytes];
+    }
+
+    /** The limit set, in MB. */
+    public static function quotaMb(): int
+    {
+        $v = (int) ((new \App\Models\Setting())->get('video_quota_mb') ?? 0);
+        return $v >= self::MIN_QUOTA_MB ? $v : self::DEFAULT_QUOTA_MB;
+    }
+
     /** Begin an upload of $size bytes → upload id. */
     public function start(int $size): string
     {
@@ -64,6 +131,12 @@ final class VideoUploader
         }
         if ($size > self::MAX_BYTES) {
             throw new RuntimeException('影片超過 200MB，請剪短或壓縮後再上傳。Video over 200 MB — trim or compress it first.');
+        }
+        $u = self::usage();
+        if ($u['used'] + $size > $u['quota']) {
+            throw new RuntimeException(sprintf(
+                "影片空間不足：已用 %s／上限 %s，這段影片 %s。請先到「影片空間」刪除舊影片。\nNot enough video space: %s of %s used, this video is %s. Delete old videos first (Video storage).",
+                self::size($u['used']), self::size($u['quota']), self::size($size), self::size($u['used']), self::size($u['quota']), self::size($size)));
         }
         foreach ([$this->dir, $this->tmpDir] as $d) {
             if (!is_dir($d) && !@mkdir($d, 0755, true) && !is_dir($d)) {
@@ -128,6 +201,11 @@ final class VideoUploader
         if ((int) @filesize($part) !== $meta['size']) {
             throw new RuntimeException('影片未完整上傳，請重試。The video did not arrive in full — try again.');
         }
+        $u = self::usage();
+        if ($u['used'] + $meta['size'] > $u['quota']) {        // someone else filled the space meanwhile
+            $this->abort($id);
+            throw new RuntimeException('影片空間已滿，請先刪除舊影片。Video space is full — delete old videos first.');
+        }
         $ext = self::detect($part);
         if ($ext === null) {
             $this->abort($id);
@@ -140,6 +218,13 @@ final class VideoUploader
         @chmod($this->dir . '/' . $name, 0644);
         unset($_SESSION['video_uploads'][$id]);
         return 'videos/' . $name;
+    }
+
+    /** "1.2 GB", "350 MB". */
+    public static function size(int $bytes): string
+    {
+        return $bytes >= 1 << 30 ? rtrim(rtrim(number_format($bytes / (1 << 30), 2), '0'), '.') . ' GB'
+             : ($bytes >= 1 << 20 ? number_format($bytes / (1 << 20), $bytes < 10 << 20 ? 1 : 0) . ' MB' : number_format($bytes / 1024) . ' KB');
     }
 
     /** Throw away an unfinished upload. */

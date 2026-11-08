@@ -300,6 +300,10 @@ $router->post('/admin/photos/video/start',  'AdminController@videoStart');
 $router->post('/admin/photos/video/chunk',  'AdminController@videoChunk');
 $router->post('/admin/photos/video/finish', 'AdminController@videoFinish');
 $router->post('/admin/photos/video/abort',  'AdminController@videoAbort');
+$router->get('/admin/photos/videos',          'AdminController@videoStorage');
+$router->post('/admin/photos/videos/quota',   'AdminController@videoQuota');
+$router->post('/admin/photos/videos/delete',  'AdminController@videoDelete');
+$router->post('/admin/photos/videos/clean',   'AdminController@videoClean');
 
 // ---------- 6. Go ----------
 // Sleep mode (System → 休眠模式): visitors get the one "see you next year"

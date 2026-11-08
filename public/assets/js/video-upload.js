@@ -78,6 +78,7 @@
     preview.removeAttribute('src'); preview.load();
     file = url = poster = null; playable = false; uploadId = null;
     card.hidden = true; drop.hidden = false; prog.hidden = true; setWarn('');
+    card.classList.remove('is-portrait', 'is-done', 'is-busy');
     input.value = ''; $('videoCaption').value = '';
   }
 
@@ -101,8 +102,16 @@
     var done = false;
     preview.onloadedmetadata = function () {
       playable = !!preview.videoWidth;
-      $('videoMeta').textContent = mb(f.size) + ' · ' + clock(preview.duration || 0)
-        + (preview.videoWidth ? ' · ' + preview.videoWidth + '×' + preview.videoHeight : '');
+      var vw = preview.videoWidth, vh = preview.videoHeight, tall = vh > vw;
+      card.classList.toggle('is-portrait', playable && tall);
+      $('videoMeta').innerHTML = '';
+      $('videoMeta').appendChild(document.createTextNode(mb(f.size) + ' · ' + clock(preview.duration || 0) + (vw ? ' · ' + vw + '×' + vh : '')));
+      if (vw) {
+        var o = document.createElement('span');
+        o.className = 'vid-orient' + (tall ? ' is-tall' : vw === vh ? ' is-square' : '');
+        o.innerHTML = tall ? '直式 <span class="en">Vertical</span>' : vw === vh ? '正方 <span class="en">Square</span>' : '橫式 <span class="en">Horizontal</span>';
+        $('videoMeta').appendChild(o);
+      }
       if (preview.duration > 600) setWarn('這段影片超過 10 分鐘，訪客用手機看會很慢。可以先剪短嗎？<span class="en">Over 10 minutes — slow for visitors on phones. Could you trim it?</span>');
       // A frame a little way in (the first is often black).
       try { preview.currentTime = Math.min(1, (preview.duration || 0) / 10); } catch (e) {}
@@ -125,6 +134,7 @@
     preview.src = url;
   }
 
+  preview.addEventListener('contextmenu', function (e) { e.preventDefault(); });
   input.addEventListener('change', function () { choose(input.files[0]); });
   ['dragenter', 'dragover'].forEach(function (t) {
     drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.add('is-over'); });
@@ -201,7 +211,8 @@
       return retry(function () {
         return post(form.dataset.finish, {
           id: uploadId, event_id: form.event_id.value, category_id: $('videoCat').value,
-          caption: $('videoCaption').value, duration: isFinite(preview.duration) ? preview.duration : 0, poster: poster
+          caption: $('videoCaption').value, duration: isFinite(preview.duration) ? preview.duration : 0, poster: poster,
+          width: preview.videoWidth || 0, height: preview.videoHeight || 0
         });
       }, 2);
     }).then(function () {
@@ -235,11 +246,14 @@
       dlg.setAttribute('role', 'dialog');
       dlg.setAttribute('aria-modal', 'true');
       dlg.setAttribute('aria-label', '影片 Video');
-      dlg.innerHTML = '<div class="vid-modal-box"><video controls playsinline preload="metadata"></video>'
+      dlg.innerHTML = '<div class="vid-modal-box"><video controls playsinline preload="metadata" controlslist="nodownload" disablepictureinpicture></video>'
         + '<p class="help">拖到想要的畫面，按「用目前畫面當封面」。<span class="en">Go to the frame you like, then use it as the cover.</span></p>'
         + '<div class="vid-modal-actions"><button type="button" class="primary" data-grab>用目前畫面當封面 <span class="en">Use as cover</span></button>'
         + '<button type="button" class="mini-btn ghost" data-close>關閉 <span class="en">Close</span></button></div></div>';
       document.body.appendChild(dlg);
+      var mv = dlg.querySelector('video');
+      mv.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+      mv.addEventListener('loadedmetadata', function () { dlg.classList.toggle('is-portrait', mv.videoHeight > mv.videoWidth); });
       dlg.addEventListener('click', function (e) { if (e.target === dlg || e.target.closest('[data-close]')) dlg.close(); });
       document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !dlg.hidden) dlg.close(); });
     }

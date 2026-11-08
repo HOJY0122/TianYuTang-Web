@@ -577,6 +577,11 @@ class AdminController extends Controller
         $caption = trim(mb_substr((string) ($_POST['caption'] ?? ''), 0, 255));
         $seconds = (int) round((float) ($_POST['duration'] ?? 0));
         $seconds = $seconds > 0 ? min($seconds, 65535) : null;
+        $dim = static fn(string $k): ?int => ($v = (int) ($_POST[$k] ?? 0)) > 0 && $v <= 16384 ? $v : null;
+        [$w, $h] = [$dim('width'), $dim('height')];
+        if ($w === null || $h === null) {
+            $w = $h = null;
+        }
 
         $videos = new VideoUploader();
         $images = new ImageUploader('photos');
@@ -593,7 +598,7 @@ class AdminController extends Controller
             $images->delete($poster['thumb']);
             $this->json(['ok' => false, 'error' => $e->getMessage()], 422);
         }
-        $photoId = (new Photo())->createVideo($eventId, $poster['path'], $poster['thumb'], $video, $seconds, $caption !== '' ? $caption : null, $categoryId ?: null);
+        $photoId = (new Photo())->createVideo($eventId, $poster['path'], $poster['thumb'], $video, $seconds, $caption !== '' ? $caption : null, $categoryId ?: null, $w, $h);
         $this->json(['ok' => true, 'photo_id' => $photoId]);
     }
 

@@ -1694,3 +1694,14 @@ label > .app-scan-btn{margin-top:8px;width:100%}
 .vid-modal-box{width:min(920px,100%);background:#fffdf5;border-radius:16px;padding:14px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
 .vid-modal-box video{display:block;width:100%;max-height:70vh;border-radius:10px;background:#000}
 .vid-modal-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+/* Vertical / horizontal */
+.vid-orient{display:inline-flex;align-items:center;gap:4px;margin-left:8px;padding:1px 9px;border-radius:999px;font-size:.8rem;font-weight:800;
+  background:#e8f1fb;color:#1f4f86;border:1px solid #bcd3ee;vertical-align:1px}
+.vid-orient.is-tall{background:#fdeee4;color:#8a3a12;border-color:#efc3a6}
+.vid-orient .en{font-weight:600;opacity:.8}
+.vid-card.is-portrait{grid-template-columns:auto minmax(0,1fr)}
+.vid-card.is-portrait .vid-preview video{width:auto;height:min(480px,70vh);max-height:none;max-width:100%;margin:0 auto}
+.vid-modal.is-portrait .vid-modal-box{width:auto;max-width:100%}
+.vid-modal.is-portrait .vid-modal-box video{width:auto;height:70vh;max-height:70vh;margin:0 auto}
+.vid-modal.is-portrait .vid-modal-box .help{max-width:24rem}
+@media (max-width:860px){ .vid-card.is-portrait{grid-template-columns:1fr} .vid-card.is-portrait .vid-preview video{height:min(420px,60vh)} }

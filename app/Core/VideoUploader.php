@@ -156,6 +156,7 @@ final class VideoUploader
     {
         $file = self::file($path);
         if ($file !== null) {
+            Media::dropVideoCache((string) $path, $file);
             @unlink($file);
         }
     }

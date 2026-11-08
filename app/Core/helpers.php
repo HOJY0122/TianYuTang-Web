@@ -97,8 +97,22 @@ function album_figure(array $photo, string $area, string $alt): string
     $video   = (string) ($photo['video_path'] ?? '');
     $attrs   = photo_full_attrs($photo['file_path'], $area) . ' data-caption="' . h($caption) . '"';
     if ($video !== '') {
-        $attrs .= ' class="is-video" data-video="' . h(App\Core\Media::videoUrl($video)) . '"'
-                . ' data-poster="' . h(App\Core\Media::url($photo['file_path'])) . '"';
+        // Vertical (phone 9:16) or horizontal: known from the upload, so
+        // the tile and the player are shaped right before anything loads.
+        $w = (int) ($photo['video_w'] ?? 0);
+        $hgt = (int) ($photo['video_h'] ?? 0);
+        $tall = $w > 0 && $hgt > $w;
+        $attrs .= ' class="is-video' . ($tall ? ' is-portrait' : '') . '"'
+                . ' data-poster="' . h(App\Core\Media::url($photo['file_path'])) . '"'
+                . ' data-vt="' . (str_ends_with($video, '.webm') ? 'video/webm' : 'video/mp4') . '"'
+                . ($w > 0 && $hgt > 0 ? ' data-w="' . $w . '" data-h="' . $hgt . '"' : '');
+        if (App\Core\Media::guarded($area)) {
+            // Protected: the encrypted copy and its key; the lightbox decrypts it in memory.
+            [$key, $iv] = App\Core\Media::videoKey($video);
+            $attrs .= ' data-video="' . h(App\Core\Media::videoUrl($video, true)) . '" data-vk="' . bin2hex($key) . '" data-vi="' . bin2hex($iv) . '"';
+        } else {
+            $attrs .= ' data-video="' . h(App\Core\Media::videoUrl($video)) . '"';
+        }
     }
     $out = '<figure ' . $attrs . '>' . photo_img($photo['thumb_path'], $area, ['alt' => $caption !== '' ? $caption : $alt, 'loading' => 'lazy']);
     if ($video !== '') {

@@ -92,6 +92,18 @@
       alertBox('影片 ' + mb(f.size) + '，超過 ' + mb(MAX) + '。請先剪短或壓縮。\nThe video is ' + mb(f.size) + ', over ' + mb(MAX) + '. Trim or compress it first.');
       return;
     }
+    // Room left in 影片空間 (the bar keeps it up to date).
+    var space = document.getElementById('liveVideoSpace');
+    if (space && f.size > +space.dataset.left) {
+      var go = function () { location.href = space.getAttribute('href') || location.href; };
+      var msg = '影片空間不足：這段影片 ' + mb(f.size) + '，尚餘 ' + mb(+space.dataset.left) + '。請先刪除舊影片。\n'
+              + 'Not enough video space: this video is ' + mb(f.size) + ', ' + mb(+space.dataset.left) + ' left. Delete old videos first.';
+      if (window.TYTDialog && TYTDialog.confirm) {
+        TYTDialog.confirm(msg, { type: 'error', okText: '查看影片空間 See storage', cancelText: '關閉 Close' }).then(function (yes) { if (yes) go(); });
+      } else { alertBox(msg); }
+      input.value = '';
+      return;
+    }
     reset();
     file = f;
     url = URL.createObjectURL(f);

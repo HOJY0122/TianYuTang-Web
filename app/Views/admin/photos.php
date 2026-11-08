@@ -80,6 +80,7 @@ $photoCount = count($photos) - $videoCount;
   <!-- ---------- Upload a video ---------- -->
   <div class="panel vid-panel">
     <h2><?= icon('play') ?> 上傳影片 <span class="en">Upload a video</span></h2>
+    <?php $spaceLink = true; require BASE_PATH . '/app/Views/admin/_video_space.php'; ?>
     <form id="videoUpload" class="vid-form" data-start="<?= url('/admin/photos/video/start') ?>" data-chunk="<?= url('/admin/photos/video/chunk') ?>"
           data-finish="<?= url('/admin/photos/video/finish') ?>" data-abort="<?= url('/admin/photos/video/abort') ?>"
           data-max="<?= App\Core\VideoUploader::MAX_BYTES ?>" onsubmit="return false">

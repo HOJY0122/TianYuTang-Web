@@ -38,6 +38,19 @@ class Photo extends Model
         return $id;
     }
 
+    /** Every album video, all events: for 影片空間 (sizes are read from the files by the controller). */
+    public function allVideos(): array
+    {
+        return $this->fetchAll(
+            'SELECT p.*, e.year, e.name AS event_name, e.is_test, c.name_zh AS cat_zh, c.name_en AS cat_en
+               FROM event_photos p
+               JOIN events e ON e.id = p.event_id
+               LEFT JOIN photo_categories c ON c.id = p.category_id
+              WHERE p.video_path IS NOT NULL
+              ORDER BY p.created_at DESC, p.id DESC'
+        );
+    }
+
     /**
      * All photos for one event, in display order. $category: null = every
      * photo, 0 = uncategorised ("其他 Others"), N = that category.

@@ -64,6 +64,7 @@
     </div>
   </div>
 </div>
+<script src="<?= asset('js/aes-ctr.js') ?>"></script>
 <script>
 (function () {
   // ---- album rows: arrows page through, disabled at either end ----
@@ -111,44 +112,81 @@
   }
   video.addEventListener('loadedmetadata', function () { if (video.videoWidth) shape(video.videoWidth, video.videoHeight); });
   function hex(s) { var a = new Uint8Array(s.length / 2); for (var i = 0; i < a.length; i++) a[i] = parseInt(s.substr(i * 2, 2), 16); return a; }
-  /** Fetch the encrypted copy and decrypt it in 4 MB pieces (AES-CTR: piece at byte n uses counter prefix ‖ n/16) → Promise<Blob>. */
-  function decrypt(it, progress, signal) {
-    var iv = hex(it.vi);
-    function counter(at) {
-      var c = new Uint8Array(16), dv = new DataView(c.buffer), n = at / 16;
-      c.set(iv, 0);
-      dv.setUint32(8, Math.floor(n / 4294967296)); dv.setUint32(12, n >>> 0);
-      return c;
+  /**
+   * Fetch the encrypted copy and decrypt it in 4 MB pieces (AES-CTR: piece
+   * at byte n uses counter prefix ‖ n/16) → Promise<Blob>. The browser's
+   * own crypto when it has it (HTTPS pages); otherwise js/aes-ctr.js — so
+   * plain-http testing and older phones play protected videos too.
+   */
+  function decryptor(it) {
+    var iv = hex(it.vi), key = hex(it.vk);
+    if (window.crypto && crypto.subtle && window.isSecureContext !== false) {
+      return crypto.subtle.importKey('raw', key, 'AES-CTR', false, ['decrypt']).then(function (k) {
+        return function (buf, at) {
+          var c = new Uint8Array(16), dv = new DataView(c.buffer), n = at / 16;
+          c.set(iv, 0);
+          dv.setUint32(8, Math.floor(n / 4294967296)); dv.setUint32(12, n >>> 0);
+          return crypto.subtle.decrypt({ name: 'AES-CTR', counter: c, length: 64 }, k, buf);
+        };
+      });
     }
-    return crypto.subtle.importKey('raw', hex(it.vk), 'AES-CTR', false, ['decrypt']).then(function (key) {
-      return fetch(it.video, { credentials: 'same-origin', signal: signal }).then(function (r) {
+    if (!window.TYTAesCtr) return Promise.reject(new Error('no AES'));
+    var ctr = TYTAesCtr(key, iv);
+    // A short pause before each piece keeps the page (and the ring) moving.
+    return Promise.resolve(function (buf, at) {
+      return new Promise(function (ok) { setTimeout(function () { ok(ctr(buf, at)); }, 0); });
+    });
+  }
+  /** Download the encrypted copy: streamed when possible, else one request with progress. */
+  function download(url, progress, signal, onPiece) {
+    if (window.fetch && window.ReadableStream && window.Response && 'body' in Response.prototype) {
+      return fetch(url, { credentials: 'same-origin', signal: signal }).then(function (r) {
         if (!r.ok || !r.body) throw new Error('HTTP ' + r.status);
-        var total = +r.headers.get('Content-Length') || 0, reader = r.body.getReader();
-        var SEG = 4 << 20, pending = [], have = 0, got = 0, offset = 0, parts = [], chain = Promise.resolve();
-        function take(len) {
-          var buf = new Uint8Array(len), p = 0;
-          while (p < len) {
-            var head = pending[0], n = Math.min(head.length, len - p);
-            buf.set(head.subarray(0, n), p); p += n;
-            if (n === head.length) pending.shift(); else pending[0] = head.subarray(n);
-          }
-          have -= len;
-          var at = offset; offset += len;
-          chain = chain.then(function () {
-            return crypto.subtle.decrypt({ name: 'AES-CTR', counter: counter(at), length: 64 }, key, buf);
-          }).then(function (plain) { parts.push(plain); });
-        }
+        var total = +r.headers.get('Content-Length') || 0, reader = r.body.getReader(), got = 0;
         function pump() {
           return reader.read().then(function (x) {
-            if (x.done) { if (have) take(have); return chain; }
-            pending.push(x.value); have += x.value.length; got += x.value.length;
+            if (x.done) return;
+            got += x.value.length;
             if (total) progress(got / total);
-            while (have >= SEG) take(SEG);
+            onPiece(x.value);
             return pump();
           });
         }
-        return pump().then(function () { return new Blob(parts, { type: it.vt || 'video/mp4' }); });
+        return pump();
       });
+    }
+    return new Promise(function (ok, bad) {
+      var x = new XMLHttpRequest();
+      x.open('GET', url);
+      x.responseType = 'arraybuffer';
+      x.onprogress = function (e) { if (e.lengthComputable) progress(e.loaded / e.total); };
+      x.onload = function () { if (x.status === 200) { onPiece(new Uint8Array(x.response)); ok(); } else bad(new Error('HTTP ' + x.status)); };
+      x.onerror = function () { bad(new Error('network')); };
+      if (signal) signal.addEventListener('abort', function () { x.abort(); bad(new Error('aborted')); });
+      x.send();
+    });
+  }
+  function decrypt(it, progress, signal) {
+    return decryptor(it).then(function (dec) {
+      var SEG = 4 << 20, pending = [], have = 0, offset = 0, parts = [], chain = Promise.resolve();
+      function take(len) {
+        var buf = new Uint8Array(len), p = 0;
+        while (p < len) {
+          var head = pending[0], n = Math.min(head.length, len - p);
+          buf.set(head.subarray(0, n), p); p += n;
+          if (n === head.length) pending.shift(); else pending[0] = head.subarray(n);
+        }
+        have -= len;
+        var at = offset; offset += len;
+        chain = chain.then(function () { return dec(buf, at); }).then(function (plain) { parts.push(plain); });
+      }
+      return download(it.video, progress, signal, function (bytes) {
+        pending.push(bytes); have += bytes.length;
+        while (have >= SEG) take(SEG);
+      }).then(function () {
+        if (have) take(have);
+        return chain;
+      }).then(function () { return new Blob(parts, { type: it.vt || 'video/mp4' }); });
     });
   }
   function ring(f) {
@@ -158,7 +196,7 @@
   function playEncrypted(it) {
     var kept = blobs.filter(function (b) { return b.key === it.video; })[0];
     if (kept) { video.src = kept.url; video.play().catch(function () {}); return; }
-    if (!window.crypto || !crypto.subtle || !window.ReadableStream) {
+    if (!(window.crypto && crypto.subtle) && !window.TYTAesCtr) {
       vload.hidden = false;
       vload.classList.add('is-error');
       vload.querySelector('.lb-vload-text').innerHTML = '此瀏覽器未能播放受保護的影片，請更新瀏覽器。<span class="en">This browser cannot play protected videos — please update it.</span>';

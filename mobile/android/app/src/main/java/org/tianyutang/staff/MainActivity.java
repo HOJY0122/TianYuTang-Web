@@ -13,9 +13,10 @@ import com.getcapacitor.CapConfig;
 /**
  * The staff pages of the website, plus the native scanner (TytScanPlugin).
  *
- * No address saved yet → the built-in setup screen (www/index.html) asks for
- * it. Saved → the site opens at /admin/login, and only that site gets the
- * native bridge; links elsewhere open in the phone's browser.
+ * Every start shows the setup screen (www/index.html: last address filled in,
+ * recent ones one tap away) unless the address was saved with "Remember".
+ * The chosen site opens at /admin/login, and only that site gets the native
+ * bridge; links elsewhere open in the phone's browser.
  *
  * Back button: goes back a page, like a browser. On the first page it asks
  * "press again to leave" instead of closing the app at once (Capacitor alone
@@ -26,7 +27,9 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        String site = SiteAddress.get(this);
+        // Remembered address, or the one picked on the setup screen this run;
+        // otherwise the setup screen (www/index.html) asks.
+        String site = SiteAddress.toOpen(this);
         if (site != null) {
             config = new CapConfig.Builder(this)
                     .setServerUrl(SiteAddress.origin(site))

@@ -35,13 +35,22 @@ phones cannot read it by tapping. Camera reading is the way.
 
 ## One APK for every site
 
-The first time the app opens it asks for the **website address** and keeps
-it. So the same APK works for testing and for the live site:
+Each time the app opens it shows the **website address** screen: the last
+address is filled in and recent ones are one tap away (handy while testing,
+when the PC's address changes). Before opening, the app checks the site
+answers (5 s) — if not, it says so (same Wi-Fi? server running? address
+changed?) instead of a blank screen, with "Open anyway".
+
+Tick **記住，下次直接打開 Remember** (ticked by itself for an `https://`
+address) and from then on the app opens that site straight away — do this
+once the live domain is up. The same APK works for testing and the live site:
 
 - Live site: `https://www.your-domain.org` (must be HTTPS).
 - Testing on the same Wi-Fi: `http://192.168.x.x:8000` (plain http is only
   accepted for local-network addresses).
-- To switch later: on the sign-in page tap **更換網站 Change site**.
+- To switch later: on the sign-in page (or the "cannot reach" page) tap
+  **更換網站 Change site** — the setup screen comes back, address kept.
+- Long-press an address in the recent list to remove it.
 
 ## Build the APK with Android Studio (Windows)
 

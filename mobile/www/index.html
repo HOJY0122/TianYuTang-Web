@@ -5,66 +5,173 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>天玉堂 Staff</title>
 <style>
-  :root { --red: #9f211b; --gold: #d8bf79; --cream: #fbf3e2; --ink: #2b1d14; }
-  * { box-sizing: border-box; }
+  :root { --red: #9f211b; --gold: #d8bf79; --cream: #fbf3e2; --ink: #2b1d14; --muted: #7a6a5a; --green: #2f6b3a; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body { margin: 0; min-height: 100vh; background: var(--cream); color: var(--ink);
-         font-family: "Noto Sans TC", system-ui, sans-serif; display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
-  .card { width: 100%; max-width: 420px; background: #fff; border: 1px solid var(--gold); border-radius: 18px; padding: 24px 20px; box-shadow: 0 6px 24px rgba(0,0,0,.08); }
-  h1 { margin: 0 0 4px; color: var(--red); font-size: 24px; }
-  .en { color: #7a6a5a; font-size: 14px; }
-  label { display: block; margin: 20px 0 6px; font-weight: 700; }
-  input { width: 100%; font-size: 18px; padding: 14px; border: 2px solid var(--gold); border-radius: 12px; }
-  input:focus { outline: none; border-color: var(--red); }
-  button { width: 100%; margin-top: 14px; min-height: 52px; font-size: 18px; font-weight: 700; color: #fff; background: var(--red); border: 0; border-radius: 12px; }
-  button:disabled { opacity: .6; }
-  .err { color: var(--red); margin-top: 10px; min-height: 1.2em; white-space: pre-line; }
-  .tip { margin-top: 18px; font-size: 14px; color: #6b5b4b; line-height: 1.6; }
+         font-family: "Noto Sans TC", system-ui, sans-serif; display: flex; align-items: center; justify-content: center;
+         padding: max(20px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom)); }
+  .card { width: 100%; max-width: 440px; background: #fff; border: 1px solid var(--gold); border-radius: 20px; padding: 22px 18px; box-shadow: 0 6px 24px rgba(0,0,0,.08); }
+  .head { display: flex; align-items: center; gap: 12px; }
+  .seal { flex: none; width: 48px; height: 48px; border-radius: 12px; background: var(--red); color: #ffe7a8; display: grid; place-items: center;
+          font-size: 26px; font-weight: 900; box-shadow: inset 0 0 0 2px rgba(255,231,168,.35); }
+  h1 { margin: 0; color: var(--red); font-size: 22px; line-height: 1.2; }
+  .en { color: var(--muted); font-size: 13.5px; font-weight: 500; }
+  h1 .en { display: block; }
+  label.lbl { display: block; margin: 20px 0 6px; font-weight: 800; }
+  input[type=url] { width: 100%; font-size: 18px; padding: 14px; border: 2px solid var(--gold); border-radius: 12px; background: #fffdf7; }
+  input[type=url]:focus { outline: none; border-color: var(--red); background: #fff; }
+  .recent { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  .recent-title { font-size: 13px; font-weight: 800; color: var(--muted); margin-top: 14px; }
+  .chip { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 50px; padding: 8px 12px; border-radius: 12px; border: 1px solid #ead9ad;
+          background: #fffaf0; color: var(--ink); font-size: 15.5px; font-weight: 700; text-align: left; font-family: inherit; }
+  .chip .dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: #c9a64e; }
+  .chip.https .dot { background: var(--green); }
+  .chip .u { flex: 1; min-width: 0; word-break: break-all; font-family: ui-monospace, monospace; font-size: 14.5px; }
+  .chip .tag { flex: none; font-size: 11.5px; font-weight: 800; color: var(--muted); }
+  .chip.is-on { border-color: var(--red); background: #fff1e8; }
+  .remember { display: flex; gap: 10px; align-items: flex-start; margin-top: 16px; padding: 12px; border-radius: 12px; background: #f8f1df; font-weight: 700; line-height: 1.4; }
+  .remember input { width: 22px; height: 22px; margin: 1px 0 0; accent-color: var(--red); flex: none; }
+  .remember small { display: block; font-weight: 500; color: var(--muted); font-size: 13px; margin-top: 2px; }
+  button.go { width: 100%; margin-top: 14px; min-height: 56px; font-size: 19px; font-weight: 800; color: #fff; background: var(--red); border: 0; border-radius: 14px; font-family: inherit; }
+  button.go:disabled { opacity: .7; }
+  button.go .spin { display: none; width: 18px; height: 18px; margin-right: 8px; border: 3px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; vertical-align: -3px; animation: s 0.8s linear infinite; }
+  button.go.busy .spin { display: inline-block; }
+  @keyframes s { to { transform: rotate(360deg); } }
+  .err { margin-top: 12px; padding: 12px; border-radius: 12px; background: #fdecea; border: 1px solid #efb7b0; color: #8a1f17; white-space: pre-line; line-height: 1.5; font-size: 14.5px; }
+  .err[hidden], .anyway[hidden] { display: none; }
+  .err ul { margin: 8px 0 0; padding-left: 18px; color: #6b3a32; }
+  .anyway { width: 100%; margin-top: 10px; min-height: 46px; border-radius: 12px; border: 1px solid var(--gold); background: #fff8e1; color: var(--red); font-weight: 800; font-size: 15px; font-family: inherit; }
+  .tip { margin-top: 18px; font-size: 13.5px; color: #6b5b4b; line-height: 1.6; }
   code { background: #f4ead2; padding: 1px 5px; border-radius: 5px; }
 </style>
 </head>
 <body>
 <form class="card" id="f" novalidate>
-  <h1>天玉堂 工作人員</h1>
-  <div class="en">Staff app — first-time setup</div>
+  <div class="head">
+    <div class="seal" aria-hidden="true">天</div>
+    <h1>連接網站 <span class="en">Choose the website</span></h1>
+  </div>
 
-  <label for="url">網站地址 <span class="en">Website address</span></label>
+  <label class="lbl" for="url">網站地址 <span class="en">Website address</span></label>
   <input id="url" type="url" inputmode="url" autocomplete="url" autocapitalize="off" spellcheck="false"
-         placeholder="https://www.tianyutang.org" required>
-  <button id="go" type="submit">儲存並開啟 Save &amp; open</button>
-  <div class="err" id="err" role="alert"></div>
+         placeholder="https://www.tianyutang.org 或 192.168.1.20:8000" required>
+
+  <div id="recentBox" hidden>
+    <div class="recent-title">最近用過 <span class="en">Recently used — tap to connect · long-press to remove</span></div>
+    <div class="recent" id="recent"></div>
+  </div>
+
+  <label class="remember">
+    <input type="checkbox" id="remember">
+    <span>記住這個網站，下次直接打開
+      <small>正式網站（https）可以記住；測試時（電腦地址常變）不要勾，每次開 App 都會問。<br>
+      Remember — open it straight away next time. Tick for the live site; leave it off while testing, so the app asks each time.</small></span>
+  </label>
+
+  <button class="go" id="go" type="submit"><span class="spin" aria-hidden="true"></span><span id="goText">連接 Connect</span></button>
+  <div class="err" id="err" role="alert" hidden></div>
+  <button type="button" class="anyway" id="anyway" hidden>仍要開啟 Open anyway</button>
 
   <div class="tip">
-    只需設定一次，之後打開 App 會直接到登入頁。<br>
-    <span class="en">Set once — afterwards the app opens straight at the sign-in page.</span><br><br>
-    正式網站必須是 <code>https://</code>。測試時（同一 Wi-Fi）可用 <code>http://192.168.x.x:8000</code>。<br>
-    <span class="en">The live site must be https://. For testing on the same Wi-Fi, http://192.168.x.x:8000 also works.</span><br><br>
-    要更換網址：在登入頁按「更換網站 Change site」。<br>
-    <span class="en">To change it later: tap "Change site" on the sign-in page.</span>
+    正式網站必須是 <code>https://</code>。測試時（同一 Wi-Fi）可用電腦的地址，例 <code>192.168.1.20:8000</code>。<br>
+    <span class="en">The live site must be https://. For testing on the same Wi-Fi, use the PC's address, e.g. 192.168.1.20:8000.</span><br>
+    之後要更換：在登入頁按「更換網站 Change site」。<span class="en">To change later: "Change site" on the sign-in page.</span>
   </div>
 </form>
 <script>
 (function () {
   'use strict';
-  var f = document.getElementById('f'), input = document.getElementById('url'),
-      go = document.getElementById('go'), err = document.getElementById('err');
+  var $ = function (id) { return document.getElementById(id); };
+  var f = $('f'), input = $('url'), go = $('go'), goText = $('goText'), err = $('err'), anyway = $('anyway'),
+      remember = $('remember'), recentBox = $('recentBox'), recentList = $('recent');
   var setup = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.TytSetup;
+  var touched = false;      // the person changed the tick themselves: leave it alone
+
+  function showErr(text, list) {
+    err.hidden = false;
+    err.textContent = text;
+    if (list) {
+      var ul = document.createElement('ul');
+      list.forEach(function (t) { var li = document.createElement('li'); li.textContent = t; ul.appendChild(li); });
+      err.appendChild(ul);
+    }
+  }
+  function busy(on) {
+    go.disabled = on;
+    go.classList.toggle('busy', on);
+    goText.textContent = on ? '連接中… Connecting…' : '連接 Connect';
+  }
+  // Live site (https) → remember by default; a PC on the Wi-Fi → ask every time.
+  function guessRemember() {
+    if (touched) return;
+    remember.checked = /^\s*https:\/\//i.test(input.value) || (/[a-z]/i.test(input.value) && !/^\s*http:/i.test(input.value) && !/^\s*\d{1,3}(\.\d{1,3}){3}/.test(input.value));
+  }
+  remember.addEventListener('change', function () { touched = true; });
+  input.addEventListener('input', function () { err.hidden = true; anyway.hidden = true; guessRemember(); markChip(); });
+
+  function markChip() {
+    Array.prototype.forEach.call(recentList.children, function (b) { b.classList.toggle('is-on', b.dataset.url === input.value.trim()); });
+  }
+  function drawRecent(list) {
+    recentList.innerHTML = '';
+    (list || []).forEach(function (u) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip' + (/^https:/i.test(u) ? ' https' : '');
+      b.dataset.url = u;
+      var dot = document.createElement('span'); dot.className = 'dot';
+      var t = document.createElement('span'); t.className = 'u'; t.textContent = u.replace(/^https?:\/\//i, '');
+      var tag = document.createElement('span'); tag.className = 'tag'; tag.textContent = /^https:/i.test(u) ? '正式 Live' : '測試 Test';
+      b.appendChild(dot); b.appendChild(t); b.appendChild(tag);
+      var held = null;
+      b.addEventListener('click', function () { if (held === 'done') { held = null; return; } input.value = u; guessRemember(); markChip(); connect(false); });
+      // Long-press: remove from the list.
+      b.addEventListener('touchstart', function () { held = setTimeout(function () {
+        held = 'done';
+        if (window.confirm('從清單移除？\nRemove from the list?\n\n' + u)) setup.forgetSite({ url: u }).then(load);
+      }, 650); }, { passive: true });
+      ['touchend', 'touchmove', 'touchcancel'].forEach(function (ev) { b.addEventListener(ev, function () { if (held && held !== 'done') { clearTimeout(held); held = null; } }, { passive: true }); });
+      recentList.appendChild(b);
+    });
+    recentBox.hidden = !(list && list.length);
+    markChip();
+  }
+
+  function connect(force) {
+    var v = input.value.trim();
+    err.hidden = true; anyway.hidden = true;
+    if (!v) { input.focus(); return; }
+    busy(true);
+    setup.setSite({ url: v, remember: remember.checked, force: !!force }).catch(function (x) {
+      busy(false);
+      var msg = (x && x.message) || '網址不正確。Address not accepted.';
+      if (x && x.code === 'UNREACHABLE') {
+        showErr(msg, ['手機和電腦在同一個 Wi-Fi 嗎？Same Wi-Fi as the PC?',
+                      '電腦的伺服器開著嗎？Is the server on the PC running?',
+                      '電腦的地址改了嗎？（Windows：ipconfig）Has the PC’s address changed? (Windows: ipconfig)']);
+        anyway.hidden = false;
+      } else {
+        showErr(msg);
+      }
+    });
+  }
+  anyway.addEventListener('click', function () { connect(true); });
+  f.addEventListener('submit', function (e) { e.preventDefault(); connect(false); });
+
+  function load() {
+    return setup.getSite().then(function (r) {
+      if (r && r.url && !input.value) input.value = r.url;
+      drawRecent(r && r.recent);
+      guessRemember();
+    });
+  }
+
   if (!setup) {
-    err.textContent = '請在 天玉堂 Staff App 內開啟。\nPlease open this inside the 天玉堂 Staff app.';
+    showErr('請在 天玉堂 Staff App 內開啟。\nPlease open this inside the 天玉堂 Staff app.');
     go.disabled = true;
     return;
   }
-  f.addEventListener('submit', function (e) {
-    e.preventDefault();
-    err.textContent = '';
-    var v = input.value.trim();
-    if (!v) { input.focus(); return; }
-    go.disabled = true;
-    setup.setSite({ url: v }).catch(function (x) {
-      go.disabled = false;
-      err.textContent = (x && x.message) || '網址不正確。Address not accepted.';
-    });
-  });
-  input.focus();
+  load().then(function () { if (!input.value) input.focus(); });
 })();
 </script>
 </body>

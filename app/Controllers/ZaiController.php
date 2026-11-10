@@ -167,7 +167,13 @@ class ZaiController extends Controller
     {
         $this->requireAdmin();
         $event = $this->event();
-        $this->page('admin/zai_tables', 'tables', $event, ['seating' => (new Zai())->seating((int) $event['id'])]);
+        $zai = new Zai();
+        $this->page('admin/zai_tables', 'tables', $event, [
+            'seating'   => $zai->seating((int) $event['id']),
+            'copyFrom'  => $zai->eventsWithTables((int) $event['id']),
+            'dayCounts' => $zai->dayCounts((int) $event['id']),
+            'isSystem'  => $this->isSystemAdmin(),
+        ]);
     }
 
     // -------------------------------------------------------- actions
@@ -421,6 +427,51 @@ class ZaiController extends Controller
             $this->warnIfFull($zai, (int) $w['event_id'], $table);
         }
         $this->redirect('/admin/zai/waiting?event=' . (int) $w['event_id'] . '#w' . (int) $w['id']);
+    }
+
+    /** POST /admin/zai/tables/copy {event_id, from} — use another event's tables (a new year: last year's hall). */
+    public function copyTables(): void
+    {
+        $this->requireAdmin();
+        $this->requireCsrf();
+        $events = new Event();
+        $event = $events->find((int) ($_POST['event_id'] ?? 0));
+        $from = $events->find((int) ($_POST['from'] ?? 0));
+        if ($event === null || $from === null || (int) $from['id'] === (int) $event['id']) {
+            $this->redirect('/admin/zai/tables');
+        }
+        $zai = new Zai();
+        if ($zai->dayCounts((int) $event['id'])['seated'] > 0) {
+            $this->flash('error', '已有人入座 People are seated',
+                "這個活動已有人安排了桌子，不能整套換桌子設定。請逐張修改，或先清空施齋資料。\nPeople already have tables in this event — change tables one by one, or clear Day 3 first.");
+            $this->redirect('/admin/zai/tables?event=' . (int) $event['id']);
+        }
+        $n = $zai->copyTables((int) $from['id'], (int) $event['id']);
+        $this->flash('success', '已複製 Copied', "已從 {$from['year']} {$from['name']} 複製 {$n} 張桌子。\nCopied {$n} tables from {$from['year']}.");
+        $this->redirect('/admin/zai/tables?event=' . (int) $event['id']);
+    }
+
+    /** POST /admin/zai/reset {event_id, confirm_word} — system admins: clear this event's Day 3 (tables kept). */
+    public function resetDay(): void
+    {
+        $this->requireAdmin();
+        $this->requireCsrf();
+        $event = (new Event())->find((int) ($_POST['event_id'] ?? 0));
+        if ($event === null) {
+            $this->redirect('/admin/zai/tables');
+        }
+        $back = '/admin/zai/tables?event=' . (int) $event['id'] . '#reset';
+        if (!$this->isSystemAdmin()) {
+            $this->flash('error', '沒有權限 Not allowed', '只有系統管理員可以清空施齋資料。Only a system admin can clear Day 3.');
+            $this->redirect($back);
+        }
+        if (trim((string) ($_POST['confirm_word'] ?? '')) !== '清空') {
+            $this->flash('error', '未清空 Not cleared', "請在框內輸入「清空」兩個字才可以清空。\nType 清空 in the box to confirm.");
+            $this->redirect($back);
+        }
+        (new Zai())->resetDay((int) $event['id']);
+        $this->flash('success', '已清空 Cleared', "{$event['year']} {$event['name']} 的施齋資料已清空，桌子設定保留。\nDay 3 is cleared for this event; the tables are kept.");
+        $this->redirect('/admin/zai/tables?event=' . (int) $event['id']);
     }
 
     /** POST /admin/zai/tables — how many tables, seats at each. */

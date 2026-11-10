@@ -41,6 +41,70 @@ class Zai extends Model
      * $count are removed (people at them keep the number, shown as "no
      * such table" until moved).
      */
+    /** Other events that have tables set up (to copy from): id, year, name, tables. */
+    public function eventsWithTables(int $exceptEventId): array
+    {
+        return $this->fetchAll(
+            'SELECT e.id, e.year, e.name, e.is_test, COUNT(t.id) AS tables, SUM(t.seats) AS seats
+               FROM events e JOIN zai_tables t ON t.event_id = e.id
+              WHERE e.id <> ? GROUP BY e.id, e.year, e.name, e.is_test ORDER BY e.year DESC, e.id DESC', [$exceptEventId]);
+    }
+
+    /**
+     * Copy another event's tables (numbers and seats) — a new year starts
+     * with last year's hall. Group tables become open again: which tables a
+     * 團體 group gets is that year's own business.
+     */
+    public function copyTables(int $fromEventId, int $toEventId): int
+    {
+        $this->db->beginTransaction();
+        try {
+            $this->execute('DELETE FROM zai_tables WHERE event_id = ?', [$toEventId]);
+            $n = $this->execute(
+                "INSERT INTO zai_tables (event_id, table_no, seats, kind) SELECT ?, table_no, seats, 'open' FROM zai_tables WHERE event_id = ?",
+                [$toEventId, $fromEventId]);
+            $this->db->commit();
+            return $n;
+        } catch (\Throwable $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
+    }
+
+    /** What 清空 would clear for this event: people with a Day 3 status, waiting list, groups arrived / with tables. */
+    public function dayCounts(int $eventId): array
+    {
+        return [
+            'people'  => (int) $this->scalar('SELECT COUNT(*) FROM zai_people WHERE event_id = ?', [$eventId]),
+            'seated'  => (int) $this->scalar('SELECT COUNT(*) FROM zai_people WHERE event_id = ? AND table_no IS NOT NULL', [$eventId]),
+            'waiting' => (int) $this->scalar('SELECT COUNT(*) FROM zai_waiting WHERE event_id = ?', [$eventId]),
+            'groups'  => (int) $this->scalar("SELECT COUNT(*) FROM zai_groups WHERE event_id = ? AND (status = 'arrived' OR COALESCE(tables, '') <> '')", [$eventId]),
+        ];
+    }
+
+    /**
+     * 清空施齋資料: start this event's Day 3 again (after a rehearsal, or to
+     * redo it). Cleared: every person's status and table, the waiting list,
+     * groups' arrival and tables, group-table marks, and the "arrived" mirror
+     * on registrations. Kept: the tables and seats, the group list itself,
+     * cheque details (money records), and all registrations.
+     */
+    public function resetDay(int $eventId): void
+    {
+        $this->db->beginTransaction();
+        try {
+            $this->execute('UPDATE rsvp_attendees a JOIN rsvp_groups g ON g.id = a.group_id SET a.checked_in_at = NULL WHERE g.event_id = ?', [$eventId]);
+            $this->execute('DELETE FROM zai_people WHERE event_id = ?', [$eventId]);
+            $this->execute('DELETE FROM zai_waiting WHERE event_id = ?', [$eventId]);
+            $this->execute("UPDATE zai_groups SET status = 'expected', tables = NULL, arrived_at = NULL, arrived_by = NULL WHERE event_id = ?", [$eventId]);
+            $this->execute("UPDATE zai_tables SET kind = 'open' WHERE event_id = ?", [$eventId]);
+            $this->db->commit();
+        } catch (\Throwable $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
+    }
+
     public function setTables(int $eventId, int $count, int $seats, bool $resetSeats): void
     {
         $count = max(0, min(self::MAX_TABLES, $count));

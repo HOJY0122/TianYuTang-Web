@@ -40,7 +40,9 @@ $statusLabel = ['waiting' => ['pending', '候補中 Waiting'], 'seated' => ['ok'
         <?= $tableSelect('table_no', $r['table_no'] !== null ? (int) $r['table_no'] : null, 'aria-label="桌號 Table"', (int) $r['people'], '#' . (int) $r['queue_no'] . ' ' . $r['name']) ?>
         <button class="mini-btn" name="status" value="seated" type="submit" data-needs-table>✓ 安排入座 <span class="en">Seat</span></button>
         <?php if ($r['status'] !== 'waiting'): ?><button class="mini-btn ghost" name="status" value="waiting" type="submit">↺ 改回候補</button><?php endif; ?>
-        <?php if ($r['status'] !== 'left'): ?><button class="mini-btn ghost" name="status" value="left" type="submit">已離開 <span class="en">Left</span></button><?php endif; ?>
+        <?php if ($r['status'] !== 'left'): ?><button class="mini-btn ghost" name="status" value="left" type="submit"
+          data-confirm="<?= h('#' . (int) $r['queue_no'] . ' ' . $r['name'] . ' 離開了？' . ($r['status'] === 'seated' ? "\n第 " . (int) $r['table_no'] . ' 桌會空出 ' . (int) $r['people'] . ' 個位。' : '') . "\n\nMark as left?") ?>"
+          data-confirm-title="離開 Left" data-danger>已離開 <span class="en">Left</span></button><?php endif; ?>
       </div>
     </form>
   <?php endforeach; ?>

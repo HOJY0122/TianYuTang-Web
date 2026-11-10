@@ -9,6 +9,9 @@ $kindLabel = ['person' => '已登記', 'group' => '團體', 'waiting' => '候補
 ?>
 <p class="ez-hint" style="margin-top:0">已用 <b><?= (int) $totals['used'] ?></b> / <?= (int) $totals['seats'] ?> 座位 · 有空位的桌 <b><?= (int) $totals['tables_free'] ?></b> 張
   <span class="en"><?= (int) $totals['used'] ?> of <?= (int) $totals['seats'] ?> seats · <?= (int) $totals['tables_free'] ?> tables with room</span></p>
+<form method="POST" action="<?= url('/admin/zai/easy/leave') ?>" id="ezLeaveP" hidden><?= csrf_field() ?><input type="hidden" name="kind" value="person"></form>
+<form method="POST" action="<?= url('/admin/zai/easy/leave') ?>" id="ezLeaveW" hidden><?= csrf_field() ?><input type="hidden" name="kind" value="wait"></form>
+<p class="ez-hint">客人走了不吃？按桌子，再按名字旁的「離開」，座位會空出來。<span class="en">Someone left? Open the table and tap 離開 beside their name — the seat is freed.</span></p>
 <div class="ez-tview-list" id="liveEzTables" data-live="zai_people zai_groups zai_waiting zai_tables">
   <?php foreach ($seating as $no => $t):
     $left = $t['seats'] - $t['used'];
@@ -28,8 +31,13 @@ $kindLabel = ['person' => '已登記', 'group' => '團體', 'waiting' => '候補
         <?= icon('chevron-down', 'ez-tchev') ?>
       </summary>
       <ul>
-        <?php foreach ($t['who'] as [$k, $label, $cnt]): ?>
-          <li><span class="zai-kind k-<?= h($k) ?>"><?= h($kindLabel[$k] ?? $k) ?></span> <?= h($label) ?><?= $cnt > 1 ? ' <b>× ' . (int) $cnt . '</b>' : '' ?></li>
+        <?php foreach ($t['who'] as [$k, $label, $cnt, $x]): ?>
+          <li><span class="ez-tname"><span class="zai-kind k-<?= h($k) ?>"><?= h($kindLabel[$k] ?? $k) ?></span> <?= h($label) ?><?= $cnt > 1 ? ' <b>× ' . (int) $cnt . '</b>' : '' ?></span>
+            <?php if ($k !== 'group' && (!empty($x['aid']) || !empty($x['wid']))): ?>
+              <button type="submit" form="<?= $k === 'waiting' ? 'ezLeaveW' : 'ezLeaveP' ?>" name="id" value="<?= (int) ($x['aid'] ?? $x['wid']) ?>" class="ez-leave"
+                      data-confirm="<?= h(($x['name'] ?? $label) . ' 離開了，不吃了？' . "\n第 {$no} 桌會空出 {$cnt} 個位。\n\nHas " . ($x['name'] ?? $label) . " left? {$cnt} seat(s) at table {$no} become free.") ?>"
+                      data-confirm-title="離開 Left" data-confirm-ok="✓ 是，已離開 Yes, left" data-danger><?= icon('log-out') ?> 離開</button>
+            <?php endif; ?></li>
         <?php endforeach; ?>
         <?php if (!$t['who']): ?><li class="ez-tempty">空桌 <small>Empty</small></li><?php endif; ?>
       </ul>

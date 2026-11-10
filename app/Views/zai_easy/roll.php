@@ -9,7 +9,8 @@
 $title = '名單'; $titleEn = 'Who is here, who is not yet';
 require __DIR__ . '/_top.php';
 $isHere = static fn(array $p): bool => $p['zstatus'] === 'confirmed';
-$todo = ['people' => array_filter($people, static fn($p) => !$isHere($p)),
+$gone = array_filter($people, static fn($p) => $p['zstatus'] === 'left');
+$todo = ['people' => array_filter($people, static fn($p) => !$isHere($p) && $p['zstatus'] !== 'left'),
          'groups' => array_filter($groups, static fn($g) => $g['status'] !== 'arrived'),
          'waiting' => array_filter($waiting, static fn($w) => $w['status'] === 'waiting')];
 $here = ['people' => array_filter($people, $isHere),
@@ -20,7 +21,7 @@ $show = $tab === 'here' ? $here : $todo;
 $tbl = static fn($t): string => trim((string) $t) !== '' ? '第 ' . h((string) $t) . ' 桌' : '';
 ?>
 <nav class="ez-tabs" aria-label="名單 List">
-  <a href="<?= url('/admin/zai/easy/roll') ?>"<?= $tab === 'todo' ? ' class="is-on" aria-current="page"' : '' ?>>未到 <small>Not yet</small><b><?= $n($todo) ?></b></a>
+  <a href="<?= url('/admin/zai/easy/roll') ?>"<?= $tab === 'todo' ? ' class="is-on" aria-current="page"' : '' ?>>未到 <small>Not yet</small><b><?= $n($todo) + count($gone) ?></b></a>
   <a href="<?= url('/admin/zai/easy/roll') ?>?tab=here"<?= $tab === 'here' ? ' class="is-on" aria-current="page"' : '' ?>>已到 <small>Here</small><b><?= $n($here) ?></b></a>
 </nav>
 <div class="ez-search">
@@ -58,6 +59,16 @@ $tbl = static fn($t): string => trim((string) $t) !== '' ? '第 ' . h((string) $
     </a>
   <?php endforeach; ?>
 
+  <?php if ($tab === 'todo' && $gone): ?>
+    <p class="ez-sec" data-filter-row><?= icon('log-out') ?> 已離開 <small>Left — tap if they came back</small> · <?= count($gone) ?></p>
+    <?php foreach ($gone as $p): ?>
+      <a class="ez-row is-gone" data-filter-row href="<?= url('/admin/zai/easy/find') ?>?q=<?= rawurlencode((string) $p['ref_code']) ?>">
+        <span class="ez-row-main"><b><?= h($p['name']) ?></b>
+          <small><?= h($p['ref_code']) ?></small></span>
+        <span class="ez-row-state">回來了？<br><small>Came back</small></span>
+      </a>
+    <?php endforeach; ?>
+  <?php endif; ?>
   <div class="ez-msg ez-warn" data-filter-empty hidden><b>找不到 Not found</b></div>
   <?php if (!$show['people'] && !$show['groups'] && !$show['waiting']): ?>
     <div class="ez-msg ez-info"><b><?= $tab === 'todo' ? '全部都到了 ✓' : '還沒有人到' ?></b><p><?= $tab === 'todo' ? 'Everyone is here.' : 'No one is here yet.' ?></p></div>

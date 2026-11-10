@@ -284,6 +284,8 @@ $router->post('/admin/zai/waiting/add',       'ZaiController@addWaiting');
 $router->post('/admin/zai/waiting/update',    'ZaiController@updateWaiting');
 $router->get('/admin/zai/tables',             'ZaiController@tables');
 $router->post('/admin/zai/tables',            'ZaiController@saveTables');
+$router->post('/admin/zai/tables/copy',       'ZaiController@copyTables');
+$router->post('/admin/zai/reset',             'ZaiController@resetDay');
 $router->post('/admin/vouchers/layout',       'VoucherController@layout');
 $router->get('/admin/vouchers/signature',     'VoucherController@signature');
 

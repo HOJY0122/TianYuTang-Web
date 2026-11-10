@@ -1968,3 +1968,12 @@ body.ez .tyd-title{font-family:inherit}
 .ez-tview .ez-leave{min-height:36px;padding:4px 10px;font-size:14px}
 .ez-row.is-gone{background:#f4f0e8;border-color:#ddd2bf;opacity:.92}
 .ez-row.is-gone .ez-row-state{color:#6b5c50}
+/* 施齋 桌子: copy last year's tables / clear Day 3 */
+.zai-copy{display:flex;align-items:center;justify-content:space-between;gap:12px 20px;flex-wrap:wrap}
+.zai-copy.is-empty{border:2px solid var(--gold);background:#fff8e6}
+.zai-copy-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.zai-copy-row select{max-width:100%}
+.zai-reset{border:1px solid #efb7b0;background:#fffafa}
+.zai-reset h2{color:#a3281f}
+.zai-reset-list{margin:.4rem 0 .8rem;padding-left:1.2rem;line-height:1.7}
+.zai-reset-list .en{color:var(--muted)}

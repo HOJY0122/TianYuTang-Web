@@ -1953,3 +1953,4 @@ a.ez-stat:active{transform:scale(.98)}
 .vs-bigwarn{margin:6px 0 0;padding:8px 10px;border-radius:10px;background:#fff1e0;border:1px solid #f0b46a;color:#7a3b00;font-size:.86rem;line-height:1.5}
 .vs-bigwarn[hidden]{display:none}
 .vs-bigwarn .en{display:block;opacity:.85}
+body.ez .tyd-title{font-family:inherit}

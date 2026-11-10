@@ -27,10 +27,11 @@ $fav  = $site['site_favicon_path'] ?: $site['site_logo_path'];
   <div class="ez-bar-title"><?= icon('chair') ?> 施齋入座</div>
   <?php if (!$onlyZai): ?>
     <a class="ez-home ez-full" href="<?= url('/admin/zai') ?>" title="完整版 Full view"><?= icon('list') ?><span>完整版</span></a>
-  <?php else: ?>
+  <?php elseif ($screen === 'start'): ?>
+    <?php // Log out only on the first screen — never next to the working buttons. ?>
     <form method="POST" action="<?= url('/admin/logout') ?>" class="ez-out"><?= csrf_field() ?>
-      <button type="submit" class="ez-home" data-confirm="要登出嗎？&#10;Log out?"><?= icon('log-out') ?><span>登出</span></button></form>
-  <?php endif; ?>
+      <button type="submit" class="ez-home" data-confirm="要登出嗎？&#10;Log out?" data-confirm-title="登出 Log out" data-danger><?= icon('log-out') ?><span>登出</span></button></form>
+  <?php else: ?><span class="ez-home ez-home-ph"></span><?php endif; ?>
 </header>
 <main class="ez-main">
   <h1 class="ez-q"><?= h($title) ?><small><?= h($titleEn) ?></small></h1>

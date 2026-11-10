@@ -154,7 +154,7 @@ try {
       <button type="button" class="a11y-btn" id="a11yBtn" aria-expanded="false" aria-controls="a11yPanel"
               title="無障礙設定 Accessibility">
         <!-- Universal access symbol: a person with open arms -->
-        <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" focusable="false">
+        <svg viewBox="0 0 24 24" width="23" height="23" aria-hidden="true" focusable="false">
           <circle cx="12" cy="3.6" r="2.3" fill="currentColor"/>
           <path d="M3.5 7.6l8.5 1.8 8.5-1.8M12 9.4v5.2M12 14.6l-3.6 6.6M12 14.6l3.6 6.6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
@@ -179,18 +179,47 @@ try {
 
 <!-- ⓘ Floating help: always in the same corner, explains the page you are on.
      The wording is the system admin's to change (網站文字 Wording). -->
+<?php
+// The help text is a few lines, usually each starting with "・": shown as
+// numbered steps, each Chinese line with its English line under it.
+$_hSplit = static fn(string $t): array => array_values(array_filter(array_map(
+    static fn($l) => trim(preg_replace('/^\s*(?:[・•\-–*]|\d+[.)、])\s*/u', '', $l)), preg_split('/\R/u', $t)), 'strlen'));
+$_hZh = $_hSplit(t($helpKey));
+$_hEn = $_hSplit(t($helpKey, 'en'));
+$_hContact = trim((string) ($event['contact_info'] ?? ''));
+?>
 <div class="help-fab">
   <div class="help-panel" id="helpPanel" role="dialog" aria-labelledby="helpTitle" hidden>
-    <button type="button" class="help-close" id="helpClose" aria-label="關閉 Close">×</button>
-    <div class="help-title" id="helpTitle"><?= tb('help.title') ?></div>
-    <p class="help-zh"><?= h(t($helpKey)) ?></p>
-    <?php if (t($helpKey, 'en') !== ''): ?><p class="help-en"><?= h(t($helpKey, 'en')) ?></p><?php endif; ?>
-    <?php if (!empty($event['contact_info'])): ?>
-      <p class="help-contact"><?= h($event['contact_info']) ?></p>
-    <?php endif; ?>
+    <div class="help-head">
+      <span class="help-head-ic" aria-hidden="true"><?= icon('info') ?></span>
+      <div class="help-title" id="helpTitle"><?= h(t('help.title')) ?><?php if (t('help.title', 'en') !== ''): ?><small><?= h(t('help.title', 'en')) ?></small><?php endif; ?></div>
+      <button type="button" class="help-close" id="helpClose" aria-label="關閉 Close"><?= icon('x') ?></button>
+    </div>
+    <div class="help-body">
+      <?php if (count($_hZh) > 1): ?>
+        <ol class="help-steps">
+          <?php foreach ($_hZh as $_hI => $_hLine): ?>
+            <li><span class="help-n" aria-hidden="true"><?= $_hI + 1 ?></span>
+              <span><?= h($_hLine) ?><?php if (!empty($_hEn[$_hI])): ?><small><?= h($_hEn[$_hI]) ?></small><?php endif; ?></span></li>
+          <?php endforeach; ?>
+        </ol>
+      <?php else: ?>
+        <p class="help-one"><?= h(implode(' ', $_hZh)) ?><?php if ($_hEn): ?><small><?= h(implode(' ', $_hEn)) ?></small><?php endif; ?></p>
+      <?php endif; ?>
+      <?php if ($_hContact !== ''): ?>
+        <div class="help-contact">
+          <span class="help-contact-ic" aria-hidden="true"><?= icon('phone') ?></span>
+          <div><b>聯絡我們 <small>Contact</small></b><span><?= nl2br(h($_hContact)) ?></span></div>
+        </div>
+      <?php endif; ?>
+      <button type="button" class="help-a11y" id="helpA11y">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><circle cx="12" cy="3.6" r="2.3" fill="currentColor"/><path d="M3.5 7.6l8.5 1.8 8.5-1.8M12 9.4v5.2M12 14.6l-3.6 6.6M12 14.6l3.6 6.6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        字太小？放大字體 <small>Text too small? Make it bigger</small>
+      </button>
+    </div>
   </div>
   <button type="button" class="help-btn" id="helpBtn" aria-expanded="false" aria-controls="helpPanel" title="說明 Help">
-    <span aria-hidden="true">i</span><span class="sr-only">說明 Help</span>
+    <?= icon('info') ?><span class="help-btn-label" aria-hidden="true">說明</span><span class="sr-only">說明 Help</span>
   </button>
 </div>
 <script>
@@ -224,6 +253,13 @@ try {
   hBtn.addEventListener('click', function (e) { e.stopPropagation(); open(false); help(hPanel.hidden); });
   hPanel.addEventListener('click', function (e) { e.stopPropagation(); });
   document.getElementById('helpClose').addEventListener('click', function () { help(false); hBtn.focus(); });
+  // "Text too small?" in the help panel opens the accessibility panel.
+  document.getElementById('helpA11y').addEventListener('click', function (e) {
+    e.stopPropagation(); help(false); open(true);
+    var cur = panel.querySelector('[data-size][aria-pressed="true"]') || panel.querySelector('[data-size]');
+    if (cur) cur.focus();
+    btn.scrollIntoView({ block: 'nearest' });
+  });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !hPanel.hidden) { help(false); hBtn.focus(); } });
 
   document.addEventListener('click', function () { open(false); help(false); });

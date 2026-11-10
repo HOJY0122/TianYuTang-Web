@@ -1126,3 +1126,63 @@ html.hc .nav-tile-go{background:#000}
   html.text-lg .stepper input,html.text-xl .stepper input{min-width:0}
   html.text-xl .stepper button{width:2.6rem;min-height:2.6rem}
 }
+
+/* ---------- 無障礙 button: about 12% smaller ---------- */
+.a11y-btn{min-width:3.7rem;min-height:2.85rem;padding:.2rem .5rem;border-radius:12px}
+.a11y-btn small{font-size:.6rem}
+@media (max-width:760px){ .a11y-btn{min-width:3rem;min-height:2.65rem;padding:.15rem .25rem} }
+
+/* ---------- ⓘ 說明 help: a calm pill, opens a tidy card ---------- */
+.help-btn{display:inline-flex;align-items:center;gap:.35rem;width:auto;height:2.6rem;padding:0 .95rem 0 .7rem;border-radius:999px;
+  font:700 .9rem/1 var(--sans);font-style:normal;color:#fff8df;background:rgba(159,33,27,.62);
+  border:1.5px solid rgba(243,223,156,.85);box-shadow:0 4px 14px rgba(80,20,10,.25),0 0 0 3px rgba(243,223,156,.18)}
+.help-btn .ic{width:1.15rem;height:1.15rem;stroke-width:2.3}
+.help-btn:hover,.help-btn:focus-visible,.help-btn[aria-expanded="true"]{background:rgba(159,33,27,.96);transform:translateY(-1px)}
+.help-btn[aria-expanded="true"]{box-shadow:0 4px 14px rgba(80,20,10,.3),0 0 0 3px rgba(243,223,156,.45)}
+@media (max-width:760px){
+  .help-btn{width:2.6rem;height:2.6rem;padding:0;justify-content:center}
+  .help-btn-label{display:none}
+  .help-btn .ic{width:1.3rem;height:1.3rem}
+}
+.help-panel{width:min(23rem,calc(100vw - 2rem));padding:0;overflow:hidden auto;border:1px solid var(--line);border-radius:18px;
+  background:#fffdf7;box-shadow:0 18px 50px rgba(40,20,10,.3);transform-origin:bottom right;animation:helpIn .18s ease}
+@keyframes helpIn{from{opacity:0;transform:translateY(8px) scale(.96)}}
+@media (prefers-reduced-motion:reduce){ .help-panel{animation:none} }
+.help-head{position:sticky;top:0;z-index:1;display:flex;align-items:center;gap:.6rem;padding:.8rem .7rem .8rem 1rem;
+  background:linear-gradient(135deg,#9f211b,#7a1712);color:#fff8df;border-bottom:2px solid #d9b65c}
+.help-head-ic{display:grid;place-items:center;flex:none;width:2.1rem;height:2.1rem;border-radius:50%;background:rgba(255,248,223,.15);
+  box-shadow:inset 0 0 0 1.5px rgba(243,223,156,.6)}
+.help-head-ic .ic{width:1.2rem;height:1.2rem;color:#f3df9c}
+.help-panel .help-title{flex:1;min-width:0;margin:0;padding:0;color:#fff8df;font:800 1.02rem/1.25 var(--sans)}
+.help-panel .help-title small{display:block;font-size:.74rem;font-weight:500;color:#f3df9c;margin-top:.1rem}
+.help-panel .help-close{position:static;flex:none;display:grid;place-items:center;width:2.2rem;height:2.2rem;padding:0;border-radius:50%;
+  background:rgba(255,248,223,.14);color:#fff8df;border:0;cursor:pointer}
+.help-panel .help-close:hover{background:rgba(255,248,223,.28)}
+.help-panel .help-close .ic{width:1.05rem;height:1.05rem}
+.help-body{padding:.9rem 1rem 1rem;display:flex;flex-direction:column;gap:.8rem}
+.help-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.7rem}
+.help-steps li{display:flex;gap:.65rem;align-items:flex-start;line-height:1.55;font-size:.95rem}
+.help-steps li small,.help-one small{display:block;color:var(--muted);font-size:.84em;margin-top:.15rem;line-height:1.45}
+.help-n{flex:none;display:grid;place-items:center;width:1.55rem;height:1.55rem;margin-top:.1rem;border-radius:50%;
+  background:#fbefd0;border:1.5px solid #d9b65c;color:var(--red);font:800 .8rem/1 var(--sans)}
+.help-one{margin:0;line-height:1.6;font-size:.95rem;white-space:normal}
+.help-contact{display:flex;gap:.65rem;align-items:flex-start;padding:.7rem .8rem;border-radius:12px;background:#fbf4e1;border:1px solid #efe1b8;
+  font-size:.9rem;line-height:1.55}
+.help-contact b{display:block;color:var(--red);font-size:.88rem}
+.help-contact b small{font-weight:600;color:var(--muted)}
+.help-contact-ic{flex:none;display:grid;place-items:center;width:1.9rem;height:1.9rem;border-radius:50%;background:#fff;border:1px solid #e6cf8e;color:var(--red)}
+.help-contact-ic .ic{width:1rem;height:1rem}
+.help-a11y{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;width:100%;padding:.6rem .8rem;border-radius:12px;border:1px dashed #d9b65c;
+  background:transparent;color:var(--red);font:700 .88rem/1.3 var(--sans);text-align:left;cursor:pointer}
+.help-a11y small{font-weight:500;color:var(--muted)}
+.help-a11y:hover{background:#fff6e2;border-style:solid}
+/* Phone: the card rises from the bottom, full width. */
+@media (max-width:760px){
+  .help-panel{position:fixed;left:.6rem;right:.6rem;bottom:calc(env(safe-area-inset-bottom,0px) + 4rem);width:auto;max-height:72vh;transform-origin:bottom center}
+}
+html.hc .help-btn{background:#000;color:#fff;border-color:#fff;box-shadow:none}
+html.hc .help-head{background:#000;border-color:#fff}
+html.hc .help-panel{border:2px solid #000}
+html.tone-calm .help-btn{background:rgba(140,111,90,.75)}
+html.tone-calm .help-btn:hover,html.tone-calm .help-btn[aria-expanded="true"]{background:#6f5646}
+html.tone-calm .help-head{background:linear-gradient(135deg,#8c6f5a,#6a5242);border-bottom-color:#d9b65c}

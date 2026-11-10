@@ -14,8 +14,11 @@
   --kai:"LXGW WenKai TC","BiauKai","DFKai-SB","標楷體","KaiTi","STKaiti",serif;
   --sans:"Noto Sans TC","Noto Sans SC","Microsoft JhengHei","PingFang TC",sans-serif;
 }
-html{font-size:calc(18px * var(--fs,1));scroll-behavior:smooth;-webkit-text-size-adjust:100%}
-html.text-lg{font-size:21px}
+/* Text size = the base size × the site's body size (Forms & fonts, --fs) × the
+   visitor's choice (無障礙 Accessibility: --a11y). Large / X-Large multiply, so
+   they are always bigger than Normal, whatever body size the site uses. */
+html{--a11y:1;font-size:calc(18px * var(--fs,1) * var(--a11y));scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+html.text-lg{--a11y:1.2}
 *{box-sizing:border-box}
 body{margin:0;background:linear-gradient(180deg,#fff7d9,#fffaf0 40%,#f7ecc8);color:var(--dark);
   font-family:var(--sans);line-height:1.7}
@@ -72,7 +75,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .a11y-switch{display:flex;align-items:center;gap:.6rem;margin:.9rem 0 .2rem;font-weight:700;cursor:pointer}
 .a11y-switch input{width:1.6rem;height:1.6rem;min-height:0;accent-color:var(--red)}
 .a11y-reset{margin-top:.6rem;width:100%;min-height:2.8rem;border:1px solid var(--line);border-radius:10px;background:transparent;cursor:pointer;font-weight:700}
-html.text-xl{font-size:24px}
+html.text-xl{--a11y:1.4}
 
 /* High contrast: pure black on white, underlined links, strong borders */
 html.hc body{background:#fff;color:#000}
@@ -140,7 +143,7 @@ main{display:block}
 
 /* ---------- Cards ---------- */
 .card{background:rgba(255,253,247,.94);border:1px solid var(--line);border-radius:var(--radius);padding:1.4rem;box-shadow:var(--shadow)}
-.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(16rem,1fr));gap:1rem}
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,16rem),1fr));gap:1rem}
 .info-card h3{margin:0 0 .5rem;color:var(--red);font-size:1.35rem}
 .info-card h3 .en{display:inline;font-size:.65em;margin-left:.35rem}
 .info-card p{margin:0;white-space:pre-line}
@@ -367,8 +370,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--red);box-shadow:0 0 0
   .card{padding:1.1rem}
 }
 @media (max-width:420px){
-  html{font-size:calc(17px * var(--fs,1))}
-  html.text-lg{font-size:20px}
+  html{font-size:calc(17px * var(--fs,1) * var(--a11y))}
   .album-strip{grid-auto-columns:78%}
 }
 
@@ -512,7 +514,7 @@ body > .site-footer{flex-shrink:0}
 .age-note{border-left-color:var(--red);background:#fff1e6}
 .age-note strong{color:var(--deep-red)}
 .age-note .en{display:block;margin-top:.15rem}
-.reg-types{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:.8rem}
+.reg-types{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:.8rem}
 .reg-type{position:relative;display:flex;gap:.9rem;align-items:flex-start;margin:0;padding:1rem 1.1rem;cursor:pointer;
   border:2px solid var(--line);border-radius:16px;background:var(--card);transition:border-color .15s,background-color .15s,box-shadow .15s}
 .reg-type input{position:absolute;opacity:0;pointer-events:none}
@@ -783,7 +785,7 @@ form.is-closed .attendee-body,form.is-closed .people-tools,form.is-closed .choic
    tighter spacing, smaller buttons) — everything still easy to tap.
    ========================================================== */
 @media (max-width:600px){
-  html{font-size:calc(16.5px * var(--fs,1))}
+  html{font-size:calc(16.5px * var(--fs,1) * var(--a11y))}
   .section{padding:1.5rem .85rem}
   .section-title{margin-bottom:1.1rem}
   .section-title h2{font-size:1.6rem}
@@ -810,7 +812,7 @@ form.is-closed .attendee-body,form.is-closed .people-tools,form.is-closed .choic
   .window-timer .wt-time{font-size:1.25rem}
 }
 @media (max-width:420px){
-  html{font-size:calc(16px * var(--fs,1))}
+  html{font-size:calc(16px * var(--fs,1) * var(--a11y))}
 }
 .stepper input{min-width:3.5rem}
 .people-tools .all-same{flex:1 1 100%;margin:0!important}
@@ -998,7 +1000,7 @@ html.hc .section-title::before,html.hc .section-title::after,html.hc .welcome h1
 .location-card{border-top:3px solid var(--gold);gap:1.4rem 2rem;align-items:start}
 .loc-title svg{width:1.3em;height:1.3em;vertical-align:-.2em}
 .loc-hint{margin:.7rem 0 0;color:var(--muted);font-size:.95rem}
-.map-buttons{display:grid;grid-template-columns:repeat(auto-fit,minmax(12.5rem,1fr));gap:.7rem;margin-top:1rem}
+.map-buttons{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,12.5rem),1fr));gap:.7rem;margin-top:1rem}
 .map-buttons .btn{min-height:3.5rem;font-size:1.05rem}
 .qr-pair{display:grid;grid-auto-flow:column;gap:1rem}
 .qr-frame{background:#fffdf7;border:1px solid #d9bf7f;border-radius:16px;padding:.9rem .9rem .7rem;
@@ -1117,3 +1119,10 @@ html.hc .nav-tile-go{background:#000}
 @media (min-width:601px){ .nav-tiles.is-two .nt-tap{display:none} }
 /* 如何前往: the QR cards sit level with the middle of the left side (title stays at the top) */
 @media (min-width:761px){ .location-card .qr-pair{align-self:center} }
+
+/* Large / X-Large text on a phone: nothing may push the page wider than the screen. */
+@media (max-width:600px){
+  html.text-lg .album-all,html.text-xl .album-all{white-space:normal;text-align:center}
+  html.text-lg .stepper input,html.text-xl .stepper input{min-width:0}
+  html.text-xl .stepper button{width:2.6rem;min-height:2.6rem}
+}

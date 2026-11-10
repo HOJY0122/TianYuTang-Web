@@ -21,7 +21,10 @@ require __DIR__ . '/_top.php';
   // not for everyone (asks first). Purple = kept for groups (asks first).
   $hallNos = array_keys(array_filter($seating, static fn($t) => $t['seats'] > 0));
   $hallClass = 'hall-easy';
-  $hallCell = static function (int $no) use ($seating, $need, $current): string {
+  // Every table asks first ("安排到第 3 桌？"), so a slip of the finger
+  // never seats anyone (dialog.js: data-confirm on the button).
+  $whoText = implode('、', $who);
+  $hallCell = static function (int $no) use ($seating, $need, $current, $whoText): string {
       $t = $seating[$no];
       if (!empty($current) && $no === (int) $current) {
           return '<button type="button" class="ez-tbl fits is-current" disabled aria-disabled="true"><b>' . $no . '</b><small>目前 Now</small></button>';
@@ -38,9 +41,14 @@ require __DIR__ . '/_top.php';
               . '<b>' . $no . '</b><small>滿 Full</small></button>';
       }
       $fits = $left >= $need;
-      $ask = !$fits ? '第 ' . $no . ' 桌只剩 ' . $left . ' 個位，還是要坐這裡？&#10;Only ' . $left . ' seat(s) left — seat them here anyway?' : '';
+      $ask = (!empty($current)
+              ? "把 {$whoText} 從第 {$current} 桌換到第 {$no} 桌？\nMove from table {$current} to table {$no}?"
+              : "把 {$whoText}（{$need} 人）安排到第 {$no} 桌？\nSeat them ({$need}) at table {$no}?")
+          . (!$fits ? "\n\n⚠ 第 {$no} 桌只剩 {$left} 個位。\nOnly {$left} seat(s) left at this table." : '');
       return '<button type="submit" name="table" value="' . $no . '" class="ez-tbl ' . ($fits ? 'fits' : 'some') . '"'
-          . ($ask ? ' data-confirm="' . $ask . '"' : '') . '><b>' . $no . '</b><small>剩 ' . $left . ' 位</small></button>';
+          . ' data-confirm="' . h($ask) . '" data-confirm-title="' . h('確認桌號 Confirm table ' . $no) . '"'
+          . ' data-confirm-ok="' . h('✓ 確認，第 ' . $no . ' 桌 Yes') . '"'
+          . '><b>' . $no . '</b><small>剩 ' . $left . ' 位</small></button>';
   };
   require BASE_PATH . '/app/Views/partials/zai_hall.php';
   ?>

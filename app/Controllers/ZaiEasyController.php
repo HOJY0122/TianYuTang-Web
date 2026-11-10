@@ -363,6 +363,41 @@ class ZaiEasyController extends Controller
     }
 
     /** GET /admin/zai/easy/waitlist */
+    /**
+     * POST /admin/zai/easy/leave {kind: person|wait, id} — 離開 Left: someone
+     * seated who went after all. Their seat is freed at once; a done screen
+     * says which table has room again.
+     */
+    public function leave(): void
+    {
+        $this->requireAdmin();
+        $this->requireCsrf();
+        $event = (new Event())->active();
+        $eventId = (int) $event['id'];
+        $zai = new Zai();
+        $id = (int) ($_POST['id'] ?? 0);
+        if (($_POST['kind'] ?? '') === 'wait') {
+            $w = $zai->waitingRow($id);
+            if ($w === null || (int) $w['event_id'] !== $eventId) {
+                $this->redirect('/admin/zai/easy');
+            }
+            $from = (int) $w['table_no'];
+            $zai->updateWaiting($id, 'left', null);
+            $name = $w['name'] . ((int) $w['people'] > 1 ? '（' . (int) $w['people'] . ' 人）' : '');
+            $n = (int) $w['people'];
+        } else {
+            if ($zai->attendeeEvent($id) !== $eventId) {
+                $this->redirect('/admin/zai/easy');
+            }
+            $from = (int) ($zai->peopleStatus([$id])[$id]['table_no'] ?? 0);
+            $zai->leavePerson($id, $this->by());
+            $name = $this->attendeeName($id);
+            $n = 1;
+        }
+        $this->done('離開', 'Left', $name . ($from ? "\n第 {$from} 桌空出 {$n} 個位。\nTable {$from} has {$n} seat(s) free again." : ''),
+            'ok', ['/admin/zai/easy/tables', '看桌子 See tables']);
+    }
+
     /** GET /admin/zai/easy/roll?tab=todo|here — 名單: who is here, who is not yet (tap to confirm). */
     public function roll(): void
     {

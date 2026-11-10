@@ -1954,3 +1954,17 @@ a.ez-stat:active{transform:scale(.98)}
 .vs-bigwarn[hidden]{display:none}
 .vs-bigwarn .en{display:block;opacity:.85}
 body.ez .tyd-title{font-family:inherit}
+/* 離開 Left (someone seated who went) */
+.ez-seated-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.ez-seated-acts .ez-change{margin-top:0}
+.ez-leave{display:inline-flex;align-items:center;gap:5px;min-height:40px;padding:6px 12px;border-radius:12px;border:2px solid #e3b4ad;
+  background:#fff5f3;color:#a3281f;font:800 15px/1.1 inherit;cursor:pointer;white-space:nowrap}
+.ez-leave small{font-weight:600;color:#b9675e;font-size:12px}
+.ez-leave .ic{width:16px;height:16px}
+.ez-leave:active{transform:scale(.97)}
+.ez-pname em.gone{color:#8a7a68;background:#efe9df;font-style:normal}
+.ez-tview li{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ez-tname{min-width:0}
+.ez-tview .ez-leave{min-height:36px;padding:4px 10px;font-size:14px}
+.ez-row.is-gone{background:#f4f0e8;border-color:#ddd2bf;opacity:.92}
+.ez-row.is-gone .ez-row-state{color:#6b5c50}

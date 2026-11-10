@@ -155,10 +155,10 @@ class Zai extends Model
             }
         };
         foreach ($this->fetchAll(
-            'SELECT p.table_no, a.name, g.ref_code FROM zai_people p
+            'SELECT p.table_no, p.attendee_id, a.name, g.ref_code FROM zai_people p
                JOIN rsvp_attendees a ON a.id = p.attendee_id JOIN rsvp_groups g ON g.id = a.group_id
               WHERE p.event_id = ? AND p.table_no IS NOT NULL ORDER BY a.id', [$eventId]) as $r) {
-            $add((int) $r['table_no'], 'person', $r['name'] . ' · ' . $r['ref_code'], 1);
+            $add((int) $r['table_no'], 'person', $r['name'] . ' · ' . $r['ref_code'], 1, ['aid' => (int) $r['attendee_id'], 'name' => $r['name']]);
         }
         // A 團體 group buys / reserves its tables WHOLE: each of its tables
         // counts as full, however many of them come (no head count needed).
@@ -167,8 +167,8 @@ class Zai extends Model
                 $add($no, 'group', $g['name'], (int) ($tables[$no] ?? self::DEFAULT_SEATS), ['id' => (int) $g['id'], 'arrived' => $g['status'] === 'arrived', 'whole' => true]);
             }
         }
-        foreach ($this->fetchAll("SELECT table_no, name, queue_no, people FROM zai_waiting WHERE event_id = ? AND status = 'seated' AND table_no IS NOT NULL", [$eventId]) as $r) {
-            $add((int) $r['table_no'], 'waiting', $r['name'] . ' · #' . $r['queue_no'], (int) $r['people']);
+        foreach ($this->fetchAll("SELECT id, table_no, name, queue_no, people FROM zai_waiting WHERE event_id = ? AND status = 'seated' AND table_no IS NOT NULL", [$eventId]) as $r) {
+            $add((int) $r['table_no'], 'waiting', $r['name'] . ' · #' . $r['queue_no'], (int) $r['people'], ['wid' => (int) $r['id'], 'name' => $r['name']]);
         }
         ksort($map);
         return $map;
@@ -304,9 +304,23 @@ class Zai extends Model
     {
         $this->execute(
             'INSERT INTO zai_people (attendee_id, event_id, status, table_no, updated_by) VALUES (?, ?, ?, ?, ?)
-             ON DUPLICATE KEY UPDATE status = VALUES(status), table_no = VALUES(table_no), updated_by = VALUES(updated_by)',
+             ON DUPLICATE KEY UPDATE status = VALUES(status), table_no = VALUES(table_no), updated_by = VALUES(updated_by),
+                                     left_from = IF(VALUES(status) = \'left\', left_from, NULL)',
             [$attendeeId, $eventId, $status, $tableNo, $by]);
         $this->mirrorArrival($attendeeId, $status === 'confirmed');
+    }
+
+    /**
+     * 離開 Left: they came, then went (do not want to eat after all). The
+     * seat is freed, they no longer count as arrived; left_from keeps the
+     * table they had. Confirming them again later works as usual.
+     */
+    public function leavePerson(int $attendeeId, string $by): void
+    {
+        $this->execute(
+            "UPDATE zai_people SET left_from = COALESCE(table_no, left_from), table_no = NULL, status = 'left', updated_by = ? WHERE attendee_id = ?",
+            [$by, $attendeeId]);
+        $this->mirrorArrival($attendeeId, false);
     }
 
     public function clearPerson(int $attendeeId): void

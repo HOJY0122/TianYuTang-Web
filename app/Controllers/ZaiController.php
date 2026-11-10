@@ -188,6 +188,11 @@ class ZaiController extends Controller
             $zai->clearPerson($id);
             $this->redirect($back);
         }
+        if (($_POST['status'] ?? '') === 'left') {
+            // 離開 Left: came, then went — the seat is freed, they no longer count as arrived.
+            $zai->leavePerson($id, $this->by());
+            $this->redirect($back);
+        }
         $status = ($_POST['status'] ?? '') === 'pending' ? 'pending' : 'confirmed';
         $table = $this->tableNo($_POST['table_no'] ?? '');
         $this->refuseGroupTable($zai, $eventId, $table, $back);

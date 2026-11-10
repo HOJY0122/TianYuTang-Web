@@ -33,8 +33,13 @@ require __DIR__ . '/_top.php';
           <small class="ez-id"><b>IC <?= h($a['ic_no'] ?: '—') ?></b></small>
           <?php if (!empty($a['contact_no']) && $a['contact_no'] !== '—'): ?><small class="ez-id"><?= icon('phone') ?> <?= h($a['contact_no']) ?></small><?php endif; ?>
           <small><?= h($a['ref_code']) ?><?= $a['org_name'] ? ' · 團體 ' . h($a['org_name']) : '' ?></small>
-          <?php if ($z): ?><em class="<?= $z['status'] === 'confirmed' ? 'ok' : 'warn' ?>"><?= $z['status'] === 'confirmed' ? '已確認' : '待定' ?><?= $z['table_no'] ? ' · 已在第 ' . (int) $z['table_no'] . ' 桌' : '' ?></em><?php endif; ?>
-          <?php if ($seated): ?><a class="ez-change" href="<?= url('/admin/zai/easy/table') ?>?for=people&amp;ids=<?= (int) $a['id'] ?>&amp;change=1"><?= icon('refresh') ?> 換桌 <small>Change table</small></a><?php endif; ?></span>
+          <?php if ($z): ?><em class="<?= $z['status'] === 'confirmed' ? 'ok' : ($z['status'] === 'left' ? 'gone' : 'warn') ?>"><?= $z['status'] === 'confirmed' ? '已確認' : ($z['status'] === 'left' ? '已離開 Left' . (!empty($z['left_from']) ? '（原第 ' . (int) $z['left_from'] . ' 桌）' : '') : '待定') ?><?= $z['table_no'] ? ' · 已在第 ' . (int) $z['table_no'] . ' 桌' : '' ?></em><?php endif; ?>
+          <?php if ($seated): ?><span class="ez-seated-acts">
+            <a class="ez-change" href="<?= url('/admin/zai/easy/table') ?>?for=people&amp;ids=<?= (int) $a['id'] ?>&amp;change=1"><?= icon('refresh') ?> 換桌 <small>Change table</small></a>
+            <button type="submit" form="ezLeave" name="id" value="<?= (int) $a['id'] ?>" class="ez-leave"
+                    data-confirm="<?= h($a['name'] . ' 離開了，不吃了？' . "\n第 " . (int) $z['table_no'] . " 桌會空出 1 個位。\n\nHas " . $a['name'] . ' left? 1 seat at table ' . (int) $z['table_no'] . ' becomes free.') ?>"
+                    data-confirm-title="離開 Left" data-confirm-ok="✓ 是，已離開 Yes, left" data-danger><?= icon('log-out') ?> 離開 <small>Left</small></button>
+          </span><?php endif; ?></span>
       </<?= $seated ? 'div' : 'label' ?>>
     <?php endforeach; ?>
     <p class="ez-step"><span>2</span> 然後按 <small>Then tap</small></p>
@@ -42,6 +47,8 @@ require __DIR__ . '/_top.php';
     <button type="submit" name="go" value="table" class="ez-btn ez-ok" data-need-pick disabled>✓ 確認，選桌號 <small>Confirm &amp; choose a table</small></button>
     <button type="submit" name="go" value="pending" class="ez-btn ez-alt" data-need-pick disabled>… 待定，等一下 <small>Pending — not yet</small></button>
   </form>
+  <?php // 離開 Left buttons on seated people belong to this form (forms cannot sit inside one another). ?>
+  <form method="POST" action="<?= url('/admin/zai/easy/leave') ?>" id="ezLeave" hidden><?= csrf_field() ?><input type="hidden" name="kind" value="person"></form>
 <?php endif; ?>
 <?php if (!empty($members)): ?>
   <!-- Last, after the people to tick: these belong to a 團體 group (option ②). -->

@@ -54,7 +54,7 @@ $hidden = '<input type="hidden" name="event_id" value="' . (int) $event['id'] . 
           <strong><?= h($a['name']) ?></strong>
           <span class="help">IC <?= h($a['ic_no'] ?: '—') ?><?= !empty($a['contact_no']) ? ' · ' . h($a['contact_no']) : '' ?></span>
           <?php if ($st): ?>
-            <span class="badge <?= $st['status'] === 'confirmed' ? 'ok' : 'pending' ?>"><?= $st['status'] === 'confirmed' ? '✓ 已確認' : '… 待定' ?>
+            <span class="badge <?= $st['status'] === 'confirmed' ? 'ok' : ($st['status'] === 'left' ? 'cancelled' : 'pending') ?>"><?= $st['status'] === 'confirmed' ? '✓ 已確認' : ($st['status'] === 'left' ? '已離開 Left' . (!empty($st['left_from']) ? '（原第 ' . (int) $st['left_from'] . ' 桌）' : '') : '… 待定') ?>
               <?= $st['table_no'] ? ' · 第 ' . (int) $st['table_no'] . ' 桌' : '' ?></span>
           <?php else: ?><span class="badge">未處理 Not yet</span><?php endif; ?>
         </div>
@@ -62,6 +62,9 @@ $hidden = '<input type="hidden" name="event_id" value="' . (int) $event['id'] . 
           <?= $tableSelect('table_no', $st && $st['table_no'] !== null ? (int) $st['table_no'] : null, 'aria-label="桌號 Table"', 1, (string) $a['name']) ?>
           <button class="mini-btn" name="status" value="confirmed" type="submit" data-needs-table data-table-optional>✓ 確認 <span class="en">Confirm</span></button>
           <button class="mini-btn ghost" name="status" value="pending" type="submit">… 待定 <span class="en">Pending</span></button>
+          <?php if ($st && $st['status'] === 'confirmed'): ?><button class="mini-btn ghost" name="status" value="left" type="submit"
+              data-confirm="<?= h($a['name'] . ' 離開了，不吃了？' . ($st['table_no'] ? "\n第 " . (int) $st['table_no'] . ' 桌會空出 1 個位。' : '') . "\n\nMark " . $a['name'] . ' as left? Their seat is freed.') ?>"
+              data-confirm-title="離開 Left" data-danger title="客人走了 They left"><?= icon('log-out') ?> 離開 <span class="en">Left</span></button><?php endif; ?>
           <?php if ($st): ?><button class="mini-btn ghost" name="status" value="clear" type="submit" title="清除 Clear">↺</button><?php endif; ?>
         </div>
       </form>
